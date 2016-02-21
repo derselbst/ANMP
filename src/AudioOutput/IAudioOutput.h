@@ -10,10 +10,18 @@ using namespace std;
 
 class IAudioOutput
 {
-public:
+protected:
+    // this is an interface, even if there were no pure virtual methods, allow
+    // construction for child classes only
+    IAudioOutput();
 
-    // Empty virtual destructor for proper cleanup
-    virtual ~IAudioOutput() {}
+public:
+  
+  IAudioOutput(IAudioOutput const&) = delete;
+  IAudioOutput& operator=(IAudioOutput const&) = delete;
+
+    // virtual destructor for proper cleanup
+    virtual ~IAudioOutput();
 
     /**
      * opens a sound device, e.g. set buffer size, periods, pcm format (int16,

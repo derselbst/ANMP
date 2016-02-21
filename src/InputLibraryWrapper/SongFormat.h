@@ -1,6 +1,7 @@
 #ifndef SONGFORMAT_H
 #define SONGFORMAT_H
 
+#include <SampleFormat.h>
 
 /**
   * class SongFormat
@@ -9,18 +10,12 @@
 
 struct SongFormat
 {
-    unsigned int SampleRate=0;
-    // indicates the sample format in pcm buffer "data"
-    SampleFormat_t SampleFormat=SampleFormat_t::unset;
-    int Channels=0;
+    unsigned int SampleRate = 0;
     
-    // Constructors/Destructors
-    //  
-
-    /**
-     * Empty Destructor
-     */
-    ~SongFormat ();
+    // indicates the type of the items in pcm buffer "data" from PCMHolder
+    SampleFormat_t SampleFormat = SampleFormat_t::unknown;
+    
+    int Channels = 0;
 
     /**
      * returns bitrate in bit/s

@@ -2,7 +2,9 @@
 #ifndef PCMHOLDER_H
 #define PCMHOLDER_H
 
-#include <string>
+#include <vector>
+
+#include "loop.h"
 
 /**
   * class PCMHolder
@@ -11,27 +13,37 @@
 
 class PCMHolder
 {
+protected:
+    // even if there were no pure virtual methods, allow
+    // construction for child classes only
+    PCMHolder();
+
 public:
 
-    // Constructors/Destructors
-    //  
+    // virtual destructor for proper cleanup
+    virtual ~PCMHolder();
 
-    // Empty virtual destructor for proper cleanup
-    virtual ~PCMHolder () {};
+    // forbid copying
+    PCMHolder(PCMHolder const&) = delete;
+    PCMHolder& operator=(PCMHolder const&) = delete;
 
-    // Static Public attributes
-    //  
 
-    // Public attributes
-    //  
 
+    // pointer to pcm data
     pcm_t data = nullptr;
-    // how many items (i.e. floats) are there in data?
+    
+    // how many items (i.e. floats, int16s, etc.) are there in data?
     size_t count = 0;
-    // how many floats to skip when starting with playback
-    size_t offset = 0;
-    string Filename;
+    
+    // pcm specific information
     SongFormat Format;
+    
+    // how many items to skip when starting with playback
+    size_t offset = 0;
+    
+    // fullpath to underlying audio file
+    string Filename;
+
 
 
     /**
@@ -58,7 +70,7 @@ public:
     /**
      * @return vector
      */
-    virtual vector getLoops () const = 0;
+    virtual vector<loop_t> getLoops () const = 0;
 
 
     /**
@@ -66,9 +78,6 @@ public:
      * @return unsigned int
      */
     virtual unsigned int getFrames () const = 0;
-
-
-    void initAttributes () ;
 
 };
 
