@@ -1,6 +1,7 @@
 #ifndef IAUDIOOUTPUT_H
 #define IAUDIOOUTPUT_H
 
+using namespace std;
 
 /**
   * class IAudioOutput
@@ -20,7 +21,7 @@ public:
      * 
      * shall only be called once
      */
-    virtual void open () = 0;
+    virtual void open (bool realtime=false) = 0;
 
 
     /**
@@ -29,7 +30,7 @@ public:
      * 
      * can be called multiple time if necessary
      */
-    virtual void init () = 0;
+    virtual void init (unsigned int sampleRate, uint8_t channels, SampleFormat_t s) = 0;
 
 
     /**
@@ -56,7 +57,7 @@ public:
      * @param  frames no. of frames to be played from the buffer
      * @param  channels no. of channels
      */
-    virtual void write (float* buffer, unsigned int frames, unsigned char channels) = 0;
+    virtual void write (float* buffer, unsigned int frames) = 0;
 
 
     /**
@@ -64,7 +65,7 @@ public:
      * @param  frames
      * @param  channels
      */
-    virtual void write (int16_t* buffer, unsigned int frames, unsigned char channels) = 0;
+    virtual void write (int16_t* buffer, unsigned int frames) = 0;
 
 
     /**
@@ -77,7 +78,7 @@ public:
      * @param  pcmFormat specifies the format for the items frameBuffer (int16, float,
      * etc.)
      */
-    virtual void write (pcm_t frameBuffer, unsigned int frames, unsigned int channels, int offset, SampleFormat_t pcmFormat) = 0;
+    virtual void write (pcm_t* frameBuffer, unsigned int frames, int offset, SampleFormat_t pcmFormat) = 0;
 
 };
 
