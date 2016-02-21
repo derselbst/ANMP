@@ -4,7 +4,6 @@
 //  
 
 Song::Song () {
-initAttributes();
 }
 
 Song::~Song () { }
@@ -31,7 +30,3 @@ bool Song::isPlayable ()
 // not more than 6 channels
 // this->pcm!=nullptr
 }
-
-void Song::initAttributes () {
-}
-

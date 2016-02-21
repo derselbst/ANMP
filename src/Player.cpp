@@ -4,7 +4,6 @@
 //  
 
 Player::Player () {
-initAttributes();
 }
 
 Player::~Player () { }
@@ -241,8 +240,5 @@ const int& channels = this->currentSong->Format.Channels;
  */
 bool Player::playInternal ()
 {
-}
-
-void Player::initAttributes () {
 }
 

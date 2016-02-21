@@ -1,10 +1,5 @@
-
 #ifndef PLAYER_H
 #define PLAYER_H
-
-#include <string>
-#include vector
-
 
 
 /**
@@ -86,23 +81,7 @@ public:
      */
     void seekTo (unsigned int frame);
 
-protected:
-
-    // Static Protected attributes
-    //  
-
-    // Protected attributes
-    //  
-
-public:
-
-protected:
-
-public:
-
-protected:
-
-
+    
 private:
 
     // Static Private attributes
@@ -112,19 +91,12 @@ private:
     //  
 
     undef PreAmpVolume;
-    Song* currentSong;
-    Playlist& playlist;
+    Song* currentSong = nullptr;
+    Playlist playlist;
     // frame offset; (song.pcm + offset + FRAMESTOFLOATS(playhead)) points to the frame that will be played on subsequent call to playSample
-    size_t playhead;
-    IAudioOutput audioDriver_;
-    bool isPlaying;
-public:
-
-private:
-
-public:
-
-private:
+    size_t playhead = 0;
+    IAudioOutput* audioDriver_;
+    bool isPlaying = false;
 
 
 
@@ -164,8 +136,6 @@ private:
      * @return bool
      */
     bool playInternal ();
-
-    void initAttributes () ;
 
 };
 

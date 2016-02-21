@@ -3,10 +3,6 @@
 // Constructors/Destructors
 //  
 
-SongFormat::SongFormat () {
-initAttributes();
-}
-
 SongFormat::~SongFormat () { }
 
 //  
@@ -30,7 +26,4 @@ void SongFormat::getBitrate ()
 // samplerate * sample depth * channels
 }
 
-void SongFormat::initAttributes () {
-    SampleRate = 0;
-}
 

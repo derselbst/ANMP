@@ -3,7 +3,8 @@
 // Constructors/Destructors
 //  
 
-LazyusfWrapper::LazyusfWrapper () {
+LazyusfWrapper::LazyusfWrapper ()
+{
 }
 
 LazyusfWrapper::~LazyusfWrapper () { }

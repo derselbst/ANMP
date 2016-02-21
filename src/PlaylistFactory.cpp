@@ -138,12 +138,3 @@ subNode.insert();
 }
 
 
-/**
- * @return PCMHolder*
- * @param  extension
- */
-PCMHolder* PlaylistFactory::getPCMHolderFromFileType (string extension)
-{
-}
-
-

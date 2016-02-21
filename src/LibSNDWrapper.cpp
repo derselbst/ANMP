@@ -3,7 +3,8 @@
 // Constructors/Destructors
 //  
 
-LibSNDWrapper::LibSNDWrapper () {
+LibSNDWrapper::LibSNDWrapper ()
+{
 }
 
 LibSNDWrapper::~LibSNDWrapper () { }

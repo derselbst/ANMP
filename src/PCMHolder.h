@@ -16,16 +16,8 @@ public:
     // Constructors/Destructors
     //  
 
-
-    /**
-     * Empty Constructor
-     */
-    PCMHolder ();
-
-    /**
-     * Empty Destructor
-     */
-    virtual ~PCMHolder ();
+    // Empty virtual destructor for proper cleanup
+    virtual ~PCMHolder () {};
 
     // Static Public attributes
     //  
@@ -33,11 +25,11 @@ public:
     // Public attributes
     //  
 
-    pcm_t data;
+    pcm_t data = nullptr;
     // how many items (i.e. floats) are there in data?
-    size_t count;
+    size_t count = 0;
     // how many floats to skip when starting with playback
-    size_t offset;
+    size_t offset = 0;
     string Filename;
     SongFormat Format;
 
@@ -45,69 +37,35 @@ public:
     /**
      * opens the current file using the corresponding lib
      */
-    virtual void open ();
+    virtual void open () = 0;
 
 
     /**
      */
-    virtual void close ();
+    virtual void close () = 0;
+
+
+    /** synchronos read call to library goes here
+     */
+    virtual void fillBuffer () = 0;
 
 
     /**
-     * @param  items ensure that the buffer holds at least "items" floats
      */
-    virtual void fillBuffer (unsigned int items);
-
-
-    /**
-     */
-    virtual void releaseBuffer ();
+    virtual void releaseBuffer () = 0;
 
 
     /**
      * @return vector
      */
-    virtual vector getLoops () const;
+    virtual vector getLoops () const = 0;
 
 
     /**
      * returns number of frames that are (expected to be) in pcm buffer
      * @return unsigned int
      */
-    virtual unsigned int getFrames () const;
-
-protected:
-
-    // Static Protected attributes
-    //  
-
-    // Protected attributes
-    //  
-
-public:
-
-protected:
-
-public:
-
-protected:
-
-
-private:
-
-    // Static Private attributes
-    //  
-
-    // Private attributes
-    //  
-
-public:
-
-private:
-
-public:
-
-private:
+    virtual unsigned int getFrames () const = 0;
 
 
     void initAttributes () ;

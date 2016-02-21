@@ -1,11 +1,5 @@
-
 #ifndef IPLAYLIST_H
 #define IPLAYLIST_H
-#include "Config.h"
-
-#include <string>
-#include vector
-
 
 
 /**
@@ -13,91 +7,44 @@
   * Holds the songs to be played
   */
 
-class IPlaylist : virtual public Config
+class IPlaylist
 {
 public:
 
     // Constructors/Destructors
     //  
-
-
-    /**
-     * Empty Constructor
-     */
-    IPlaylist ();
-
-    /**
-     * Empty Destructor
-     */
-    virtual ~IPlaylist ();
-
-    // Static Public attributes
-    //  
-
-    // Public attributes
-    //  
-
+    // Empty virtual destructor for proper cleanup
+    virtual ~IPlaylist() {}
 
 
     /**
      * @param  song
      */
-    virtual void add (Song song);
+    virtual void add (Song song) = 0;
 
 
     /**
      */
-    virtual void remove ();
+    virtual void remove (Song song) = 0;
+    
+    /**
+     */
+    virtual void remove (int i) = 0;
 
 
     /**
      */
-    virtual void next ();
+    virtual Song& next () = 0;
 
 
     /**
      */
-    virtual void previous ();
+    virtual Song& previous () = 0;
 
 
     /**
      */
-    virtual void current ();
-
-protected:
-
-    // Static Protected attributes
-    //  
-
-    // Protected attributes
-    //  
-
-public:
-
-protected:
-
-public:
-
-protected:
-
-
-private:
-
-    // Static Private attributes
-    //  
-
-    // Private attributes
-    //  
-
-public:
-
-private:
-
-public:
-
-private:
-
-
+    virtual Song& current () = 0;
 
 };
 

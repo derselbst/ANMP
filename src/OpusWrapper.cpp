@@ -3,7 +3,8 @@
 // Constructors/Destructors
 //  
 
-OpusWrapper::OpusWrapper () {
+OpusWrapper::OpusWrapper ()
+{
 }
 
 OpusWrapper::~OpusWrapper () { }

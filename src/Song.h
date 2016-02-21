@@ -1,10 +1,7 @@
-
 #ifndef SONG_H
 #define SONG_H
 
 #include <string>
-#include vector
-
 
 
 /**
@@ -37,7 +34,7 @@ public:
     //  
 
     string& Filename;
-    PCMHolder* pcm;
+    PCMHolder* pcm = nullptr;
     SongInfo Metadata;
     core::tree loops;
 
@@ -47,42 +44,6 @@ public:
      * @return bool
      */
     bool isPlayable ();
-
-protected:
-
-    // Static Protected attributes
-    //  
-
-    // Protected attributes
-    //  
-
-public:
-
-protected:
-
-public:
-
-protected:
-
-
-private:
-
-    // Static Private attributes
-    //  
-
-    // Private attributes
-    //  
-
-public:
-
-private:
-
-public:
-
-private:
-
-
-    void initAttributes () ;
 
 };
 

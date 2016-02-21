@@ -1,8 +1,6 @@
-
 #ifndef IAUDIOOUTPUT_H
 #define IAUDIOOUTPUT_H
 
-#include <string>
 
 /**
   * class IAudioOutput
@@ -13,7 +11,8 @@ class IAudioOutput
 {
 public:
 
-
+    // Empty virtual destructor for proper cleanup
+    virtual ~IAudioOutput() {}
 
     /**
      * opens a sound device, e.g. set buffer size, periods, pcm format (int16,
@@ -21,7 +20,7 @@ public:
      * 
      * shall only be called once
      */
-    virtual void open ();
+    virtual void open () = 0;
 
 
     /**
@@ -30,26 +29,26 @@ public:
      * 
      * can be called multiple time if necessary
      */
-    virtual void init ();
+    virtual void init () = 0;
 
 
     /**
      * Wait for all pending frames to be played and then stop the PCM.
      */
-    virtual void drain ();
+    virtual void drain () = 0;
 
 
     /**
      * This function stops the PCM immediately. The pending samples on the buffer are
      * ignored.
      */
-    virtual void drop ();
+    virtual void drop () = 0;
 
 
     /**
      * closes the device
      */
-    virtual void close ();
+    virtual void close () = 0;
 
 
     /**
@@ -57,7 +56,7 @@ public:
      * @param  frames no. of frames to be played from the buffer
      * @param  channels no. of channels
      */
-    virtual void write (float* buffer, unsigned int frames, unsigned char channels);
+    virtual void write (float* buffer, unsigned int frames, unsigned char channels) = 0;
 
 
     /**
@@ -65,7 +64,7 @@ public:
      * @param  frames
      * @param  channels
      */
-    virtual void write (int16_t* buffer, unsigned int frames, unsigned char channels);
+    virtual void write (int16_t* buffer, unsigned int frames, unsigned char channels) = 0;
 
 
     /**
@@ -78,30 +77,7 @@ public:
      * @param  pcmFormat specifies the format for the items frameBuffer (int16, float,
      * etc.)
      */
-    virtual void write (pcm_t frameBuffer, unsigned int frames, unsigned int channels, int offset, SampleFormat_t pcmFormat);
-
-protected:
-
-public:
-
-protected:
-
-public:
-
-protected:
-
-
-private:
-
-public:
-
-private:
-
-public:
-
-private:
-
-
+    virtual void write (pcm_t frameBuffer, unsigned int frames, unsigned int channels, int offset, SampleFormat_t pcmFormat) = 0;
 
 };
 

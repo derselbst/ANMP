@@ -2,11 +2,6 @@
 
 // Constructors/Destructors
 //  
-
-SongInfo::SongInfo () {
-initAttributes();
-}
-
 SongInfo::~SongInfo () { }
 
 //  
@@ -20,7 +15,4 @@ SongInfo::~SongInfo () { }
 
 // Other methods
 //  
-
-void SongInfo::initAttributes () {
-}
 
