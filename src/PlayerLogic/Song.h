@@ -17,14 +17,8 @@ public:
     //  
 
 
-    /**
-     * Empty Constructor
-     */
-    Song ();
+    Song (PCMHolder* p);
 
-    /**
-     * Empty Destructor
-     */
     virtual ~Song ();
 
     // Static Public attributes

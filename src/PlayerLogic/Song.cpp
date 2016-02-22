@@ -3,10 +3,18 @@
 // Constructors/Destructors
 //  
 
-Song::Song () {
+// by passing PCMHolder as pointer here, this instance becomes owner of PCMHolder, thus also takes care of its destruction
+Song::Song (PCMHolder* p, core::tree loops)
+{
+  this->pcm = p;
+  this->Filename = this->pcm->Filename;
+  this->loops = loops;
 }
 
-Song::~Song () { }
+Song::~Song ()
+{
+  delete this->pcm;
+}
 
 //  
 // Methods
@@ -27,6 +35,5 @@ Song::~Song () { }
  */
 bool Song::isPlayable ()
 {
-// not more than 6 channels
-// this->pcm!=nullptr
+    return this->pcm!=nullptr && this->pcm->Format.Channels <= 6 && this->pcm->Format.Channels <= 0;
 }
