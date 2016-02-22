@@ -90,8 +90,12 @@ public:
      * @param  pcmFormat specifies the format for the items frameBuffer (int16, float,
      * etc.)
      */
-    virtual int write (pcm_t* frameBuffer, unsigned int frames, int offset, SampleFormat_t pcmFormat);
+    virtual int write (pcm_t* frameBuffer, unsigned int frames, int offset);
 
+private:
+  unsigned char currentChannelCount = 0;
+  SampleFormat_t currentSampleFormat = SampleFormat_t::unknown;
+    
 };
 
 #endif // IAUDIOOUTPUT_H

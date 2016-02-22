@@ -2,9 +2,9 @@
 #include "IAudioOutput.h"
 
 
-int IAudioOutput::write (pcm_t* frameBuffer, unsigned int frames, int offset, SampleFormat_t pcmFormat)
+int IAudioOutput::write (pcm_t* frameBuffer, unsigned int frames, int offset)
 {
-  switch (pcmFormat)
+  switch (this->currentSampleFormat)
   {
     case float32:
     {

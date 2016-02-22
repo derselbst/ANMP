@@ -51,7 +51,6 @@ private:
   
   void start ();
   snd_pcm_t *alsa_dev = nullptr;
-  unsigned char lastChannelCount = 0;
 };
 
 #endif // ALSAOUTPUT_H

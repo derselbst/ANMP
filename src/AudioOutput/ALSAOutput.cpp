@@ -181,7 +181,8 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
     // restart pcm
     this->start();
     
-    this->lastChannelCount = channels;
+    this->currentChannelCount = channels;
+    this->currentSampleFormat = s;
 }
 
 void ALSAOutput::drain()
@@ -215,7 +216,7 @@ int ALSAOutput::write (float* buffer, unsigned int frames)
 int total = 0 ;
     while (total < frames)
     { 
-      int retval = snd_pcm_writei (alsa_dev, data + total * this->lastChannelCount, frames - total) ;
+      int retval = snd_pcm_writei (alsa_dev, data + total * this->currentChannelCount, frames - total) ;
 
         if (retval >= 0)
         {   total += retval ;
