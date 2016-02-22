@@ -42,11 +42,9 @@ public:
 
     void close () override;
 
-    void write (float* buffer, unsigned int frames) override;
+    int write (float* buffer, unsigned int frames) override;
 
-    void write (int16_t* buffer, unsigned int frames) override;
-
-    void write (pcm_t* frameBuffer, unsigned int frames, int offset, SampleFormat_t pcmFormat) override;
+    int write (int16_t* buffer, unsigned int frames) override;
 
     
 private:
