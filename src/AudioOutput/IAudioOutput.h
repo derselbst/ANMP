@@ -1,6 +1,10 @@
 #ifndef IAUDIOOUTPUT_H
 #define IAUDIOOUTPUT_H
 
+#include <cstdint>
+
+#include "SampleFormat.h"
+
 using namespace std;
 
 /**
@@ -65,7 +69,7 @@ public:
      * @param  frames no. of frames to be played from the buffer
      * @param  channels no. of channels
      */
-    virtual void write (float* buffer, unsigned int frames) = 0;
+    virtual int write (float* buffer, unsigned int frames) = 0;
 
 
     /**
@@ -73,7 +77,7 @@ public:
      * @param  frames
      * @param  channels
      */
-    virtual void write (int16_t* buffer, unsigned int frames) = 0;
+    virtual int write (int16_t* buffer, unsigned int frames) = 0;
 
 
     /**
@@ -86,7 +90,7 @@ public:
      * @param  pcmFormat specifies the format for the items frameBuffer (int16, float,
      * etc.)
      */
-    virtual void write (pcm_t* frameBuffer, unsigned int frames, int offset, SampleFormat_t pcmFormat) = 0;
+    virtual int write (pcm_t* frameBuffer, unsigned int frames, int offset, SampleFormat_t pcmFormat);
 
 };
 
