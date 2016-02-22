@@ -3,10 +3,37 @@
 // Constructors/Destructors
 //  
 
-Player::Player () {
+Player::Player (IPlaylist playlist)
+{
+this->playlist = playlist;
 }
 
-Player::~Player () { }
+Player::~Player ()
+{
+  this->audiodriver.close()
+  delete this->audiodriver;
+}
+
+void Player::init()
+{
+  delete this->audioDriver;
+  
+  switch(Config::audioDriver)
+  {
+      case ALSA:
+	this->audioDriver = new ALSAOutput();
+      break;
+    case default:
+      throw NotImplementedException();
+      break
+  }
+  
+  this->audiodriver.open();
+  
+  
+  this->setCurrentSong(this->playlist->current());
+  
+}
 
 //  
 // Methods
@@ -27,7 +54,7 @@ void Player::play ()
 {
 if (this->isPlaying)
 {
-return;
+  return;
 }
 
 this->isPlaying=true;
@@ -51,7 +78,13 @@ Song Player::getCurrentSong ()
 void Player::setCurrentSong (Song& song)
 {
 // ---LOCK---
+  if(this->currentSong != nullptr)
+  {
+    this->currentSong->pcm->releaseBuffer();
+  }
 this->currentSong = &Song;
+// go ahead and start filling the pcm buffer
+this->futureFillBuffer = async(launch::async, this->currentSong->pcm->fillBuffer());
 // ---UNLOCK---
 this->resetPlayhead();
 }
@@ -111,6 +144,9 @@ void Player::fadeout ()
  */
 void Player::seekTo (unsigned int frame)
 {
+  // TODO: stop playback
+  this->playhead=frame;
+  // TODO: restart playback
 }
 
 
@@ -119,8 +155,11 @@ void Player::seekTo (unsigned int frame)
  */
 void Player::resetPlayhead ()
 {
+  // TODO: stop playback
 // reset playhead to beginning of song
-this->playhead=ItemsToFrames(currentSong->offset);
+this->playhead=ItemsToFrames(this->currentSong->offset);
+
+// TODO: restart playback??
 }
 
 
@@ -133,10 +172,10 @@ this->playhead=ItemsToFrames(currentSong->offset);
  * @param  stopFrame play until we've reached stopFrame, although this frame will
  * not be played
  */
-void Player::playLoop (unsigned int startFrame, unsigned int stopFrame)
+void Player::playLoop (core::tree& loop)
 {
 // while there are sub-loops that need to be played
-while(loop l* = this->currentSong.loops.getNextLoop(this->playhead) != nullptr)
+while(NODE* l = this->currentSong.loops.getNextLoop(this->playhead) != nullptr)
 {
 
 // if the user requested to seek past the current loop, skip it at all
@@ -145,10 +184,10 @@ if(this->playhead > l->end)
 continue;
 }
 
-this->playSamples(playhead, l->start);
+this->playFrames(playhead, l->start);
 // at this point: playhead==l.start
         bool forever = l->count==0;
-        while(forever || l->count--)
+        while(this->isPlaying && (forever || l->count--))
         {
             // if we play this loop multiple time, make sure we start at the beginning again
             this->seekTo(l.start);
@@ -158,7 +197,7 @@ this->playSamples(playhead, l->start);
 }
 
 // play rest of file
-this->playSamples(playhead, stopFrame);
+this->playFrames(playhead, loop.stop);
 }
 
 
@@ -184,7 +223,7 @@ if(framesToPlay<=0)
   return;
 }
 
-this->playSamples(FramesToItems(framesToPlay));
+this->playFrames(FramesToItems(framesToPlay));
 }
 
 
@@ -222,23 +261,39 @@ const int& channels = this->currentSong->Format.Channels;
     const int BUFSIZE = FRAMES * channels;
 
     int fullTransfers = itemsToPlay / BUFSIZE;
-    for(int i=0; i<fullTransfers; i++)
+    for(int i=0; this->isPlaying && i<fullTransfers; i++)
     {
-        this->currentSong->pcm->fillBuffer();
+        // wait for another fillBuffer call to finish
+        this->futureFillBuffer.get();
         this->audioDriver->write (pcmBuffer, FRAMES /* or more correctly BUFSIZE/channels , its the same*/, channels, offset+(i*BUFSIZE));
+        this->futureFillBuffer = async(launch::async, this->currentSong->pcm->fillBuffer());
+	
+	// update playhead position
+	this->playhead+=FRAMES;
     }
-
+    
+    if(this->isPlaying)
+    {
     int finalTransfer = itemsToPlay % BUFSIZE;
-    this->currentSong->pcm->fillBuffer();
+    this->futureFillBuffer.get();
     this->audioDriver->write(pcmBuffer, finalTransfer/channels, channels, offset+(fullTransfers*BUFSIZE));
+    this->playhead+=finalTransfer/channels;
+    this->futureFillBuffer = async(launch::async, this->currentSong->pcm->fillBuffer());
 }
 }
 
 
-/**
- * @return bool
- */
-bool Player::playInternal ()
+void Player::playInternal ()
 {
+  while(this->isPlaying)
+  {
+  SongFormat& format = this->currentSong->pcm->Format;
+  this->audiodriver->init(format.SampleRate, format.Channels, format.SampleFormat);
+  
+    core::tree& loops = this->currentSong->loops;
+    this->playLoop(loops);
+    
+    this->next();
+  }
 }
 

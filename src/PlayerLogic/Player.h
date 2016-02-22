@@ -31,7 +31,7 @@ public:
     // Public attributes
     //  
 
-
+    void init();
 
     /**
      */
@@ -90,13 +90,15 @@ private:
     // Private attributes
     //  
 
-    undef PreAmpVolume;
+    float PreAmpVolume;
     Song* currentSong = nullptr;
-    Playlist playlist;
+    IPlaylist playlist;
     // frame offset; (song.pcm + offset + FRAMESTOFLOATS(playhead)) points to the frame that will be played on subsequent call to playSample
     size_t playhead = 0;
-    IAudioOutput* audioDriver_;
+    IAudioOutput* audioDriver;
     bool isPlaying = false;
+    
+    future<void> futureFillBuffer;
 
 
 
@@ -131,11 +133,7 @@ private:
      */
     void playFrames (unsigned int itemsToPlay);
 
-
-    /**
-     * @return bool
-     */
-    bool playInternal ();
+    void playInternal ();
 
 };
 

@@ -17,7 +17,7 @@ public:
     //  
 
 
-    Song (PCMHolder* p);
+    Song (PCMHolder* p, core::tree loops);
 
     virtual ~Song ();
 
