@@ -16,7 +16,7 @@ class PCMHolder
 protected:
     // even if there were no pure virtual methods, allow
     // construction for child classes only
-    PCMHolder();
+    PCMHolder(string filename);
 
 public:
 
@@ -30,7 +30,7 @@ public:
 
 
     // pointer to pcm data
-    pcm_t data = nullptr;
+    pcm_t* data = nullptr;
     
     // how many items (i.e. floats, int16s, etc.) are there in data?
     size_t count = 0;

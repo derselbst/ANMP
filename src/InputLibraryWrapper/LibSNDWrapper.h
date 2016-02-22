@@ -20,13 +20,52 @@ public:
     /**
      * Empty Constructor
      */
-    LibSNDWrapper ();
+    LibSNDWrapper (string filename);
 
     /**
      * Empty Destructor
      */
     virtual ~LibSNDWrapper ();
+    
+    // interface methods declaration
+    
+    /**
+     * opens the current file using the corresponding lib
+     */
+    void open () override;
 
+
+    /**
+     */
+    void close () override;
+
+
+    /** synchronos read call to library goes here
+     */
+    void fillBuffer () override;
+
+
+    /**
+     */
+    void releaseBuffer () override;
+
+
+    /**
+     * @return vector
+     */
+    vector<loop_t> getLoops () const override;
+
+
+    /**
+     * returns number of frames that are (expected to be) in pcm buffer
+     * @return unsigned int
+     */
+    unsigned int getFrames () const override;
+
+private:
+          SNDFILE *sndfile = nullptr;
+        SF_INFO sfinfo;
+    
 };
 
 #endif // LIBSNDWRAPPER_H
