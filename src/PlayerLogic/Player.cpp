@@ -264,7 +264,7 @@ const int& channels = this->currentSong->Format.Channels;
     for(int i=0; this->isPlaying && i<fullTransfers; i++)
     {
         // wait for another fillBuffer call to finish
-        this->futureFillBuffer.get();
+        this->futureFillBuffer.wait();
         this->audioDriver->write (pcmBuffer, FRAMES /* or more correctly BUFSIZE/channels , its the same*/, channels, offset+(i*BUFSIZE));
         this->futureFillBuffer = async(launch::async, this->currentSong->pcm->fillBuffer());
 	
@@ -275,7 +275,7 @@ const int& channels = this->currentSong->Format.Channels;
     if(this->isPlaying)
     {
     int finalTransfer = itemsToPlay % BUFSIZE;
-    this->futureFillBuffer.get();
+    this->futureFillBuffer.wait();
     this->audioDriver->write(pcmBuffer, finalTransfer/channels, channels, offset+(fullTransfers*BUFSIZE));
     this->playhead+=finalTransfer/channels;
     this->futureFillBuffer = async(launch::async, this->currentSong->pcm->fillBuffer());
