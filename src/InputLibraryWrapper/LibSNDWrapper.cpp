@@ -5,11 +5,12 @@
 // Constructors/Destructors
 //  
 
-LibSNDWrapper::LibSNDWrapper (string filename)
+LibSNDWrapper::LibSNDWrapper (string filename, size_t offset)
 {
   this->Filename = filename;
   memset (&sfinfo, 0, sizeof (sfinfo)) ;
   this->Format.SampleFormat = SampleFormat_t::float32;
+  this->offset = offset;
   
   // TODO: just for sure: check whether other instance vars are init properly
 }
@@ -49,12 +50,15 @@ void LibSNDWrapper::fillBuffer()
 {
   if(this->data==nullptr)
   {
-            size_t BUFFER_LEN = this->getFrames() * this->Format.Channels;
-            this->data = new float[BUFFER_LEN];
+    sf_seek(this->sndfile, this->offset, SEEK_SET);
+    
+            size_t BufferLen = this->getFrames() * this->Format.Channels;
+	    BufferLen -= this->offset * this->Format.Channels;
+            this->data = new float[BufferLen];
 	    
-            int readcount = sf_read_float (sndfile, this->data, BUFFER_LEN);
+            int readcount = sf_read_float (this->sndfile, this->data, BufferLen);
 	    
-            if(readcount != BUFFER_LEN)
+            if(readcount != BufferLen)
                 // TODO: LOG: printf("THIS SHOULD NEVER HAPPEN: only read %d frames, although there are %d frames in the file\n", readcount/sfinfo.channels, sfinfo.frames);
 
   }
@@ -79,7 +83,7 @@ vector<loop_t> LibSNDWrapper::getLoops () const
     res.push_back(l);
     
     SF_INSTRUMENT inst;
-            int ret = sf_command (sndfile, SFC_GET_INSTRUMENT, &inst, sizeof (inst)) ;
+            int ret = sf_command (this->sndfile, SFC_GET_INSTRUMENT, &inst, sizeof (inst)) ;
             if(ret == SF_TRUE && inst.loop_count > 0)
             {
 	      
@@ -91,9 +95,6 @@ vector<loop_t> LibSNDWrapper::getLoops () const
 		res.push_back(l);
 	      }
             }
-
-            // TODO: make sure loop array is sorted correctly
-  std::sort (res.begin(), res.end(), myLoopSort);
   }
    return res;
 }
@@ -111,8 +112,3 @@ unsigned int LibSNDWrapper::getFrames () const
 // Other methods
 //  
 
-// should sort descendingly
-bool myLoopSort(loop_t i,loop_t j)
-{
-  return (i.end-i.start)>(j.end-j.start);
-}

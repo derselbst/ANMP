@@ -20,7 +20,7 @@ public:
     /**
      * Empty Constructor
      */
-    LibSNDWrapper (string filename);
+    LibSNDWrapper (string filename, size_t offset=0);
 
     /**
      * Empty Destructor

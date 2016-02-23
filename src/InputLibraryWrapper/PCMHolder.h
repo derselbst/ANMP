@@ -16,7 +16,7 @@ class PCMHolder
 protected:
     // even if there were no pure virtual methods, allow
     // construction for child classes only
-    PCMHolder(string filename);
+    PCMHolder(string filename, size_t offset=0);
 
 public:
 
@@ -38,8 +38,8 @@ public:
     // pcm specific information
     SongFormat Format;
     
-    // how many items to skip when starting with playback
-    size_t offset = 0;
+    // how many frames to skip when reading pcm from file
+    size_t offset;
     
     // fullpath to underlying audio file
     string Filename;
