@@ -68,14 +68,21 @@ void LibSNDWrapper::releaseBuffer()
 
 vector<loop_t> LibSNDWrapper::getLoops () const
 {
-  SF_INSTRUMENT inst;
+  static vector<loop_t> res;
   
-  vector<loop_t> res;
-  
+  if(res.empty())
+  {
+    loop_t l;
+    l.start = 0;
+    l.end = this->getFrames();
+    l.count = 1;
+    res.push_back(l);
+    
+    SF_INSTRUMENT inst;
             int ret = sf_command (sndfile, SFC_GET_INSTRUMENT, &inst, sizeof (inst)) ;
             if(ret == SF_TRUE && inst.loop_count > 0)
             {
-	      loop_t l;
+	      
 	      for (int i=0; i<inst.loop_count; i++)
 	      {
 		l.start = inst.loops[i].start;
@@ -84,6 +91,10 @@ vector<loop_t> LibSNDWrapper::getLoops () const
 		res.push_back(l);
 	      }
             }
+
+            // TODO: make sure loop array is sorted correctly
+  std::sort (res.begin(), res.end(), myLoopSort);
+  }
    return res;
 }
 
@@ -100,4 +111,8 @@ unsigned int LibSNDWrapper::getFrames () const
 // Other methods
 //  
 
-
+// should sort descendingly
+bool myLoopSort(loop_t i,loop_t j)
+{
+  return (i.end-i.start)>(j.end-j.start);
+}
