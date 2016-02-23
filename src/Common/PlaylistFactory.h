@@ -11,25 +11,12 @@ class PlaylistFactory
 {
 public:
 
-    // Constructors/Destructors
-    //  
-
-
-    /**
-     * Empty Constructor
-     */
-    PlaylistFactory ();
-
-    /**
-     * Empty Destructor
-     */
-    virtual ~PlaylistFactory ();
-
-    // Static Public attributes
-    //  
-
-    // Public attributes
-    //  
+    // no object
+    PlaylistFactory() = delete;
+    // no copy
+    PlaylistFactory(const PlaylistFactory&) = delete;
+    // no assign
+    PlaylistFactory& operator=(const PlaylistFactory&) = delete;
 
 
 
@@ -37,7 +24,7 @@ public:
      * @param  playlist
      * @param  filePaths
      */
-    static void addSongs (IPlaylist playlist, vector<Song>& filePaths);
+    static void addSongs (IPlaylist& playlist, vector<Song>& filePaths);
 
 
     /**
@@ -45,7 +32,7 @@ public:
      * @param  filePath
      * @param  offset
      */
-    static void addSong (IPlaylist playlist, string filePath, string offset = "");
+    static void addSong (IPlaylist& playlist, string filePath, string offset = "");
 
 
 private:
