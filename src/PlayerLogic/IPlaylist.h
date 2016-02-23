@@ -14,7 +14,7 @@ public:
     // Constructors/Destructors
     //  
     // Empty virtual destructor for proper cleanup
-    virtual ~IPlaylist() {}
+    virtual ~IPlaylist()
 
 
     /**
@@ -34,17 +34,17 @@ public:
 
     /**
      */
-    virtual Song& next () = 0;
+    virtual Song* next () = 0;
 
 
     /**
      */
-    virtual Song& previous () = 0;
+    virtual Song* previous () = 0;
 
 
     /**
      */
-    virtual Song& current () = 0;
+    virtual Song* current () = 0;
 
 };
 
