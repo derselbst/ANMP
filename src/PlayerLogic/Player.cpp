@@ -243,8 +243,9 @@ pcm_t* pcmBuffer = this->currentSong->pcm->data;
 // then seek within the buffer to that point where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
 int offset = FramesToItems(this->playhead) % bufSize;
 
-// be sure that in every case we start at offset (esp. when we just run over the buffer and thus start again at the beginning)
-offset += this->currentSong->pcm->offset;
+// TODO: remove this
+// // be sure that in every case we start at offset (esp. when we just run over the buffer and thus start again at the beginning)
+// offset += this->currentSong->pcm->offset;
 
 const int& channels = this->currentSong->Format.Channels;
 
