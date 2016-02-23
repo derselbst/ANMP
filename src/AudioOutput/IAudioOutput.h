@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include "SampleFormat.h"
+#include "types.h"
 
 using namespace std;
 
@@ -92,7 +92,7 @@ public:
      */
     virtual int write (pcm_t* frameBuffer, unsigned int frames, int offset);
 
-private:
+protected:
   unsigned char currentChannelCount = 0;
   SampleFormat_t currentSampleFormat = SampleFormat_t::unknown;
     

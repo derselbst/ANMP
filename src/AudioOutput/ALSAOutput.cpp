@@ -216,7 +216,7 @@ int ALSAOutput::write (float* buffer, unsigned int frames)
 int total = 0 ;
     while (total < frames)
     { 
-      int retval = snd_pcm_writei (alsa_dev, data + total * this->currentChannelCount, frames - total) ;
+      int retval = snd_pcm_writei (alsa_dev, buffer + total * this->currentChannelCount, frames - total) ;
 
         if (retval >= 0)
         {   total += retval ;
@@ -292,7 +292,7 @@ int total = 0 ;
 
 int ALSAOutput::write (int16_t* buffer, unsigned int frames)
 {
-  
+  return 0;
 }
 
 
