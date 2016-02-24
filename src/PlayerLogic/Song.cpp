@@ -4,7 +4,7 @@
 //  
 
 // by passing PCMHolder as pointer here, this instance becomes owner of PCMHolder, thus also takes care of its destruction
-Song::Song (PCMHolder* p, core::tree loops)
+Song::Song (PCMHolder* p, core::tree<loop_t> loops)
 {
   this->pcm = p;
   this->Filename = this->pcm->Filename;

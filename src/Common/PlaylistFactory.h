@@ -1,6 +1,11 @@
 #ifndef PLAYLISTFACTORY_H
 #define PLAYLISTFACTORY_H
 
+#include "IPlaylist.h"
+#include "PCMHolder.h"
+#include "tree.h"
+
+using namespace std;
 
 /**
   * class PlaylistFactory
@@ -24,7 +29,7 @@ public:
      * @param  playlist
      * @param  filePaths
      */
-    static void addSongs (IPlaylist& playlist, vector<Song>& filePaths);
+    static void addSongs (IPlaylist& playlist, vector<string>& filePaths);
 
 
     /**
@@ -41,7 +46,8 @@ private:
      * @return core::tree
      * @param  p
      */
-    static core::tree getLoopsFromPCM (PCMHolder* p);
+    static core::tree<loop_t> getLoopFromPCM (PCMHolder* p);
+    static bool myLoopSort(loop_t i,loop_t j);
 
 };
 

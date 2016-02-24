@@ -1,6 +1,9 @@
 #ifndef IPLAYLIST_H
 #define IPLAYLIST_H
 
+#include "Song.h"
+
+using namespace std;
 
 /**
   * class IPlaylist
@@ -14,7 +17,7 @@ public:
     // Constructors/Destructors
     //  
     // Empty virtual destructor for proper cleanup
-    virtual ~IPlaylist()
+    virtual ~IPlaylist();
 
 
     /**

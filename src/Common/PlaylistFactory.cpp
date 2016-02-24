@@ -1,25 +1,14 @@
+#include <vector>
+
 #include "PlaylistFactory.h"
 
-// Constructors/Destructors
-//  
+#include "Common.h"
+#include "types.h"
 
-PlaylistFactory::PlaylistFactory () {
-}
-
-PlaylistFactory::~PlaylistFactory () { }
-
-//  
-// Methods
-//  
-
-
-// Accessor methods
-//  
-
-
-// Other methods
-//  
-
+#include "LazyusfWrapper.h"
+#include "LibSNDWrapper.h"
+#include "OpusWrapper.h"
+#include "VGMStreamWrapper.h"
 
 /**
  * @param  playlist
@@ -39,39 +28,43 @@ for (vector<string>::iterator it = filePaths.begin() ; it != filePaths.end(); ++
  * @param  filePath
  * @param  offset
  */
-void PlaylistFactory::addSong (IPlaylist& playlist, string filePath, string offset = "")
+void PlaylistFactory::addSong (IPlaylist& playlist, string filePath, string offset)
 {
 string ext = getFileExtension(filePath);
 PCMHolder* pcm=nullptr;
-  if (ext=="cue")
+
+  if (iEquals(ext,"cue"))
   {
     // parse cue and call addSong()
-    return true;
+    return;
   }
   else if (iEquals(ext, "usf") || iEquals(ext, "miniusf"))
   {
-    pcm = new LazyusfWrapper(filePath);
-      try
-      {
-	pcm.open();
-      }
-      catch
-      {
-      // log and cancel
-      }
+    // TODO: implement me
+//     pcm = new LazyusfWrapper(filePath);
+//       try
+//       {
+// 	pcm.open();
+//       }
+//       catch
+//       {
+//       // log and cancel
+//       }
+    return;
   }
   else if(iEquals(ext, "opus"))
   {
-    pcm = new OpusWrapper(filePath);
-    try
-    {
-      pcm.open();
-    }
-    catch
-    {
-    // log and cancel
-    }
-
+//     TODO: implement me
+//     pcm = new OpusWrapper(filePath);
+//     try
+//     {
+//       pcm.open();
+//     }
+//     catch
+//     {
+//     // log and cancel
+//     }
+return;
 
   }
   else // so many formats to test here, try and error
@@ -81,33 +74,35 @@ PCMHolder* pcm=nullptr;
 
     try
     {
-      pcm.open();
+      pcm->open();
     }
-    catch
+    //TODO catch correct exception
+    catch(...)
     {
-      pcm.close();
+      pcm->close();
       delete pcm;
-      pcm=new VGMStreamWrapper(filePath);
-      try
-      {
-	pcm.open();
-      }
-      catch
-      {
-	pcm.close();
-	delete pcm;
+//       TODO: implement me
+//       pcm=new VGMStreamWrapper(filePath);
+//       try
+//       {
+// 	pcm.open();
+//       }
+//       catch
+//       {
+// 	pcm.close();
+// 	delete pcm;
 	pcm=nullptr;
-      }
+//       }
     }
+  }
 
     if(pcm==nullptr)
     {
     // log it away
-    // return false?
+   return;
     }
-  }
 
-    core::tree loops = getLoopFromPCM(pcm);
+    core::tree<loop_t> loops = getLoopFromPCM(pcm);
 
 Song s(pcm, loops);
 
@@ -119,9 +114,9 @@ playlist.add(s);
  * @return core::tree
  * @param  p
  */
-core::tree PlaylistFactory::getLoopFromPCM (PCMHolder* p)
+core::tree<loop_t> PlaylistFactory::getLoopFromPCM (PCMHolder* p)
 {
-  core::tree loopTree;
+  core::tree<loop_t> loopTree;
   loop_t l;
   l.start = 0;
   l.stop = p->getFrames();
@@ -143,7 +138,7 @@ return loopTree;
 // should sort descendingly
 bool myLoopSort(loop_t i,loop_t j)
 {
-  return (i.end-i.start)>(j.end-j.start);
+  return (i.stop-i.start)>(j.stop-j.start);
 }
 
 

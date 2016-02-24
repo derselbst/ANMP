@@ -3,6 +3,11 @@
 
 #include <string>
 
+#include "PCMHolder.h"
+#include "tree.h"
+#include "SongInfo.h"
+
+using namespace std;
 
 /**
   * class Song
@@ -17,7 +22,7 @@ public:
     //  
 
 
-    Song (PCMHolder* p, core::tree loops);
+    Song (PCMHolder* p, core::tree<loop_t> loops);
 
     virtual ~Song ();
 
@@ -30,7 +35,7 @@ public:
     string& Filename;
     PCMHolder* pcm = nullptr;
     SongInfo Metadata;
-    core::tree loops;
+    core::tree<loop_t> loops;
 
 
     /**

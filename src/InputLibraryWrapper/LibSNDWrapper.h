@@ -1,6 +1,8 @@
 #ifndef LIBSNDWRAPPER_H
 #define LIBSNDWRAPPER_H
 
+#include <sndfile.h>
+
 #include "PCMHolder.h"
 
 

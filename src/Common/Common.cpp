@@ -1,7 +1,12 @@
+#include <iostream>
 #include <cctype>
 #include <string>
 #include <algorithm>
 #include <cmath>
+
+#ifdef _POSIX_VERSION
+#include <strings.h>
+#endif
 
 using namespace std;
 
@@ -11,8 +16,8 @@ using namespace std;
 bool iEqualsUgly(string strFirst, string strSecond)
 {
   // convert strings to upper case before compare
-  transform(strFirst.begin(), strFirst.end(), strFirst.begin(), toupper);
-  transform(strSecond.begin(), strSecond.end(), strSecond.begin(), toupper);
+  transform(strFirst.begin(), strFirst.end(), strFirst.begin(), [](unsigned char c) { return std::toupper(c); });
+  transform(strSecond.begin(), strSecond.end(), strSecond.begin(), [](unsigned char c) { return std::toupper(c); });
   return strFirst == strSecond;
 }
 #endif

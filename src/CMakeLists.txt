@@ -4,14 +4,13 @@ project(ANMP)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
 
-include_directories(Common)
+include_directories(Common PlayerLogic InputLibraryWrapper AudioOutput)
 
 SET(libSRCS
 AudioOutput/ALSAOutput.cpp
 AudioOutput/IAudioOutput.cpp
 
-Common/common.cpp
-Common/CustomExceptions.cpp
+Common/Common.cpp
 Common/PlaylistFactory.cpp
 
 InputLibraryWrapper/LazyusfWrapper.cpp

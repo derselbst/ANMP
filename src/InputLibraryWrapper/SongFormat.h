@@ -1,7 +1,7 @@
 #ifndef SONGFORMAT_H
 #define SONGFORMAT_H
 
-#include <SampleFormat.h>
+#include "types.h"
 
 /**
   * class SongFormat

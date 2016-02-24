@@ -1,7 +1,5 @@
 #include "LibSNDWrapper.h"
 
-#include <sndfile.h>
-
 // Constructors/Destructors
 //  
 

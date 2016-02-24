@@ -4,7 +4,10 @@
 
 #include <vector>
 
-#include "loop.h"
+#include "types.h"
+#include "SongFormat.h"
+
+using namespace std;
 
 /**
   * class PCMHolder

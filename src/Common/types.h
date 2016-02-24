@@ -1,3 +1,8 @@
+#ifndef TYPES_H
+#define TYPES_H
+
+#include <cstdint>
+
 typedef void pcm_t; 
 
 
@@ -45,3 +50,5 @@ typedef enum SampleFormat
   float32,
   float64,
 } SampleFormat_t;
+
+#endif
