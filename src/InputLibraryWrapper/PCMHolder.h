@@ -3,6 +3,7 @@
 #define PCMHOLDER_H
 
 #include <vector>
+#include <string>
 
 #include "types.h"
 #include "SongFormat.h"
@@ -19,7 +20,7 @@ class PCMHolder
 protected:
     // even if there were no pure virtual methods, allow
     // construction for child classes only
-    PCMHolder(string filename, size_t offset=0);
+    PCMHolder();
 
 public:
 

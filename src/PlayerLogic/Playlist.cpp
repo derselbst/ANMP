@@ -1,3 +1,5 @@
+#include "Playlist.h"
+
 void Playlist::add (Song song)
 {
   bool firstElement = this->queue.empty();
@@ -12,6 +14,7 @@ void Playlist::add (Song song)
     void Playlist::remove (Song song)
     {
 multiset<Song>::iterator it = this->queue.find(song);
+
 if(it!=this->queue.end())
 {
 this->queue.erase(it);
@@ -46,12 +49,13 @@ this->queue.erase(it);
 	this->currentSong++;
       }
       
-      return &(*this->currentSong);
+      // TODO: whats wrong here???
+      return const_cast<Song*>(&(*this->currentSong));
     }
 
     /**
      */
-    Song* previous ()
+    Song* Playlist::previous ()
     {
       if(this->queue.empty())
       {
@@ -68,19 +72,21 @@ this->queue.erase(it);
 	this->currentSong--;
       }
       
-      return &(*this->currentSong);
+      // TODO: whats wrong here???
+      return const_cast<Song*>(&(*this->currentSong));
     }
 
 
     /**
      */
-    Song* current ()
+    Song* Playlist::current ()
     {
       if(this->queue.empty() || this->currentSong==this->queue.end())
       {
 	return nullptr;
       }
       
-      return &(*this->currentSong);
+      // TODO: whats wrong here???
+      return const_cast<Song*>(&(*this->currentSong));
     }
  

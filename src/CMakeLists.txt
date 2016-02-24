@@ -13,12 +13,13 @@ AudioOutput/IAudioOutput.cpp
 Common/Common.cpp
 Common/PlaylistFactory.cpp
 
-InputLibraryWrapper/LazyusfWrapper.cpp
+# InputLibraryWrapper/LazyusfWrapper.cpp
 InputLibraryWrapper/LibSNDWrapper.cpp
-InputLibraryWrapper/OpusWrapper.cpp
+# InputLibraryWrapper/OpusWrapper.cpp
 InputLibraryWrapper/SongFormat.cpp
-InputLibraryWrapper/VGMStreamWrapper.cpp
+# InputLibraryWrapper/VGMStreamWrapper.cpp
 
+PlayerLogic/Config.cpp
 PlayerLogic/Player.cpp
 PlayerLogic/Playlist.cpp
 PlayerLogic/Song.cpp

@@ -1,6 +1,11 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include <future>
+
+#include "Song.h"
+#include "IPlaylist.h"
+#include "IAudioOutput.h"
 
 /**
   * class Player
@@ -18,7 +23,7 @@ public:
     /**
      * Empty Constructor
      */
-    Player ();
+    Player (IPlaylist* playlist);
 
     /**
      * Empty Destructor
@@ -47,7 +52,7 @@ public:
     /**
      * @param  song
      */
-    void setCurrentSong (Song& song);
+    void setCurrentSong (Song* song);
 
 
     /**
@@ -92,10 +97,10 @@ private:
 
     float PreAmpVolume;
     Song* currentSong = nullptr;
-    IPlaylist playlist;
+    IPlaylist* playlist;
     // frame offset; (song.pcm + FRAMESTOFLOATS(playhead)) points to the frame that will be played on subsequent call to playSample
     size_t playhead = 0;
-    IAudioOutput* audioDriver;
+    IAudioOutput* audioDriver = nullptr;
     bool isPlaying = false;
     
     future<void> futureFillBuffer;
@@ -117,7 +122,7 @@ private:
      * @param  stopFrame play until we've reached stopFrame, although this frame will
      * not be played
      */
-    void playLoop (unsigned int startFrame, unsigned int stopFrame);
+    void playLoop (core::tree<loop_t>& loop);
 
 
     /**

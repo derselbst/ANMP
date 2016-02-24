@@ -1,6 +1,8 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include "types.h"
+
 /**
   * class Config
   * 
@@ -19,9 +21,9 @@ struct Config
 
     // Static Public attributes
     //
-    static AudioDriver_t audioDriver = AudioDriver_t::ALSA;
-    static bool useLoopInfo = true;
-    static int overridingGlobalLoopCount = -1;
+    static AudioDriver_t audioDriver;
+    static bool useLoopInfo;
+    static int overridingGlobalLoopCount;
     static const unsigned int FramesToRender = 2048;
 
 };

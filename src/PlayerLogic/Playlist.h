@@ -3,14 +3,16 @@
 
 #include <set>
 
-class Playlist
+#include "IPlaylist.h"
+
+class Playlist : public IPlaylist
 {
 public:
 
     // Constructors/Destructors
     //  
     // Empty virtual destructor for proper cleanup
-    virtual ~Playlist()
+    virtual ~Playlist();
 
 
     /**

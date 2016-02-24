@@ -15,7 +15,7 @@ struct SongFormat
     // indicates the type of the items in pcm buffer "data" from PCMHolder
     SampleFormat_t SampleFormat = SampleFormat_t::unknown;
     
-    int Channels = 0;
+    unsigned int Channels = 0;
 
     /**
      * returns bitrate in bit/s

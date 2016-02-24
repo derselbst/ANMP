@@ -1,17 +1,25 @@
+
+#include "Config.h"
+#include "CommonExceptions.h"
 #include "Player.h"
+#include "ALSAOutput.h"
+
+// TODO: make this nicer
+#define FramesToItems(x) ((x)*this->currentSong->pcm->Format.Channels)
+#define ASYNC_FILL_BUFFER (async(launch::async, &PCMHolder::fillBuffer, this->currentSong->pcm))
 
 // Constructors/Destructors
 //  
 
-Player::Player (IPlaylist playlist)
+Player::Player (IPlaylist* playlist)
 {
 this->playlist = playlist;
 }
 
 Player::~Player ()
 {
-  this->audiodriver.close()
-  delete this->audiodriver;
+  this->audioDriver->close();
+  delete this->audioDriver;
 }
 
 void Player::init()
@@ -23,12 +31,12 @@ void Player::init()
       case ALSA:
 	this->audioDriver = new ALSAOutput();
       break;
-    case default:
+    default:
       throw NotImplementedException();
-      break
+      break;
   }
   
-  this->audiodriver.open();
+  this->audioDriver->open();
   
   
   this->setCurrentSong(this->playlist->current());
@@ -60,7 +68,7 @@ if (this->isPlaying)
 this->isPlaying=true;
 
 // new thread that runs playInternal
-async(launch::async, this->playInternal);
+async(launch::async, &Player::playInternal, this);
 }
 
 
@@ -69,22 +77,24 @@ async(launch::async, this->playInternal);
  */
 Song Player::getCurrentSong ()
 {
+//  return this->currentSong;
+  throw NotImplementedException();
 }
 
 
 /**
  * @param  song
  */
-void Player::setCurrentSong (Song& song)
+void Player::setCurrentSong (Song* song)
 {
 // ---LOCK---
   if(this->currentSong != nullptr)
   {
     this->currentSong->pcm->releaseBuffer();
   }
-this->currentSong = &Song;
+this->currentSong = song;
 // go ahead and start filling the pcm buffer
-this->futureFillBuffer = async(launch::async, this->currentSong->pcm->fillBuffer());
+this->futureFillBuffer = ASYNC_FILL_BUFFER;
 // ---UNLOCK---
 this->resetPlayhead();
 }
@@ -157,7 +167,7 @@ void Player::resetPlayhead ()
 {
   // TODO: stop playback
 // reset playhead to beginning of song
-this->playhead=ItemsToFrames(this->currentSong->offset);
+this->playhead=0;
 
 // TODO: restart playback??
 }
@@ -172,8 +182,9 @@ this->playhead=ItemsToFrames(this->currentSong->offset);
  * @param  stopFrame play until we've reached stopFrame, although this frame will
  * not be played
  */
-void Player::playLoop (core::tree& loop)
+void Player::playLoop (core::tree<loop_t>& loop)
 {
+/* TODO IMPLEMENT ME
 // while there are sub-loops that need to be played
 while(NODE* l = this->currentSong.loops.getNextLoop(this->playhead) != nullptr)
 {
@@ -195,9 +206,9 @@ this->playFrames(playhead, l->start);
             // at this point: playhead=l.end
         }
 }
-
+*/
 // play rest of file
-this->playFrames(playhead, loop.stop);
+this->playFrames(playhead, (*loop).stop);
 }
 
 
@@ -212,8 +223,7 @@ void Player::playFrames (unsigned int startFrame, unsigned int stopFrame)
 (void)startFrame;
 
 // ---LOCK---
-int framesToPlay = stopFrame - (this->playhead % this->currentSong->pcm->Frames);
-int channels = this->currentSong->Format->Channels;
+int framesToPlay = stopFrame - (this->playhead % this->currentSong->pcm->getFrames());
 // ---UNLOCK---
 
 if(framesToPlay<=0)
@@ -247,7 +257,7 @@ int offset = FramesToItems(this->playhead) % bufSize;
 // // be sure that in every case we start at offset (esp. when we just run over the buffer and thus start again at the beginning)
 // offset += this->currentSong->pcm->offset;
 
-const int& channels = this->currentSong->Format.Channels;
+const unsigned int& channels = this->currentSong->pcm->Format.Channels;
 
 // ---UNLOCK---
 
@@ -258,16 +268,16 @@ const int& channels = this->currentSong->Format.Channels;
 //         this->audioDriver->write(pcmBuffer+i, 1, channels) ;
 
 // thus do it by handing in small buffers within the buffer ;)
-    const int& FRAMES = Config::FramesToRender;
-    const int BUFSIZE = FRAMES * channels;
+    const unsigned int& FRAMES = Config::FramesToRender;
+    const unsigned int BUFSIZE = FRAMES * channels;
 
     int fullTransfers = itemsToPlay / BUFSIZE;
     for(int i=0; this->isPlaying && i<fullTransfers; i++)
     {
         // wait for another fillBuffer call to finish
         this->futureFillBuffer.wait();
-        this->audioDriver->write (pcmBuffer, FRAMES /* or more correctly BUFSIZE/channels , its the same*/, channels, offset+(i*BUFSIZE));
-        this->futureFillBuffer = async(launch::async, this->currentSong->pcm->fillBuffer());
+        this->audioDriver->write (pcmBuffer, FRAMES /* or more correctly BUFSIZE/channels , its the same*/, offset+(i*BUFSIZE));
+        this->futureFillBuffer = ASYNC_FILL_BUFFER;
 	
 	// update playhead position
 	this->playhead+=FRAMES;
@@ -277,9 +287,9 @@ const int& channels = this->currentSong->Format.Channels;
     {
     int finalTransfer = itemsToPlay % BUFSIZE;
     this->futureFillBuffer.wait();
-    this->audioDriver->write(pcmBuffer, finalTransfer/channels, channels, offset+(fullTransfers*BUFSIZE));
+    this->audioDriver->write(pcmBuffer, finalTransfer/channels, offset+(fullTransfers*BUFSIZE));
     this->playhead+=finalTransfer/channels;
-    this->futureFillBuffer = async(launch::async, this->currentSong->pcm->fillBuffer());
+    this->futureFillBuffer = ASYNC_FILL_BUFFER;
 }
 }
 
@@ -289,9 +299,9 @@ void Player::playInternal ()
   while(this->isPlaying)
   {
   SongFormat& format = this->currentSong->pcm->Format;
-  this->audiodriver->init(format.SampleRate, format.Channels, format.SampleFormat);
+  this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
   
-    core::tree& loops = this->currentSong->loops;
+    core::tree<loop_t>& loops = this->currentSong->loops;
     this->playLoop(loops);
     
     this->next();

@@ -1,4 +1,7 @@
+#include <cstring>
+
 #include "LibSNDWrapper.h"
+#include "CommonExceptions.h"
 
 // Constructors/Destructors
 //  
@@ -54,9 +57,9 @@ void LibSNDWrapper::fillBuffer()
 	    BufferLen -= this->offset * this->Format.Channels;
             this->data = new float[BufferLen];
 	    
-            int readcount = sf_read_float (this->sndfile, this->data, BufferLen);
+            int readcount = sf_read_float (this->sndfile, static_cast<float*>(this->data), BufferLen);
 	    
-            if(readcount != BufferLen)
+            if(readcount != BufferLen);
                 // TODO: LOG: printf("THIS SHOULD NEVER HAPPEN: only read %d frames, although there are %d frames in the file\n", readcount/sfinfo.channels, sfinfo.frames);
 
   }
@@ -76,7 +79,7 @@ vector<loop_t> LibSNDWrapper::getLoops () const
   {
     loop_t l;
     l.start = 0;
-    l.end = this->getFrames();
+    l.stop = this->getFrames();
     l.count = 1;
     res.push_back(l);
     
@@ -88,7 +91,7 @@ vector<loop_t> LibSNDWrapper::getLoops () const
 	      for (int i=0; i<inst.loop_count; i++)
 	      {
 		l.start = inst.loops[i].start;
-		l.stop  = inst.loops[i].stop;
+		l.stop  = inst.loops[i].end;
 		l.count = inst.loops[i].count;
 		res.push_back(l);
 	      }
