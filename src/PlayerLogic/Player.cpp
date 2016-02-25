@@ -18,8 +18,13 @@ this->playlist = playlist;
 
 Player::~Player ()
 {
+  if(this->audioDriver!=nullptr)
+  {
   this->audioDriver->close();
+  }
   delete this->audioDriver;
+  
+  delete this->playlist;
 }
 
 void Player::init()

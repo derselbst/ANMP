@@ -1,8 +1,10 @@
 #include <vector>
+#include <iostream>
 
 #include "PlaylistFactory.h"
 
 #include "Common.h"
+#include "CommonExceptions.h"
 #include "types.h"
 
 #include "LazyusfWrapper.h"
@@ -77,8 +79,9 @@ return;
       pcm->open();
     }
     //TODO catch correct exception
-    catch(...)
+    catch(runtime_error& e)
     {
+      cerr << e.what() << endl;
       pcm->close();
       delete pcm;
 //       TODO: implement me
@@ -104,7 +107,7 @@ return;
 
     core::tree<loop_t> loops = getLoopFromPCM(pcm);
 
-Song s(pcm, loops);
+Song* s = new Song(pcm, loops);
 
 playlist.add(s);
 }

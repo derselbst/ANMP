@@ -20,12 +20,12 @@ class PCMHolder
 protected:
     // even if there were no pure virtual methods, allow
     // construction for child classes only
-    PCMHolder();
+    PCMHolder(){};
 
 public:
 
-    // virtual destructor for proper cleanup
-    virtual ~PCMHolder();
+    // empty virtual destructor for proper cleanup
+    virtual ~PCMHolder(){};
 
     // forbid copying
     PCMHolder(PCMHolder const&) = delete;

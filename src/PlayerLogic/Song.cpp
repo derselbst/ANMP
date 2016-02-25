@@ -10,7 +10,7 @@ bool operator< (const Song& lhs, const Song& rhs)
 //  
 
 // by passing PCMHolder as pointer here, this instance becomes owner of PCMHolder, thus also takes care of its destruction
-Song::Song (PCMHolder* p, core::tree<loop_t> loops):Filename(p->Filename)
+Song::Song (PCMHolder* p, core::tree<loop_t> loops) : Filename(p->Filename)
 {
   this->pcm = p;
   this->loops = loops;

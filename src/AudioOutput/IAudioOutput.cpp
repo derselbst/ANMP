@@ -5,6 +5,12 @@
 #include "CommonExceptions.h"
 #include "IAudioOutput.h"
 
+IAudioOutput::IAudioOutput()
+{}
+
+IAudioOutput::~IAudioOutput()
+{}
+
 
 int IAudioOutput::write (pcm_t* frameBuffer, unsigned int frames, int offset)
 {
