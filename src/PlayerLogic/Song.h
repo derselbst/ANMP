@@ -14,6 +14,9 @@ using namespace std;
   * 
   */
 
+class Song;
+bool operator< (const Song& lhs, const Song& rhs);
+
 class Song
 {
 public:
@@ -25,6 +28,8 @@ public:
     Song (PCMHolder* p, core::tree<loop_t> loops);
 
     virtual ~Song ();
+
+
 
     // Static Public attributes
     //  

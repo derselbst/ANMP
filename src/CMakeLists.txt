@@ -26,4 +26,4 @@ PlayerLogic/Song.cpp
 )
 # SET(myprogSRCS test.cpp)
 
-ADD_LIBRARY(libanmp ${libSRCS})
+ADD_LIBRARY(anmp ${libSRCS})
