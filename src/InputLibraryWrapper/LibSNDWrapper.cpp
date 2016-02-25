@@ -59,8 +59,10 @@ void LibSNDWrapper::fillBuffer()
 	    
             int readcount = sf_read_float (this->sndfile, static_cast<float*>(this->data), BufferLen);
 	    
-            if(readcount != BufferLen);
+            if(readcount != BufferLen){}
                 // TODO: LOG: printf("THIS SHOULD NEVER HAPPEN: only read %d frames, although there are %d frames in the file\n", readcount/sfinfo.channels, sfinfo.frames);
+	    
+	    this->count = readcount;
 
   }
 }
@@ -68,7 +70,8 @@ void LibSNDWrapper::fillBuffer()
 void LibSNDWrapper::releaseBuffer()
 {
   delete [] static_cast<float*>(this->data);
-  this->data=nullptr;  
+  this->data=nullptr;
+  this->count = 0;
 }
 
 vector<loop_t> LibSNDWrapper::getLoops () const

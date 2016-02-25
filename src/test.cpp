@@ -9,7 +9,7 @@ using namespace std;
 
 int main()
 {
- string filenames = "/path/to/some/wav.wav";
+ string filenames = "/home/tom/Eigene Programme/ANMP/src/bmenuhard.wav";
  
  
  IPlaylist* plist = new Playlist();
@@ -17,12 +17,12 @@ int main()
  PlaylistFactory::addSong(*plist, filenames);
  
  Player p(plist);
- /* TO BE TESTED:
-  * 
-  * p.init();
-  * p.play();
-  * while(true);
-  */
+
+   
+   p.init();
+   p.play();
+   while(true);
+  
  
  return 0;
  

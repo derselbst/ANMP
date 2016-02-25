@@ -1,3 +1,4 @@
+#include <iostream>
 
 #include "Config.h"
 #include "CommonExceptions.h"
@@ -248,8 +249,9 @@ this->playFrames(FramesToItems(framesToPlay));
  */
 void Player::playFrames (unsigned int itemsToPlay)
 {
+  // wait for another ASYNC_FILL_BUFFER call to finish, so that pcm->data and bufSize can get updated
+this->futureFillBuffer.wait();
 // ---LOCK---
-
 size_t bufSize = this->currentSong->pcm->count;
 
 // first define a nice shortcut to our pcmBuffer
@@ -304,7 +306,11 @@ void Player::playInternal ()
   while(this->isPlaying)
   {
   SongFormat& format = this->currentSong->pcm->Format;
-  this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
+  try{
+    this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
+  }
+  catch(runtime_error& e)
+  { cout << e.what() << endl;this->stop();return;}
   
     core::tree<loop_t>& loops = this->currentSong->loops;
     this->playLoop(loops);
