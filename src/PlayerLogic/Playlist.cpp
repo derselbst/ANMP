@@ -1,6 +1,14 @@
 #include "Playlist.h"
 
-void Playlist::add (Song song)
+Playlist::~Playlist()
+{
+  for(SongQueue_t::iterator it= this->queue.begin(); it!=this->queue.end(); it++)
+  {
+    delete *it;
+  }
+}
+
+void Playlist::add (Song* song)
 {
   bool firstElement = this->queue.empty();
   this->queue.insert(song);
@@ -11,13 +19,15 @@ void Playlist::add (Song song)
 }
 
 
-    void Playlist::remove (Song song)
+    void Playlist::remove (Song* song)
     {
-multiset<Song>::iterator it = this->queue.find(song);
+SongQueue_t::iterator it = this->queue.find(song);
 
 if(it!=this->queue.end())
 {
+  delete *it;
 this->queue.erase(it);
+
 }
       
     }
@@ -49,8 +59,7 @@ this->queue.erase(it);
 	this->currentSong++;
       }
       
-      // TODO: whats wrong here???
-      return const_cast<Song*>(&(*this->currentSong));
+      return *this->currentSong;
     }
 
     /**
@@ -72,8 +81,7 @@ this->queue.erase(it);
 	this->currentSong--;
       }
       
-      // TODO: whats wrong here???
-      return const_cast<Song*>(&(*this->currentSong));
+return *this->currentSong;
     }
 
 
@@ -86,7 +94,6 @@ this->queue.erase(it);
 	return nullptr;
       }
       
-      // TODO: whats wrong here???
-      return const_cast<Song*>(&(*this->currentSong));
+return *this->currentSong;
     }
  

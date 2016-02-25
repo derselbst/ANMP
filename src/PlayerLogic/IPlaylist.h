@@ -17,18 +17,18 @@ public:
     // Constructors/Destructors
     //  
     // Empty virtual destructor for proper cleanup
-    virtual ~IPlaylist();
+    virtual ~IPlaylist(){};
 
 
     /**
      * @param  song
      */
-    virtual void add (Song song) = 0;
+    virtual void add (Song* song) = 0;
 
 
     /**
      */
-    virtual void remove (Song song) = 0;
+    virtual void remove (Song* song) = 0;
     
     /**
      */
