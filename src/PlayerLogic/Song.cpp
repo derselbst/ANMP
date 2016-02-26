@@ -1,11 +1,5 @@
 #include "Song.h"
 
-
-bool operator< (const Song& lhs, const Song& rhs)
-{
-  return lhs.pcm < rhs.pcm;
-}
-
 // Constructors/Destructors
 //  
 

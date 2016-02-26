@@ -14,9 +14,6 @@ using namespace std;
   * 
   */
 
-class Song;
-bool operator< (const Song& lhs, const Song& rhs);
-
 class Song
 {
 public:
