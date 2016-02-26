@@ -44,7 +44,13 @@ public:
      */
     virtual void init (unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime=false) = 0;
 
-
+    
+    /**
+     * Wait for all pending frames to be played and then stop the PCM.
+     */
+    virtual void start () = 0;
+    
+    
     /**
      * Wait for all pending frames to be played and then stop the PCM.
      */

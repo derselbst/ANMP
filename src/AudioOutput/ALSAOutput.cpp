@@ -304,9 +304,13 @@ int ALSAOutput::write (int16_t* buffer, unsigned int frames)
 
 void ALSAOutput::start()
 {
+  snd_pcm_reset (this->alsa_dev);
+  snd_pcm_prepare(this->alsa_dev);
                 int err = snd_pcm_start(this->alsa_dev);
-                if (err < 0) {
+                if (err < 0)
+		{
                        throw runtime_error("unable to start pcm (" + string(snd_strerror(err)) + ")");
+		       
       }
 }
 

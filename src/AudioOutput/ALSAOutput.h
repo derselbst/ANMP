@@ -61,10 +61,10 @@ public:
 
     int write (int16_t* buffer, unsigned int frames) override;
 
-    
+    void start () override;
 private:
   
-  void start ();
+  
   snd_pcm_t *alsa_dev = nullptr;
 };
 
