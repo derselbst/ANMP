@@ -33,7 +33,7 @@ public:
      * 
      * shall only be called once
      */
-    virtual void open (bool realtime=false) = 0;
+    virtual void open () = 0;
 
 
     /**
@@ -42,7 +42,7 @@ public:
      * 
      * can be called multiple time if necessary
      */
-    virtual void init (unsigned int sampleRate, uint8_t channels, SampleFormat_t s) = 0;
+    virtual void init (unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime=false) = 0;
 
 
     /**

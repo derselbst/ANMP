@@ -1,6 +1,5 @@
 #include <string>
-#include <exception>
-#include <stdexcept>
+#include "CommonExceptions.h"
 
 
 #include "ALSAOutput.h"
@@ -22,27 +21,22 @@ ALSAOutput::~ALSAOutput ()
 //  
 // Interface Implementation
 //  
-void ALSAOutput::open(bool realtime)
+void ALSAOutput::open()
 {  
   const char device[] = "default";
 
   if (this->alsa_dev==nullptr)
   {
-      int err;
-
+    int err;
       if ((err = snd_pcm_open (&this->alsa_dev, device, SND_PCM_STREAM_PLAYBACK, 0)) < 0)
       {
 	this->alsa_dev=nullptr;
 	  throw runtime_error("cannot open audio device \"" + string(device) + "\" (" + string(snd_strerror(err)) + ")");
       };
-
-// this->init(22050,1,SampleFormat_t::float32);
-
-
   }
 } /* alsa_open */
 
-void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t s)
+void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime)
 {
   // changing hw settings can only safely be done when pcm is not running
   // therefore stop the pcm and drain all pending frames
@@ -52,11 +46,8 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
   
   int err;
 
-    
-    
-    
-    
-          snd_pcm_nonblock (this->alsa_dev, 0);
+  // block when calling ALSA API
+  snd_pcm_nonblock (this->alsa_dev, 0);
 
       snd_pcm_hw_params_t* hw_params;
       if ((err = snd_pcm_hw_params_malloc (&hw_params)) < 0)
@@ -66,24 +57,34 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
 
       if ((err = snd_pcm_hw_params_any (this->alsa_dev, hw_params)) < 0)
       {
+	snd_pcm_hw_params_free (hw_params);
 	  throw runtime_error("cannot initialize hardware parameter structure (" + string(string(snd_strerror(err))) + ")");
       };
 
       if ((err = snd_pcm_hw_params_set_access (this->alsa_dev, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED)) < 0)
       {
+	snd_pcm_hw_params_free (hw_params);
 	  throw runtime_error("cannot set access type (" + string(snd_strerror(err)) + ")");
       };
 
-
-    
-    
-    
-    
-    
-    
-  
-    // TODO: set sample format according to s
-    if ((err = snd_pcm_hw_params_set_format (this->alsa_dev, hw_params, SND_PCM_FORMAT_FLOAT)) < 0)
+/***************
+ * INTERESTING *
+ **************/
+    switch(s)
+    {
+      case float32:
+	err = snd_pcm_hw_params_set_format (this->alsa_dev, hw_params, SND_PCM_FORMAT_FLOAT);
+	break;
+      case int16:
+	err = snd_pcm_hw_params_set_format (this->alsa_dev, hw_params, SND_PCM_FORMAT_S16);
+	break;
+      case unknown:
+	throw runtime_error("ALSAOutput::init(): Sample Format not set");
+      default:
+	throw NotImplementedException();
+	break;
+    }
+    if (err < 0)
     {
 	snd_pcm_hw_params_free (hw_params);
         throw runtime_error("cannot set sample format (" + string(snd_strerror(err)) + ")");
@@ -100,17 +101,10 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
 	snd_pcm_hw_params_free (hw_params);
         throw runtime_error("cannot set channel count (" + string(snd_strerror(err)) + ")");
     };
-    
-    
-    
-    
-    
-    
-    
-    
-    
+// end interesting
+
     snd_pcm_uframes_t alsa_period_size, alsa_buffer_frames;
-      if (/*realtime*/0)
+      if (realtime)
       {   alsa_period_size = 256;
 	  alsa_buffer_frames = 3 * alsa_period_size;
       }
@@ -121,11 +115,13 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
       
       if ((err = snd_pcm_hw_params_set_buffer_size_near (this->alsa_dev, hw_params, &alsa_buffer_frames)) < 0)
       {
+	snd_pcm_hw_params_free (hw_params);
 	  throw runtime_error("cannot set buffer size (" + string(snd_strerror(err)) + ")");
       };
 
       if ((err = snd_pcm_hw_params_set_period_size_near (this->alsa_dev, hw_params, &alsa_period_size, 0)) < 0)
       {
+	snd_pcm_hw_params_free (hw_params);
 	  throw runtime_error("cannot set period size (" + string(snd_strerror(err)) + ")");
       };
 
@@ -143,17 +139,12 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
       snd_pcm_hw_params_get_buffer_size (hw_params, &buffer_size);
       if (alsa_period_size == buffer_size)
       {
+	snd_pcm_hw_params_free (hw_params);
 	  throw runtime_error("Can't use period equal to buffer size (" + to_string(alsa_period_size) + " == " + to_string(buffer_size) + ")");
       };
 
       snd_pcm_hw_params_free (hw_params);
-      
-      
-      
-      
-      
-      
-      
+
 
       snd_pcm_sw_params_t *sw_params;
       if ((err = snd_pcm_sw_params_malloc (&sw_params)) != 0)
@@ -163,17 +154,20 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
 
       if ((err = snd_pcm_sw_params_current (this->alsa_dev, sw_params)) != 0)
       {
+	snd_pcm_sw_params_free (sw_params);
 	  throw runtime_error(string(__func__) + ": snd_pcm_sw_params_current: " + string(snd_strerror(err)));
       };
 
       /* note: set start threshold to delay start until the ring buffer is full */
       if ((err = snd_pcm_sw_params_set_start_threshold (this->alsa_dev, sw_params, buffer_size)) < 0)
       {
+	snd_pcm_sw_params_free (sw_params);
 	  throw runtime_error("cannot set start threshold (" + string(snd_strerror(err)) + ")");
       };
 
       if ((err = snd_pcm_sw_params (this->alsa_dev, sw_params)) != 0)
       {
+	snd_pcm_sw_params_free (sw_params);
 	  throw runtime_error(string(__func__) + ": snd_pcm_sw_params: " + string(snd_strerror(err)));
       };
 
@@ -181,13 +175,10 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
 
       snd_pcm_reset (this->alsa_dev);
     
-    
-    
-   
-    
-    // restart pcm
+      // pcm might still be in stopped state, start it explicitly
     this->start();
     
+    // WOW, WE MADE IT TIL HERE, so update channelcount and srate
     this->currentChannelCount = channels;
     this->currentSampleFormat = s;
 }
@@ -236,13 +227,13 @@ int total = 0 ;
         switch (retval)
         {
         case -EAGAIN :
-            puts ("alsa_write_float: EAGAIN") ;
+            puts ("alsa_write: EAGAIN") ;
             continue ;
             break ;
 
         case -EPIPE :
             if (epipe_count > 0)
-            {   printf ("alsa_write_float: EPIPE %d\n", epipe_count) ;
+            {   printf ("alsa_write: EPIPE %d\n", epipe_count) ;
                 if (epipe_count > 140)
                     return retval ;
             } ;
@@ -274,25 +265,25 @@ int total = 0 ;
             break ;
 
         case -EBADFD :
-            fprintf (stderr, "alsa_write_float: Bad PCM state.n") ;
+            fprintf (stderr, "alsa_write: Bad PCM state.n") ;
             return 0 ;
             break ;
 
         case -ESTRPIPE :
-            fprintf (stderr, "alsa_write_float: Suspend event.n") ;
+            fprintf (stderr, "alsa_write: Suspend event.n") ;
             return 0 ;
             break ;
 
         case -EIO :
-            puts ("alsa_write_float: EIO") ;
+            puts ("alsa_write: EIO") ;
             return 0 ;
 
         default :
-            fprintf (stderr, "alsa_write_float: retval = %d\n", retval) ;
+            fprintf (stderr, "alsa_write: retval = %d\n", retval) ;
             return 0 ;
             break ;
-        } ; /* switch */
-    } ; /* while */
+        }; /* switch */
+    }; /* while */
 
     return total ;
 }

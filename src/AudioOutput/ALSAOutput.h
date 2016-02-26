@@ -47,9 +47,9 @@ public:
     
     // interface methods declaration
 
-    void open (bool realtime = false) override;
+    void open () override;
 
-    void init (unsigned int sampleRate, uint8_t channels, SampleFormat_t s) override;
+    void init (unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime = false) override;
 
     void drain () override;
 
