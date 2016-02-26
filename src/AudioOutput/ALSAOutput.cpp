@@ -26,16 +26,37 @@ void ALSAOutput::open(bool realtime)
 {  
   const char device[] = "default";
 
-  if (alsa_dev==nullptr)
+  if (this->alsa_dev==nullptr)
   {
       int err;
 
-      if ((err = snd_pcm_open (&alsa_dev, device, SND_PCM_STREAM_PLAYBACK, 0)) < 0)
+      if ((err = snd_pcm_open (&this->alsa_dev, device, SND_PCM_STREAM_PLAYBACK, 0)) < 0)
       {
+	this->alsa_dev=nullptr;
 	  throw runtime_error("cannot open audio device \"" + string(device) + "\" (" + string(snd_strerror(err)) + ")");
       };
 
-      snd_pcm_nonblock (alsa_dev, 0);
+// this->init(22050,1,SampleFormat_t::float32);
+
+
+  }
+} /* alsa_open */
+
+void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t s)
+{
+  // changing hw settings can only safely be done when pcm is not running
+  // therefore stop the pcm and drain all pending frames
+  // DO NOT drop pending frames, due to latency some frames might still be played,
+  // dropping them will cause (at least in non-realtime mode) a hearable brick
+  this->drain();
+  
+  int err;
+
+    
+    
+    
+    
+          snd_pcm_nonblock (this->alsa_dev, 0);
 
       snd_pcm_hw_params_t* hw_params;
       if ((err = snd_pcm_hw_params_malloc (&hw_params)) < 0)
@@ -43,18 +64,53 @@ void ALSAOutput::open(bool realtime)
 	  throw runtime_error("cannot allocate hardware parameter structure (" + string(string(snd_strerror(err))) + ")");
       };
 
-      if ((err = snd_pcm_hw_params_any (alsa_dev, hw_params)) < 0)
+      if ((err = snd_pcm_hw_params_any (this->alsa_dev, hw_params)) < 0)
       {
 	  throw runtime_error("cannot initialize hardware parameter structure (" + string(string(snd_strerror(err))) + ")");
       };
 
-      if ((err = snd_pcm_hw_params_set_access (alsa_dev, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED)) < 0)
+      if ((err = snd_pcm_hw_params_set_access (this->alsa_dev, hw_params, SND_PCM_ACCESS_RW_INTERLEAVED)) < 0)
       {
 	  throw runtime_error("cannot set access type (" + string(snd_strerror(err)) + ")");
       };
 
-      snd_pcm_uframes_t alsa_period_size, alsa_buffer_frames;
-      if (realtime)
+
+    
+    
+    
+    
+    
+    
+  
+    // TODO: set sample format according to s
+    if ((err = snd_pcm_hw_params_set_format (this->alsa_dev, hw_params, SND_PCM_FORMAT_FLOAT)) < 0)
+    {
+	snd_pcm_hw_params_free (hw_params);
+        throw runtime_error("cannot set sample format (" + string(snd_strerror(err)) + ")");
+    };
+    
+    if ((err = snd_pcm_hw_params_set_rate_near (this->alsa_dev, hw_params, &sampleRate, 0)) < 0)
+    {
+	snd_pcm_hw_params_free (hw_params);
+        throw runtime_error("cannot set sample rate (" + string(snd_strerror(err)) + ")");
+    };
+
+    if ((err = snd_pcm_hw_params_set_channels (this->alsa_dev, hw_params, channels)) < 0)
+    {
+	snd_pcm_hw_params_free (hw_params);
+        throw runtime_error("cannot set channel count (" + string(snd_strerror(err)) + ")");
+    };
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    snd_pcm_uframes_t alsa_period_size, alsa_buffer_frames;
+      if (/*realtime*/0)
       {   alsa_period_size = 256;
 	  alsa_buffer_frames = 3 * alsa_period_size;
       }
@@ -63,20 +119,22 @@ void ALSAOutput::open(bool realtime)
 	  alsa_buffer_frames = 4 * alsa_period_size;
       };
       
-      if ((err = snd_pcm_hw_params_set_buffer_size_near (alsa_dev, hw_params, &alsa_buffer_frames)) < 0)
+      if ((err = snd_pcm_hw_params_set_buffer_size_near (this->alsa_dev, hw_params, &alsa_buffer_frames)) < 0)
       {
 	  throw runtime_error("cannot set buffer size (" + string(snd_strerror(err)) + ")");
       };
 
-      if ((err = snd_pcm_hw_params_set_period_size_near (alsa_dev, hw_params, &alsa_period_size, 0)) < 0)
+      if ((err = snd_pcm_hw_params_set_period_size_near (this->alsa_dev, hw_params, &alsa_period_size, 0)) < 0)
       {
 	  throw runtime_error("cannot set period size (" + string(snd_strerror(err)) + ")");
       };
 
-      if ((err = snd_pcm_hw_params (alsa_dev, hw_params)) < 0)
-      {
-	  throw runtime_error("cannot set parameters (" + string(snd_strerror(err)) + ")");
-      };
+    if ((err = snd_pcm_hw_params (this->alsa_dev, hw_params)) < 0)
+    {
+        snd_pcm_hw_params_free (hw_params);
+        throw runtime_error("cannot set parameters (" + string(snd_strerror(err)) + ")");
+    };
+    
 
       /* extra check: if we have only one period, this code won't work */
       snd_pcm_hw_params_get_period_size (hw_params, &alsa_period_size, 0);
@@ -89,6 +147,13 @@ void ALSAOutput::open(bool realtime)
       };
 
       snd_pcm_hw_params_free (hw_params);
+      
+      
+      
+      
+      
+      
+      
 
       snd_pcm_sw_params_t *sw_params;
       if ((err = snd_pcm_sw_params_malloc (&sw_params)) != 0)
@@ -96,74 +161,29 @@ void ALSAOutput::open(bool realtime)
 	  throw runtime_error(string(__func__) + ": snd_pcm_sw_params_malloc: " + string(snd_strerror(err)));
       };
 
-      if ((err = snd_pcm_sw_params_current (alsa_dev, sw_params)) != 0)
+      if ((err = snd_pcm_sw_params_current (this->alsa_dev, sw_params)) != 0)
       {
 	  throw runtime_error(string(__func__) + ": snd_pcm_sw_params_current: " + string(snd_strerror(err)));
       };
 
       /* note: set start threshold to delay start until the ring buffer is full */
-      if ((err = snd_pcm_sw_params_set_start_threshold (alsa_dev, sw_params, buffer_size)) < 0)
+      if ((err = snd_pcm_sw_params_set_start_threshold (this->alsa_dev, sw_params, buffer_size)) < 0)
       {
 	  throw runtime_error("cannot set start threshold (" + string(snd_strerror(err)) + ")");
       };
 
-      if ((err = snd_pcm_sw_params (alsa_dev, sw_params)) != 0)
+      if ((err = snd_pcm_sw_params (this->alsa_dev, sw_params)) != 0)
       {
 	  throw runtime_error(string(__func__) + ": snd_pcm_sw_params: " + string(snd_strerror(err)));
       };
 
       snd_pcm_sw_params_free (sw_params);
 
-      snd_pcm_reset (alsa_dev);
-  }
-} /* alsa_open */
-
-void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t s)
-{
-  // changing hw settings can only safely be done when pcm is not running
-  // therefore stop the pcm and drop all pending frames
-  this->drop();
-  
-  int err;
-  
-    snd_pcm_hw_params_t* hw_params;
-    if ((err = snd_pcm_hw_params_malloc (&hw_params)) < 0)
-    {
-        throw runtime_error("cannot allocate hardware parameter structure (" + string(snd_strerror(err)) + ")");
-    };
-
-    if ((err = snd_pcm_hw_params_current (alsa_dev, hw_params)) < 0)
-    {
-	snd_pcm_hw_params_free (hw_params);
-        throw runtime_error("cannot initialize hardware parameter structure with current settings (" + string(snd_strerror(err)) + ")");
-    };
-  
-    // TODO: set sample format according to s
-    if ((err = snd_pcm_hw_params_set_format (alsa_dev, hw_params, SND_PCM_FORMAT_FLOAT)) < 0)
-    {
-	snd_pcm_hw_params_free (hw_params);
-        throw runtime_error("cannot set sample format (" + string(snd_strerror(err)) + ")");
-    };
+      snd_pcm_reset (this->alsa_dev);
     
-    if ((err = snd_pcm_hw_params_set_rate_near (alsa_dev, hw_params, &sampleRate, 0)) < 0)
-    {
-	snd_pcm_hw_params_free (hw_params);
-        throw runtime_error("cannot set sample rate (" + string(snd_strerror(err)) + ")");
-    };
-
-    if ((err = snd_pcm_hw_params_set_channels (alsa_dev, hw_params, channels)) < 0)
-    {
-	snd_pcm_hw_params_free (hw_params);
-        throw runtime_error("cannot set channel count (" + string(snd_strerror(err)) + ")");
-    };
     
-    if ((err = snd_pcm_hw_params (alsa_dev, hw_params)) < 0)
-    {
-        snd_pcm_hw_params_free (hw_params);
-        throw runtime_error("cannot set parameters (" + string(snd_strerror(err)) + ")");
-    };
     
-    snd_pcm_hw_params_free (hw_params);
+   
     
     // restart pcm
     this->start();
@@ -174,20 +194,20 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
 
 void ALSAOutput::drain()
 {
-  snd_pcm_drain(alsa_dev);
+  snd_pcm_drain(this->alsa_dev);
 }
 
 void ALSAOutput::drop()
 {
-  snd_pcm_drop(alsa_dev);
+  snd_pcm_drop(this->alsa_dev);
 }
 
 void ALSAOutput::close()
 {
-    if (alsa_dev != nullptr)
+    if (this->alsa_dev != nullptr)
     { 
-	snd_pcm_close (alsa_dev);
-	alsa_dev = nullptr;
+	snd_pcm_close (this->alsa_dev);
+	this->alsa_dev = nullptr;
     };
 }
 
@@ -203,7 +223,7 @@ int ALSAOutput::write (float* buffer, unsigned int frames)
 int total = 0 ;
     while (total < frames)
     { 
-      int retval = snd_pcm_writei (alsa_dev, buffer + total * this->currentChannelCount, frames - total) ;
+      int retval = snd_pcm_writei (this->alsa_dev, buffer + total * this->currentChannelCount, frames - total) ;
 
         if (retval >= 0)
         {   total += retval ;
@@ -250,7 +270,7 @@ int total = 0 ;
             } ;
 #endif
 
-            snd_pcm_prepare (alsa_dev) ;
+            snd_pcm_prepare (this->alsa_dev) ;
             break ;
 
         case -EBADFD :
@@ -294,7 +314,7 @@ int ALSAOutput::write (int16_t* buffer, unsigned int frames)
 
 void ALSAOutput::start()
 {
-                int err = snd_pcm_start(alsa_dev);
+                int err = snd_pcm_start(this->alsa_dev);
                 if (err < 0) {
                         //fprintf (stderr,"Start PCM error: %s\n", string(snd_strerror(err)));
                 }
