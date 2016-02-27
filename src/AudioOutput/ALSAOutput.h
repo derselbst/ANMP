@@ -23,7 +23,7 @@
 
 /**
   * class ALSAOutput
-  * 
+  *
   */
 
 class ALSAOutput : public IAudioOutput
@@ -31,7 +31,7 @@ class ALSAOutput : public IAudioOutput
 public:
 
     // Constructors/Destructors
-    //  
+    //
 
 
     /**
@@ -43,8 +43,8 @@ public:
      * Empty Destructor
      */
     virtual ~ALSAOutput ();
-    
-    
+
+
     // interface methods declaration
 
     void open () override;
@@ -63,9 +63,9 @@ public:
 
     void start () override;
 private:
-  
-  
-  snd_pcm_t *alsa_dev = nullptr;
+
+
+    snd_pcm_t *alsa_dev = nullptr;
 };
 
 #endif // ALSAOUTPUT_H

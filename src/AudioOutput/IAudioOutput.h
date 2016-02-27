@@ -9,7 +9,7 @@ using namespace std;
 
 /**
   * class IAudioOutput
-  * 
+  *
   */
 
 class IAudioOutput
@@ -20,9 +20,9 @@ protected:
     IAudioOutput();
 
 public:
-  
-  IAudioOutput(IAudioOutput const&) = delete;
-  IAudioOutput& operator=(IAudioOutput const&) = delete;
+
+    IAudioOutput(IAudioOutput const&) = delete;
+    IAudioOutput& operator=(IAudioOutput const&) = delete;
 
     // virtual destructor for proper cleanup
     virtual ~IAudioOutput();
@@ -30,7 +30,7 @@ public:
     /**
      * opens a sound device, e.g. set buffer size, periods, pcm format (int16,
      * float,...), i.e. things that dont change while running program
-     * 
+     *
      * shall only be called once
      */
     virtual void open () = 0;
@@ -39,18 +39,18 @@ public:
     /**
      * initializes a sound device, e.g. set samplerate, channels, i.e. settings that
      * can change while running program
-     * 
+     *
      * can be called multiple time if necessary
      */
     virtual void init (unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime=false) = 0;
 
-    
+
     /**
      * Wait for all pending frames to be played and then stop the PCM.
      */
     virtual void start () = 0;
-    
-    
+
+
     /**
      * Wait for all pending frames to be played and then stop the PCM.
      */
@@ -99,9 +99,9 @@ public:
     virtual int write (pcm_t* frameBuffer, unsigned int frames, int offset);
 
 protected:
-  unsigned char currentChannelCount = 0;
-  SampleFormat_t currentSampleFormat = SampleFormat_t::unknown;
-    
+    unsigned char currentChannelCount = 0;
+    SampleFormat_t currentSampleFormat = SampleFormat_t::unknown;
+
 };
 
 #endif // IAUDIOOUTPUT_H

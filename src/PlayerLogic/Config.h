@@ -5,13 +5,13 @@
 
 /**
   * class Config
-  * 
+  *
   */
 
 struct Config
 {
     // Constructors/Destructors
-    //  
+    //
     // no object
     Config() = delete;
     // no copy

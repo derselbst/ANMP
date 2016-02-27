@@ -8,10 +8,10 @@
 class Playlist : public IPlaylist
 {
 public:
-  typedef multiset<Song*> SongQueue_t;
+    typedef multiset<Song*> SongQueue_t;
 
     // Constructors/Destructors
-    //  
+    //
     // Empty virtual destructor for proper cleanup
     virtual ~Playlist();
 
@@ -25,7 +25,7 @@ public:
     /**
      */
     void remove (Song* song) override;
-    
+
     /**
      */
     void remove (int i) override;
@@ -45,8 +45,8 @@ public:
     Song* current () override;
 
 private:
-  SongQueue_t queue;
-  SongQueue_t::iterator currentSong = this->queue.begin();
+    SongQueue_t queue;
+    SongQueue_t::iterator currentSong = this->queue.begin();
 };
 
 #endif // PLAYLIST_H

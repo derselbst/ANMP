@@ -9,7 +9,7 @@
 
 /**
   * class Player
-  * 
+  *
   */
 
 class Player
@@ -17,7 +17,7 @@ class Player
 public:
 
     // Constructors/Destructors
-    //  
+    //
 
 
     /**
@@ -31,10 +31,10 @@ public:
     virtual ~Player ();
 
     // Static Public attributes
-    //  
+    //
 
     // Public attributes
-    //  
+    //
 
     void init();
 
@@ -86,29 +86,29 @@ public:
      */
     void seekTo (unsigned int frame);
 
-    
+
 private:
 
     // Static Private attributes
-    //  
+    //
 
     // Private attributes
-    //  
+    //
 
     float PreAmpVolume;
-    
+
     Song* currentSong = nullptr;
     recursive_mutex mtxCurrentSong;
-    
+
     IPlaylist* playlist;
-    
+
     // frame offset; (song.pcm + FRAMESTOFLOATS(playhead)) points to the frame that will be played on subsequent call to playSample
     unsigned int playhead = 0;
-    
+
     IAudioOutput* audioDriver = nullptr;
-    
+
     bool isPlaying = false;
-    
+
     future<void> futureFillBuffer;
     future<void> futurePlayInternal;
 
@@ -122,7 +122,7 @@ private:
     /**
      * make sure you called seekTo(startFrame) before calling this!
      * @param  startFrame intended: the frame with which we want to start the playback
-     * 
+     *
      * actually: does nothing, just for debug purposes, the actual start is determined
      * by playhead
      * @param  stopFrame play until we've reached stopFrame, although this frame will

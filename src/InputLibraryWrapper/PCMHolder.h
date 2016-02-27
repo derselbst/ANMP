@@ -12,7 +12,7 @@ using namespace std;
 
 /**
   * class PCMHolder
-  * 
+  *
   */
 
 class PCMHolder
@@ -20,12 +20,12 @@ class PCMHolder
 protected:
     // even if there were no pure virtual methods, allow
     // construction for child classes only
-    PCMHolder(){};
+    PCMHolder() {};
 
 public:
 
     // empty virtual destructor for proper cleanup
-    virtual ~PCMHolder(){};
+    virtual ~PCMHolder() {};
 
     // forbid copying
     PCMHolder(PCMHolder const&) = delete;
@@ -35,16 +35,16 @@ public:
 
     // pointer to pcm data
     pcm_t* data = nullptr;
-    
+
     // how many items (i.e. floats, int16s, etc.) are there in data?
     size_t count = 0;
-    
+
     // pcm specific information
     SongFormat Format;
-    
+
     // how many frames to skip when reading pcm from file
     size_t offset;
-    
+
     // fullpath to underlying audio file
     string Filename;
 

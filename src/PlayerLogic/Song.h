@@ -11,7 +11,7 @@ using namespace std;
 
 /**
   * class Song
-  * 
+  *
   */
 
 class Song
@@ -19,7 +19,7 @@ class Song
 public:
 
     // Constructors/Destructors
-    //  
+    //
 
 
     Song (PCMHolder* p, core::tree<loop_t> loops);
@@ -29,10 +29,10 @@ public:
 
 
     // Static Public attributes
-    //  
+    //
 
     // Public attributes
-    //  
+    //
 
     string& Filename;
     PCMHolder* pcm = nullptr;

@@ -2,9 +2,9 @@
 
 bool operator != (SongFormat const& lhs, SongFormat const& rhs)
 {
-  return lhs.SampleRate  != rhs.SampleRate &&
-         lhs.SampleFormat!= rhs.SampleFormat &&
-         lhs.Channels    != rhs.Channels;
+    return lhs.SampleRate  != rhs.SampleRate &&
+           lhs.SampleFormat!= rhs.SampleFormat &&
+           lhs.Channels    != rhs.Channels;
 }
 
 /**

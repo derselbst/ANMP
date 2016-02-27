@@ -5,7 +5,7 @@
 
 /**
   * class SongFormat
-  * 
+  *
   */
 struct SongFormat;
 bool operator != (SongFormat const& lhs, SongFormat const& rhs);
@@ -13,10 +13,10 @@ bool operator != (SongFormat const& lhs, SongFormat const& rhs);
 struct SongFormat
 {
     unsigned int SampleRate = 0;
-    
+
     // indicates the type of the items in pcm buffer "data" from PCMHolder
     SampleFormat_t SampleFormat = SampleFormat_t::unknown;
-    
+
     unsigned int Channels = 0;
 
     /**

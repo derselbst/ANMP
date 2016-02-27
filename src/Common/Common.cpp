@@ -15,10 +15,14 @@ using namespace std;
 // will workon all platforms, but probably slow
 bool iEqualsUgly(string strFirst, string strSecond)
 {
-  // convert strings to upper case before compare
-  transform(strFirst.begin(), strFirst.end(), strFirst.begin(), [](unsigned char c) { return std::toupper(c); });
-  transform(strSecond.begin(), strSecond.end(), strSecond.begin(), [](unsigned char c) { return std::toupper(c); });
-  return strFirst == strSecond;
+    // convert strings to upper case before compare
+    transform(strFirst.begin(), strFirst.end(), strFirst.begin(), [](unsigned char c) {
+        return std::toupper(c);
+    });
+    transform(strSecond.begin(), strSecond.end(), strSecond.begin(), [](unsigned char c) {
+        return std::toupper(c);
+    });
+    return strFirst == strSecond;
 }
 #endif
 
@@ -26,9 +30,9 @@ bool iEqualsUgly(string strFirst, string strSecond)
 bool iEquals(const string& str1, const string& str2)
 {
 #ifdef _POSIX_VERSION
-  return strncasecmp(str1.c_str(), str2.c_str(), min(str1.size(),str2.size())) == 0;  
+    return strncasecmp(str1.c_str(), str2.c_str(), min(str1.size(),str2.size())) == 0;
 #else
-  return iEqualsUgly(str1, str2);
+    return iEqualsUgly(str1, str2);
 #endif
 }
 

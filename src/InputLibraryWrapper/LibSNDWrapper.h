@@ -8,7 +8,7 @@
 
 /**
   * class LibSNDWrapper
-  * 
+  *
   */
 
 class LibSNDWrapper : public PCMHolder
@@ -16,7 +16,7 @@ class LibSNDWrapper : public PCMHolder
 public:
 
     // Constructors/Destructors
-    //  
+    //
 
 
     /**
@@ -28,9 +28,9 @@ public:
      * Empty Destructor
      */
     virtual ~LibSNDWrapper ();
-    
+
     // interface methods declaration
-    
+
     /**
      * opens the current file using the corresponding lib
      */
@@ -65,9 +65,9 @@ public:
     unsigned int getFrames () const override;
 
 private:
-          SNDFILE *sndfile = nullptr;
-        SF_INFO sfinfo;
-    
+    SNDFILE *sndfile = nullptr;
+    SF_INFO sfinfo;
+
 };
 
 #endif // LIBSNDWRAPPER_H

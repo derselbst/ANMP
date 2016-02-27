@@ -9,7 +9,7 @@ using namespace std;
 
 /**
   * class PlaylistFactory
-  * 
+  *
   */
 
 class PlaylistFactory

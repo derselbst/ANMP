@@ -6,7 +6,7 @@
 
 /**
   * class LazyusfWrapper
-  * 
+  *
   */
 
 class LazyusfWrapper : public PCMHolder
@@ -14,7 +14,7 @@ class LazyusfWrapper : public PCMHolder
 public:
 
     // Constructors/Destructors
-    //  
+    //
 
 
     /**

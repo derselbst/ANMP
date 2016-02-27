@@ -6,7 +6,7 @@
 
 /**
   * class VGMStreamWrapper
-  * 
+  *
   */
 
 class VGMStreamWrapper : public PCMHolder
@@ -14,7 +14,7 @@ class VGMStreamWrapper : public PCMHolder
 public:
 
     // Constructors/Destructors
-    //  
+    //
 
 
     /**

@@ -6,7 +6,7 @@
 
 /**
   * class OpusWrapper
-  * 
+  *
   */
 
 class OpusWrapper : public PCMHolder
@@ -14,7 +14,7 @@ class OpusWrapper : public PCMHolder
 public:
 
     // Constructors/Destructors
-    //  
+    //
 
 
     /**

@@ -15,9 +15,9 @@ class IPlaylist
 public:
 
     // Constructors/Destructors
-    //  
+    //
     // Empty virtual destructor for proper cleanup
-    virtual ~IPlaylist(){};
+    virtual ~IPlaylist() {};
 
 
     /**
@@ -29,7 +29,7 @@ public:
     /**
      */
     virtual void remove (Song* song) = 0;
-    
+
     /**
      */
     virtual void remove (int i) = 0;

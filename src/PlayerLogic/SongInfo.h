@@ -6,7 +6,7 @@
 
 /**
   * class SongInfo
-  * 
+  *
   */
 
 struct SongInfo
