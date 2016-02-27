@@ -13,7 +13,7 @@ ALSAOutput::ALSAOutput () {
 
 ALSAOutput::~ALSAOutput ()
 {
-  this->drop();
+//   this->drop();
   this->close();
 }
 
