@@ -96,15 +96,21 @@ private:
     //  
 
     float PreAmpVolume;
+    
     Song* currentSong = nullptr;
+    recursive_mutex mtxCurrentSong;
+    
     IPlaylist* playlist;
+    
     // frame offset; (song.pcm + FRAMESTOFLOATS(playhead)) points to the frame that will be played on subsequent call to playSample
-    size_t playhead = 0;
+    unsigned int playhead = 0;
+    
     IAudioOutput* audioDriver = nullptr;
+    
     bool isPlaying = false;
     
     future<void> futureFillBuffer;
-
+    future<void> futurePlayInternal;
 
 
     /**

@@ -8,7 +8,7 @@
 // TODO: make this nicer
 #define FramesToItems(x) ((x)*this->currentSong->pcm->Format.Channels)
 #define ASYNC_FILL_BUFFER (async(launch::async, &PCMHolder::fillBuffer, this->currentSong->pcm))
-
+#define USERS_ARE_STUPID if(this->audioDriver==nullptr || this->playlist==nullptr || this->currentSong==nullptr){throw NotInitializedException();}
 // Constructors/Destructors
 //  
 
@@ -19,6 +19,24 @@ this->playlist = playlist;
 
 Player::~Player ()
 {
+  this->stop();
+  
+  try
+  {
+    this->futureFillBuffer.wait();
+  }
+  catch(future_error& e)
+  {}
+  
+  try
+  {
+    this->futurePlayInternal.wait();
+  }
+  catch(future_error& e)
+  {}
+
+lock_guard<recursive_mutex> lck(mtxCurrentSong);
+  
   if(this->audioDriver!=nullptr)
   {
   this->audioDriver->close();
@@ -30,6 +48,8 @@ Player::~Player ()
 
 void Player::init()
 {
+    this->stop();
+    
   delete this->audioDriver;
   
   switch(Config::audioDriver)
@@ -38,43 +58,37 @@ void Player::init()
 	this->audioDriver = new ALSAOutput();
       break;
     default:
+      this->audioDriver=nullptr;
       throw NotImplementedException();
       break;
   }
   
   this->audioDriver->open();
   
-  
   this->setCurrentSong(this->playlist->current());
-  
 }
-
-//  
-// Methods
-//  
-
-
-// Accessor methods
-//  
-
-
-// Other methods
-//  
 
 
 /**
  */
 void Player::play ()
-{
+{USERS_ARE_STUPID
 if (this->isPlaying)
 {
   return;
 }
 
+  try
+  {
+    this->futurePlayInternal.wait();
+  }
+  catch(future_error& e)
+  {}
+
 this->isPlaying=true;
 
 // new thread that runs playInternal
-async(launch::async, &Player::playInternal, this);
+this->futurePlayInternal = async(launch::async, &Player::playInternal, this);
 }
 
 
@@ -82,7 +96,7 @@ async(launch::async, &Player::playInternal, this);
  * @return Song
  */
 Song Player::getCurrentSong ()
-{
+{USERS_ARE_STUPID
 //  return this->currentSong;
   throw NotImplementedException();
 }
@@ -93,30 +107,55 @@ Song Player::getCurrentSong ()
  */
 void Player::setCurrentSong (Song* song)
 {
-// ---LOCK---
+lock_guard<recursive_mutex> lck(mtxCurrentSong);
+
+  SongFormat oldformat;
   if(this->currentSong != nullptr)
   {
+    // wait for another ASYNC_FILL_BUFFER call to finish
+this->futureFillBuffer.wait();
     this->currentSong->pcm->releaseBuffer();
+      oldformat = this->currentSong->pcm->Format;
   }
+
 this->currentSong = song;
 // go ahead and start filling the pcm buffer
 this->futureFillBuffer = ASYNC_FILL_BUFFER;
-// ---UNLOCK---
+  
+SongFormat& format = this->currentSong->pcm->Format;
+
+    if(oldformat != format)
+    {
+  try
+  {
+    this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
+  }
+  catch(exception& e)
+  { 
+    cout << e.what() << endl;
+    this->stop();
+    return;
+    
+  }
+    }
 this->resetPlayhead();
 }
 
 
-/**
+/** @brief stops the playback
+ * same as pause() but also resets playhead
+ * 
  */
 void Player::stop ()
 {
-this->isPlaying=false;
-
+this->pause();
 this->resetPlayhead();
 }
 
 
-/**
+/** @brief pauses the playback
+ * stops the playback at the next opportunity
+ * 
  */
 void Player::pause ()
 {
@@ -129,29 +168,23 @@ this->isPlaying=false;
  * prepares the player for the next song to be played, but doesnt start playback
  */
 void Player::next ()
-{
-// get next song in playlist
-
-// if channels or samplerate different
-//     this->stop();
-//     this->setCurrentSong(NextSong);
-//     this->audioDriver->init();
-// else
-//     this->setCurrentSong(NextSong);
+{USERS_ARE_STUPID
+  this->setCurrentSong(this->playlist->next());
 }
 
 
 /**
  */
 void Player::previous ()
-{
+{USERS_ARE_STUPID
+    this->setCurrentSong(this->playlist->previous());
 }
 
 
 /**
  */
 void Player::fadeout ()
-{
+{USERS_ARE_STUPID
 }
 
 
@@ -160,9 +193,28 @@ void Player::fadeout ()
  */
 void Player::seekTo (unsigned int frame)
 {
-  // TODO: stop playback
   this->playhead=frame;
-  // TODO: restart playback
+  return;
+  
+  bool oldState = this->isPlaying;
+  this->pause();
+  
+  // make sure we wait for playInternal to finish
+  // TODO: this wont work if being called from playInternal itself
+  try
+  {
+    this->futurePlayInternal.wait();
+  }
+  catch(future_error& e)
+  {}
+  {
+    lock_guard<recursive_mutex> lck(mtxCurrentSong);
+  this->playhead=frame;
+  }
+  if(oldState)
+  {
+    this->play();
+  }
 }
 
 
@@ -171,11 +223,7 @@ void Player::seekTo (unsigned int frame)
  */
 void Player::resetPlayhead ()
 {
-  // TODO: stop playback
-// reset playhead to beginning of song
-this->playhead=0;
-
-// TODO: restart playback??
+this->seekTo(0);
 }
 
 
@@ -189,7 +237,7 @@ this->playhead=0;
  * not be played
  */
 void Player::playLoop (core::tree<loop_t>& loop)
-{
+{USERS_ARE_STUPID
 /* TODO IMPLEMENT ME
 // while there are sub-loops that need to be played
 while(NODE* l = this->currentSong.loops.getNextLoop(this->playhead) != nullptr)
@@ -223,14 +271,14 @@ this->playFrames(playhead, (*loop).stop);
  * @param  stopFrame
  */
 void Player::playFrames (unsigned int startFrame, unsigned int stopFrame)
-{
+{USERS_ARE_STUPID
 
 // just do nothing with it, but avoid compiler warning
 (void)startFrame;
 
-// ---LOCK---
+do
+{
 int framesToPlay = stopFrame - (this->playhead % this->currentSong->pcm->getFrames());
-// ---UNLOCK---
 
 if(framesToPlay<=0)
 {
@@ -240,6 +288,9 @@ if(framesToPlay<=0)
 }
 
 this->playFrames(FramesToItems(framesToPlay));
+// here playhead is expected to be equal stopFrame
+// if this is not the case play again if necessary
+}while(this->playhead % stopFrame != 0 && this->isPlaying);
 }
 
 
@@ -248,25 +299,21 @@ this->playFrames(FramesToItems(framesToPlay));
  * be played
  */
 void Player::playFrames (unsigned int itemsToPlay)
-{
+{USERS_ARE_STUPID
   // wait for another ASYNC_FILL_BUFFER call to finish, so that pcm->data and bufSize can get updated
 this->futureFillBuffer.wait();
-// ---LOCK---
+
 size_t bufSize = this->currentSong->pcm->count;
 
 // first define a nice shortcut to our pcmBuffer
 pcm_t* pcmBuffer = this->currentSong->pcm->data;
 
-// then seek within the buffer to that point where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
-int offset = FramesToItems(this->playhead) % bufSize;
+unsigned int memorizedPlayhead = this->playhead;
 
-// TODO: remove this
-// // be sure that in every case we start at offset (esp. when we just run over the buffer and thus start again at the beginning)
-// offset += this->currentSong->pcm->offset;
+// then seek within the buffer to that point where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
+int offset = FramesToItems(memorizedPlayhead) % bufSize;
 
 const unsigned int& channels = this->currentSong->pcm->Format.Channels;
-
-// ---UNLOCK---
 
 // this is a very simple form of what we do below
 // just hand in every frame separately
@@ -279,7 +326,7 @@ const unsigned int& channels = this->currentSong->pcm->Format.Channels;
     const unsigned int BUFSIZE = FRAMES * channels;
 
     int fullTransfers = itemsToPlay / BUFSIZE;
-    for(int i=0; this->isPlaying && i<fullTransfers; i++)
+    for(int i=0; this->isPlaying && (this->playhead==memorizedPlayhead + i*FRAMES) && i<fullTransfers; i++)
     {
         // wait for another fillBuffer call to finish
         this->futureFillBuffer.wait();
@@ -290,7 +337,7 @@ const unsigned int& channels = this->currentSong->pcm->Format.Channels;
 	this->playhead+=FRAMES;
     }
     
-    if(this->isPlaying)
+    if(this->isPlaying && (this->playhead==memorizedPlayhead + fullTransfers*FRAMES))
     {
     int finalTransfer = itemsToPlay % BUFSIZE;
     this->futureFillBuffer.wait();
@@ -303,19 +350,22 @@ const unsigned int& channels = this->currentSong->pcm->Format.Channels;
 
 void Player::playInternal ()
 {
+       lock_guard<recursive_mutex> lck(mtxCurrentSong);
   while(this->isPlaying)
   {
-  SongFormat& format = this->currentSong->pcm->Format;
-  try{
-    this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
-  }
-  catch(runtime_error& e)
-  { cout << e.what() << endl;this->stop();return;}
-  
+
     core::tree<loop_t>& loops = this->currentSong->loops;
+
     this->playLoop(loops);
-    
+  
+    // ok, for some reason we left playLoop, if this was due to we shall stop playing
+    // leave this loop immediately, else play next song
+    if(!this->isPlaying)
+{
+  break;
+}
     this->next();
+  
   }
 }
 
