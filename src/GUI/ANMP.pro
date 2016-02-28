@@ -3,16 +3,18 @@
 # Project created by QtCreator 2016-02-28T15:40:47
 #
 #-------------------------------------------------
-
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 QT       += core gui
 CONFIG   += c++11
 
-INCLUDEPATH += /home/tom/qtcreator/ANMP/ANMP/src/PlayerLogic/
-INCLUDEPATH += /home/tom/qtcreator/ANMP/ANMP/src/InputLibraryWrapper/
-INCLUDEPATH += /home/tom/qtcreator/ANMP/ANMP/src/Common/
-INCLUDEPATH += /home/tom/qtcreator/ANMP/ANMP/src/AudioOutput/
+INCLUDEPATH += ../PlayerLogic/
+INCLUDEPATH += ../InputLibraryWrapper/
+INCLUDEPATH += ../Common/
+INCLUDEPATH += ../AudioOutput/
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+LIBS += ../build/libanmp.a -lasound -lsndfile
+
+
 
 TARGET = ANMP
 TEMPLATE = app
