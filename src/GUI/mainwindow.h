@@ -19,8 +19,8 @@ public:
     ~MainWindow();
 
 private:
-    Ui::MainWindow *ui;
-    Player* player;
+    Ui::MainWindow *ui = new Ui::MainWindow;
+    Player* player = nullptr;
     IPlaylist* playlist = new Playlist();
 
 private slots:

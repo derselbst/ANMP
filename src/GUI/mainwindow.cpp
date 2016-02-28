@@ -6,9 +6,8 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
 {
-    ui->setupUi(this);
+    this->ui->setupUi(this);
 }
 
 MainWindow::~MainWindow()
@@ -39,12 +38,13 @@ void MainWindow::initPlayer()
 
 void MainWindow::on_initButton_clicked()
 {
-    if(this->player!=nullptr)
+  delete this->player;
+    if(this->player==nullptr)
     {
         this->player = new Player(this->playlist);
         this->player->init();
     }
-ui->statusbar->showMessage("hallo", 2000);
+this->ui->statusbar->showMessage("Player initialized", 2000);
 }
 
 void MainWindow::on_actionPlay_triggered()
