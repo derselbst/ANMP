@@ -6,30 +6,32 @@
 #include <string>
 
 #include "types.h"
+#include "tree.h"
 #include "SongFormat.h"
+#include "SongInfo.h"
 
 using namespace std;
 
 /**
-  * class PCMHolder
+  * class Song
   *
   */
 
-class PCMHolder
+class Song
 {
 protected:
     // even if there were no pure virtual methods, allow
     // construction for child classes only
-    PCMHolder() {};
+    Song();
 
 public:
 
     // empty virtual destructor for proper cleanup
-    virtual ~PCMHolder() {};
+    virtual ~Song();
 
     // forbid copying
-    PCMHolder(PCMHolder const&) = delete;
-    PCMHolder& operator=(PCMHolder const&) = delete;
+    Song(Song const&) = delete;
+    Song& operator=(Song const&) = delete;
 
 
 
@@ -48,8 +50,18 @@ public:
     // fullpath to underlying audio file
     string Filename;
 
+    // holds metadata for this song e.g. title, interpret, album
+    SongInfo Metadata;
+    
+    // a tree, that holds to loops to be played
+    core::tree<loop_t> loopTree;
 
-
+    /**
+     * called to check whether the current song is playable or not
+     * @return bool
+     */
+    bool isPlayable ();
+    
     /**
      * opens the current file using the corresponding lib
      */
@@ -74,7 +86,7 @@ public:
     /**
      * @return vector
      */
-    virtual vector<loop_t> getLoops () const = 0;
+    void buildLoopTree ();
 
 
     /**
@@ -83,6 +95,16 @@ public:
      */
     virtual unsigned int getFrames () const = 0;
 
+private:
+  
+    /**
+     * @return vector
+     */
+    virtual vector<loop_t> getLoopArray () const = 0;
+    
+    
+    static bool myLoopSort(loop_t i,loop_t j);
+    
 };
 
 #endif // PCMHOLDER_H

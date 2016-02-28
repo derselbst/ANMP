@@ -1,7 +1,7 @@
 #ifndef VGMSTREAMWRAPPER_H
 #define VGMSTREAMWRAPPER_H
 
-#include "PCMHolder.h"
+#include "Song.h"
 
 
 /**
@@ -9,7 +9,7 @@
   *
   */
 
-class VGMStreamWrapper : public PCMHolder
+class VGMStreamWrapper : public Song
 {
 public:
 

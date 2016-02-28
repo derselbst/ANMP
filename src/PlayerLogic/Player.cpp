@@ -6,8 +6,8 @@
 #include "ALSAOutput.h"
 
 // TODO: make this nicer
-#define FramesToItems(x) ((x)*this->currentSong->pcm->Format.Channels)
-#define ASYNC_FILL_BUFFER (async(launch::async, &PCMHolder::fillBuffer, this->currentSong->pcm))
+#define FramesToItems(x) ((x)*this->currentSong->Format.Channels)
+#define ASYNC_FILL_BUFFER (async(launch::async, &Song::fillBuffer, this->currentSong))
 #define USERS_ARE_STUPID if(this->audioDriver==nullptr || this->playlist==nullptr || this->currentSong==nullptr){throw NotInitializedException();}
 // Constructors/Destructors
 //
@@ -95,7 +95,7 @@ void Player::play ()
 /**
  * @return Song
  */
-Song Player::getCurrentSong ()
+Song* Player::getCurrentSong ()
 {   USERS_ARE_STUPID
 //  return this->currentSong;
     throw NotImplementedException();
@@ -114,15 +114,15 @@ void Player::setCurrentSong (Song* song)
     {
         // wait for another ASYNC_FILL_BUFFER call to finish
         this->futureFillBuffer.wait();
-        this->currentSong->pcm->releaseBuffer();
-        oldformat = this->currentSong->pcm->Format;
+        this->currentSong->releaseBuffer();
+        oldformat = this->currentSong->Format;
     }
 
     this->currentSong = song;
 // go ahead and start filling the pcm buffer
     this->futureFillBuffer = ASYNC_FILL_BUFFER;
 
-    SongFormat& format = this->currentSong->pcm->Format;
+    SongFormat& format = this->currentSong->Format;
 
     if(oldformat != format)
     {
@@ -278,7 +278,7 @@ void Player::playFrames (unsigned int startFrame, unsigned int stopFrame)
 
     do
     {
-        int framesToPlay = stopFrame - (this->playhead % this->currentSong->pcm->getFrames());
+        int framesToPlay = stopFrame - (this->playhead % this->currentSong->getFrames());
 
         if(framesToPlay<=0)
         {
@@ -300,20 +300,20 @@ void Player::playFrames (unsigned int startFrame, unsigned int stopFrame)
  */
 void Player::playFrames (unsigned int itemsToPlay)
 {   USERS_ARE_STUPID
-    // wait for another ASYNC_FILL_BUFFER call to finish, so that pcm->data and bufSize can get updated
+    // wait for another ASYNC_FILL_BUFFER call to finish, so that data and bufSize can get updated
     this->futureFillBuffer.wait();
 
-    size_t bufSize = this->currentSong->pcm->count;
+    size_t bufSize = this->currentSong->count;
 
 // first define a nice shortcut to our pcmBuffer
-    pcm_t* pcmBuffer = this->currentSong->pcm->data;
+    pcm_t* pcmBuffer = this->currentSong->data;
 
     unsigned int memorizedPlayhead = this->playhead;
 
 // then seek within the buffer to that point where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
     int offset = FramesToItems(memorizedPlayhead) % bufSize;
 
-    const unsigned int& channels = this->currentSong->pcm->Format.Channels;
+    const unsigned int& channels = this->currentSong->Format.Channels;
 
 // this is a very simple form of what we do below
 // just hand in every frame separately
@@ -354,7 +354,7 @@ void Player::playInternal ()
     while(this->isPlaying)
     {
 
-        core::tree<loop_t>& loops = this->currentSong->loops;
+        core::tree<loop_t>& loops = this->currentSong->loopTree;
 
         this->playLoop(loops);
 

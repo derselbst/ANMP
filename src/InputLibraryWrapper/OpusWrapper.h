@@ -1,7 +1,7 @@
 #ifndef OPUSWRAPPER_H
 #define OPUSWRAPPER_H
 
-#include "PCMHolder.h"
+#include "Song.h"
 
 
 /**
@@ -9,7 +9,7 @@
   *
   */
 
-class OpusWrapper : public PCMHolder
+class OpusWrapper : public Song
 {
 public:
 

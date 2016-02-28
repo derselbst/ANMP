@@ -2,8 +2,9 @@
 #define PLAYLISTFACTORY_H
 
 #include "IPlaylist.h"
-#include "PCMHolder.h"
-#include "tree.h"
+
+#include <vector>
+#include <string>
 
 using namespace std;
 
@@ -39,15 +40,6 @@ public:
      */
     static void addSong (IPlaylist& playlist, string filePath, string offset = "");
 
-
-private:
-
-    /**
-     * @return core::tree
-     * @param  p
-     */
-    static core::tree<loop_t> getLoopFromPCM (PCMHolder* p);
-    static bool myLoopSort(loop_t i,loop_t j);
 
 };
 

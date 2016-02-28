@@ -1,7 +1,7 @@
 #ifndef LAZYUSFWRAPPER_H
 #define LAZYUSFWRAPPER_H
 
-#include "PCMHolder.h"
+#include "Song.h"
 
 
 /**
@@ -9,7 +9,7 @@
   *
   */
 
-class LazyusfWrapper : public PCMHolder
+class LazyusfWrapper : public Song
 {
 public:
 

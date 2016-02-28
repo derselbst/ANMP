@@ -74,7 +74,7 @@ void LibSNDWrapper::releaseBuffer()
     this->count = 0;
 }
 
-vector<loop_t> LibSNDWrapper::getLoops () const
+vector<loop_t> LibSNDWrapper::getLoopArray () const
 {
     static vector<loop_t> res;
 

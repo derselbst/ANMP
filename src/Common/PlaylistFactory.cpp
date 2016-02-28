@@ -1,7 +1,7 @@
-#include <vector>
 #include <iostream>
 
 #include "PlaylistFactory.h"
+#include "Song.h"
 
 #include "Common.h"
 #include "CommonExceptions.h"
@@ -33,7 +33,7 @@ void PlaylistFactory::addSongs (IPlaylist& playlist, vector<string>& filePaths)
 void PlaylistFactory::addSong (IPlaylist& playlist, string filePath, string offset)
 {
     string ext = getFileExtension(filePath);
-    PCMHolder* pcm=nullptr;
+    Song* pcm=nullptr;
 
     if (iEquals(ext,"cue"))
     {
@@ -105,43 +105,11 @@ void PlaylistFactory::addSong (IPlaylist& playlist, string filePath, string offs
         return;
     }
 
-    core::tree<loop_t> loops = getLoopFromPCM(pcm);
+    pcm->buildLoopTree();
 
-    Song* s = new Song(pcm, loops);
 
-    playlist.add(s);
+    playlist.add(pcm);
 }
 
-
-/**
- * @return core::tree
- * @param  p
- */
-core::tree<loop_t> PlaylistFactory::getLoopFromPCM (PCMHolder* p)
-{
-    core::tree<loop_t> loopTree;
-    loop_t l;
-    l.start = 0;
-    l.stop = p->getFrames();
-    l.count = 1;
-    *loopTree = l;
-    /* TODO:implement!!
-      vector<loop_t> l = p.getLoops();
-
-      // TODO: make sure loop array is sorted correctly
-      std::sort (l.begin(), l.end(), myLoopSort);
-      foreach loop in l
-      {
-        core::tree subNode = findRootLoopNode(loopTree, loop);
-        subNode.insert();
-      }*/
-    return loopTree;
-}
-
-// should sort descendingly
-bool myLoopSort(loop_t i,loop_t j)
-{
-    return (i.stop-i.start)>(j.stop-j.start);
-}
 
 

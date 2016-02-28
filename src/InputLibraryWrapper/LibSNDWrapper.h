@@ -3,7 +3,7 @@
 
 #include <sndfile.h>
 
-#include "PCMHolder.h"
+#include "Song.h"
 
 
 /**
@@ -11,7 +11,7 @@
   *
   */
 
-class LibSNDWrapper : public PCMHolder
+class LibSNDWrapper : public Song
 {
 public:
 
@@ -55,7 +55,7 @@ public:
     /**
      * @return vector
      */
-    vector<loop_t> getLoops () const override;
+    vector<loop_t> getLoopArray () const;
 
 
     /**

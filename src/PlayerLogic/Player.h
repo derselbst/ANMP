@@ -46,7 +46,7 @@ public:
     /**
      * @return Song
      */
-    Song getCurrentSong ();
+    Song* getCurrentSong ();
 
 
     /**
