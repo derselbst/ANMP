@@ -118,6 +118,7 @@ private:
      */
     void resetPlayhead ();
 
+    core::tree<loop_t>* getNextLoop(core::tree<loop_t>& l);
 
     /**
      * make sure you called seekTo(startFrame) before calling this!

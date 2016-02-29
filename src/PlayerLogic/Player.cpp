@@ -1,4 +1,5 @@
 #include <iostream>
+#include <limits>
 
 #include "Config.h"
 #include "CommonExceptions.h"
@@ -233,6 +234,25 @@ void Player::resetPlayhead ()
     this->seekTo(0);
 }
 
+core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)
+{
+    loop_t compareLoop;
+    compareLoop.start = numeric_limits<unsigned int>::max();
+    
+    core::tree<loop_t>* ptrToNearest = nullptr;
+    // find loop that starts closest, i.e. right after, to whereever playhead points to
+    for (core::tree<loop_t>::iterator it = l.begin(); it != l.end(); ++it)
+    {
+	if(this->playhead < (*it).start && (*it).start < compareLoop.start)
+	{
+	  compareLoop=*it;
+	  ptrToNearest=it.tree_ptr();
+	}
+    }
+    
+    return ptrToNearest;
+}
+
 
 /**
  * make sure you called seekTo(startFrame) before calling this!
@@ -245,30 +265,31 @@ void Player::resetPlayhead ()
  */
 void Player::playLoop (core::tree<loop_t>& loop)
 {   USERS_ARE_STUPID
-    /* TODO IMPLEMENT ME
+  
     // while there are sub-loops that need to be played
-    while(NODE* l = this->currentSong.loops.getNextLoop(this->playhead) != nullptr)
+    core::tree<loop_t>* subloop;
+    while((subloop = this->getNextLoop(loop)) != nullptr)
     {
 
     // if the user requested to seek past the current loop, skip it at all
-    if(this->playhead > l->end)
+    if(this->playhead > (*(*subloop)).stop)
     {
     continue;
     }
 
-    this->playFrames(playhead, l->start);
-    // at this point: playhead==l.start
-            bool forever = l->count==0;
-            while(this->isPlaying && (forever || l->count--))
+    this->playFrames(playhead, (*(*subloop)).start);
+    // at this point: playhead==subloop.start
+            bool forever = (*(*subloop)).count==0;
+            while(this->isPlaying && (forever || (*(*subloop)).count--))
             {
                 // if we play this loop multiple time, make sure we start at the beginning again
-                this->seekTo(l.start);
-                this->playLoop(l);
+                this->seekTo((*(*subloop)).start);
+                this->playLoop(*subloop);
                 // at this point: playhead=l.end
             }
     }
-    */
-// play rest of file
+
+    // play rest of file
     this->playFrames(playhead, (*loop).stop);
 }
 
