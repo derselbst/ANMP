@@ -6,8 +6,32 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
+    ui(new Ui::MainWindow)
 {
     this->ui->setupUi(this);
+
+
+
+
+
+
+    // Create model
+        model = new QStringListModel(this);
+
+        // Make data
+        QStringList List;
+        List << "test" << "Reverie" << "Prelude";
+
+        // Populate our model
+        model->setStringList(List);
+
+        // Glue model and view together
+        ui->listView->setModel(model);
+
+        // Add additional feature so that
+        // we can manually modify the data in ListView
+        // It may be triggered by hitting any key or double-click etc.
+        ui->listView->setEditTriggers(QAbstractItemView::AnyKeyPressed | QAbstractItemView::DoubleClicked);
 }
 
 MainWindow::~MainWindow()
@@ -29,6 +53,31 @@ void MainWindow::on_actionAdd_Songs_triggered()
       }
     // reset everything, stop playback
     // load the file
+
+
+
+
+
+
+
+
+
+          // Adding at the end
+
+      for(int i=0; i<fileNames.count(); i++)
+      {
+
+          // Get the position
+          int row = model->rowCount();
+
+          // Enable add one or more rows
+          model->insertRows(row,1);
+
+          // Get the row for Edit mode
+          QModelIndex index = model->index(row);
+
+          this->model->setData(index,fileNames.at(i));
+      }
 }
 
 void MainWindow::initPlayer()

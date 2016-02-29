@@ -6,6 +6,12 @@
 #include "IPlaylist.h"
 #include "Playlist.h"
 
+
+#include <QStringList>
+#include <QStringListModel>
+#include <QAbstractItemView>
+
+
 namespace Ui {
 class MainWindow;
 }
@@ -19,9 +25,18 @@ public:
     ~MainWindow();
 
 private:
-    Ui::MainWindow *ui = new Ui::MainWindow;
+    Ui::MainWindow *ui;
     Player* player = nullptr;
     IPlaylist* playlist = new Playlist();
+
+
+
+
+    QStringListModel *model;
+
+
+
+
 
 private slots:
     void on_actionAdd_Songs_triggered();
