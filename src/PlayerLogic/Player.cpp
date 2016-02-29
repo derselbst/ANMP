@@ -72,7 +72,12 @@ void Player::init()
 /**
  */
 void Player::play ()
-{   USERS_ARE_STUPID
+{   
+  if(this->audioDriver==nullptr || this->currentSong==nullptr)
+  {
+    this->init();
+  }
+  
     if (this->isPlaying)
     {
         return;
