@@ -48,7 +48,9 @@ Player::~Player ()
 
 void Player::init()
 {
-    this->stop();
+    this->pause();
+    
+    lock_guard<recursive_mutex> lck(mtxCurrentSong);
 
     delete this->audioDriver;
 
