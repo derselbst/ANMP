@@ -12,7 +12,7 @@ IAudioOutput::~IAudioOutput()
 {}
 
 
-int IAudioOutput::write (pcm_t* frameBuffer, unsigned int frames, int offset)
+int IAudioOutput::write (pcm_t* frameBuffer, frame_t frames, int offset)
 {
     switch (this->currentSampleFormat)
     {

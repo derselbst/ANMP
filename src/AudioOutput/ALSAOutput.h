@@ -57,9 +57,9 @@ public:
 
     void close () override;
 
-    int write (float* buffer, unsigned int frames) override;
+    int write (float* buffer, frame_t frames) override;
 
-    int write (int16_t* buffer, unsigned int frames) override;
+    int write (int16_t* buffer, frame_t frames) override;
 
     void start () override;
 private:

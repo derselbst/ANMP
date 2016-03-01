@@ -93,7 +93,7 @@ public:
      * returns number of frames this song lasts, they dont necessarily have to be in the pcm buffer at one time
      * @return unsigned int
      */
-    virtual unsigned int getFrames () const = 0;
+    virtual frame_t getFrames () const = 0;
 
 private:
   

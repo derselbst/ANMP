@@ -99,7 +99,7 @@ vector<loop_t> LibSNDWrapper::getLoopArray () const
     return res;
 }
 
-unsigned int LibSNDWrapper::getFrames () const
+frame_t LibSNDWrapper::getFrames () const
 {
     return this->sfinfo.frames - this->offset;
 }

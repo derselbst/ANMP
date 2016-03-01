@@ -62,7 +62,7 @@ public:
      * returns number of frames this song lasts, they dont necessarily have to be in the pcm buffer at one time
      * @return unsigned int
      */
-    unsigned int getFrames () const override;
+    frame_t getFrames () const override;
 
 private:
     SNDFILE *sndfile = nullptr;

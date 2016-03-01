@@ -4,7 +4,7 @@
 #include <cstdint>
 
 typedef void pcm_t;
-
+typedef unsigned int frame_t;
 
 typedef enum LoopType
 {
@@ -17,11 +17,11 @@ typedef enum LoopType
 typedef struct loop
 {
     // frame to start the loop
-    uint32_t start;
+    frame_t start;
 
     // frame to end the loop
     // this frame WILL be played!
-    uint32_t stop;
+    frame_t stop;
 
     // how many times this loop is being played
     // zero indicates playing forever

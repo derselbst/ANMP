@@ -129,7 +129,7 @@ void Player::setCurrentSong (Song* song)
     }
 
     this->currentSong = song;
-// go ahead and start filling the pcm buffer
+    // go ahead and start filling the pcm buffer
     this->futureFillBuffer = ASYNC_FILL_BUFFER;
 
     SongFormat& format = this->currentSong->Format;
@@ -201,7 +201,7 @@ void Player::fadeout ()
 /**
  * @param  frame seeks the playhead to frame "frame"
  */
-void Player::seekTo (unsigned int frame)
+void Player::seekTo (frame_t frame)
 {
     this->playhead=frame;
     return;
@@ -239,7 +239,7 @@ void Player::resetPlayhead ()
 core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)
 {
     loop_t compareLoop;
-    compareLoop.start = numeric_limits<unsigned int>::max();
+    compareLoop.start = numeric_limits<frame_t>::max();
     
     core::tree<loop_t>* ptrToNearest = nullptr;
     // find loop that starts closest, i.e. right after, to whereever playhead points to
@@ -273,22 +273,22 @@ void Player::playLoop (core::tree<loop_t>& loop)
     while((subloop = this->getNextLoop(loop)) != nullptr)
     {
 
-    // if the user requested to seek past the current loop, skip it at all
-    if(this->playhead > (*(*subloop)).stop)
-    {
-    continue;
-    }
+	// if the user requested to seek past the current loop, skip it at all
+	if(this->playhead > (*(*subloop)).stop)
+	{
+	    continue;
+	}
 
-    this->playFrames(playhead, (*(*subloop)).start);
-    // at this point: playhead==subloop.start
-            bool forever = (*(*subloop)).count==0;
-            while(this->isPlaying && (forever || (*(*subloop)).count--))
-            {
-                // if we play this loop multiple time, make sure we start at the beginning again
-                this->seekTo((*(*subloop)).start);
-                this->playLoop(*subloop);
-                // at this point: playhead=l.end
-            }
+	this->playFrames(playhead, (*(*subloop)).start);
+	// at this point: playhead==subloop.start
+	bool forever = (*(*subloop)).count==0;
+	while(this->isPlaying && (forever || (*(*subloop)).count--))
+	{
+	    // if we play this loop multiple time, make sure we start at the beginning again
+	    this->seekTo((*(*subloop)).start);
+	    this->playLoop(*subloop);
+	    // at this point: playhead=l.end
+	}
     }
 
     // play rest of file
@@ -300,7 +300,7 @@ void Player::playLoop (core::tree<loop_t>& loop)
  * @param  startFrame
  * @param  stopFrame
  */
-void Player::playFrames (unsigned int startFrame, unsigned int stopFrame)
+void Player::playFrames (frame_t startFrame, frame_t stopFrame)
 {   USERS_ARE_STUPID
 
 // just do nothing with it, but avoid compiler warning
@@ -308,7 +308,7 @@ void Player::playFrames (unsigned int startFrame, unsigned int stopFrame)
 
     do
     {
-        int framesToPlay = stopFrame - (this->playhead % this->currentSong->getFrames());
+        long long framesToPlay = stopFrame - (this->playhead % this->currentSong->getFrames());
 
         if(framesToPlay<=0)
         {
@@ -336,7 +336,7 @@ void Player::playFrames (unsigned int itemsToPlay)
 // first define a nice shortcut to our pcmBuffer
     pcm_t* pcmBuffer = this->currentSong->data;
 
-    unsigned int memorizedPlayhead = this->playhead;
+    frame_t memorizedPlayhead = this->playhead;
 
     size_t bufSize = this->currentSong->count;
     if(bufSize==0)
@@ -356,7 +356,7 @@ void Player::playFrames (unsigned int itemsToPlay)
 //         this->audioDriver->write(pcmBuffer+i, 1, channels) ;
 
 // thus do it by handing in small buffers within the buffer ;)
-    const unsigned int& FRAMES = Config::FramesToRender;
+    const frame_t& FRAMES = Config::FramesToRender;
     const unsigned int BUFSIZE = FRAMES * channels;
 
     int fullTransfers = itemsToPlay / BUFSIZE;

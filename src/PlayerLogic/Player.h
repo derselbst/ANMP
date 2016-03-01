@@ -84,7 +84,7 @@ public:
     /**
      * @param  frame seeks the playhead to frame "frame"
      */
-    void seekTo (unsigned int frame);
+    void seekTo (frame_t frame);
 
 
 private:
@@ -103,7 +103,7 @@ private:
     IPlaylist* playlist;
 
     // frame offset; (song.pcm + FRAMESTOFLOATS(playhead)) points to the frame that will be played on subsequent call to playSample
-    unsigned int playhead = 0;
+    frame_t playhead = 0;
 
     IAudioOutput* audioDriver = nullptr;
 
@@ -136,7 +136,7 @@ private:
      * @param  startFrame
      * @param  stopFrame
      */
-    void playFrames (unsigned int startFrame, unsigned int stopFrame);
+    void playFrames (frame_t startFrame, frame_t stopFrame);
 
 
     /**
