@@ -308,7 +308,11 @@ void Player::playFrames (frame_t startFrame, frame_t stopFrame)
 
     do
     {
-        long long framesToPlay = stopFrame - (this->playhead % this->currentSong->getFrames());
+        if(this->currentSong->getFrames()==0)
+	{
+	  return;
+	}
+        signed long long framesToPlay = stopFrame - (this->playhead % this->currentSong->getFrames());
 
         if(framesToPlay<=0)
         {
