@@ -51,7 +51,6 @@ void LibSNDWrapper::fillBuffer()
         sf_seek(this->sndfile, this->offset, SEEK_SET);
 
         size_t BufferLen = this->getFrames() * this->Format.Channels;
-        BufferLen -= this->offset * this->Format.Channels;
         this->data = new float[BufferLen];
 
         int readcount = sf_read_float (this->sndfile, static_cast<float*>(this->data), BufferLen);
@@ -102,7 +101,7 @@ vector<loop_t> LibSNDWrapper::getLoopArray () const
 
 unsigned int LibSNDWrapper::getFrames () const
 {
-    return this->sfinfo.frames;
+    return this->sfinfo.frames - this->offset;
 }
 
 
