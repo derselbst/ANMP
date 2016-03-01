@@ -333,13 +333,17 @@ void Player::playFrames (unsigned int itemsToPlay)
     // wait for another ASYNC_FILL_BUFFER call to finish, so that data and bufSize can get updated
     this->futureFillBuffer.wait();
 
-    size_t bufSize = this->currentSong->count;
-
 // first define a nice shortcut to our pcmBuffer
     pcm_t* pcmBuffer = this->currentSong->data;
 
     unsigned int memorizedPlayhead = this->playhead;
 
+    size_t bufSize = this->currentSong->count;
+    if(bufSize==0)
+    {
+      // nothing to play, we are finished here
+      return;
+    }
 // then seek within the buffer to that point where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
     int offset = FramesToItems(memorizedPlayhead) % bufSize;
 
