@@ -68,6 +68,8 @@ void Player::init()
 
     this->audioDriver->open();
 
+    // unset currentSong, this should force setCurrentSong to reinit audioDriver
+    this->currentSong=nullptr;
     this->setCurrentSong(this->playlist->current());
 }
 
