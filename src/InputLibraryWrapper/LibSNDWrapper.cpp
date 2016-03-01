@@ -6,13 +6,10 @@
 // Constructors/Destructors
 //
 
-LibSNDWrapper::LibSNDWrapper (string filename, size_t offset)
+LibSNDWrapper::LibSNDWrapper (string filename, size_t offset) : Song(filename, offset)
 {
-    this->Filename = filename;
-    memset (&sfinfo, 0, sizeof (sfinfo)) ;
     this->Format.SampleFormat = SampleFormat_t::float32;
-    this->offset = offset;
-
+    memset (&sfinfo, 0, sizeof (sfinfo)) ;
     // TODO: just for sure: check whether other instance vars are init properly
 }
 

@@ -22,7 +22,7 @@ class Song
 protected:
     // even if there were no pure virtual methods, allow
     // construction for child classes only
-    Song();
+    Song(string filename, size_t offset=0);
 
 public:
 
