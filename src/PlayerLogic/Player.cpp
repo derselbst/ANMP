@@ -43,8 +43,6 @@ Player::~Player ()
         this->audioDriver->close();
     }
     delete this->audioDriver;
-
-    delete this->playlist;
 }
 
 void Player::init()

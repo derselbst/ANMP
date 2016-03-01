@@ -38,6 +38,7 @@ MainWindow::~MainWindow()
 {
     delete this->ui;
     delete this->player;
+    delete this->playlist;
 }
 
 void MainWindow::on_actionAdd_Songs_triggered()

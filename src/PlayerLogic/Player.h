@@ -97,14 +97,21 @@ private:
 
     float PreAmpVolume;
 
+    // pointer to the song we are currently isPlaying
+    // instance is owned by this.playlist
     Song* currentSong = nullptr;
+    
     recursive_mutex mtxCurrentSong;
 
+    // pointer to the playlist we use
+    // we dont own this playlist, we dont care about destruction
     IPlaylist* playlist;
 
     // frame offset; (song.pcm + FRAMESTOFLOATS(playhead)) points to the frame that will be played on subsequent call to playSample
     frame_t playhead = 0;
 
+    // pointer to the audioDriver, we currently use
+    // we DO own this instance and should care about destruction
     IAudioOutput* audioDriver = nullptr;
 
     bool isPlaying = false;
