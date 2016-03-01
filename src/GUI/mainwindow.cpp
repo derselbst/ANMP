@@ -87,13 +87,7 @@ void MainWindow::initPlayer()
 
 void MainWindow::on_initButton_clicked()
 {
-  delete this->player;
-    if(this->player==nullptr)
-    {
-        this->player = new Player(this->playlist);
-        this->player->init();
-    }
-this->ui->statusbar->showMessage("Player initialized", 2000);
+
 }
 
 void MainWindow::on_actionPlay_triggered()

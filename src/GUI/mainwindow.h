@@ -26,8 +26,8 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    Player* player = nullptr;
     IPlaylist* playlist = new Playlist();
+    Player* player = this->player = new Player(this->playlist);
 
 
 
