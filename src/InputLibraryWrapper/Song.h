@@ -33,8 +33,19 @@ public:
     Song(Song const&) = delete;
     Song& operator=(Song const&) = delete;
 
+//--------------------------------------------------------------------
+// File specific level    
+//--------------------------------------------------------------------
+    // fullpath to underlying audio file
+    string Filename;
+    
+    // how many frames to skip when reading pcm from file
+    size_t offset;
+//--------------------------------------------------------------------
 
-
+//--------------------------------------------------------------------
+// RAW PCM Buffer specific area
+//--------------------------------------------------------------------
     // pointer to pcm data
     pcm_t* data = nullptr;
 
@@ -44,17 +55,43 @@ public:
     // pcm specific information
     SongFormat Format;
 
-    // how many frames to skip when reading pcm from file
-    size_t offset;
+    // a tree, that holds to loops to be played
+/*  example: syntax aggreement: ([a,b],k) defines an instance of loop_t where:
+    a: loop_t::start
+    b: loop_t::stop
+    k  loop_t::count
+    given is an audio file with N frames
+    in order to make the audio file play, the root node of loopTree will always
+    contain ([0,N],1)
+    imagine that this audio file has additionally defined loop points (such as
+    in smpl chunk in RIFF-WAVE files)
+    
+    this.getLoopArray() will return these loop points as array, based on that array,
+    the loopTree is begin built, which might look like this:
+    
+                          ([0,N],1)
+                        /      |   \
+                      /        |     \
+                    /          |       \
+                  /            |         \
+                /              |           \
+              /                |             \
+    ([3,10],5)          ([15,12000],6)      ([12001,65344],1)
+                               |                     \
+                               |                      \
+                        ([20,4000],123)           ([12005, 12010],2)
+                           /         \
+                          /           \
+                   ([20-22],4)     ([30,3000],23)
+*/
+    core::tree<loop_t> loopTree;
+//--------------------------------------------------------------------
 
-    // fullpath to underlying audio file
-    string Filename;
 
     // holds metadata for this song e.g. title, interpret, album
     SongInfo Metadata;
     
-    // a tree, that holds to loops to be played
-    core::tree<loop_t> loopTree;
+
 
     /**
      * called to check whether the current song is playable or not
