@@ -37,4 +37,8 @@ install_manifest.txt
 *.x86_64
 *.hex
 
- 
+# ProjectFiles
+*.pro.user
+
+# Audio Test Files
+*.wav
