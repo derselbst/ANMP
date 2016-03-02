@@ -172,11 +172,6 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
 
     snd_pcm_sw_params_free (sw_params);
 
-    snd_pcm_reset (this->alsa_dev);
-
-    // pcm might still be in stopped state, start it explicitly
-    this->start();
-
     // WOW, WE MADE IT TIL HERE, so update channelcount and srate
     this->currentChannelCount = channels;
     this->currentSampleFormat = s;

@@ -169,6 +169,12 @@ void Player::pause ()
 {
     this->isPlaying=false;
 
+    if(this->audioDriver!=nullptr)
+    {
+      // we wont feed any audioDriver with PCM anymore, so stop the PCM stream
+      // by draining the last few frames
+      this->audioDriver->drain();
+    }
 }
 
 
@@ -393,6 +399,7 @@ void Player::playInternal ()
 
         core::tree<loop_t>& loops = this->currentSong->loopTree;
 
+	this->audioDriver->start();
         this->playLoop(loops);
 
         // ok, for some reason we left playLoop, if this was due to we shall stop playing
