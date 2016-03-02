@@ -6,13 +6,10 @@
 // Constructors/Destructors
 //
 
-LibSNDWrapper::LibSNDWrapper (string filename, size_t offset)
+LibSNDWrapper::LibSNDWrapper (string filename, size_t offset) : Song(filename, offset)
 {
-    this->Filename = filename;
-    memset (&sfinfo, 0, sizeof (sfinfo)) ;
     this->Format.SampleFormat = SampleFormat_t::float32;
-    this->offset = offset;
-
+    memset (&sfinfo, 0, sizeof (sfinfo)) ;
     // TODO: just for sure: check whether other instance vars are init properly
 }
 
@@ -54,7 +51,6 @@ void LibSNDWrapper::fillBuffer()
         sf_seek(this->sndfile, this->offset, SEEK_SET);
 
         size_t BufferLen = this->getFrames() * this->Format.Channels;
-        BufferLen -= this->offset * this->Format.Channels;
         this->data = new float[BufferLen];
 
         int readcount = sf_read_float (this->sndfile, static_cast<float*>(this->data), BufferLen);
@@ -103,9 +99,9 @@ vector<loop_t> LibSNDWrapper::getLoopArray () const
     return res;
 }
 
-unsigned int LibSNDWrapper::getFrames () const
+frame_t LibSNDWrapper::getFrames () const
 {
-    return this->sfinfo.frames;
+    return this->sfinfo.frames - this->offset;
 }
 
 

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <limits>
 
 #include "Config.h"
 #include "CommonExceptions.h"
@@ -42,13 +43,13 @@ Player::~Player ()
         this->audioDriver->close();
     }
     delete this->audioDriver;
-
-    delete this->playlist;
 }
 
 void Player::init()
 {
-    this->stop();
+    this->pause();
+    
+    lock_guard<recursive_mutex> lck(mtxCurrentSong);
 
     delete this->audioDriver;
 
@@ -65,6 +66,8 @@ void Player::init()
 
     this->audioDriver->open();
 
+    // unset currentSong, this should force setCurrentSong to reinit audioDriver
+    this->currentSong=nullptr;
     this->setCurrentSong(this->playlist->current());
 }
 
@@ -72,7 +75,12 @@ void Player::init()
 /**
  */
 void Player::play ()
-{   USERS_ARE_STUPID
+{   
+  if(this->audioDriver==nullptr || this->currentSong==nullptr)
+  {
+    this->init();
+  }
+  
     if (this->isPlaying)
     {
         return;
@@ -119,7 +127,7 @@ void Player::setCurrentSong (Song* song)
     }
 
     this->currentSong = song;
-// go ahead and start filling the pcm buffer
+    // go ahead and start filling the pcm buffer
     this->futureFillBuffer = ASYNC_FILL_BUFFER;
 
     SongFormat& format = this->currentSong->Format;
@@ -191,7 +199,7 @@ void Player::fadeout ()
 /**
  * @param  frame seeks the playhead to frame "frame"
  */
-void Player::seekTo (unsigned int frame)
+void Player::seekTo (frame_t frame)
 {
     this->playhead=frame;
     return;
@@ -226,6 +234,25 @@ void Player::resetPlayhead ()
     this->seekTo(0);
 }
 
+core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)
+{
+    loop_t compareLoop;
+    compareLoop.start = numeric_limits<frame_t>::max();
+    
+    core::tree<loop_t>* ptrToNearest = nullptr;
+    // find loop that starts closest, i.e. right after, to whereever playhead points to
+    for (core::tree<loop_t>::iterator it = l.begin(); it != l.end(); ++it)
+    {
+	if(this->playhead < (*it).start && (*it).start < compareLoop.start)
+	{
+	  compareLoop=*it;
+	  ptrToNearest=it.tree_ptr();
+	}
+    }
+    
+    return ptrToNearest;
+}
+
 
 /**
  * make sure you called seekTo(startFrame) before calling this!
@@ -238,30 +265,32 @@ void Player::resetPlayhead ()
  */
 void Player::playLoop (core::tree<loop_t>& loop)
 {   USERS_ARE_STUPID
-    /* TODO IMPLEMENT ME
+  
     // while there are sub-loops that need to be played
-    while(NODE* l = this->currentSong.loops.getNextLoop(this->playhead) != nullptr)
+    core::tree<loop_t>* subloop;
+    while((subloop = this->getNextLoop(loop)) != nullptr)
     {
 
-    // if the user requested to seek past the current loop, skip it at all
-    if(this->playhead > l->end)
-    {
-    continue;
+	// if the user requested to seek past the current loop, skip it at all
+	if(this->playhead > (*(*subloop)).stop)
+	{
+	    continue;
+	}
+
+	this->playFrames(playhead, (*(*subloop)).start);
+	// at this point: playhead==subloop.start
+	bool forever = (*(*subloop)).count==0;
+	uint32_t count = (*(*subloop)).count;
+	while(this->isPlaying && (forever || count--))
+	{
+	    // if we play this loop multiple time, make sure we start at the beginning again
+	    this->seekTo((*(*subloop)).start);
+	    this->playLoop(*subloop);
+	    // at this point: playhead=l.end
+	}
     }
 
-    this->playFrames(playhead, l->start);
-    // at this point: playhead==l.start
-            bool forever = l->count==0;
-            while(this->isPlaying && (forever || l->count--))
-            {
-                // if we play this loop multiple time, make sure we start at the beginning again
-                this->seekTo(l.start);
-                this->playLoop(l);
-                // at this point: playhead=l.end
-            }
-    }
-    */
-// play rest of file
+    // play rest of file
     this->playFrames(playhead, (*loop).stop);
 }
 
@@ -270,7 +299,7 @@ void Player::playLoop (core::tree<loop_t>& loop)
  * @param  startFrame
  * @param  stopFrame
  */
-void Player::playFrames (unsigned int startFrame, unsigned int stopFrame)
+void Player::playFrames (frame_t startFrame, frame_t stopFrame)
 {   USERS_ARE_STUPID
 
 // just do nothing with it, but avoid compiler warning
@@ -278,7 +307,11 @@ void Player::playFrames (unsigned int startFrame, unsigned int stopFrame)
 
     do
     {
-        int framesToPlay = stopFrame - (this->playhead % this->currentSong->getFrames());
+        if(this->currentSong->getFrames()==0)
+	{
+	  return;
+	}
+        signed long long framesToPlay = stopFrame - (this->playhead % this->currentSong->getFrames());
 
         if(framesToPlay<=0)
         {
@@ -303,13 +336,17 @@ void Player::playFrames (unsigned int itemsToPlay)
     // wait for another ASYNC_FILL_BUFFER call to finish, so that data and bufSize can get updated
     this->futureFillBuffer.wait();
 
-    size_t bufSize = this->currentSong->count;
-
 // first define a nice shortcut to our pcmBuffer
     pcm_t* pcmBuffer = this->currentSong->data;
 
-    unsigned int memorizedPlayhead = this->playhead;
+    frame_t memorizedPlayhead = this->playhead;
 
+    size_t bufSize = this->currentSong->count;
+    if(bufSize==0)
+    {
+      // nothing to play, we are finished here
+      return;
+    }
 // then seek within the buffer to that point where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
     int offset = FramesToItems(memorizedPlayhead) % bufSize;
 
@@ -322,7 +359,7 @@ void Player::playFrames (unsigned int itemsToPlay)
 //         this->audioDriver->write(pcmBuffer+i, 1, channels) ;
 
 // thus do it by handing in small buffers within the buffer ;)
-    const unsigned int& FRAMES = Config::FramesToRender;
+    const frame_t& FRAMES = Config::FramesToRender;
     const unsigned int BUFSIZE = FRAMES * channels;
 
     int fullTransfers = itemsToPlay / BUFSIZE;

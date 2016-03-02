@@ -201,7 +201,7 @@ void ALSAOutput::close()
     }
 }
 
-int ALSAOutput::write (float* buffer, unsigned int frames)
+int ALSAOutput::write (float* buffer, frame_t frames)
 {
     static int epipe_count = 0;
 
@@ -287,7 +287,7 @@ int ALSAOutput::write (float* buffer, unsigned int frames)
     return total;
 }
 
-int ALSAOutput::write (int16_t* buffer, unsigned int frames)
+int ALSAOutput::write (int16_t* buffer, frame_t frames)
 {
     return 0;
 }

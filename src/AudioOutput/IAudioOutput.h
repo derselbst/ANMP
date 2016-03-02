@@ -75,7 +75,7 @@ public:
      * @param  frames no. of frames to be played from the buffer
      * @param  channels no. of channels
      */
-    virtual int write (float* buffer, unsigned int frames) = 0;
+    virtual int write (float* buffer, frame_t frames) = 0;
 
 
     /**
@@ -83,7 +83,7 @@ public:
      * @param  frames
      * @param  channels
      */
-    virtual int write (int16_t* buffer, unsigned int frames) = 0;
+    virtual int write (int16_t* buffer, frame_t frames) = 0;
 
 
     /**
@@ -96,7 +96,7 @@ public:
      * @param  pcmFormat specifies the format for the items frameBuffer (int16, float,
      * etc.)
      */
-    virtual int write (pcm_t* frameBuffer, unsigned int frames, int offset);
+    virtual int write (pcm_t* frameBuffer, frame_t frames, int offset);
 
 protected:
     unsigned char currentChannelCount = 0;

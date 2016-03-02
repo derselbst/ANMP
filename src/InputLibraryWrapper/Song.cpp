@@ -3,9 +3,10 @@
 // Constructors/Destructors
 //
 
-Song::Song ()
+Song::Song (string filename, size_t offset)
 {
-  
+    this->Filename = filename;
+    this->offset = offset;
 }
 
 Song::~Song ()

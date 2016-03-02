@@ -84,7 +84,7 @@ public:
     /**
      * @param  frame seeks the playhead to frame "frame"
      */
-    void seekTo (unsigned int frame);
+    void seekTo (frame_t frame);
 
 
 private:
@@ -97,14 +97,21 @@ private:
 
     float PreAmpVolume;
 
+    // pointer to the song we are currently isPlaying
+    // instance is owned by this.playlist
     Song* currentSong = nullptr;
+    
     recursive_mutex mtxCurrentSong;
 
+    // pointer to the playlist we use
+    // we dont own this playlist, we dont care about destruction
     IPlaylist* playlist;
 
     // frame offset; (song.pcm + FRAMESTOFLOATS(playhead)) points to the frame that will be played on subsequent call to playSample
-    unsigned int playhead = 0;
+    frame_t playhead = 0;
 
+    // pointer to the audioDriver, we currently use
+    // we DO own this instance and should care about destruction
     IAudioOutput* audioDriver = nullptr;
 
     bool isPlaying = false;
@@ -118,6 +125,7 @@ private:
      */
     void resetPlayhead ();
 
+    core::tree<loop_t>* getNextLoop(core::tree<loop_t>& l);
 
     /**
      * make sure you called seekTo(startFrame) before calling this!
@@ -135,7 +143,7 @@ private:
      * @param  startFrame
      * @param  stopFrame
      */
-    void playFrames (unsigned int startFrame, unsigned int stopFrame);
+    void playFrames (frame_t startFrame, frame_t stopFrame);
 
 
     /**
