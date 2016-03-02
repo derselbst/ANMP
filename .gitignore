@@ -38,7 +38,7 @@ install_manifest.txt
 *.hex
 
 # ProjectFiles
-*.pro.user
+*.pro.user*
 
 # Audio Test Files
 *.wav
