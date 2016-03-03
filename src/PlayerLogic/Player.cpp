@@ -374,12 +374,13 @@ void Player::playFrames (unsigned int itemsToPlay)
 void Player::playInternal ()
 {
     lock_guard<recursive_mutex> lck(mtxCurrentSong);
+    
+    this->audioDriver->start();
     while(this->isPlaying)
     {
 
         core::tree<loop_t>& loops = this->currentSong->loopTree;
 
-	this->audioDriver->start();
         this->playLoop(loops);
 
         // ok, for some reason we left playLoop, if this was due to we shall stop playing
