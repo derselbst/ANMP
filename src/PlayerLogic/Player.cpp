@@ -209,26 +209,6 @@ void Player::seekTo (frame_t frame)
 {
     this->playhead=frame;
     return;
-
-    bool oldState = this->isPlaying;
-    this->pause();
-
-    // make sure we wait for playInternal to finish
-    // TODO: this wont work if being called from playInternal itself
-    try
-    {
-        this->futurePlayInternal.wait();
-    }
-    catch(future_error& e)
-    {}
-    {
-        lock_guard<recursive_mutex> lck(mtxCurrentSong);
-        this->playhead=frame;
-    }
-    if(oldState)
-    {
-        this->play();
-    }
 }
 
 
