@@ -8,7 +8,7 @@ this->clear();
 void Playlist::add (Song* song)
 {
     bool firstElement = this->queue.empty();
-    this->queue.insert(song);
+    this->queue.push_back(song);
     if(firstElement)
     {
         this->currentSong=this->queue.begin();
@@ -18,31 +18,26 @@ void Playlist::add (Song* song)
 
 void Playlist::remove (Song* song)
 {
-    SongQueue_t::iterator it = this->queue.find(song);
-
-    if(it!=this->queue.end())
+    for(SongQueue_t::iterator it = this->queue.begin(); it!=this->queue.end(); it++)
     {
-        delete *it;
+      if(*it == song)
+      {
+	delete *it;
         this->queue.erase(it);
-
+      }
     }
-
 }
 
 /**
  */
 void Playlist::remove (int i)
 {
-
+  this->remove(this->queue[i]);
 }
 
 void Playlist::clear()
 {
-    for(SongQueue_t::iterator it= this->queue.begin(); it!=this->queue.end(); it++)
-    {
-        delete *it;
-	this->queue.erase(it);
-    }
+    this->queue.clear();
 }
 
 

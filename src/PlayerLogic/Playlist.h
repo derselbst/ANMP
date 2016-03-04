@@ -1,14 +1,14 @@
 #ifndef PLAYLIST_H
 #define PLAYLIST_H
 
-#include <set>
+#include <queue>
 
 #include "IPlaylist.h"
 
 class Playlist : public IPlaylist
 {
 public:
-    typedef multiset<Song*> SongQueue_t;
+    typedef deque<Song*> SongQueue_t;
 
     // Constructors/Destructors
     //
