@@ -229,7 +229,7 @@ core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)
     // find loop that starts closest, i.e. right after, to whereever playhead points to
     for (core::tree<loop_t>::iterator it = l.begin(); it != l.end(); ++it)
     {
-	if(this->playhead < (*it).start && (*it).start < compareLoop.start)
+	if(this->playhead <= (*it).start && (*it).start < compareLoop.start)
 	{
 	  compareLoop=*it;
 	  ptrToNearest=it.tree_ptr();
