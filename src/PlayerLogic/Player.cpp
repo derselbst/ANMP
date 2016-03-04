@@ -265,9 +265,10 @@ void Player::playLoop (core::tree<loop_t>& loop)
 
 	this->playFrames(playhead, (*(*subloop)).start);
 	// at this point: playhead==subloop.start
-	bool forever = (*(*subloop)).count==0;
-	uint32_t count = (*(*subloop)).count;
-	while(this->isPlaying && (forever || count--))
+	
+	uint32_t mycount = Config::overridingGlobalLoopCount!=-1 ? Config::overridingGlobalLoopCount : (*(*subloop)).count;
+	bool forever = mycount==0;
+	while(this->isPlaying && (forever || mycount--))
 	{
 	    // if we play this loop multiple time, make sure we start at the beginning again
 	    this->seekTo((*(*subloop)).start);

@@ -72,15 +72,14 @@ void LibSNDWrapper::releaseBuffer()
 
 vector<loop_t> LibSNDWrapper::getLoopArray () const
 {
-    static vector<loop_t> res;
+    vector<loop_t> res;
 
     if(res.empty())
     {
-        loop_t l;
-        l.start = 0;
-        l.stop = this->getFrames();
-        l.count = 1;
-        res.push_back(l);
+//         l.start = 0;
+//         l.stop = this->getFrames();
+//         l.count = 1;
+//         res.push_back(l);
 
         SF_INSTRUMENT inst;
         int ret = sf_command (this->sndfile, SFC_GET_INSTRUMENT, &inst, sizeof (inst)) ;
@@ -89,8 +88,12 @@ vector<loop_t> LibSNDWrapper::getLoopArray () const
 
             for (int i=0; i<inst.loop_count; i++)
             {
+	      
+        loop_t l;
                 l.start = inst.loops[i].start;
                 l.stop  = inst.loops[i].end;
+		// COMMENT
+		l.stop -= 1;
                 l.count = inst.loops[i].count;
                 res.push_back(l);
             }

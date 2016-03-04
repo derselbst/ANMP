@@ -141,6 +141,8 @@ private:
     
     
     static bool myLoopSort(loop_t i,loop_t j);
+    static bool loopsMatch(const loop_t& parent, const loop_t& child);
+    static core::tree<loop_t>& findRootLoopNode(core::tree<loop_t>& loopTree, const loop_t& subLoop);
     
 };
 
