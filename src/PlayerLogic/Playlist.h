@@ -30,6 +30,7 @@ public:
      */
     void remove (int i) override;
 
+    void clear() override;
 
     /**
      */

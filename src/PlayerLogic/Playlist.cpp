@@ -2,10 +2,7 @@
 
 Playlist::~Playlist()
 {
-    for(SongQueue_t::iterator it= this->queue.begin(); it!=this->queue.end(); it++)
-    {
-        delete *it;
-    }
+this->clear();
 }
 
 void Playlist::add (Song* song)
@@ -37,6 +34,15 @@ void Playlist::remove (Song* song)
 void Playlist::remove (int i)
 {
 
+}
+
+void Playlist::clear()
+{
+    for(SongQueue_t::iterator it= this->queue.begin(); it!=this->queue.end(); it++)
+    {
+        delete *it;
+	this->queue.erase(it);
+    }
 }
 
 
