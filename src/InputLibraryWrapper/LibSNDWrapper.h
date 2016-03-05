@@ -2,6 +2,7 @@
 #define LIBSNDWRAPPER_H
 
 #include <sndfile.h>
+#include <future>
 
 #include "Song.h"
 
@@ -42,7 +43,7 @@ public:
     void close () override;
 
 
-    /** synchronos read call to library goes here
+    /** PCM buffer fill call to underlying library goes here
      */
     void fillBuffer () override;
 
@@ -67,6 +68,12 @@ public:
 private:
     SNDFILE *sndfile = nullptr;
     SF_INFO sfinfo;
+    
+    future<void> futureFillBuffer;
+    // a flag that indicates a prematurely abort of async buffer fill
+    bool stopFillBuffer = false;
+    
+    void asyncFillBuffer();
 
 };
 

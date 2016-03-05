@@ -116,7 +116,7 @@ private:
 
     bool isPlaying = false;
 
-    future<void> futureFillBuffer;
+    
     future<void> futurePlayInternal;
 
 

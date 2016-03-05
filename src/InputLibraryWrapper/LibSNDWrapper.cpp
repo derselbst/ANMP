@@ -1,7 +1,13 @@
 #include <cstring>
+#include <thread>         // std::this_thread::sleep_for
+#include <chrono>
 
 #include "LibSNDWrapper.h"
 #include "CommonExceptions.h"
+#include "Config.h"
+
+// exception-free waiting
+#define WAIT(future)     try{ future.wait(); } catch(future_error& e){}
 
 // Constructors/Destructors
 //
@@ -48,26 +54,55 @@ void LibSNDWrapper::fillBuffer()
 {
     if(this->data==nullptr)
     {
+        this->count = this->getFrames() * this->Format.Channels;
+        this->data = new float[this->count];
+	
+	// usually this shouldnt block at all
+	WAIT(this->futureFillBuffer);
+	
+	// immediatly start filling the pcm buffer
+	this->futureFillBuffer = async(launch::async, &LibSNDWrapper::asyncFillBuffer, this);
+	
+	// give libsnd at least a minor headstart
+	this_thread::sleep_for (chrono::milliseconds(1));
+    }
+}
+
+void LibSNDWrapper::asyncFillBuffer()
+{
         sf_seek(this->sndfile, this->offset, SEEK_SET);
 
-        size_t BufferLen = this->getFrames() * this->Format.Channels;
-        this->data = new float[BufferLen];
+        int readcount=0;
+	unsigned int itemsToRender = Config::FramesToRender*this->Format.Channels;
+	
+	int fullFillCount = this->count/itemsToRender;
+	for(int i = 0; i<fullFillCount && !this->stopFillBuffer; i++)
+	{
+	  readcount += sf_read_float(this->sndfile, static_cast<float*>(this->data)+i*itemsToRender, itemsToRender);
+	}
+	
+	if(!this->stopFillBuffer)
+	{
+	    unsigned int lastItemsToRender = this->count % itemsToRender;
+	    readcount += sf_read_float(this->sndfile, static_cast<float*>(this->data)+fullFillCount*itemsToRender, lastItemsToRender);
+	    
+	    if(readcount != this->count) {}
+	    // TODO: LOG: printf("THIS SHOULD NEVER HAPPEN: only read %d frames, although there are %d frames in the file\n", readcount/sfinfo.channels, sfinfo.frames);
 
-        int readcount = sf_read_float (this->sndfile, static_cast<float*>(this->data), BufferLen);
-
-        if(readcount != BufferLen) {}
-        // TODO: LOG: printf("THIS SHOULD NEVER HAPPEN: only read %d frames, although there are %d frames in the file\n", readcount/sfinfo.channels, sfinfo.frames);
-
-        this->count = readcount;
-
-    }
+    //         this->count = readcount;
+	}
 }
 
 void LibSNDWrapper::releaseBuffer()
 {
+  this->stopFillBuffer=true;
+  WAIT(this->futureFillBuffer);
+  
     delete [] static_cast<float*>(this->data);
     this->data=nullptr;
     this->count = 0;
+    
+    this->stopFillBuffer=false;
 }
 
 vector<loop_t> LibSNDWrapper::getLoopArray () const
