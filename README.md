@@ -16,3 +16,25 @@ Another measure taken to achieve gapless playback is to avoid touching the under
 Cue sheets will just add the same song file multiple times to a playlist, but with different file-offsets.
 
 Implementing new formats shall be done by implementing the abstract base class **Song**. By that a wrapper for any library that actually supports this format is written.
+
+## Build Dependencies
+
+* cmake >= 2.8
+* ALSA
+* libsndfile (strongly recommended to play most common audio formats)
+* QT5 (for GUI support only)
+
+## Building from Source
+### Building core
+```shell
+cd src
+mkdir build && cd build
+cmake ..
+make
+```
+### Building GUI
+```shell
+cd src/GUI
+qmake-qt5
+make
+```
