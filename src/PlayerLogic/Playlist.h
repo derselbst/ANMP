@@ -48,7 +48,7 @@ public:
 
 private:
     SongQueue_t queue;
-    SongQueue_t::iterator currentSong = this->queue.begin();
+    SongQueue_t::size_type currentSong = 0;
 };
 
 #endif // PLAYLIST_H

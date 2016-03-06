@@ -1,5 +1,7 @@
 #include "Playlist.h"
 
+#define EMPTY_GUARD     if(this->queue.empty()) { return nullptr; }
+
 Playlist::~Playlist()
 {
 this->clear();
@@ -7,12 +9,7 @@ this->clear();
 
 void Playlist::add (Song* song)
 {
-    bool firstElement = this->queue.empty();
     this->queue.push_back(song);
-    if(firstElement)
-    {
-        this->currentSong=this->queue.begin();
-    }
 }
 
 
@@ -45,50 +42,32 @@ void Playlist::clear()
  */
 Song* Playlist::next ()
 {
-    if(this->queue.empty())
-    {
-        return nullptr;
-    }
+    EMPTY_GUARD
 
-    if(this->currentSong==this->queue.end() || this->currentSong==--this->queue.end())
-    {
-        // if we reached end of queue, start at beginning
-        this->currentSong = this->queue.begin();
-    }
-    else
-    {
-        this->currentSong++;
-    }
+this->currentSong = (this->currentSong+1) % this->queue.size();
 
-    return *this->currentSong;
+    return this->queue[this->currentSong];
 }
 
 /**
  */
 Song* Playlist::previous ()
 {
-    if(this->queue.empty())
-    {
-        return nullptr;
-    }
+    EMPTY_GUARD
 
-    if(this->currentSong==this->queue.begin())
-    {
-        // if we are already at beginning of queue, return last song
-        this->currentSong=--this->queue.end();
-    }
-    else
-    {
-        this->currentSong--;
-    }
+this->currentSong = (this->currentSong+this->queue.size()-1) % this->queue.size();
 
-    return *this->currentSong;
+    return this->queue[this->currentSong];
 }
 
 Song* Playlist::getSong(unsigned int id)
 {
   if(this->queue.size() > id)
   {
+    // TODO: this is a simple getter function, that should NOT implicitly set id
+    // as currentSong
+    this->currentSong = id;
+    
   return this->queue[id];
   }
   
@@ -99,11 +78,8 @@ Song* Playlist::getSong(unsigned int id)
  */
 Song* Playlist::current ()
 {
-    if(this->queue.empty() || this->currentSong==this->queue.end())
-    {
-        return nullptr;
-    }
+    EMPTY_GUARD
 
-    return *this->currentSong;
+    return this->queue[this->currentSong];
 }
 
