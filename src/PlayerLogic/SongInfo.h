@@ -14,6 +14,7 @@ struct SongInfo
 {
     string Title;
     string Artist;
+    string Album;
     string Composer;
     string Year;
     string Genre;
