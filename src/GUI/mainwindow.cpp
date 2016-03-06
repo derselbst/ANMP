@@ -44,7 +44,7 @@ MainWindow::~MainWindow()
 void MainWindow::on_actionAdd_Songs_triggered()
 {
   const QString dir;
-  const QStringList fileNames = QFileDialog::getOpenFileNames(this, "Open WAV File", dir, "Wave Files (*.wav);;Text Files (*.txt)");
+  const QStringList fileNames = QFileDialog::getOpenFileNames(this, "Open WAV File", dir, "");//Wave Files (*.wav);;Text Files (*.txt)
 
       for(int i=0; i<fileNames.count(); i++)
       {
@@ -111,4 +111,9 @@ void MainWindow::on_actionNext_Song_triggered()
     this->player->stop();
     this->player->next();
     this->player->play();
+}
+
+void MainWindow::on_actionClear_Playlist_triggered()
+{
+    this->playlist->clear();
 }

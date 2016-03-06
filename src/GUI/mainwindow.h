@@ -46,6 +46,7 @@ private slots:
     void on_actionStop_triggered();
     void on_actionPause_triggered();
     void on_actionNext_Song_triggered();
+    void on_actionClear_Playlist_triggered();
 };
 
 #endif // MAINWINDOW_H
