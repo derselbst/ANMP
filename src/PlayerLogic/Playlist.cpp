@@ -85,6 +85,15 @@ Song* Playlist::previous ()
     return *this->currentSong;
 }
 
+Song* Playlist::getSong(unsigned int id)
+{
+  if(this->queue.size() > id)
+  {
+  return this->queue[id];
+  }
+  
+  return nullptr;
+}
 
 /**
  */

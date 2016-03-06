@@ -36,6 +36,7 @@ public:
      */
     virtual void remove (int i) = 0;
 
+    virtual Song* getSong(unsigned int id) = 0;
 
     /**
      */

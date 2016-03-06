@@ -40,6 +40,7 @@ public:
      */
     Song* previous () override;
 
+    Song* getSong(unsigned int id) override;
 
     /**
      */
