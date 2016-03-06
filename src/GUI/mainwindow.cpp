@@ -14,6 +14,19 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 
+    QString rootPath = qgetenv("HOME");
+    drivesModel->setFilter(QDir::NoDotAndDotDot | QDir::Dirs);
+    ui->treeView->setModel(drivesModel);
+    ui->treeView->setRootIndex(drivesModel->setRootPath(rootPath+"/../"));
+    ui->treeView->hideColumn(1);
+    ui->treeView->hideColumn(2);
+    ui->treeView->hideColumn(3);
+
+    filesModel->setFilter(QDir::NoDotAndDotDot | QDir::Files);
+    ui->listView->setModel(filesModel);
+    ui->listView->setRootIndex(filesModel->setRootPath(rootPath));
+
+
 
     // Create model
         model = new QStringListModel(this);
@@ -26,12 +39,12 @@ MainWindow::MainWindow(QWidget *parent) :
         model->setStringList(List);
 
         // Glue model and view together
-        ui->listView->setModel(model);
+        ui->tableView->setModel(model);
 
         // Add additional feature so that
         // we can manually modify the data in ListView
         // It may be triggered by hitting any key or double-click etc.
-        ui->listView->setEditTriggers(QAbstractItemView::AnyKeyPressed | QAbstractItemView::DoubleClicked);
+        ui->tableView->setEditTriggers(QAbstractItemView::AnyKeyPressed | QAbstractItemView::DoubleClicked);
 }
 
 MainWindow::~MainWindow()
@@ -81,15 +94,6 @@ void MainWindow::on_actionAdd_Songs_triggered()
       }
 }
 
-void MainWindow::initPlayer()
-{
-
-}
-
-void MainWindow::on_initButton_clicked()
-{
-
-}
 
 void MainWindow::on_actionPlay_triggered()
 {
@@ -111,4 +115,10 @@ void MainWindow::on_actionNext_Song_triggered()
     this->player->stop();
     this->player->next();
     this->player->play();
+}
+
+void MainWindow::on_treeView_clicked(const QModelIndex &index)
+{
+    QString sPath = drivesModel->fileInfo(index).absoluteFilePath();
+    ui->listView->setRootIndex(filesModel->setRootPath(sPath));
 }
