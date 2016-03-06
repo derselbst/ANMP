@@ -8,7 +8,7 @@
 
 
 #include <QStringList>
-#include <QStringListModel>
+#include <QStandardItemModel>
 #include <QAbstractItemView>
 #include <QFileSystemModel>
 
@@ -28,16 +28,18 @@ public:
 private:
     Ui::MainWindow *ui;
     IPlaylist* playlist = new Playlist();
-    Player* player = this->player = new Player(this->playlist);
+    Player* player = new Player(this->playlist);
 
 
 
 
-    QStringListModel *model;
+    QStandardItemModel *model;
 
 
     QFileSystemModel        *drivesModel = new QFileSystemModel(this);
     QFileSystemModel        *filesModel = new QFileSystemModel(this);
+
+    void buildPlaylistView();
 
 
 private slots:
@@ -48,6 +50,8 @@ private slots:
     void on_actionNext_Song_triggered();
     void on_actionClear_Playlist_triggered();
     void on_treeView_clicked(const QModelIndex &index);
+    void on_tableView_doubleClicked(const QModelIndex &index);
+    void on_actionPrevious_Song_triggered();
 };
 
 #endif // MAINWINDOW_H

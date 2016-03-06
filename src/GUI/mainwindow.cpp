@@ -27,24 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->listView->setRootIndex(filesModel->setRootPath(rootPath));
 
 
-
-    // Create model
-        model = new QStringListModel(this);
-
-        // Make data
-        QStringList List;
-        List << "test" << "Reverie" << "Prelude";
-
-        // Populate our model
-        model->setStringList(List);
-
-        // Glue model and view together
-        ui->tableView->setModel(model);
-
-        // Add additional feature so that
-        // we can manually modify the data in ListView
-        // It may be triggered by hitting any key or double-click etc.
-        ui->tableView->setEditTriggers(QAbstractItemView::AnyKeyPressed | QAbstractItemView::DoubleClicked);
+this->buildPlaylistView();
 }
 
 MainWindow::~MainWindow()
@@ -52,6 +35,23 @@ MainWindow::~MainWindow()
     delete this->ui;
     delete this->player;
     delete this->playlist;
+}
+
+void MainWindow::buildPlaylistView()
+{
+    // Create model
+        model = new QStandardItemModel(0,3,this);
+
+
+
+    model->setHeaderData(0, Qt::Horizontal, "Title");
+        model->setHeaderData(1, Qt::Horizontal, "Interpret");
+        model->setHeaderData(2, Qt::Horizontal, "Album");
+
+
+
+        this->ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+        this->ui->tableView->setModel(model);
 }
 
 void MainWindow::on_actionAdd_Songs_triggered()
@@ -62,24 +62,10 @@ void MainWindow::on_actionAdd_Songs_triggered()
       for(int i=0; i<fileNames.count(); i++)
       {
 
-      PlaylistFactory::addSong(*this->playlist, fileNames.at(i).toUtf8().constData());
+      Song* newSong = PlaylistFactory::addSong(*this->playlist, fileNames.at(i).toUtf8().constData());
 
-      }
-    // reset everything, stop playback
-    // load the file
-
-
-
-
-
-
-
-
-
-          // Adding at the end
-
-      for(int i=0; i<fileNames.count(); i++)
-      {
+      if(newSong==nullptr)
+          continue;
 
           // Get the position
           int row = model->rowCount();
@@ -87,11 +73,21 @@ void MainWindow::on_actionAdd_Songs_triggered()
           // Enable add one or more rows
           model->insertRows(row,1);
 
-          // Get the row for Edit mode
-          QModelIndex index = model->index(row);
-
+          // Title
+          QModelIndex index = model->index(row,0);
           this->model->setData(index,fileNames.at(i));
+
+          // Interpret
+          index = model->index(row,1);
+          this->model->setData(index,QString(newSong->Metadata.Artist.c_str()));
+
+          // Album
+          index = model->index(row,2);
+          this->model->setData(index,QString(newSong->Metadata.Album.c_str()));
+
+          this->ui->tableView->setCurrentIndex(index);
       }
+
 }
 
 
@@ -117,6 +113,13 @@ void MainWindow::on_actionNext_Song_triggered()
     this->player->play();
 }
 
+void MainWindow::on_actionPrevious_Song_triggered()
+{
+    this->player->stop();
+    this->player->previous();
+    this->player->play();
+}
+
 void MainWindow::on_actionClear_Playlist_triggered()
 {                                                                                                                                                                                
       this->playlist->clear();
@@ -128,3 +131,12 @@ void MainWindow::on_treeView_clicked(const QModelIndex &index)
     ui->listView->setRootIndex(filesModel->setRootPath(sPath));
 }
 
+
+void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
+{
+    this->player->stop();
+    Song* songToPlay = this->playlist->getSong(index.row());
+    this->player->setCurrentSong(songToPlay);
+    this->player->play();
+
+}
