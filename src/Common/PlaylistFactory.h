@@ -25,20 +25,12 @@ public:
     PlaylistFactory& operator=(const PlaylistFactory&) = delete;
 
 
-
-    /**
-     * @param  playlist
-     * @param  filePaths
-     */
-    static void addSongs (IPlaylist& playlist, vector<string>& filePaths);
-
-
     /**
      * @param  playlist
      * @param  filePath
      * @param  offset
      */
-    static void addSong (IPlaylist& playlist, string filePath, string offset = "");
+    static Song* addSong (IPlaylist& playlist, string filePath, string offset = "");
 
 
 };

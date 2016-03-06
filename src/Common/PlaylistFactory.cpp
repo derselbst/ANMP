@@ -12,25 +12,13 @@
 #include "OpusWrapper.h"
 #include "VGMStreamWrapper.h"
 
-/**
- * @param  playlist
- * @param  filePaths
- */
-void PlaylistFactory::addSongs (IPlaylist& playlist, vector<string>& filePaths)
-{
-    for (vector<string>::iterator it = filePaths.begin() ; it != filePaths.end(); ++it)
-    {
-        addSong(playlist, *it);
-    }
-}
-
 
 /**
  * @param  playlist
  * @param  filePath
  * @param  offset
  */
-void PlaylistFactory::addSong (IPlaylist& playlist, string filePath, string offset)
+Song* PlaylistFactory::addSong (IPlaylist& playlist, string filePath, string offset)
 {
     string ext = getFileExtension(filePath);
     Song* pcm=nullptr;
@@ -38,7 +26,7 @@ void PlaylistFactory::addSong (IPlaylist& playlist, string filePath, string offs
     if (iEquals(ext,"cue"))
     {
         // parse cue and call addSong()
-        return;
+        return pcm;
     }
     else if (iEquals(ext, "usf") || iEquals(ext, "miniusf"))
     {
@@ -52,7 +40,7 @@ void PlaylistFactory::addSong (IPlaylist& playlist, string filePath, string offs
 //       {
 //       // log and cancel
 //       }
-        return;
+        return pcm;
     }
     else if(iEquals(ext, "opus"))
     {
@@ -66,7 +54,7 @@ void PlaylistFactory::addSong (IPlaylist& playlist, string filePath, string offs
 //     {
 //     // log and cancel
 //     }
-        return;
+        return pcm;
 
     }
     else // so many formats to test here, try and error
@@ -102,13 +90,15 @@ void PlaylistFactory::addSong (IPlaylist& playlist, string filePath, string offs
     if(pcm==nullptr)
     {
         // log it away
-        return;
+        return pcm;
     }
 
     pcm->buildLoopTree();
 
 
     playlist.add(pcm);
+    
+    return pcm;
 }
 
 
