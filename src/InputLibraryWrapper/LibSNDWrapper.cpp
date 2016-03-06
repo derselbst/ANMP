@@ -5,9 +5,7 @@
 #include "LibSNDWrapper.h"
 #include "CommonExceptions.h"
 #include "Config.h"
-
-// exception-free waiting
-#define WAIT(future)     try{ future.wait(); } catch(future_error& e){}
+#include "Common.h"
 
 // Constructors/Destructors
 //

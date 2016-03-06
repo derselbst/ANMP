@@ -2,6 +2,7 @@
 #include <limits>
 
 #include "Config.h"
+#include "Common.h"
 #include "CommonExceptions.h"
 #include "Player.h"
 #include "ALSAOutput.h"
@@ -21,12 +22,7 @@ Player::~Player ()
 {
     this->stop();
 
-    try
-    {
-        this->futurePlayInternal.wait();
-    }
-    catch(future_error& e)
-    {}
+WAIT(this->futurePlayInternal);
 
     lock_guard<recursive_mutex> lck(mtxCurrentSong);
 
@@ -78,12 +74,7 @@ void Player::play ()
         return;
     }
 
-    try
-    {
-        this->futurePlayInternal.wait();
-    }
-    catch(future_error& e)
-    {}
+WAIT(this->futurePlayInternal);
 
     this->isPlaying=true;
 
