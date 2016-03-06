@@ -99,7 +99,14 @@ Song* Player::getCurrentSong ()
 void Player::setCurrentSong (Song* song)
 {
     lock_guard<recursive_mutex> lck(mtxCurrentSong);
+    
+    if(this->currentSong == song)
+    {
+      // nothing to do here
+      return;
+    }
 
+    // capture format of former current song
     SongFormat oldformat;
     if(this->currentSong != nullptr)
     {
@@ -111,21 +118,26 @@ void Player::setCurrentSong (Song* song)
     // go ahead and start filling the pcm buffer
     this->currentSong->fillBuffer();
 
-    SongFormat& format = this->currentSong->Format;
-
-    if(oldformat != format)
+    // if the audio has already been initialized
+    if(this->audioDriver!=nullptr)
     {
-        try
-        {
-            this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
-        }
-        catch(exception& e)
-        {
-            cout << e.what() << endl;
-            this->stop();
-            return;
+      SongFormat& format = this->currentSong->Format;
 
-        }
+      // in case samplerate or channel count differ, reinit audioDriver
+      if(oldformat != format)
+      {
+	  try
+	  {
+	      this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
+	  }
+	  catch(exception& e)
+	  {
+	      cout << e.what() << endl;
+	      this->stop();
+	      return;
+
+	  }
+      }
     }
     this->resetPlayhead();
 }
