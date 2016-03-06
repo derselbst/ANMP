@@ -10,6 +10,7 @@
 #include <QStringList>
 #include <QStringListModel>
 #include <QAbstractItemView>
+#include <QFileSystemModel>
 
 
 namespace Ui {
@@ -35,18 +36,18 @@ private:
     QStringListModel *model;
 
 
-
+    QFileSystemModel        *drivesModel = new QFileSystemModel(this);
+    QFileSystemModel        *filesModel = new QFileSystemModel(this);
 
 
 private slots:
     void on_actionAdd_Songs_triggered();
-    void initPlayer();
-    void on_initButton_clicked();
     void on_actionPlay_triggered();
     void on_actionStop_triggered();
     void on_actionPause_triggered();
     void on_actionNext_Song_triggered();
     void on_actionClear_Playlist_triggered();
+    void on_treeView_clicked(const QModelIndex &index);
 };
 
 #endif // MAINWINDOW_H

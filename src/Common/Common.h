@@ -1,5 +1,8 @@
 #include <string>
 
+// exception-free waiting
+#define WAIT(future)     try{ future.wait(); } catch(future_error& e){}
+
 using namespace std;
 
 #ifndef _POSIX_VERSION
