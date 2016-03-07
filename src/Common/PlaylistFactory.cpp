@@ -95,6 +95,7 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, string filePath, string off
 
     pcm->buildLoopTree();
 
+    pcm->close();
 
     playlist.add(pcm);
     

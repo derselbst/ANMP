@@ -111,10 +111,12 @@ void Player::setCurrentSong (Song* song)
     if(this->currentSong != nullptr)
     {
         this->currentSong->releaseBuffer();
+	this->currentSong->close();
         oldformat = this->currentSong->Format;
     }
 
     this->currentSong = song;
+    this->currentSong->open();
     // go ahead and start filling the pcm buffer
     this->currentSong->fillBuffer();
 
