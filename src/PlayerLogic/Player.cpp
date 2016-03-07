@@ -170,6 +170,7 @@ void Player::pause ()
       // by dropping the last few frames
       this->audioDriver->drop();
     }
+    WAIT(this->futurePlayInternal);
 }
 
 
