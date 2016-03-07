@@ -3,6 +3,10 @@
 #include "PlaylistFactory.h"
 #include "Playlist.h"
 #include <QFileDialog>
+#include <QProgressDialog>
+
+#include <thread>         // std::this_thread::sleep_for
+#include <chrono>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -25,6 +29,11 @@ MainWindow::MainWindow(QWidget *parent) :
     filesModel->setFilter(QDir::NoDotAndDotDot | QDir::Files);
     ui->listView->setModel(filesModel);
     ui->listView->setRootIndex(filesModel->setRootPath(rootPath));
+
+    this->ui->listView->hide();
+    this->ui->treeView->hide();
+
+    this->ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
 
 this->buildPlaylistView();
@@ -59,10 +68,22 @@ void MainWindow::on_actionAdd_Songs_triggered()
   const QString dir;
   const QStringList fileNames = QFileDialog::getOpenFileNames(this, "Open WAV File", dir, "");//Wave Files (*.wav);;Text Files (*.txt)
 
-      for(int i=0; i<fileNames.count(); i++)
+  QProgressDialog progress("Adding files...", "Abort", 0, fileNames.count(), this);
+     progress.setWindowModality(Qt::WindowModal);
+     progress.show();
+
+      for(int i=0; !progress.wasCanceled() && i<fileNames.count(); i++)
       {
+          // only redraw progress dialog on every fifth song
+          if(i%10==0)
+          {
+                 progress.setValue(i);
+                 QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+}
 
       Song* newSong = PlaylistFactory::addSong(*this->playlist, fileNames.at(i).toUtf8().constData());
+
+
 
       if(newSong==nullptr)
           continue;
@@ -88,36 +109,37 @@ void MainWindow::on_actionAdd_Songs_triggered()
           this->ui->tableView->setCurrentIndex(index);
       }
 
+      progress.setValue(fileNames.count());
 }
 
 
 void MainWindow::on_actionPlay_triggered()
 {
-    this->player->play();
+    this->play();
 }
 
 void MainWindow::on_actionStop_triggered()
 {
-    this->player->stop();
+    this->stop();
 }
 
 void MainWindow::on_actionPause_triggered()
 {
-    this->player->pause();
+    this->pause();
 }
 
 void MainWindow::on_actionNext_Song_triggered()
 {
-    this->player->stop();
+    this->stop();
     this->player->next();
-    this->player->play();
+    this->play();
 }
 
 void MainWindow::on_actionPrevious_Song_triggered()
 {
-    this->player->stop();
+    this->stop();
     this->player->previous();
-    this->player->play();
+    this->play();
 }
 
 void MainWindow::on_actionClear_Playlist_triggered()
@@ -134,9 +156,47 @@ void MainWindow::on_treeView_clicked(const QModelIndex &index)
 
 void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 {
-    this->player->stop();
+    this->stop();
     Song* songToPlay = this->playlist->getSong(index.row());
     this->player->setCurrentSong(songToPlay);
-    this->player->play();
+    this->play();
 
+}
+
+void MainWindow::on_playButton_toggled(bool checked)
+{
+    if(checked)
+    {
+        this->play();
+    }
+    else
+    {
+        this->pause();
+    }
+}
+
+void MainWindow::on_stopButton_clicked()
+{
+    this->stop();
+}
+
+void MainWindow::play()
+{
+    this->player->play();
+    this->ui->playButton->setText("Pause");
+    this->ui->playButton->setChecked(true);
+}
+
+void MainWindow::pause()
+{
+    this->player->pause();
+    this->ui->playButton->setText("Play");
+    this->ui->playButton->setChecked(false);
+}
+
+void MainWindow::stop()
+{
+    this->player->stop();
+    this->ui->playButton->setText("Play");
+    this->ui->playButton->setChecked(false);
 }

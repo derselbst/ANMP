@@ -40,6 +40,9 @@ private:
     QFileSystemModel        *filesModel = new QFileSystemModel(this);
 
     void buildPlaylistView();
+    void play();
+    void pause();
+    void stop();
 
 
 private slots:
@@ -52,6 +55,8 @@ private slots:
     void on_treeView_clicked(const QModelIndex &index);
     void on_tableView_doubleClicked(const QModelIndex &index);
     void on_actionPrevious_Song_triggered();
+    void on_playButton_toggled(bool checked);
+    void on_stopButton_clicked();
 };
 
 #endif // MAINWINDOW_H
