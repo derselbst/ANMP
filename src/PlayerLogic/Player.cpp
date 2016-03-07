@@ -100,6 +100,7 @@ void Player::setCurrentSong (Song* song)
 {
     lock_guard<recursive_mutex> lck(mtxCurrentSong);
     
+    this->resetPlayhead();
     if(this->currentSong == song)
     {
       // nothing to do here
@@ -141,7 +142,6 @@ void Player::setCurrentSong (Song* song)
 	  }
       }
     }
-    this->resetPlayhead();
 }
 
 
