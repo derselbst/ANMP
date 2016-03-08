@@ -36,8 +36,6 @@ public:
     // Public attributes
     //
 
-    void init();
-
     /**
      */
     void play ();
@@ -119,6 +117,8 @@ private:
     
     future<void> futurePlayInternal;
 
+    
+    void init();
 
     /**
      * resets the playhead to beginning of currentSong
