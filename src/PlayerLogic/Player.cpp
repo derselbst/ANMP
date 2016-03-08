@@ -63,7 +63,7 @@ void Player::init()
 /**
  */
 void Player::play ()
-{   
+{
   if(this->audioDriver==nullptr || this->currentSong==nullptr)
   {
     this->init();
@@ -285,10 +285,14 @@ void Player::playLoop (core::tree<loop_t>& loop)
 void Player::playFrames (frame_t startFrame, frame_t stopFrame)
 {   USERS_ARE_STUPID
 
-// just do nothing with it, but avoid compiler warning
-    (void)startFrame;
+  if(startFrame!=this->playhead)
+  {
+    cout << "Oops: Expected Playhead to be equal " << startFrame << ", but playhead is " << this->playhead << endl;
+  }
 
-    do
+    // the user may request to seek while we are playing, thus check whether playhead is
+    // still in range
+    while(this->isPlaying && this->playhead>=startFrame && this->playhead<stopFrame)
     {
         if(this->currentSong->getFrames()==0)
 	{
@@ -299,14 +303,14 @@ void Player::playFrames (frame_t startFrame, frame_t stopFrame)
         if(framesToPlay<=0)
         {
             // well smth. went wrong...
-            // TODO: fancy error msg here
+            cerr << "THIS SHOULD NEVER HAPPEN! framesToPlay negative" << endl;
             return;
         }
 
         this->playFrames(FramesToItems(framesToPlay));
-// here playhead is expected to be equal stopFrame
-// if this is not the case play again if necessary
-    } while(this->playhead % stopFrame != 0 && this->isPlaying);
+	// here playhead is expected to be equal stopFrame
+	// if this is not the case play again if necessary
+    }
 }
 
 
