@@ -59,7 +59,7 @@ public:
 /*  example: syntax aggreement: ([a,b],k) defines an instance of loop_t where:
     a: loop_t::start
     b: loop_t::stop
-    k  loop_t::count
+    k: loop_t::count
     given is an audio file with N frames
     in order to make the audio file play, the root node of loopTree will always
     contain ([0,N],1)
