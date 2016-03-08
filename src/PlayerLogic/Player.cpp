@@ -54,9 +54,9 @@ void Player::init()
 
     this->audioDriver->open();
 
-    // unset currentSong, this should force setCurrentSong to reinit audioDriver
-    this->currentSong=nullptr;
-    this->setCurrentSong(this->playlist->current());
+      SongFormat& fmt = this->currentSong->Format;
+      this->audioDriver->init(fmt.SampleRate, fmt.Channels, fmt.SampleFormat);
+      this->resetPlayhead();
 }
 
 
@@ -117,6 +117,11 @@ void Player::setCurrentSong (Song* song)
     }
 
     this->currentSong = song;
+    if(this->currentSong == nullptr)
+    {
+      return;
+    }
+    
     this->currentSong->open();
     // go ahead and start filling the pcm buffer
     this->currentSong->fillBuffer();
