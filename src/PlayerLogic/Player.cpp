@@ -64,7 +64,12 @@ void Player::init()
  */
 void Player::play ()
 {
-  if(this->audioDriver==nullptr || this->currentSong==nullptr)
+  if(this->currentSong==nullptr)
+  {
+    return;
+  }
+  
+  if(this->audioDriver==nullptr)
   {
     this->init();
   }
