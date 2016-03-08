@@ -294,7 +294,7 @@ void Player::playFrames (frame_t startFrame, frame_t stopFrame)
 	{
 	  return;
 	}
-        signed long long framesToPlay = stopFrame - (this->playhead % this->currentSong->getFrames());
+        signed long long framesToPlay = stopFrame - this->playhead;
 
         if(framesToPlay<=0)
         {
