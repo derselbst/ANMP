@@ -324,11 +324,10 @@ void Player::playFrames (frame_t startFrame, frame_t stopFrame)
 }
 
 
-void Player::playFrames (unsigned int framesToPlay)
+void Player::playFrames (frame_t framesToPlay)
 {   USERS_ARE_STUPID
     
     frame_t memorizedPlayhead = this->playhead;
-
     size_t& bufSize = this->currentSong->count;
     
 // here is a very simple form of what we do below
@@ -338,23 +337,28 @@ void Player::playFrames (unsigned int framesToPlay)
 // Disadvantage: keeps the CPU very busy
 // thus do it by handing in small buffers within the buffer ;)
     
-    while(this->isPlaying && framesToPlay>0)
+    // check if we seeked during playback or pcm size is zero
+    while(this->isPlaying && // has smb. stopped playback?
+          framesToPlay>0 && // are there any frames left to play?
+          bufSize!=0 && // are there any samples in pcm buffer?
+	  memorizedPlayhead==this->playhead // make sure noone seeked while playing
+	 )
     {
-        // if we seeked during playback or pcm size is zero
-        if(memorizedPlayhead!=this->playhead || bufSize==0)
-        {
-            // nothing to play, we are finished here
-            return;
-        }
         // seek within the buffer to that item where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
-        int itemOffset = FramesToItems(this->playhead) % bufSize;
+        int itemOffset = FramesToItems(memorizedPlayhead) % bufSize;
         // number of frames we will write to audioDriver in this run
         int framesToPush = min(Config::FramesToRender, framesToPlay);
+	// PLAY!
         int framesWritten = this->audioDriver->write(this->currentSong->data, framesToPush, itemOffset);
+	
+	// ensure PCM buffer(s) are well filled
         this->currentSong->fillBuffer();
         
+	// update the playhead
         this->playhead+=framesWritten;
+	// update our local copy of playhead
         memorizedPlayhead+=framesWritten;
+	// update frames-left-to-play
         framesToPlay-=framesWritten;
     }
 }
