@@ -31,12 +31,12 @@ void LibSNDWrapper::open ()
 {
     if (!(this->sndfile = sf_open (this->Filename.c_str(), SFM_READ, &sfinfo)))
     {
-        throw runtime_error(string(sf_strerror (NULL)));
+        throw runtime_error(string("Error: ") + __func__ + string(": ") + string(sf_strerror (NULL)) + " (in File \"" + this->Filename + ")\"");
     };
 
     if (sfinfo.channels < 1 || sfinfo.channels >= 6)
     {
-        throw runtime_error("Error : channels = " + to_string(sfinfo.channels));
+        throw runtime_error(string("Error: ") + __func__ + string(": channels == ") + to_string(sfinfo.channels));
     };
 
     this->Format.Channels = sfinfo.channels;
