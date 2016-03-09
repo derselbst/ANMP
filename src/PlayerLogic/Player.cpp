@@ -24,8 +24,6 @@ Player::~Player ()
 
 WAIT(this->futurePlayInternal);
 
-    lock_guard<recursive_mutex> lck(mtxCurrentSong);
-
     if(this->audioDriver!=nullptr)
     {
         this->audioDriver->close();
@@ -37,7 +35,7 @@ void Player::init()
 {
     this->pause();
     
-    lock_guard<recursive_mutex> lck(mtxCurrentSong);
+    WAIT(this->futurePlayInternal);
 
     delete this->audioDriver;
 
@@ -103,8 +101,17 @@ Song* Player::getCurrentSong ()
  */
 void Player::setCurrentSong (Song* song)
 {
-    lock_guard<recursive_mutex> lck(mtxCurrentSong);
+    if(this->isPlaying)
+    {
+      throw runtime_error("Player: Cannot set song while still playing back.");
+    }
     
+    WAIT(this->futurePlayInternal);
+    this->_setCurrentSong(song);
+}
+    
+void Player::_setCurrentSong (Song* song)
+{
     this->resetPlayhead();
     if(this->currentSong == song)
     {
@@ -414,23 +421,31 @@ void Player::playFrames (frame_t framesToPlay)
 
 
 void Player::playInternal ()
-{
-    lock_guard<recursive_mutex> lck(mtxCurrentSong);
-    
-    this->audioDriver->start();
-    while(this->isPlaying)
+{    
+    try
     {
-        core::tree<loop_t>& loops = this->currentSong->loopTree;
+      this->audioDriver->start();
+      while(this->isPlaying)
+      {
+	  core::tree<loop_t>& loops = this->currentSong->loopTree;
 
-        this->playLoop(loops);
+	  this->playLoop(loops);
 
-        // ok, for some reason we left playLoop, if this was due to we shall stop playing
-        // leave this loop immediately, else play next song
-        if(!this->isPlaying)
-        {
-            break;
-        }
-        this->next();
+	  // ok, for some reason we left playLoop, if this was due to we shall stop playing
+	  // leave this loop immediately, else play next song
+	  if(!this->isPlaying)
+	  {
+	      break;
+	  }
+	  this->_setCurrentSong(this->playlist->next());
+      }
+    }
+    catch(exception& e)
+    {
+      cerr << "An Exception was thrown in Player::playInternal(): " << e.what() << endl;
+      
+      // will be save in futurePlayInternal, not sure if anybody will ever notice though
+      throw;
     }
 }
 

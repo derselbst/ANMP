@@ -98,8 +98,6 @@ private:
     // pointer to the song we are currently isPlaying
     // instance is owned by this.playlist
     Song* currentSong = nullptr;
-    
-    recursive_mutex mtxCurrentSong;
 
     // pointer to the playlist we use
     // we dont own this playlist, we dont care about destruction
@@ -119,6 +117,8 @@ private:
 
     
     void init();
+    
+    void _setCurrentSong (Song* song);
 
     /**
      * resets the playhead to beginning of currentSong
