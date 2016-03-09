@@ -317,7 +317,7 @@ void Player::playFrames (frame_t startFrame, frame_t stopFrame)
             return;
         }
 
-        this->playFrames(FramesToItems(framesToPlay));
+        this->playFrames(framesToPlay);
 	// here playhead is expected to be equal stopFrame
 	// if this is not the case play again if necessary
     }
