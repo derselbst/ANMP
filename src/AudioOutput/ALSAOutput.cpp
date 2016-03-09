@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 
 #include "CommonExceptions.h"
