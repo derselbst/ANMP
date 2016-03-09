@@ -221,13 +221,14 @@ int ALSAOutput::write (float* buffer, frame_t frames)
         switch (retval)
         {
         case -EAGAIN:
-            puts ("alsa_write: EAGAIN");
+            cout << "alsa_write: EAGAIN" << endl;
             continue;
             break;
 
         case -EPIPE:
             if (epipe_count > 0)
-            {   printf ("alsa_write: EPIPE %d\n", epipe_count);
+            {
+                cout << "alsa_write: EPIPE " << epipe_count << endl;
                 if (epipe_count > 140)
                     return retval;
             };
@@ -259,21 +260,21 @@ int ALSAOutput::write (float* buffer, frame_t frames)
             break;
 
         case -EBADFD:
-            fprintf (stderr, "alsa_write: Bad PCM state.n");
+            cerr << "alsa_write: Bad PCM state" << endl;
             return 0;
             break;
 
         case -ESTRPIPE:
-            fprintf (stderr, "alsa_write: Suspend event.n");
+            cerr << "alsa_write: Suspend event" << endl;
             return 0;
             break;
 
         case -EIO:
-            puts ("alsa_write: EIO");
+            cout << "alsa_write: EIO" << endl;
             return 0;
 
         default:
-            fprintf (stderr, "alsa_write: retval = %d\n", retval);
+            cerr << "alsa_write: retval = " << retval << endl;
             return 0;
             break;
         } /* switch */
