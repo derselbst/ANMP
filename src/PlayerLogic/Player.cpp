@@ -267,7 +267,9 @@ void Player::playLoop (core::tree<loop_t>& loop)
   
     // while there are sub-loops that need to be played
     core::tree<loop_t>* subloop;
-    while(Config::useLoopInfo && ((subloop = this->getNextLoop(loop)) != nullptr))
+    while(this->isPlaying &&
+          Config::useLoopInfo &&
+          ((subloop = this->getNextLoop(loop)) != nullptr))
     {
 
 	// if the user requested to seek past the current loop, skip it at all
