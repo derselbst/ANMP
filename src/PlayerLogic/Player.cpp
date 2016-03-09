@@ -324,57 +324,89 @@ void Player::playFrames (frame_t startFrame, frame_t stopFrame)
 }
 
 
-/**
+void Player::playFrames (unsigned int framesToPlay)
+{   USERS_ARE_STUPID
+    
+    frame_t memorizedPlayhead = this->playhead;
+
+    size_t& bufSize = this->currentSong->count;
+    
+// here is a very simple form of what we do below
+// just hand in every frame separately
+//       for(int i=0; i<framesToPlay; i+=channels)
+//         this->audioDriver->write(pcmBuffer+i.toItems(), 1, channels) ;
+// Disadvantage: keeps the CPU very busy
+// thus do it by handing in small buffers within the buffer ;)
+    
+    while(this->isPlaying && framesToPlay>0)
+    {
+        // if we seeked during playback or pcm size is zero
+        if(memorizedPlayhead!=this->playhead || bufSize==0)
+        {
+            // nothing to play, we are finished here
+            return;
+        }
+        // seek within the buffer to that item where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
+        int itemOffset = FramesToItems(this->playhead) % bufSize;
+        // number of frames we will write to audioDriver in this run
+        int framesToPush = min(Config::FramesToRender, framesToPlay);
+        int framesWritten = this->audioDriver->write(this->currentSong->data, framesToPush, itemOffset);
+        this->currentSong->fillBuffer();
+        
+        this->playhead+=framesWritten;
+        memorizedPlayhead+=framesWritten;
+        framesToPlay-=framesWritten;
+    }
+}
+
+/** REMOVE ME
  * @param  itemsToPlay how many items (e.g. floats, not frames!!) from buffer shall
  * be played
  */
-void Player::playFrames (unsigned int itemsToPlay)
-{   USERS_ARE_STUPID
-
-// first define a nice shortcut to our pcmBuffer
-    pcm_t* pcmBuffer = this->currentSong->data;
-
-    frame_t memorizedPlayhead = this->playhead;
-
-    size_t bufSize = this->currentSong->count;
-    if(bufSize==0)
-    {
-      // nothing to play, we are finished here
-      return;
-    }
-// then seek within the buffer to that point where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
-    int offset = FramesToItems(memorizedPlayhead) % bufSize;
-
-    const unsigned int& channels = this->currentSong->Format.Channels;
-
-// this is a very simple form of what we do below
-// just hand in every frame separately
-// Disadvantage: keeps the CPU very busy
-//       for(int i=0; i<floatsToPlay; i+=channels)
-//         this->audioDriver->write(pcmBuffer+i, 1, channels) ;
-
-// thus do it by handing in small buffers within the buffer ;)
-    const frame_t& FRAMES = Config::FramesToRender;
-    const unsigned int BUFSIZE = FRAMES * channels;
-
-    int fullTransfers = itemsToPlay / BUFSIZE;
-    for(int i=0; this->isPlaying && (this->playhead==memorizedPlayhead + i*FRAMES) && i<fullTransfers; i++)
-    {
-        this->audioDriver->write (pcmBuffer, FRAMES /* or more correctly BUFSIZE/channels , its the same*/, offset+(i*BUFSIZE));
-        this->currentSong->fillBuffer();
-
-        // update playhead position
-        this->playhead+=FRAMES;
-    }
-
-    if(this->isPlaying && (this->playhead==memorizedPlayhead + fullTransfers*FRAMES))
-    {
-        int finalTransfer = itemsToPlay % BUFSIZE;
-        this->audioDriver->write(pcmBuffer, finalTransfer/channels, offset+(fullTransfers*BUFSIZE));
-        this->playhead+=finalTransfer/channels;
-        this->currentSong->fillBuffer();
-    }
-}
+// void Player::playFrames (unsigned int itemsToPlay)
+// {   USERS_ARE_STUPID
+//     
+//     
+//     
+// 
+// // first define a nice shortcut to our pcmBuffer
+//     pcm_t* pcmBuffer = this->currentSong->data;
+// 
+//     frame_t memorizedPlayhead = this->playhead;
+// 
+//     size_t bufSize = this->currentSong->count;
+//     if(bufSize==0)
+//     {
+//       // nothing to play, we are finished here
+//       return;
+//     }
+// // then seek within the buffer to that point where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
+//     int offset = FramesToItems(memorizedPlayhead) % bufSize;
+// 
+//     const unsigned int& channels = this->currentSong->Format.Channels;
+// 
+// 
+//     const frame_t& FRAMES = Config::FramesToRender;
+//     const unsigned int BUFSIZE = FRAMES * channels;
+// 
+//     int fullTransfers = itemsToPlay / BUFSIZE;
+//     for(int i=0; this->isPlaying && (this->playhead==memorizedPlayhead + i*FRAMES) && i<fullTransfers; i++)
+//     {
+//         this->audioDriver->write (pcmBuffer, FRAMES /* or more correctly BUFSIZE/channels , its the same*/, offset+(i*BUFSIZE));
+//         this->currentSong->fillBuffer();
+// 
+//         // update playhead position
+//         this->playhead+=FRAMES;
+//     }
+// 
+//     if(this->isPlaying && (this->playhead==memorizedPlayhead + fullTransfers*FRAMES))
+//     {
+//         int finalTransfer = itemsToPlay % BUFSIZE;
+//         this->audioDriver->write(pcmBuffer, finalTransfer/channels, offset+(fullTransfers*BUFSIZE));
+//         this->playhead+=finalTransfer/channels;
+//         this->currentSong->fillBuffer();
+//     }
+// }
 
 
 void Player::playInternal ()
