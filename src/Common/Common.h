@@ -15,3 +15,5 @@ bool iEqualsUgly(string strFirst, string strSecond);
 bool iEquals(const string& str1, const string& str2);
 
 string getFileExtension(const string& filePath);
+
+unsigned long parse_time_crap(const char *input);

@@ -3,6 +3,7 @@
 #include <string>
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 
 #ifdef _POSIX_VERSION
 #include <strings.h>
@@ -39,4 +40,57 @@ bool iEquals(const string& str1, const string& str2)
 string getFileExtension(const string& filePath)
 {
     return filePath.substr(filePath.find_last_of(".") + 1);
+}
+
+#define BORK_TIME 0xC0CAC01A
+/** @brief converts a time string to ms
+ * 
+ * @param[in] input: a string in the format of mm:ss
+ *            where mm=minutes and ss=seconds
+ * @return an integer in milliseconds
+ */
+unsigned long parse_time_crap(const char *input)
+{
+    unsigned long value = 0;
+    unsigned long multiplier = 1000;
+    const char * ptr = input;
+    unsigned long colon_count = 0;
+
+    while (*ptr && ((*ptr >= '0' && *ptr <= '9') || *ptr == ':'))
+    {
+        colon_count += *ptr == ':';
+        ++ptr;
+    }
+    if (colon_count > 2) return BORK_TIME;
+    if (*ptr && *ptr != '.' && *ptr != ',') return BORK_TIME;
+    if (*ptr) ++ptr;
+    while (*ptr && *ptr >= '0' && *ptr <= '9') ++ptr;
+    if (*ptr) return BORK_TIME;
+
+    ptr = strrchr(input, ':');
+    if (!ptr)
+        ptr = input;
+    for (;;)
+    {
+        char * end;
+        if (ptr != input) ++ptr;
+        if (multiplier == 1000)
+        {
+            double temp = strtod(ptr, &end);
+            if (temp >= 60.0) return BORK_TIME;
+            value = (long)(temp * 1000.0f);
+        }
+        else
+        {
+            unsigned long temp = strtoul(ptr, &end, 10);
+            if (temp >= 60 && multiplier < 3600000) return BORK_TIME;
+            value += temp * multiplier;
+        }
+        if (ptr == input) break;
+        ptr -= 2;
+        while (ptr > input && *ptr != ':') --ptr;
+        multiplier *= 60;
+    }
+
+    return value;
 }

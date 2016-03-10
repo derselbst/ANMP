@@ -25,7 +25,11 @@ struct Config
     static bool useLoopInfo;
     static int overridingGlobalLoopCount;
     static const frame_t FramesToRender;
-
+    
+    
+    /// USF specific section ***
+    static bool useHle;
+    
 };
 
 

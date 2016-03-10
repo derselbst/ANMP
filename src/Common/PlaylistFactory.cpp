@@ -30,17 +30,18 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, string filePath, string off
     }
     else if (iEquals(ext, "usf") || iEquals(ext, "miniusf"))
     {
-        // TODO: implement me
-//     pcm = new LazyusfWrapper(filePath);
-//       try
-//       {
-// 	pcm.open();
-//       }
-//       catch
-//       {
-//       // log and cancel
-//       }
-        return pcm;
+	pcm = new LazyusfWrapper(filePath);
+	try
+	{
+	  pcm->open();
+	}
+	catch(exception& e)
+	{
+	      cerr << "Could not open " << filePath << "\nwhat(): " << e.what() << endl;
+	      pcm->close();
+	      delete pcm;
+	      pcm=nullptr;
+	}
     }
     else if(iEquals(ext, "opus"))
     {
@@ -67,7 +68,7 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, string filePath, string off
             pcm->open();
         }
         //TODO catch correct exception
-        catch(runtime_error& e)
+        catch(exception& e)
         {
             cerr << e.what() << endl;
             pcm->close();
