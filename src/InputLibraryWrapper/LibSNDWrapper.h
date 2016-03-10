@@ -56,7 +56,7 @@ public:
     /**
      * @return vector
      */
-    vector<loop_t> getLoopArray () const;
+    vector<loop_t> getLoopArray () const override;
 
 
     /**
