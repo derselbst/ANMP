@@ -59,9 +59,12 @@ void LazyusfWrapper::open()
 
 void LazyusfWrapper::close()
 {
-  usf_shutdown(this->usfHandle);
-  delete [] this->usfHandle;
-  this->usfHandle = nullptr;
+  if(this->usfHandle != nullptr)
+  {
+    usf_shutdown(this->usfHandle);
+    delete [] this->usfHandle;
+    this->usfHandle = nullptr;
+  }
 }
 
 void LazyusfWrapper::fillBuffer()
