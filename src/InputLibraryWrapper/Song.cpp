@@ -76,7 +76,11 @@ void Song::buildLoopTree ()
       }
 }
 
-
+vector<loop_t> Song::getLoopArray () const
+{
+    vector<loop_t> res;
+    return res;
+}
 
 // should sort descendingly
 bool Song::myLoopSort(loop_t i,loop_t j)

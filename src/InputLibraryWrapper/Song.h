@@ -137,7 +137,7 @@ private:
     /**
      * @return vector
      */
-    virtual vector<loop_t> getLoopArray () const = 0;
+    virtual vector<loop_t> getLoopArray () const;
     
     
     static bool myLoopSort(loop_t i,loop_t j);
