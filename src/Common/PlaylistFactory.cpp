@@ -1,4 +1,12 @@
 #include <iostream>
+#include <libgen.h>
+#include <linux/limits.h>
+#include <cstring>
+
+extern "C"
+{
+  #include <libcue/libcue.h>
+}
 
 #include "PlaylistFactory.h"
 #include "Song.h"
@@ -13,60 +21,69 @@
 #include "VGMStreamWrapper.h"
 
 
+
 /**
  * @param  playlist
  * @param  filePath
  * @param  offset
  */
 
-PlaylistFactory::parseCue(string& filepath)
+void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
 {
 #define cue_assert(ERRMSG, COND) \
   if(!(COND))\
   {\
-     throw runtime_error(string("Error: Failed to parse CUE-Sheet file \"") + filepath + "\" ("+ERRMSG+")");\
+     throw runtime_error(string("Error: Failed to parse CUE-Sheet file \"") + filePath + "\" ("+ERRMSG+")");\
   }
   
-  FILE *f = fopen(filepath.c_str());
+  FILE *f = fopen(filePath.c_str(), "r");
   Cd *cd = cue_parse_file(f);
   cue_assert ("error parsing CUE", cd != NULL);
   
   int ntrk = cd_get_ntrack (cd);
+  char temp[PATH_MAX];
    for(int i=0; i< ntrk; i++)
    {
-      Track* track = cd_get_track (cd, 1);
+      Track* track = cd_get_track (cd, i+1);
       cue_assert ("error getting track", track != NULL);
 
-      val = track_get_filename (track);
+      char* val = track_get_filename (track);
       cue_assert ("error getting track filename", val != NULL);
 
-      cdtext = track_get_cdtext (track);
-      cue_assert ("error getting track CDTEXT", cdtext != NULL);
+//       cdtext = track_get_cdtext (track);
+//       cue_assert ("error getting track CDTEXT", cdtext != NULL);
 
-      val = cdtext_get (PTI_PERFORMER, cdtext);
-      cue_assert ("error getting track performer", val != NULL);
+//       val = cdtext_get (PTI_PERFORMER, cdtext);
+//       cue_assert ("error getting track performer", val != NULL);
 
-      val = cdtext_get (PTI_TITLE, cdtext);
-      cue_assert ("error getting track title", val != NULL);
+//       val = cdtext_get (PTI_TITLE, cdtext);
+//       cue_assert ("error getting track title", val != NULL);
 
       int strangeFramesStart = track_get_start (track);
-      strangeFramesStart*1000/75
       
       int strangeFramesLen = track_get_length (track);
+      if(strangeFramesLen==-1)
+      {
+	strangeFramesLen=0;
+      }
+      
+      
+      strcpy(temp, filePath.c_str());
+      
+      PlaylistFactory::addSong(playlist, string(dirname(temp)).append("/").append(val), strangeFramesStart*1000/75, strangeFramesLen*1000/75);
    }
   cd_delete (cd);
-#undefine cue_assert
+#undef cue_assert
 }
 
-Song* PlaylistFactory::addSong (IPlaylist& playlist, string filePath, string offset)
+Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size_t offset, size_t len)
 {
     string ext = getFileExtension(filePath);
     Song* pcm=nullptr;
 
     if (iEquals(ext,"cue"))
     {
-        // parse cue and call addSong()
-        return pcm;
+        PlaylistFactory::parseCue(playlist, filePath);
     }
     else if (iEquals(ext, "usf") || iEquals(ext, "miniusf"))
     {
@@ -101,7 +118,7 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, string filePath, string off
     else // so many formats to test here, try and error
     {
         // TODO: pass offset to libsnd
-        pcm = new LibSNDWrapper(filePath);
+        pcm = new LibSNDWrapper(filePath, offset, len);
 
         try
         {

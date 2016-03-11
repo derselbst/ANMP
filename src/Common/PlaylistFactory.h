@@ -30,8 +30,8 @@ public:
      * @param  filePath
      * @param  offset
      */
-    static Song* addSong (IPlaylist& playlist, string filePath, string offset = "");
-
+    static Song* addSong (IPlaylist& playlist, const string filePath, size_t offset = 0, size_t len = 0);
+    static void parseCue (IPlaylist& playlist, const string&filePath);
 
 };
 
