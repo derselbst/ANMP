@@ -8,7 +8,7 @@
 // Constructors/Destructors
 //
 
-LazyusfWrapper::LazyusfWrapper(string filename, size_t offset) : Song(filename, offset)
+LazyusfWrapper::LazyusfWrapper(string filename, size_t offset, size_t len) : Song(filename, offset, len)
 {
   this->Format.SampleFormat = SampleFormat_t::int16;
   
@@ -22,7 +22,7 @@ LazyusfWrapper::~LazyusfWrapper ()
   this->releaseBuffer();
 }
 
- psf_file_callbacks stdio_callbacks =
+static psf_file_callbacks stdio_callbacks =
     {
 	"\\/:",
 	LazyusfWrapper::stdio_fopen,
@@ -88,7 +88,7 @@ void LazyusfWrapper::releaseBuffer()
 
 frame_t LazyusfWrapper::getFrames () const
 {
-  return (length_ms / 1000) * this->Format.SampleRate;
+  return msToFrames(fileLen, this->Format.SampleRate);
 }
 
 
@@ -145,7 +145,7 @@ int LazyusfWrapper::usf_info(void * context, const char * name, const char * val
   LazyusfWrapper* infoContext = reinterpret_cast<LazyusfWrapper*>(context);
   
     if (iEquals(name, "length"))
-        infoContext->length_ms += parse_time_crap(value);
+        infoContext->fileLen += parse_time_crap(value);
     else if (iEquals(name, "fade"))
         infoContext->fade_ms += parse_time_crap(value);
     else if (iEquals(name, "_enablecompare") && *value)

@@ -1,4 +1,5 @@
 #include <string>
+#include "types.h"
 
 // exception-free waiting
 #define WAIT(future)     try{ future.wait(); } catch(future_error& e){}
@@ -17,3 +18,5 @@ bool iEquals(const string& str1, const string& str2);
 string getFileExtension(const string& filePath);
 
 unsigned long parse_time_crap(const char *input);
+
+frame_t msToFrames(const size_t& ms, const unsigned int& sampleRate);

@@ -22,7 +22,7 @@ class Song
 protected:
     // even if there were no pure virtual methods, allow
     // construction for child classes only
-    Song(string filename, size_t offset=0);
+    Song(string filename, size_t fileOffset=0, size_t fileLen=0);
 
 public:
 
@@ -39,8 +39,11 @@ public:
     // fullpath to underlying audio file
     string Filename;
     
-    // how many frames to skip when reading pcm from file
-    size_t offset;
+    // how many milliseconds to skip when reading pcm from file
+    size_t fileOffset;
+    
+    // how many milliseconds following offset shall be used for playing
+    size_t fileLen;
 //--------------------------------------------------------------------
 
 //--------------------------------------------------------------------

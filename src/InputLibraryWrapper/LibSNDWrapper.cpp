@@ -10,7 +10,7 @@
 // Constructors/Destructors
 //
 
-LibSNDWrapper::LibSNDWrapper (string filename, size_t offset) : Song(filename, offset)
+LibSNDWrapper::LibSNDWrapper (string filename, size_t fileOffset, size_t fileLen) : Song(filename, fileOffset, fileLen)
 {
     this->Format.SampleFormat = SampleFormat_t::float32;
     memset (&sfinfo, 0, sizeof (sfinfo)) ;
@@ -68,7 +68,7 @@ void LibSNDWrapper::fillBuffer()
 
 void LibSNDWrapper::asyncFillBuffer()
 {
-        sf_seek(this->sndfile, this->offset, SEEK_SET);
+        sf_seek(this->sndfile, msToFrames(this->fileOffset, this->Format.SampleRate), SEEK_SET);
 
         int readcount=0;
 	unsigned int itemsToRender = Config::FramesToRender*this->Format.Channels;
@@ -137,7 +137,16 @@ vector<loop_t> LibSNDWrapper::getLoopArray () const
 
 frame_t LibSNDWrapper::getFrames () const
 {
-    return this->sfinfo.frames - this->offset;
+  int framesAvail = this->sfinfo.frames - msToFrames(this->fileOffset, this->Format.SampleRate);
+  
+  size_t totalFrames = this->fileLen==0 ? framesAvail : msToFrames(this->fileLen, this->Format.SampleRate);
+  
+  if(totalFrames > framesAvail)
+  {
+    totalFrames = framesAvail;
+  }
+  
+  return totalFrames;
 }
 
 

@@ -15,7 +15,7 @@ public:
     // Constructors/Destructors
     //
 
-    LazyusfWrapper (string filename, size_t offset=0);
+    LazyusfWrapper(string filename, size_t fileOffset=0, size_t fileLen=0);
 
     /**
      * Empty Destructor
@@ -54,8 +54,6 @@ private:
   // set by usf_info
   unsigned int enable_fifo_full = 0;
   
-  // length in ms to render
-  unsigned long length_ms = 0;
   // length in ms to fade
   unsigned long fade_ms = 0;
   
