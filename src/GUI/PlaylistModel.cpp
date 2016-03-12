@@ -72,7 +72,8 @@ QVariant PlaylistModel::headerData(int section, Qt::Orientation orientation, int
   {
     if(role==Qt::DisplayRole)
     {
-      return QString(section);
+      // use one-based counting for rows
+      return QString::number(section+1);
     }
   }
   
