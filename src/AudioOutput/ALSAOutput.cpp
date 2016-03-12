@@ -372,7 +372,71 @@ int ALSAOutput::write (int16_t* buffer, frame_t frames)
     return total;
 }
 
+void ALSAOutput::setVolume(uint8_t vol)
+{
+    
+    const char card[] = "default";
+    const char selem_name[] = "Master";
+int err;
+    
+    snd_mixer_t *handle;
+    if ((err = snd_mixer_open(&handle, 0)) != 0)
+    {
+        throw runtime_error(string(__func__) + ": snd_mixer_open: " + string(snd_strerror(err)));
+    }
+    
+    if ((err = snd_mixer_attach(handle, card)) != 0)
+    {
+    snd_mixer_close(handle);
+      throw runtime_error(string(__func__) + ": snd_mixer_attach: " + string(snd_strerror(err)));
+    }
+    
+    if ((err = snd_mixer_selem_register(handle, nullptr, nullptr)) != 0)
+    {
+    snd_mixer_close(handle);
+      throw runtime_error(string(__func__) + ": snd_mixer_selem_register: " + string(snd_strerror(err)));
+    }
+    
+    
+    if ((err = snd_mixer_load(handle)) != 0)
+    {
+    snd_mixer_close(handle);
+      throw runtime_error(string(__func__) + ": snd_mixer_load: " + string(snd_strerror(err)));
+    }
+    
+    
+snd_mixer_selem_id_t *sid;
+snd_mixer_selem_id_alloca(&sid);
+    if (sid==nullptr)
+    {
+      throw runtime_error(string(__func__) + ": snd_mixer_selem_id_alloca: " + string(snd_strerror(err)));
+    }
+    
+    snd_mixer_selem_id_set_index(sid, 0);
+    snd_mixer_selem_id_set_name(sid, selem_name);
+    
+    snd_mixer_elem_t* elem = snd_mixer_find_selem(handle, sid);
+    snd_mixer_selem_id_free(sid);
+    
+    if(elem==nullptr)
+    {
+      throw runtime_error("Cannot find mixer element! setVolume() failed!");
+    }
 
+    long min, max;
+    if ((err = snd_mixer_selem_get_playback_volume_range(elem, &min, &max)) != 0)
+    {
+      throw runtime_error(string(__func__) + ": snd_mixer_selem_get_playback_volume_range: " + string(snd_strerror(err)));
+    }
+    
+    if ((err = snd_mixer_selem_set_playback_volume_all(elem, vol * max / 100)) != 0)
+    {
+      throw runtime_error(string(__func__) + ": snd_mixer_selem_set_playback_volume_all: " + string(snd_strerror(err)));
+    }
+
+    
+    snd_mixer_close(handle);
+}
 
 // Accessor methods
 //

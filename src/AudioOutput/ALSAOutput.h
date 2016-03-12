@@ -10,6 +10,7 @@
 #define ALSA_PCM_NEW_HW_PARAMS_API
 #define ALSA_PCM_NEW_SW_PARAMS_API
 #include <alsa/asoundlib.h>
+#include <alsa/mixer.h>
 #include <sys/time.h>
 
 #if defined (__linux__)
@@ -60,6 +61,8 @@ public:
     int write (float* buffer, frame_t frames) override;
 
     int write (int16_t* buffer, frame_t frames) override;
+    
+    void setVolume(uint8_t) override;
 
     void start () override;
 private:

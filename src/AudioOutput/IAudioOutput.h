@@ -97,6 +97,11 @@ public:
      * etc.)
      */
     virtual int write (pcm_t* frameBuffer, frame_t frames, int offset);
+    
+    /**
+     * @param vol volume [0;100]
+     */
+    virtual void setVolume(uint8_t vol) = 0;
 
 protected:
     unsigned char currentChannelCount = 0;
