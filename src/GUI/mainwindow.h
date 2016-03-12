@@ -5,6 +5,7 @@
 #include "Player.h"
 #include "IPlaylist.h"
 #include "Playlist.h"
+#include "PlaylistModel.h"
 
 
 #include <QStringList>
@@ -27,13 +28,13 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    IPlaylist* playlist = new Playlist();
+    
+    PlaylistModel* model = new PlaylistModel(this);
+IPlaylist* playlist = this->model;
+
     Player* player = new Player(this->playlist);
 
 
-
-
-    QStandardItemModel *model;
 
 
     QFileSystemModel        *drivesModel = new QFileSystemModel(this);

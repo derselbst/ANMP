@@ -1,3 +1,6 @@
+#include "PlaylistModel.h"
+
+
 PlaylistModel::PlaylistModel(QObject *parent)
     : QAbstractTableModel(parent)
 {
@@ -23,14 +26,14 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
 
     if (role == Qt::DisplayRole)
     {
-      Song* songToUse = this->queue[index.row()]
+      Song* songToUse = this->queue[index.row()];
       
       switch(index.column())
       {
 	case 1:
-	  return QString(songToUse->Filename);
+	  return QString::fromStdString(songToUse->Filename);
 	case 2:
-	  return QString(songToUse->Metadata.Artist);
+	  return QString::fromStdString(songToUse->Metadata.Artist);
 	default:
 	  break;
       }
@@ -59,7 +62,7 @@ QVariant PlaylistModel::headerData(int section, Qt::Orientation orientation, int
        case Qt::ToolTipRole: // The data displayed in the item's tooltip.
 	    break;
        case Qt::WhatsThisRole: // The data displayed for the item in "What's This?" mode.
-	    break:
+	    break;
        default:
 	 // do nothing special here
 	 break;
@@ -95,13 +98,16 @@ bool PlaylistModel::setData(const QModelIndex &index, const QVariant &value, int
 //         return true;
 //     }
   // WARNING: the view will only properly be updated if we return true!
-    return false;
+    return true;
 }
 
 Qt::ItemFlags PlaylistModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags flags = QAbstractItemModel::flags(index);
-//     if (index.row() != index.column())
-//         flags |= Qt::ItemIsEditable;
+        flags |= Qt::ItemIsEditable;
+	
     return flags;
 }
+
+
+

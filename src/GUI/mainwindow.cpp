@@ -49,18 +49,18 @@ MainWindow::~MainWindow()
 void MainWindow::buildPlaylistView()
 {
     // Create model
-        model = new QStandardItemModel(0,3,this);
-
-
-
-    model->setHeaderData(0, Qt::Horizontal, "Title");
-        model->setHeaderData(1, Qt::Horizontal, "Interpret");
-        model->setHeaderData(2, Qt::Horizontal, "Album");
+//         model = new QStandardItemModel(0,3,this);
+// 
+// 
+// 
+//     model->setHeaderData(0, Qt::Horizontal, "Title");
+//         model->setHeaderData(1, Qt::Horizontal, "Interpret");
+//         model->setHeaderData(2, Qt::Horizontal, "Album");
 
 
 
         this->ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-        this->ui->tableView->setModel(model);
+        
 }
 
 void MainWindow::on_actionAdd_Songs_triggered()
@@ -89,27 +89,28 @@ void MainWindow::on_actionAdd_Songs_triggered()
           continue;
 
           // Get the position
-          int row = model->rowCount();
+//           int row = model->rowCount();
+// 
+//           // Enable add one or more rows
+//           model->insertRows(row,1);
+// 
+//           // Title
+//           QModelIndex index = model->index(row,0);
+//           this->model->setData(index,fileNames.at(i));
+// 
+//           // Interpret
+//           index = model->index(row,1);
+//           this->model->setData(index,QString(newSong->Metadata.Artist.c_str()));
+// 
+//           // Album
+//           index = model->index(row,2);
+//           this->model->setData(index,QString(newSong->Metadata.Album.c_str()));
 
-          // Enable add one or more rows
-          model->insertRows(row,1);
-
-          // Title
-          QModelIndex index = model->index(row,0);
-          this->model->setData(index,fileNames.at(i));
-
-          // Interpret
-          index = model->index(row,1);
-          this->model->setData(index,QString(newSong->Metadata.Artist.c_str()));
-
-          // Album
-          index = model->index(row,2);
-          this->model->setData(index,QString(newSong->Metadata.Album.c_str()));
-
-          this->ui->tableView->setCurrentIndex(index);
+//           this->ui->tableView->setCurrentIndex(index);
       }
 
       progress.setValue(fileNames.count());
+      this->ui->tableView->setModel(model);
 }
 
 

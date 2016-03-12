@@ -1,4 +1,14 @@
- 
+#ifndef PLAYLISTMODEL_H
+#define PLAYLISTMODEL_H
+
+#include <QModelIndex>
+#include <QAbstractTableModel>
+
+#include "Playlist.h"
+
+class Song;
+
+
 class PlaylistModel : public QAbstractTableModel, public Playlist
 {
 public:
@@ -20,35 +30,26 @@ public:
     
     
     
-    /**
-     * @param  song
-     */
+/*
     void add (Song* song) override;
 
-    /**
-     */
     void remove (Song* song) override;
 
-    /**
-     */
     void remove (int i) override;
 
     void clear() override;
 
-    /**
-     */
     Song* next () override;
 
-    /**
-     */
     Song* previous () override;
 
     Song* getSong(unsigned int id) override;
 
-    /**
-     */
-    Song* current () override;
+    Song* current () override;*/
     
 private:
 
 };
+
+
+#endif
