@@ -52,9 +52,7 @@ public:
 
     void init (unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime = false) override;
 
-    void drain () override;
 
-    void drop () override;
 
     void close () override;
 
@@ -65,10 +63,15 @@ public:
     void setVolume(uint8_t) override;
 
     void start () override;
+    void stop () override;
 private:
 
-
     snd_pcm_t *alsa_dev = nullptr;
+    
+    void drain ();
+
+    void drop ();
+    
 };
 
 #endif // ALSAOUTPUT_H

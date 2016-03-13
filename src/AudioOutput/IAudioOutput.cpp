@@ -1,7 +1,4 @@
 
-#include <exception>
-#include <stdexcept>
-
 #include "CommonExceptions.h"
 #include "IAudioOutput.h"
 

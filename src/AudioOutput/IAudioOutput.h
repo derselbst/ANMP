@@ -46,22 +46,14 @@ public:
 
 
     /**
-     * Wait for all pending frames to be played and then stop the PCM.
+     * Starts the PCM stream.
      */
     virtual void start () = 0;
 
-
     /**
-     * Wait for all pending frames to be played and then stop the PCM.
+     * Stops the PCM stream.
      */
-    virtual void drain () = 0;
-
-
-    /**
-     * This function stops the PCM immediately. The pending samples on the buffer are
-     * ignored.
-     */
-    virtual void drop () = 0;
+    virtual void stop () = 0;
 
 
     /**
@@ -104,7 +96,7 @@ public:
     virtual void setVolume(uint8_t vol) = 0;
 
 protected:
-    unsigned char currentChannelCount = 0;
+    uint8_t currentChannelCount = 0;
     SampleFormat_t currentSampleFormat = SampleFormat_t::unknown;
 
 };

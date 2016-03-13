@@ -41,7 +41,7 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
     // changing hw settings can only safely be done when pcm is not running
     // therefore stop the pcm and drain all pending frames
     // DO NOT drop pending frames, due to latency some frames might still be played,
-    // dropping them will cause (at least in non-realtime mode) a hearable brick
+    // dropping them will cause (at least in non-realtime mode) a hearable crack
     this->drain();
 
     int err;
@@ -173,7 +173,7 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
 
     snd_pcm_sw_params_free (sw_params);
 
-    // WOW, WE MADE IT TIL HERE, so update channelcount and srate
+    // WOW, WE MADE IT TIL HERE, so update channelcount and sformat
     this->currentChannelCount = channels;
     this->currentSampleFormat = s;
 }
@@ -456,5 +456,10 @@ void ALSAOutput::start()
         throw runtime_error("unable to start pcm (" + string(snd_strerror(err)) + ")");
 
     }
+}
+
+void ALSAOutput::stop()
+{
+this->drop();
 }
 
