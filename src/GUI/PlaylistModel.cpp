@@ -13,7 +13,7 @@ int PlaylistModel::rowCount(const QModelIndex & /* parent */) const
 }
 int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
 {
-    return 2;
+    return 2+1;
 }
 
 
@@ -81,14 +81,44 @@ QVariant PlaylistModel::headerData(int section, Qt::Orientation orientation, int
 }
 
 
+bool PlaylistModel::insertRows(int row, int count, const QModelIndex & parent)
+{
+  if(row>this->rowCount(QModelIndex()))
+  {
+    return false;
+  }
 
+  if(row==0)
+  {
+    // prepend
+    
+    //notify views and proxy models that a line will be inserted
+      beginInsertRows(parent, row, row+(count-1));
+    //finish insertion, notify views/models
+      endInsertRows();
+  }
+  else if(row==this->rowCount(QModelIndex()))
+  {
+    // append
+    //notify views and proxy models that a line will be inserted
+      beginInsertRows(parent, row, row+(count-1));
+    //finish insertion, notify views/models
+      endInsertRows();
+  }
+  else
+  {
+    // TODO case not implemented
+    return false;
+  }
+}
 
 
 
 bool PlaylistModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-//     if (index.isValid() && index.row() != index.column() && role == Qt::EditRole)
+//     if (index.isValid() /*&& index.row() != index.column()*/ /*&& role == Qt::EditRole*/)
 //     {
+//       
 //         int offset = offsetOf(index.row(), index.column());
 //         distances[offset] = value.toInt();
 // 
@@ -112,3 +142,10 @@ Qt::ItemFlags PlaylistModel::flags(const QModelIndex &index) const
 
 
 
+
+void PlaylistModel::add(Song* s)
+{
+  Playlist::add(s);
+  
+  this->insertRows(this->rowCount(QModelIndex()), 1);
+}
