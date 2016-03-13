@@ -184,8 +184,8 @@ void Player::pause ()
     if(this->audioDriver!=nullptr)
     {
       // we wont feed any audioDriver with PCM anymore, so stop the PCM stream
-      // by dropping the last few frames
-      this->audioDriver->drop();
+      // usually by dropping the last few frames
+      this->audioDriver->stop();
     }
     WAIT(this->futurePlayInternal);
 }
