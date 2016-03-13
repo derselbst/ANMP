@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(ANMP)
+project(anmp-core)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Weffc++ -Waggressive-loop-optimizations -Warray-bounds -Wc++11-compat")
 
