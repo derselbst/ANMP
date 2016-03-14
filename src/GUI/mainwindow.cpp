@@ -14,10 +14,19 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     this->ui->setupUi(this);
 
+    this->buildFileBrowser();
+    this->buildPlaylistView();
+}
 
+MainWindow::~MainWindow()
+{
+    delete this->ui;
+    delete this->player;
+    delete this->playlistModel;
+}
 
-
-
+void MainWindow::buildFileBrowser()
+{
     QString rootPath = qgetenv("HOME");
     drivesModel->setFilter(QDir::NoDotAndDotDot | QDir::Dirs);
     ui->treeView->setModel(drivesModel);
@@ -32,35 +41,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->ui->listView->hide();
     this->ui->treeView->hide();
-
-    this->ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-
-
-this->buildPlaylistView();
-}
-
-MainWindow::~MainWindow()
-{
-    delete this->ui;
-    delete this->player;
-    delete this->playlist;
 }
 
 void MainWindow::buildPlaylistView()
 {
-    // Create model
-        model = new QStandardItemModel(0,3,this);
-
-
-
-    model->setHeaderData(0, Qt::Horizontal, "Title");
-        model->setHeaderData(1, Qt::Horizontal, "Interpret");
-        model->setHeaderData(2, Qt::Horizontal, "Album");
-
-
-
+    this->ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
         this->ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-        this->ui->tableView->setModel(model);
+      this->ui->tableView->setModel(playlistModel); 
 }
 
 void MainWindow::on_actionAdd_Songs_triggered()
@@ -74,39 +61,14 @@ void MainWindow::on_actionAdd_Songs_triggered()
 
       for(int i=0; !progress.wasCanceled() && i<fileNames.count(); i++)
       {
-          // only redraw progress dialog on every fifth song
+          // only redraw progress dialog on every tenth song
           if(i%10==0)
           {
                  progress.setValue(i);
                  QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
-}
+          }
 
-      Song* newSong = PlaylistFactory::addSong(*this->playlist, fileNames.at(i).toUtf8().constData());
-
-
-
-      if(newSong==nullptr)
-          continue;
-
-          // Get the position
-          int row = model->rowCount();
-
-          // Enable add one or more rows
-          model->insertRows(row,1);
-
-          // Title
-          QModelIndex index = model->index(row,0);
-          this->model->setData(index,fileNames.at(i));
-
-          // Interpret
-          index = model->index(row,1);
-          this->model->setData(index,QString(newSong->Metadata.Artist.c_str()));
-
-          // Album
-          index = model->index(row,2);
-          this->model->setData(index,QString(newSong->Metadata.Album.c_str()));
-
-          this->ui->tableView->setCurrentIndex(index);
+      PlaylistFactory::addSong(*this->playlistModel, fileNames.at(i).toUtf8().constData());
       }
 
       progress.setValue(fileNames.count());
@@ -144,7 +106,7 @@ void MainWindow::on_actionPrevious_Song_triggered()
 
 void MainWindow::on_actionClear_Playlist_triggered()
 {                                                                                                                                                                                
-      this->playlist->clear();
+      this->playlistModel->clear();
 }
 
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
@@ -157,7 +119,7 @@ void MainWindow::on_treeView_clicked(const QModelIndex &index)
 void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 {
     this->stop();
-    Song* songToPlay = this->playlist->getSong(index.row());
+    Song* songToPlay = this->playlistModel->getSong(index.row());
     this->player->setCurrentSong(songToPlay);
     this->play();
 

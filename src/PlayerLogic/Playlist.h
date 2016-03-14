@@ -46,7 +46,7 @@ public:
      */
     Song* current () override;
 
-private:
+protected:
     SongQueue_t queue;
     SongQueue_t::size_type currentSong = 0;
 };
