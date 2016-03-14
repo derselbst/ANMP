@@ -2,7 +2,7 @@
 
 #include "CommonExceptions.h"
 
-#include <algorithm>
+#include <algorithm> // std::sort
 
 // Constructors/Destructors
 //
@@ -18,18 +18,6 @@ Song::~Song ()
 {
   
 }
-
-//
-// Methods
-//
-
-
-// Accessor methods
-//
-
-
-// Other methods
-//
 
 
 /**

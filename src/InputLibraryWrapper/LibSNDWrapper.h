@@ -1,10 +1,10 @@
 #ifndef LIBSNDWRAPPER_H
 #define LIBSNDWRAPPER_H
 
+#include "Song.h"
+
 #include <sndfile.h>
 #include <future>
-
-#include "Song.h"
 
 
 /**
@@ -66,7 +66,7 @@ public:
     frame_t getFrames () const override;
 
 private:
-    SNDFILE *sndfile = nullptr;
+    SNDFILE* sndfile = nullptr;
     SF_INFO sfinfo;
     
     future<void> futureFillBuffer;

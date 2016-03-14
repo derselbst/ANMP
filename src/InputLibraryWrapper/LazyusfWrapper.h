@@ -7,7 +7,6 @@
   * class LazyusfWrapper
   *
   */
-
 class LazyusfWrapper : public Song
 {
 public:
@@ -59,9 +58,7 @@ private:
   
   unsigned char* usfHandle = nullptr;
   
-public:
-static double get_seconds();
-  
+public:  
  static void * stdio_fopen( const char * path, const char * mode );
 
  static size_t stdio_fread( void *p, size_t size, size_t count, void *f );

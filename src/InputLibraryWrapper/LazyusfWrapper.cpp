@@ -1,12 +1,12 @@
 #include "LazyusfWrapper.h"
+
 #include "CommonExceptions.h"
 #include "Config.h"
 #include "Common.h"
 
+
 #include <usf.h>
 #include <psflib.h>
-// Constructors/Destructors
-//
 
 LazyusfWrapper::LazyusfWrapper(string filename, size_t offset, size_t len) : Song(filename, offset, len)
 {
@@ -117,18 +117,6 @@ int LazyusfWrapper::stdio_fclose( void * f )
 long LazyusfWrapper::stdio_ftell( void * f )
 {
     return ftell( (FILE*) f );
-}
-
-
-#include <sys/time.h>
-double LazyusfWrapper::get_seconds()
-{
-  struct timeval t;
-  struct timezone tz;
-
-  gettimeofday(&t, &tz);
-
-  return (double)(t.tv_sec) + (double)(t.tv_usec) * 0.000001;
 }
 
 int LazyusfWrapper::usf_loader(void * context, const uint8_t * exe, size_t exe_size,

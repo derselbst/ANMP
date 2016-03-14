@@ -1,14 +1,13 @@
+#include "LibSNDWrapper.h"
+
+#include "Config.h"
+#include "Common.h"
+
+
 #include <cstring>
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
 
-#include "LibSNDWrapper.h"
-#include "CommonExceptions.h"
-#include "Config.h"
-#include "Common.h"
-
-// Constructors/Destructors
-//
 
 LibSNDWrapper::LibSNDWrapper (string filename, size_t fileOffset, size_t fileLen) : Song(filename, fileOffset, fileLen)
 {
@@ -23,9 +22,6 @@ LibSNDWrapper::~LibSNDWrapper ()
     this->close();
 }
 
-//
-// Methods
-//
 
 void LibSNDWrapper::open ()
 {
@@ -109,11 +105,6 @@ vector<loop_t> LibSNDWrapper::getLoopArray () const
 
     if(res.empty())
     {
-//         l.start = 0;
-//         l.stop = this->getFrames();
-//         l.count = 1;
-//         res.push_back(l);
-
         SF_INSTRUMENT inst;
         int ret = sf_command (this->sndfile, SFC_GET_INSTRUMENT, &inst, sizeof (inst)) ;
         if(ret == SF_TRUE && inst.loop_count > 0)
@@ -121,12 +112,18 @@ vector<loop_t> LibSNDWrapper::getLoopArray () const
 
             for (int i=0; i<inst.loop_count; i++)
             {
-	      
         loop_t l;
                 l.start = inst.loops[i].start;
                 l.stop  = inst.loops[i].end;
-		// COMMENT
+
+		// WARNING: AGAINST RIFF SPEC ahead!!!
+		// quoting RIFFNEW.pdf: "dwEnd: Specifies the endpoint of the loop
+		// in samples (this sample will also be played)."
+		// however (nearly) every piece of software out there ignores that and
+		// specifies the sample excluded from the loop
+		// THUS: submit to peer pressure
 		l.stop -= 1;
+		
                 l.count = inst.loops[i].count;
                 res.push_back(l);
             }
@@ -148,12 +145,3 @@ frame_t LibSNDWrapper::getFrames () const
   
   return totalFrames;
 }
-
-
-// Accessor methods
-//
-
-
-// Other methods
-//
-
