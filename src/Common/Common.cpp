@@ -1,3 +1,6 @@
+#include "Common.h"
+
+
 #include <iostream>
 #include <cctype>
 #include <string>
@@ -8,8 +11,6 @@
 #ifdef _POSIX_VERSION
 #include <strings.h>
 #endif
-
-#include "Common.h"
 
 using namespace std;
 

@@ -1,27 +1,33 @@
+#include "PlaylistFactory.h"
+
+#include "IPlaylist.h"
+#include "Song.h"
+
+#ifdef USE_LAZYUSF
+  #include "LazyusfWrapper.h"
+#endif
+
+#ifdef USE_LIBSND
+  #include "LibSNDWrapper.h"
+#endif
+
+#include "Common.h"
+
+
 #include <iostream>
 #include <libgen.h>
 #include <linux/limits.h>
-#include <cstring>
 
-extern "C"
-{
-  #include <libcue/libcue.h>
-}
-
-#include "PlaylistFactory.h"
-#include "Song.h"
-
-#include "Common.h"
-#include "CommonExceptions.h"
-#include "types.h"
-
-#include "LazyusfWrapper.h"
-#include "LibSNDWrapper.h"
-#include "OpusWrapper.h"
-#include "VGMStreamWrapper.h"
+#ifdef USE_CUE
+  extern "C"
+  {
+    #include <libcue/libcue.h>
+  }
+#endif
 
 
 
+#ifdef USE_CUE
 /**
  * @param  playlist
  * @param  filePath
@@ -75,6 +81,7 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
   cd_delete (cd);
 #undef cue_assert
 }
+#endif
 
 Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size_t offset, size_t len)
 {
@@ -83,8 +90,11 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size
 
     if (iEquals(ext,"cue"))
     {
+#ifdef USE_CUE
         PlaylistFactory::parseCue(playlist, filePath);
+#endif
     }
+#ifdef USE_LAZYUSF
     else if (iEquals(ext, "usf") || iEquals(ext, "miniusf"))
     {
 	pcm = new LazyusfWrapper(filePath);
@@ -100,6 +110,8 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size
 	      pcm=nullptr;
 	}
     }
+#endif
+#ifdef USE_OPUS
     else if(iEquals(ext, "opus"))
     {
 //     TODO: implement me
@@ -112,11 +124,11 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size
 //     {
 //     // log and cancel
 //     }
-        return pcm;
-
     }
+#endif
     else // so many formats to test here, try and error
     {
+#ifdef USE_LIBSND
         // TODO: pass offset to libsnd
         pcm = new LibSNDWrapper(filePath, offset, len);
 
@@ -130,6 +142,7 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size
             cerr << e.what() << endl;
             pcm->close();
             delete pcm;
+#endif
 //       TODO: implement me
 //       pcm=new VGMStreamWrapper(filePath);
 //       try
@@ -142,7 +155,9 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size
 // 	delete pcm;
             pcm=nullptr;
 //       }
+#ifdef USE_LIBSND
         }
+#endif
     }
 
     if(pcm==nullptr)
