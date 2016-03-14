@@ -1,9 +1,10 @@
 #ifndef PLAYLIST_H
 #define PLAYLIST_H
 
-#include <queue>
 
 #include "IPlaylist.h"
+
+#include <queue>
 
 class Playlist : public IPlaylist
 {

@@ -1,7 +1,7 @@
 #ifndef IPLAYLIST_H
 #define IPLAYLIST_H
 
-#include "Song.h"
+class Song;
 
 using namespace std;
 

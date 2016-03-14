@@ -1,11 +1,18 @@
-#include <iostream>
-#include <limits>
+#include "Player.h"
 
+#include "tree.h"
 #include "Config.h"
 #include "Common.h"
 #include "CommonExceptions.h"
-#include "Player.h"
+
+#include "Playlist.h"
+#include "Song.h"
+#include "IAudioOutput.h"
 #include "ALSAOutput.h"
+
+#include <iostream>
+#include <limits>
+
 
 // TODO: make this nicer
 #define FramesToItems(x) ((x)*this->currentSong->Format.Channels)
