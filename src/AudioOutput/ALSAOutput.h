@@ -12,8 +12,8 @@ typedef struct _snd_pcm snd_pcm_t;
 /**
   * class ALSAOutput
   *
+  * A wrapper library for ALSA, enabling ANMP to use ALSA for playback
   */
-
 class ALSAOutput : public IAudioOutput
 {
 public:
