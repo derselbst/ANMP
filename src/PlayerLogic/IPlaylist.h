@@ -29,7 +29,7 @@ public:
     /**
      */
     virtual void remove (Song* song) = 0;
-    
+
     virtual void clear() = 0;
 
     /**

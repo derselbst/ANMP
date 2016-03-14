@@ -50,52 +50,52 @@ void LibSNDWrapper::fillBuffer()
     {
         this->count = this->getFrames() * this->Format.Channels;
         this->data = new float[this->count];
-	
-	// usually this shouldnt block at all
-	WAIT(this->futureFillBuffer);
-	
-	// immediatly start filling the pcm buffer
-	this->futureFillBuffer = async(launch::async, &LibSNDWrapper::asyncFillBuffer, this);
-	
-	// give libsnd at least a minor headstart
-	this_thread::sleep_for (chrono::milliseconds(1));
+
+        // usually this shouldnt block at all
+        WAIT(this->futureFillBuffer);
+
+        // immediatly start filling the pcm buffer
+        this->futureFillBuffer = async(launch::async, &LibSNDWrapper::asyncFillBuffer, this);
+
+        // give libsnd at least a minor headstart
+        this_thread::sleep_for (chrono::milliseconds(1));
     }
 }
 
 void LibSNDWrapper::asyncFillBuffer()
 {
-        sf_seek(this->sndfile, msToFrames(this->fileOffset, this->Format.SampleRate), SEEK_SET);
+    sf_seek(this->sndfile, msToFrames(this->fileOffset, this->Format.SampleRate), SEEK_SET);
 
-        int readcount=0;
-	unsigned int itemsToRender = Config::FramesToRender*this->Format.Channels;
-	
-	int fullFillCount = this->count/itemsToRender;
-	for(int i = 0; i<fullFillCount && !this->stopFillBuffer; i++)
-	{
-	  readcount += sf_read_float(this->sndfile, static_cast<float*>(this->data)+i*itemsToRender, itemsToRender);
-	}
-	
-	if(!this->stopFillBuffer)
-	{
-	    unsigned int lastItemsToRender = this->count % itemsToRender;
-	    readcount += sf_read_float(this->sndfile, static_cast<float*>(this->data)+fullFillCount*itemsToRender, lastItemsToRender);
-	    
-	    if(readcount != this->count) {}
-	    // TODO: LOG: printf("THIS SHOULD NEVER HAPPEN: only read %d frames, although there are %d frames in the file\n", readcount/sfinfo.channels, sfinfo.frames);
+    int readcount=0;
+    unsigned int itemsToRender = Config::FramesToRender*this->Format.Channels;
 
-    //         this->count = readcount;
-	}
+    int fullFillCount = this->count/itemsToRender;
+    for(int i = 0; i<fullFillCount && !this->stopFillBuffer; i++)
+    {
+        readcount += sf_read_float(this->sndfile, static_cast<float*>(this->data)+i*itemsToRender, itemsToRender);
+    }
+
+    if(!this->stopFillBuffer)
+    {
+        unsigned int lastItemsToRender = this->count % itemsToRender;
+        readcount += sf_read_float(this->sndfile, static_cast<float*>(this->data)+fullFillCount*itemsToRender, lastItemsToRender);
+
+        if(readcount != this->count) {}
+        // TODO: LOG: printf("THIS SHOULD NEVER HAPPEN: only read %d frames, although there are %d frames in the file\n", readcount/sfinfo.channels, sfinfo.frames);
+
+        //         this->count = readcount;
+    }
 }
 
 void LibSNDWrapper::releaseBuffer()
 {
-  this->stopFillBuffer=true;
-  WAIT(this->futureFillBuffer);
-  
+    this->stopFillBuffer=true;
+    WAIT(this->futureFillBuffer);
+
     delete [] static_cast<float*>(this->data);
     this->data=nullptr;
     this->count = 0;
-    
+
     this->stopFillBuffer=false;
 }
 
@@ -112,18 +112,18 @@ vector<loop_t> LibSNDWrapper::getLoopArray () const
 
             for (int i=0; i<inst.loop_count; i++)
             {
-        loop_t l;
+                loop_t l;
                 l.start = inst.loops[i].start;
                 l.stop  = inst.loops[i].end;
 
-		// WARNING: AGAINST RIFF SPEC ahead!!!
-		// quoting RIFFNEW.pdf: "dwEnd: Specifies the endpoint of the loop
-		// in samples (this sample will also be played)."
-		// however (nearly) every piece of software out there ignores that and
-		// specifies the sample excluded from the loop
-		// THUS: submit to peer pressure
-		l.stop -= 1;
-		
+                // WARNING: AGAINST RIFF SPEC ahead!!!
+                // quoting RIFFNEW.pdf: "dwEnd: Specifies the endpoint of the loop
+                // in samples (this sample will also be played)."
+                // however (nearly) every piece of software out there ignores that and
+                // specifies the sample excluded from the loop
+                // THUS: submit to peer pressure
+                l.stop -= 1;
+
                 l.count = inst.loops[i].count;
                 res.push_back(l);
             }
@@ -134,14 +134,14 @@ vector<loop_t> LibSNDWrapper::getLoopArray () const
 
 frame_t LibSNDWrapper::getFrames () const
 {
-  int framesAvail = this->sfinfo.frames - msToFrames(this->fileOffset, this->Format.SampleRate);
-  
-  size_t totalFrames = this->fileLen==0 ? framesAvail : msToFrames(this->fileLen, this->Format.SampleRate);
-  
-  if(totalFrames > framesAvail)
-  {
-    totalFrames = framesAvail;
-  }
-  
-  return totalFrames;
+    int framesAvail = this->sfinfo.frames - msToFrames(this->fileOffset, this->Format.SampleRate);
+
+    size_t totalFrames = this->fileLen==0 ? framesAvail : msToFrames(this->fileLen, this->Format.SampleRate);
+
+    if(totalFrames > framesAvail)
+    {
+        totalFrames = framesAvail;
+    }
+
+    return totalFrames;
 }

@@ -32,7 +32,7 @@ public:
      * @param  offset
      */
     static Song* addSong (IPlaylist& playlist, const string filePath, size_t offset = 0, size_t len = 0);
-    
+
 #ifdef USE_CUE
     static void parseCue (IPlaylist& playlist, const string&filePath);
 #endif

@@ -11,7 +11,7 @@ using namespace std;
 
 /**
   * class IAudioOutput
-  * 
+  *
   * Abstract base (i.e. interface) class for all classes that handle audio playback in ANMP
   */
 class IAudioOutput
@@ -91,7 +91,7 @@ public:
      * etc.)
      */
     virtual int write (pcm_t* frameBuffer, frame_t frames, int offset);
-    
+
     /**
      * @param vol volume [0;100]
      */

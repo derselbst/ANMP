@@ -7,7 +7,7 @@
 
 namespace core
 {
-    template <typename T> class tree;
+template <typename T> class tree;
 };
 class IAudioOutput;
 class IPlaylist;
@@ -98,12 +98,12 @@ private:
 
     bool isPlaying = false;
 
-    
+
     future<void> futurePlayInternal;
 
-    
+
     void init();
-    
+
     void _setCurrentSong (Song* song);
 
     /**

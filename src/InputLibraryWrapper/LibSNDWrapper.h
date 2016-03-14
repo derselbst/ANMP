@@ -68,11 +68,11 @@ public:
 private:
     SNDFILE* sndfile = nullptr;
     SF_INFO sfinfo;
-    
+
     future<void> futureFillBuffer;
     // a flag that indicates a prematurely abort of async buffer fill
     bool stopFillBuffer = false;
-    
+
     void asyncFillBuffer();
 
 };

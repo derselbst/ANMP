@@ -34,7 +34,7 @@ public:
     int write (float* buffer, frame_t frames) override;
 
     int write (int16_t* buffer, frame_t frames) override;
-    
+
     void setVolume(uint8_t) override;
 
     void start () override;
@@ -43,11 +43,11 @@ public:
 private:
 
     snd_pcm_t* alsa_dev = nullptr;
-    
+
     void drain ();
 
     void drop ();
-    
+
 };
 
 #endif // ALSAOUTPUT_H
