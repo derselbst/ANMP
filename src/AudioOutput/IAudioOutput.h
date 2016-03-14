@@ -1,17 +1,19 @@
 #ifndef IAUDIOOUTPUT_H
 #define IAUDIOOUTPUT_H
 
+#include "types.h"
+
+
 #include <cstdint>
 
-#include "types.h"
 
 using namespace std;
 
 /**
   * class IAudioOutput
-  *
+  * 
+  * Abstract base (i.e. interface) class for all classes that handle audio playback in ANMP
   */
-
 class IAudioOutput
 {
 protected:

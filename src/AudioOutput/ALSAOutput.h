@@ -1,25 +1,12 @@
 #ifndef ALSAOUTPUT_H
 #define ALSAOUTPUT_H
 
-#include <cstdint>
-
 #include "IAudioOutput.h"
 
-
-
-#define ALSA_PCM_NEW_HW_PARAMS_API
-#define ALSA_PCM_NEW_SW_PARAMS_API
-#include <alsa/asoundlib.h>
-#include <alsa/mixer.h>
-#include <sys/time.h>
-
-#if defined (__linux__)
-#include     <fcntl.h>
-#include     <sys/ioctl.h>
-#include     <sys/soundcard.h>
-#endif
-
-
+// just forward declare this type by ourself; it's actually
+// declared in alsa/asoundlib.h; but it's a complete overkill
+// to include ALSA in this header
+typedef struct _snd_pcm snd_pcm_t;
 
 
 /**
@@ -31,18 +18,8 @@ class ALSAOutput : public IAudioOutput
 {
 public:
 
-    // Constructors/Destructors
-    //
-
-
-    /**
-     * Empty Constructor
-     */
     ALSAOutput ();
 
-    /**
-     * Empty Destructor
-     */
     virtual ~ALSAOutput ();
 
 
@@ -51,8 +28,6 @@ public:
     void open () override;
 
     void init (unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime = false) override;
-
-
 
     void close () override;
 
@@ -64,9 +39,10 @@ public:
 
     void start () override;
     void stop () override;
+
 private:
 
-    snd_pcm_t *alsa_dev = nullptr;
+    snd_pcm_t* alsa_dev = nullptr;
     
     void drain ();
 

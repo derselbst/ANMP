@@ -1,6 +1,7 @@
+#include "IAudioOutput.h"
 
 #include "CommonExceptions.h"
-#include "IAudioOutput.h"
+
 
 IAudioOutput::IAudioOutput()
 {}

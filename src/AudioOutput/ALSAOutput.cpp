@@ -1,20 +1,29 @@
+#include "ALSAOutput.h"
+
+#include "CommonExceptions.h"
+
+
 #include <iostream>
 #include <string>
 
-#include "CommonExceptions.h"
-#include "ALSAOutput.h"
+#define ALSA_PCM_NEW_HW_PARAMS_API
+#define ALSA_PCM_NEW_SW_PARAMS_API
+#include <alsa/asoundlib.h>
+#include <alsa/mixer.h>
+#include <sys/time.h>
 
+#if defined (__linux__)
+#include     <fcntl.h>
+#include     <sys/ioctl.h>
+#include     <sys/soundcard.h>
+#endif
 
-
-// Constructors/Destructors
-//
-
-ALSAOutput::ALSAOutput () {
+ALSAOutput::ALSAOutput ()
+{
 }
 
 ALSAOutput::~ALSAOutput ()
 {
-//   this->drop();
     this->close();
 }
 
