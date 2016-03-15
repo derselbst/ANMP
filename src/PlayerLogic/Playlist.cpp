@@ -1,5 +1,7 @@
 #include "Playlist.h"
 
+#include <algorithm>
+
 #define EMPTY_GUARD     if(this->queue.empty()) { return nullptr; }
 
 Playlist::~Playlist()
@@ -15,21 +17,14 @@ void Playlist::add (Song* song)
 
 void Playlist::remove (Song* song)
 {
-    for(SongQueue_t::iterator it = this->queue.begin(); it!=this->queue.end(); it++)
-    {
-        if(*it == song)
-        {
-            delete *it;
-            this->queue.erase(it);
-        }
-    }
+    this->queue.erase(std::remove(this->queue.begin(), this->queue.end(), song), this->queue.end());
 }
 
 /**
  */
 void Playlist::remove (int i)
 {
-    this->remove(this->queue[i]);
+    this->queue.erase(this->queue.begin()+(i % this->queue.size()));
 }
 
 void Playlist::clear()
