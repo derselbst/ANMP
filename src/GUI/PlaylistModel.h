@@ -26,19 +26,19 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
     bool insertRows(int row, int count, const QModelIndex & parent = QModelIndex()) override;
-    
+    bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex()) override;
     
     
     
 
     void add (Song* song) override;
-/*
-    void remove (Song* song) override;
+
+//     void remove (Song* song) override;
 
     void remove (int i) override;
 
     void clear() override;
-
+/*
     Song* next () override;
 
     Song* previous () override;

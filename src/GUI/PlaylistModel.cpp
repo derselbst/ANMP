@@ -1,5 +1,6 @@
 #include "PlaylistModel.h"
 
+#include "Song.h"
 
 PlaylistModel::PlaylistModel(QObject *parent)
     : QAbstractTableModel(parent)
@@ -13,7 +14,7 @@ int PlaylistModel::rowCount(const QModelIndex & /* parent */) const
 }
 int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
 {
-    return 2+1;
+    return 2;
 }
 
 
@@ -30,9 +31,9 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
       
       switch(index.column())
       {
-	case 1:
+    case 0:
 	  return QString::fromStdString(songToUse->Filename);
-	case 2:
+    case 1:
 	  return QString::fromStdString(songToUse->Metadata.Artist);
 	default:
 	  break;
@@ -51,9 +52,9 @@ QVariant PlaylistModel::headerData(int section, Qt::Orientation orientation, int
       case Qt::DisplayRole: // The key data to be rendered in the form of text.
 	switch(section)
 	{
-	  case 1:
+      case 0:
 	    return QString("Filename");
-	  case 2:
+      case 1:
 	    return QString("Interpret");
 	  default:
 	    return QString("");
@@ -88,28 +89,27 @@ bool PlaylistModel::insertRows(int row, int count, const QModelIndex & parent)
     return false;
   }
 
-  if(row==0)
-  {
-    // prepend
-    
+  //notify views and proxy models that a line will be inserted
+    beginInsertRows(parent, row, row+(count-1));
+  //finish insertion, notify views/models
+    endInsertRows();
+
+  return true;
+}
+
+bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
+{
+    if(row>this->rowCount(QModelIndex()))
+    {
+      return false;
+    }
+
     //notify views and proxy models that a line will be inserted
-      beginInsertRows(parent, row, row+(count-1));
+      beginRemoveRows(parent, row, row+(count-1));
     //finish insertion, notify views/models
-      endInsertRows();
-  }
-  else if(row==this->rowCount(QModelIndex()))
-  {
-    // append
-    //notify views and proxy models that a line will be inserted
-      beginInsertRows(parent, row, row+(count-1));
-    //finish insertion, notify views/models
-      endInsertRows();
-  }
-  else
-  {
-    // TODO case not implemented
-    return false;
-  }
+      endRemoveRows();
+
+    return true;
 }
 
 
@@ -148,4 +148,22 @@ void PlaylistModel::add(Song* s)
   Playlist::add(s);
   
   this->insertRows(this->rowCount(QModelIndex()), 1);
+}
+
+void PlaylistModel::remove(int i)
+{
+    Playlist::remove(i);
+
+    this->removeRows(i, 1);
+}
+
+void PlaylistModel::clear()
+{
+    const int Elements = this->rowCount(QModelIndex());
+
+    for(int i=0; i<Elements; i++)
+    {
+        Playlist::remove(0);
+        this->removeRows(0, 1);
+    }
 }
