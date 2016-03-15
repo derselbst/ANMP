@@ -13,7 +13,7 @@
 
 #include "Common.h"
 
-
+#include <cstring>
 #include <iostream>
 #include <libgen.h>
 #include <linux/limits.h>
