@@ -1,11 +1,18 @@
-#include <iostream>
-#include <limits>
+#include "Player.h"
 
+#include "tree.h"
 #include "Config.h"
 #include "Common.h"
 #include "CommonExceptions.h"
-#include "Player.h"
+
+#include "Playlist.h"
+#include "Song.h"
+#include "IAudioOutput.h"
 #include "ALSAOutput.h"
+
+#include <iostream>
+#include <limits>
+
 
 // TODO: make this nicer
 #define FramesToItems(x) ((x)*this->currentSong->Format.Channels)
@@ -22,7 +29,7 @@ Player::~Player ()
 {
     this->stop();
 
-WAIT(this->futurePlayInternal);
+    WAIT(this->futurePlayInternal);
 
     if(this->audioDriver!=nullptr)
     {
@@ -34,7 +41,7 @@ WAIT(this->futurePlayInternal);
 void Player::init()
 {
     this->pause();
-    
+
     WAIT(this->futurePlayInternal);
 
     delete this->audioDriver;
@@ -52,9 +59,9 @@ void Player::init()
 
     this->audioDriver->open();
 
-      SongFormat& fmt = this->currentSong->Format;
-      this->audioDriver->init(fmt.SampleRate, fmt.Channels, fmt.SampleFormat);
-      this->resetPlayhead();
+    SongFormat& fmt = this->currentSong->Format;
+    this->audioDriver->init(fmt.SampleRate, fmt.Channels, fmt.SampleFormat);
+    this->resetPlayhead();
 }
 
 
@@ -62,22 +69,22 @@ void Player::init()
  */
 void Player::play ()
 {
-  if(this->currentSong==nullptr)
-  {
-    return;
-  }
-  
-  if(this->audioDriver==nullptr)
-  {
-    this->init();
-  }
-  
+    if(this->currentSong==nullptr)
+    {
+        return;
+    }
+
+    if(this->audioDriver==nullptr)
+    {
+        this->init();
+    }
+
     if (this->isPlaying)
     {
         return;
     }
 
-WAIT(this->futurePlayInternal);
+    WAIT(this->futurePlayInternal);
 
     this->isPlaying=true;
 
@@ -103,20 +110,20 @@ void Player::setCurrentSong (Song* song)
 {
     if(this->isPlaying)
     {
-      throw runtime_error("Player: Cannot set song while still playing back.");
+        throw runtime_error("Player: Cannot set song while still playing back.");
     }
-    
+
     WAIT(this->futurePlayInternal);
     this->_setCurrentSong(song);
 }
-    
+
 void Player::_setCurrentSong (Song* song)
 {
     this->resetPlayhead();
     if(this->currentSong == song)
     {
-      // nothing to do here
-      return;
+        // nothing to do here
+        return;
     }
 
     // capture format of former current song
@@ -124,16 +131,16 @@ void Player::_setCurrentSong (Song* song)
     if(this->currentSong != nullptr)
     {
         this->currentSong->releaseBuffer();
-	this->currentSong->close();
+        this->currentSong->close();
         oldformat = this->currentSong->Format;
     }
 
     this->currentSong = song;
     if(this->currentSong == nullptr)
     {
-      return;
+        return;
     }
-    
+
     this->currentSong->open();
     // go ahead and start filling the pcm buffer
     this->currentSong->fillBuffer();
@@ -141,23 +148,23 @@ void Player::_setCurrentSong (Song* song)
     // if the audio has already been initialized
     if(this->audioDriver!=nullptr)
     {
-      SongFormat& format = this->currentSong->Format;
+        SongFormat& format = this->currentSong->Format;
 
-      // in case samplerate or channel count differ, reinit audioDriver
-      if(oldformat != format)
-      {
-	  try
-	  {
-	      this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
-	  }
-	  catch(exception& e)
-	  {
-	      cout << e.what() << endl;
-	      this->stop();
-	      return;
+        // in case samplerate or channel count differ, reinit audioDriver
+        if(oldformat != format)
+        {
+            try
+            {
+                this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
+            }
+            catch(exception& e)
+            {
+                cout << e.what() << endl;
+                this->stop();
+                return;
 
-	  }
-      }
+            }
+        }
     }
 }
 
@@ -183,9 +190,9 @@ void Player::pause ()
 
     if(this->audioDriver!=nullptr)
     {
-      // we wont feed any audioDriver with PCM anymore, so stop the PCM stream
-      // usually by dropping the last few frames
-      this->audioDriver->stop();
+        // we wont feed any audioDriver with PCM anymore, so stop the PCM stream
+        // usually by dropping the last few frames
+        this->audioDriver->stop();
     }
     WAIT(this->futurePlayInternal);
 }
@@ -237,18 +244,18 @@ core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)
 {
     loop_t compareLoop;
     compareLoop.start = numeric_limits<frame_t>::max();
-    
+
     core::tree<loop_t>* ptrToNearest = nullptr;
     // find loop that starts closest, i.e. right after, to whereever playhead points to
     for (core::tree<loop_t>::iterator it = l.begin(); it != l.end(); ++it)
     {
-	if(this->playhead <= (*it).start && (*it).start < compareLoop.start)
-	{
-	  compareLoop=*it;
-	  ptrToNearest=it.tree_ptr();
-	}
+        if(this->playhead <= (*it).start && (*it).start < compareLoop.start)
+        {
+            compareLoop=*it;
+            ptrToNearest=it.tree_ptr();
+        }
     }
-    
+
     return ptrToNearest;
 }
 
@@ -264,32 +271,32 @@ core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)
  */
 void Player::playLoop (core::tree<loop_t>& loop)
 {   USERS_ARE_STUPID
-  
+
     // while there are sub-loops that need to be played
     core::tree<loop_t>* subloop;
     while(this->isPlaying &&
-          Config::useLoopInfo &&
-          ((subloop = this->getNextLoop(loop)) != nullptr))
+            Config::useLoopInfo &&
+            ((subloop = this->getNextLoop(loop)) != nullptr))
     {
 
-	// if the user requested to seek past the current loop, skip it at all
-	if(this->playhead > (*(*subloop)).stop)
-	{
-	    continue;
-	}
+        // if the user requested to seek past the current loop, skip it at all
+        if(this->playhead > (*(*subloop)).stop)
+        {
+            continue;
+        }
 
-	this->playFrames(playhead, (*(*subloop)).start);
-	// at this point: playhead==subloop.start
-	
-	uint32_t mycount = Config::overridingGlobalLoopCount!=-1 ? Config::overridingGlobalLoopCount : (*(*subloop)).count;
-	bool forever = mycount==0;
-	while(this->isPlaying && (forever || mycount--))
-	{
-	    // if we play this loop multiple time, make sure we start at the beginning again
-	    this->seekTo((*(*subloop)).start);
-	    this->playLoop(*subloop);
-	    // at this point: playhead=subloop.end
-	}
+        this->playFrames(playhead, (*(*subloop)).start);
+        // at this point: playhead==subloop.start
+
+        uint32_t mycount = Config::overridingGlobalLoopCount!=-1 ? Config::overridingGlobalLoopCount : (*(*subloop)).count;
+        bool forever = mycount==0;
+        while(this->isPlaying && (forever || mycount--))
+            {
+                // if we play this loop multiple time, make sure we start at the beginning again
+                this->seekTo((*(*subloop)).start);
+                this->playLoop(*subloop);
+                // at this point: playhead=subloop.end
+            }
     }
 
     // play rest of file
@@ -304,19 +311,19 @@ void Player::playLoop (core::tree<loop_t>& loop)
 void Player::playFrames (frame_t startFrame, frame_t stopFrame)
 {   USERS_ARE_STUPID
 
-  if(startFrame!=this->playhead)
-  {
-    cout << "Oops: Expected Playhead to be equal " << startFrame << ", but playhead is " << this->playhead << endl;
-  }
+    if(startFrame!=this->playhead)
+    {
+        cout << "Oops: Expected Playhead to be equal " << startFrame << ", but playhead is " << this->playhead << endl;
+    }
 
     // the user may request to seek while we are playing, thus check whether playhead is
     // still in range
     while(this->isPlaying && this->playhead>=startFrame && this->playhead<stopFrame)
     {
         if(this->currentSong->getFrames()==0)
-	{
-	  return;
-	}
+        {
+            return;
+        }
         signed long long framesToPlay = stopFrame - this->playhead;
 
         if(framesToPlay<=0)
@@ -327,47 +334,47 @@ void Player::playFrames (frame_t startFrame, frame_t stopFrame)
         }
 
         this->playFrames(framesToPlay);
-	// here playhead is expected to be equal stopFrame
-	// if this is not the case play again if necessary
+        // here playhead is expected to be equal stopFrame
+        // if this is not the case play again if necessary
     }
 }
 
 
 void Player::playFrames (frame_t framesToPlay)
 {   USERS_ARE_STUPID
-    
+
     frame_t memorizedPlayhead = this->playhead;
     size_t& bufSize = this->currentSong->count;
-    
+
 // here is a very simple form of what we do below
 // just hand in every frame separately
 //       for(int i=0; i<framesToPlay; i+=channels)
 //         this->audioDriver->write(pcmBuffer+i.toItems(), 1, channels) ;
 // Disadvantage: keeps the CPU very busy
 // thus do it by handing in small buffers within the buffer ;)
-    
+
     // check if we seeked during playback or pcm size is zero
     while(this->isPlaying && // has smb. stopped playback?
-          framesToPlay>0 && // are there any frames left to play?
-          bufSize!=0 && // are there any samples in pcm buffer?
-	  memorizedPlayhead==this->playhead // make sure noone seeked while playing
-	 )
+            framesToPlay>0 && // are there any frames left to play?
+            bufSize!=0 && // are there any samples in pcm buffer?
+            memorizedPlayhead==this->playhead // make sure noone seeked while playing
+         )
     {
         // seek within the buffer to that item where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
         int itemOffset = FramesToItems(memorizedPlayhead) % bufSize;
         // number of frames we will write to audioDriver in this run
         int framesToPush = min(Config::FramesToRender, framesToPlay);
-	// PLAY!
+        // PLAY!
         int framesWritten = this->audioDriver->write(this->currentSong->data, framesToPush, itemOffset);
-	
-	// ensure PCM buffer(s) are well filled
+
+        // ensure PCM buffer(s) are well filled
         this->currentSong->fillBuffer();
-        
-	// update the playhead
+
+        // update the playhead
         this->playhead+=framesWritten;
-	// update our local copy of playhead
+        // update our local copy of playhead
         memorizedPlayhead+=framesWritten;
-	// update frames-left-to-play
+        // update frames-left-to-play
         framesToPlay-=framesWritten;
     }
 }
@@ -378,15 +385,15 @@ void Player::playFrames (frame_t framesToPlay)
  */
 // void Player::playFrames (unsigned int itemsToPlay)
 // {   USERS_ARE_STUPID
-//     
-//     
-//     
-// 
+//
+//
+//
+//
 // // first define a nice shortcut to our pcmBuffer
 //     pcm_t* pcmBuffer = this->currentSong->data;
-// 
+//
 //     frame_t memorizedPlayhead = this->playhead;
-// 
+//
 //     size_t bufSize = this->currentSong->count;
 //     if(bufSize==0)
 //     {
@@ -395,23 +402,23 @@ void Player::playFrames (frame_t framesToPlay)
 //     }
 // // then seek within the buffer to that point where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
 //     int offset = FramesToItems(memorizedPlayhead) % bufSize;
-// 
+//
 //     const unsigned int& channels = this->currentSong->Format.Channels;
-// 
-// 
+//
+//
 //     const frame_t& FRAMES = Config::FramesToRender;
 //     const unsigned int BUFSIZE = FRAMES * channels;
-// 
+//
 //     int fullTransfers = itemsToPlay / BUFSIZE;
 //     for(int i=0; this->isPlaying && (this->playhead==memorizedPlayhead + i*FRAMES) && i<fullTransfers; i++)
 //     {
 //         this->audioDriver->write (pcmBuffer, FRAMES /* or more correctly BUFSIZE/channels , its the same*/, offset+(i*BUFSIZE));
 //         this->currentSong->fillBuffer();
-// 
+//
 //         // update playhead position
 //         this->playhead+=FRAMES;
 //     }
-// 
+//
 //     if(this->isPlaying && (this->playhead==memorizedPlayhead + fullTransfers*FRAMES))
 //     {
 //         int finalTransfer = itemsToPlay % BUFSIZE;
@@ -423,31 +430,31 @@ void Player::playFrames (frame_t framesToPlay)
 
 
 void Player::playInternal ()
-{    
+{
     try
     {
-      this->audioDriver->start();
-      while(this->isPlaying)
-      {
-	  core::tree<loop_t>& loops = this->currentSong->loopTree;
+        this->audioDriver->start();
+        while(this->isPlaying)
+        {
+            core::tree<loop_t>& loops = this->currentSong->loopTree;
 
-	  this->playLoop(loops);
+            this->playLoop(loops);
 
-	  // ok, for some reason we left playLoop, if this was due to we shall stop playing
-	  // leave this loop immediately, else play next song
-	  if(!this->isPlaying)
-	  {
-	      break;
-	  }
-	  this->_setCurrentSong(this->playlist->next());
-      }
+            // ok, for some reason we left playLoop, if this was due to we shall stop playing
+            // leave this loop immediately, else play next song
+            if(!this->isPlaying)
+            {
+                break;
+            }
+            this->_setCurrentSong(this->playlist->next());
+        }
     }
     catch(exception& e)
     {
-      cerr << "An Exception was thrown in Player::playInternal(): " << e.what() << endl;
-      
-      // will be save in futurePlayInternal, not sure if anybody will ever notice though
-      throw;
+        cerr << "An Exception was thrown in Player::playInternal(): " << e.what() << endl;
+
+        // will be save in futurePlayInternal, not sure if anybody will ever notice though
+        throw;
     }
 }
 

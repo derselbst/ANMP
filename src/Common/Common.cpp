@@ -47,7 +47,7 @@ string getFileExtension(const string& filePath)
 
 #define BORK_TIME 0xC0CAC01A
 /** @brief converts a time string to ms
- * 
+ *
  * @param[in] input: a string in the format of mm:ss
  *            where mm=minutes and ss=seconds
  * @return an integer in milliseconds
@@ -101,10 +101,10 @@ unsigned long parse_time_crap(const char *input)
 /**
  * @param[in] ms: position in audiofile in milliseconds
  * @param[in] sampleRate: sample rate of audiofile in HZ
- * 
+ *
  * @return position in audiofile in frames (i.e. samples)
  */
 frame_t msToFrames(const size_t& ms, const unsigned int& sampleRate)
 {
-  return (ms*sampleRate)/1000;
+    return (ms*sampleRate)/1000;
 }

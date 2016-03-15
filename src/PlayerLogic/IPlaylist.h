@@ -1,7 +1,7 @@
 #ifndef IPLAYLIST_H
 #define IPLAYLIST_H
 
-#include "Song.h"
+class Song;
 
 using namespace std;
 
@@ -29,7 +29,7 @@ public:
     /**
      */
     virtual void remove (Song* song) = 0;
-    
+
     virtual void clear() = 0;
 
     /**

@@ -1,11 +1,19 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include "types.h"
+
 #include <future>
 
-#include "Song.h"
-#include "IPlaylist.h"
-#include "IAudioOutput.h"
+namespace core
+{
+template <typename T> class tree;
+};
+class IAudioOutput;
+class IPlaylist;
+class Song;
+
+using namespace std;
 
 /**
   * class Player
@@ -16,25 +24,9 @@ class Player
 {
 public:
 
-    // Constructors/Destructors
-    //
-
-
-    /**
-     * Empty Constructor
-     */
     Player (IPlaylist* playlist);
 
-    /**
-     * Empty Destructor
-     */
     virtual ~Player ();
-
-    // Static Public attributes
-    //
-
-    // Public attributes
-    //
 
     /**
      */
@@ -87,12 +79,6 @@ public:
 
 private:
 
-    // Static Private attributes
-    //
-
-    // Private attributes
-    //
-
     float PreAmpVolume;
 
     // pointer to the song we are currently isPlaying
@@ -112,12 +98,12 @@ private:
 
     bool isPlaying = false;
 
-    
+
     future<void> futurePlayInternal;
 
-    
+
     void init();
-    
+
     void _setCurrentSong (Song* song);
 
     /**

@@ -4,11 +4,11 @@
 #include "Song.h"
 
 #ifdef USE_LAZYUSF
-  #include "LazyusfWrapper.h"
+#include "LazyusfWrapper.h"
 #endif
 
 #ifdef USE_LIBSND
-  #include "LibSNDWrapper.h"
+#include "LibSNDWrapper.h"
 #endif
 
 #include "Common.h"
@@ -19,10 +19,10 @@
 #include <linux/limits.h>
 
 #ifdef USE_CUE
-  extern "C"
-  {
-    #include <libcue/libcue.h>
-  }
+extern "C"
+{
+#include <libcue/libcue.h>
+}
 #endif
 
 
@@ -41,20 +41,20 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
   {\
      throw runtime_error(string("Error: Failed to parse CUE-Sheet file \"") + filePath + "\" ("+ERRMSG+")");\
   }
-  
-  FILE *f = fopen(filePath.c_str(), "r");
-  Cd *cd = cue_parse_file(f);
-  cue_assert ("error parsing CUE", cd != NULL);
-  
-  int ntrk = cd_get_ntrack (cd);
-  char temp[PATH_MAX];
-   for(int i=0; i< ntrk; i++)
-   {
-      Track* track = cd_get_track (cd, i+1);
-      cue_assert ("error getting track", track != NULL);
 
-      char* val = track_get_filename (track);
-      cue_assert ("error getting track filename", val != NULL);
+    FILE *f = fopen(filePath.c_str(), "r");
+    Cd *cd = cue_parse_file(f);
+    cue_assert ("error parsing CUE", cd != NULL);
+
+    int ntrk = cd_get_ntrack (cd);
+    char temp[PATH_MAX];
+    for(int i=0; i< ntrk; i++)
+    {
+        Track* track = cd_get_track (cd, i+1);
+        cue_assert ("error getting track", track != NULL);
+
+        char* val = track_get_filename (track);
+        cue_assert ("error getting track filename", val != NULL);
 
 //       cdtext = track_get_cdtext (track);
 //       cue_assert ("error getting track CDTEXT", cdtext != NULL);
@@ -65,20 +65,20 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
 //       val = cdtext_get (PTI_TITLE, cdtext);
 //       cue_assert ("error getting track title", val != NULL);
 
-      int strangeFramesStart = track_get_start (track);
-      
-      int strangeFramesLen = track_get_length (track);
-      if(strangeFramesLen==-1)
-      {
-	strangeFramesLen=0;
-      }
-      
-      
-      strcpy(temp, filePath.c_str());
-      
-      PlaylistFactory::addSong(playlist, string(dirname(temp)).append("/").append(val), strangeFramesStart*1000/75, strangeFramesLen*1000/75);
-   }
-  cd_delete (cd);
+        int strangeFramesStart = track_get_start (track);
+
+        int strangeFramesLen = track_get_length (track);
+        if(strangeFramesLen==-1)
+        {
+            strangeFramesLen=0;
+        }
+
+
+        strcpy(temp, filePath.c_str());
+
+        PlaylistFactory::addSong(playlist, string(dirname(temp)).append("/").append(val), strangeFramesStart*1000/75, strangeFramesLen*1000/75);
+    }
+    cd_delete (cd);
 #undef cue_assert
 }
 #endif
@@ -97,18 +97,18 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size
 #ifdef USE_LAZYUSF
     else if (iEquals(ext, "usf") || iEquals(ext, "miniusf"))
     {
-	pcm = new LazyusfWrapper(filePath);
-	try
-	{
-	  pcm->open();
-	}
-	catch(exception& e)
-	{
-	      cerr << "Could not open " << filePath << "\nwhat(): " << e.what() << endl;
-	      pcm->close();
-	      delete pcm;
-	      pcm=nullptr;
-	}
+        pcm = new LazyusfWrapper(filePath);
+        try
+        {
+            pcm->open();
+        }
+        catch(exception& e)
+        {
+            cerr << "Could not open " << filePath << "\nwhat(): " << e.what() << endl;
+            pcm->close();
+            delete pcm;
+            pcm=nullptr;
+        }
     }
 #endif
 #ifdef USE_OPUS
@@ -171,7 +171,7 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size
     pcm->close();
 
     playlist.add(pcm);
-    
+
     return pcm;
 }
 
