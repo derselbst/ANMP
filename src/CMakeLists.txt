@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(anmp-core)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Weffc++ -Waggressive-loop-optimizations -Warray-bounds -Wc++11-compat")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Weffc++ -Waggressive-loop-optimizations -Warray-bounds")
 
 INCLUDE_DIRECTORIES(SYSTEM Common PlayerLogic InputLibraryWrapper AudioOutput)
 
@@ -19,74 +19,96 @@ SET(LIBANMP_SRC
        PlayerLogic/Playlist.cpp
 )
 
-
+############################
 ### HANDLE CODEC SUPPORT ###
+############################
 option(USE_LIBSND "Use libsnd to support common audio formats (FLAC, WAVE, OGG, etc.)" ON)
 option(USE_LAZYUSF "Use lazyusf2 to support USF (Ultra64 Sound Format)" ON)
 option(USE_CUE "Use libcue to support loading cue sheets" ON)
 
+
 if(USE_LIBSND)
   set (LIBSND_INSTALL_DIR "" CACHE FILEPATH "Directory where libsndfile is installed")
   
-  FIND_LIBRARY(LIBSNDFILE sndfile ${LIBSND_INSTALL_DIR})
+  FIND_LIBRARY(LIBSNDFILE_LIBRARIES sndfile ${LIBSND_INSTALL_DIR})
   
-  if(LIBSNDFILE)
+  if(LIBSNDFILE_LIBRARIES)
+	set (LIBSNDFILE_INCLUDE_DIR "/usr/include" CACHE FILEPATH "Directory where header files for libsndfile are installed")
+	INCLUDE_DIRECTORIES(${LIBSNDFILE_INCLUDE_DIR})
+	
         add_definitions(-DUSE_LIBSND)
         set(LIBANMP_SRC ${LIBANMP_SRC} InputLibraryWrapper/LibSNDWrapper.cpp)
         
-        set(LD_FLAGS ${LD_FLAGS} ${LIBSNDFILE})
+        set(LD_FLAGS ${LD_FLAGS} ${LIBSNDFILE_LIBRARIES})
         
-        message("LibSND libraries: ${LIBSNDFILE}")
-  else(LIBSNDFILE)
-        message(FATAL_ERROR "libsndfile not found. Define LIBSND_INSTALL_DIR or turn USE_LIBSND off.")
-  endif(LIBSNDFILE)
+        message("\tLibSND include dir  : ${LIBSNDFILE_INCLUDE_DIR}")
+        message("\tLibSND libraries    : ${LIBSNDFILE_LIBRARIES}")
+  else(LIBSNDFILE_LIBRARIES)
+        message(SEND_ERROR "libsndfile not found. Define LIBSND_INSTALL_DIR or turn USE_LIBSND off.")
+  endif(LIBSNDFILE_LIBRARIES)
 endif(USE_LIBSND)
+
 
 if(USE_LAZYUSF)
   set (LAZYUSF_INSTALL_DIR "" CACHE FILEPATH "Directory where lazyusf2 is installed")
   set (PSFLIB_INSTALL_DIR "" CACHE FILEPATH "Directory where psflib is installed")
   
-  FIND_LIBRARY(LIBLAZYUSF lazyusf2 ${LAZYUSF_INSTALL_DIR})
-  FIND_LIBRARY(LIBPSFLIB psflib ${PSFLIB_INSTALL_DIR})
+  FIND_LIBRARY(LAZYUSF_LIBRARIES lazyusf2 ${LAZYUSF_INSTALL_DIR})
+  FIND_LIBRARY(PSFLIB_LIBRARIES psflib ${PSFLIB_INSTALL_DIR})
+  find_package(ZLIB REQUIRED)
   
-  if(LIBLAZYUSF AND LIBPSFLIB)
+  if(LAZYUSF_LIBRARIES AND PSFLIB_LIBRARIES)
+	set (LAZYUSF_INCLUDE_DIR "/usr/include/lazyusf2" CACHE FILEPATH "Directory where header files for lazyusf2 are installed")
+	set (PSFLIB_INCLUDE_DIR "/usr/include/psflib" CACHE FILEPATH "Directory where header files for psflib are installed")
+	INCLUDE_DIRECTORIES(${LAZYUSF_INCLUDE_DIR} ${PSFLIB_INCLUDE_DIR} ${ZLIB_INCLUDE_DIRS})
+	
         add_definitions(-DUSE_LAZYUSF)
         set(LIBANMP_SRC ${LIBANMP_SRC} InputLibraryWrapper/LazyusfWrapper.cpp)
         
-        set(LD_FLAGS ${LD_FLAGS} ${LIBLAZYUSF} ${LIBPSFLIB})
+        set(LD_FLAGS ${LD_FLAGS} ${LAZYUSF_LIBRARIES} ${PSFLIB_LIBRARIES} ${ZLIB_LIBRARIES})
         
-        message("lazyusf2 libraries: ${LIBLAZYUSF}")
-        message("psflib   libraries: ${LIBPSFLIB}")
-  else(LIBLAZYUSF AND LIBPSFLIB)
-        if(NOT LIBLAZYUSF)
+        message("\tlazyusf2 include dir: ${LAZYUSF_INCLUDE_DIR}")
+        message("\tlazyusf2 libraries  : ${LAZYUSF_LIBRARIES}")
+        message("\tpsflib   include dir: ${PSFLIB_INCLUDE_DIR}")
+        message("\tpsflib   libraries  : ${PSFLIB_LIBRARIES}")
+        message("\tzlib     include dir: ${ZLIB_INCLUDE_DIRS}")
+        message("\tzlib     libraries  : ${ZLIB_LIBRARIES}")
+  else(LAZYUSF_LIBRARIES AND PSFLIB_LIBRARIES)
+        if(NOT LAZYUSF_LIBRARIES)
             message(SEND_ERROR "lazyusf2 not found. Define LAZYUSF_INSTALL_DIR or turn USE_LAZYUSF off.")
-        endif(NOT LIBLAZYUSF)
-        if(NOT LIBPSFLIB)
+        endif(NOT LAZYUSF_LIBRARIES)
+        if(NOT PSFLIB_LIBRARIES)
             message(SEND_ERROR "psflib not found. lazyusf2 requires a library for reading PSF files. Define PSFLIB_INSTALL_DIR or turn USE_LAZYUSF off.")
-        endif(NOT LIBPSFLIB)
-  endif(LIBLAZYUSF AND LIBPSFLIB)
+        endif(NOT PSFLIB_LIBRARIES)
+  endif(LAZYUSF_LIBRARIES AND PSFLIB_LIBRARIES)
 endif(USE_LAZYUSF)
 
 
 if(USE_CUE)
   set (LIBCUE_INSTALL_DIR "" CACHE FILEPATH "Directory where libsndfile is installed")
   
-  FIND_LIBRARY(LIBCUE cue ${LIBCUE_INSTALL_DIR})
+  FIND_LIBRARY(LIBCUE_LIBRARIES cue ${LIBCUE_INSTALL_DIR})
   
-  if(LIBCUE)
+  if(LIBCUE_LIBRARIES)
+	set (LIBCUE_INCLUDE_DIR "/usr/include/libcue-1.4" CACHE FILEPATH "Directory where header files for libcue are installed")
+	INCLUDE_DIRECTORIES(${LIBCUE_INCLUDE_DIR})
+	
         add_definitions(-DUSE_CUE)
         
-        set(LD_FLAGS ${LD_FLAGS} ${LIBCUE})
+        set(LD_FLAGS ${LD_FLAGS} ${LIBCUE_LIBRARIES})
         
-        message("libcue libraries: ${LIBCUE}")
-  else(LIBCUE)
-        message(FATAL_ERROR "libcue not found. Define LIBCUE_INSTALL_DIR or turn USE_CUE off.")
-  endif(LIBCUE)
+        message("\tlibcue   include dir: ${LIBCUE_INCLUDE_DIR}")
+        message("\tlibcue   libraries  : ${LIBCUE_LIBRARIES}")
+  else(LIBCUE_LIBRARIES)
+        message(SEND_ERROR "libcue not found. Define LIBCUE_INSTALL_DIR or turn USE_CUE off.")
+  endif(LIBCUE_LIBRARIES)
 endif(USE_CUE)
 
+#---------------------------------------------------------------------------------------------
 
-
+###################################
 ### HANDLE AUDIO OUTPUT SUPPORT ###
+###################################
 option(USE_ALSA "Compile with support to use ALSA for playback" ON)
 
 
@@ -98,11 +120,12 @@ if(USE_ALSA)
   
   set(LD_FLAGS ${LD_FLAGS} ${ALSA_LIBRARIES})
   
-  message("ALSA include dir: ${ALSA_INCLUDE_DIR}")
-  message("ALSA libraries: ${ALSA_LIBRARIES}")
+  message("\tALSA  include dir : ${ALSA_INCLUDE_DIR}")
+  message("\tALSA  libraries   : ${ALSA_LIBRARIES}")
 endif(USE_ALSA)
 
-###################################
+#---------------------------------------------------------------------------------------------
+
 
 
 ### TODO: check that there is at least one codec and one audio lib support activated
