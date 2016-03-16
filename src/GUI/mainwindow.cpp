@@ -45,7 +45,7 @@ void MainWindow::buildFileBrowser()
 
 void MainWindow::buildPlaylistView()
 {
-    this->ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    this->ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
         this->ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
       this->ui->tableView->setModel(playlistModel); 
 }
@@ -125,6 +125,14 @@ void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 
 }
 
+void MainWindow::on_tableView_activated(const QModelIndex &index)
+{
+    this->stop();
+    Song* songToPlay = this->playlistModel->getSong(index.row());
+    this->player->setCurrentSong(songToPlay);
+    this->play();
+}
+
 void MainWindow::on_playButton_toggled(bool checked)
 {
     if(checked)
@@ -162,3 +170,4 @@ void MainWindow::stop()
     this->ui->playButton->setText("Play");
     this->ui->playButton->setChecked(false);
 }
+
