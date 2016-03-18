@@ -2,6 +2,7 @@
 
 #include "Config.h"
 #include "Common.h"
+#include "AtomicWrite.h"
 
 
 #include <cstring>
@@ -80,9 +81,10 @@ void LibSNDWrapper::asyncFillBuffer()
         unsigned int lastItemsToRender = this->count % itemsToRender;
         readcount += sf_read_float(this->sndfile, static_cast<float*>(this->data)+fullFillCount*itemsToRender, lastItemsToRender);
 
-        if(readcount != this->count) {}
-        // TODO: LOG: printf("THIS SHOULD NEVER HAPPEN: only read %d frames, although there are %d frames in the file\n", readcount/sfinfo.channels, sfinfo.frames);
-
+        if(readcount != this->count)
+	{
+        CLOG(AtomicWrite::LogLevel::ERROR, "THIS SHOULD NEVER HAPPEN: only read " << readcount/sfinfo.channels << " frames, although there are " << sfinfo.frames << " frames in the file\n");
+	}
         //         this->count = readcount;
     }
 }
