@@ -10,6 +10,7 @@ INCLUDE_DIRECTORIES(SYSTEM Common PlayerLogic InputLibraryWrapper AudioOutput)
 SET(LIBANMP_SRC
 
        AudioOutput/IAudioOutput.cpp
+       Common/AtomicWrite.cpp
        Common/Common.cpp
        Common/PlaylistFactory.cpp
        InputLibraryWrapper/Song.cpp
