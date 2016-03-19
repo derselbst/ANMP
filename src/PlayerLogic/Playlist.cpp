@@ -45,22 +45,14 @@ Song* Playlist::current ()
  */
 Song* Playlist::next ()
 {
-    if(this->queue.empty()) { return nullptr; }
-  
-    this->currentSong = (this->currentSong+1) % this->queue.size();
-
-    return this->getSong(this->currentSong);
+    return this->setCurrentSong((this->currentSong+1) % this->queue.size());
 }
 
 /**
  */
 Song* Playlist::previous ()
 {
-    if(this->queue.empty()) { return nullptr; }
-
-    this->currentSong = (this->currentSong+this->queue.size()-1) % this->queue.size();
-
-    return this->getSong(this->currentSong);
+    return this->setCurrentSong((this->currentSong+this->queue.size()-1) % this->queue.size());
 }
 
 Song* Playlist::getSong(unsigned int id)
