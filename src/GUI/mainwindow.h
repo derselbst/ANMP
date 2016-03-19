@@ -57,6 +57,7 @@ private slots:
     void on_playButton_toggled(bool checked);
     void on_stopButton_clicked();
     void on_tableView_activated(const QModelIndex &index);
+    void on_tableView_remove(const QModelIndexList &);
 };
 
 #endif // MAINWINDOW_H

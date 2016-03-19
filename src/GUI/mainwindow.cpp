@@ -4,6 +4,7 @@
 #include "Playlist.h"
 #include <QFileDialog>
 #include <QProgressDialog>
+#include <QMessageBox>
 
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
@@ -171,3 +172,12 @@ void MainWindow::stop()
     this->ui->playButton->setChecked(false);
 }
 
+void MainWindow::on_tableView_remove(const QModelIndexList& elements)
+{
+  int lastRow=0;
+for(QModelIndexList::const_iterator i=elements.cbegin(); i!=elements.cend(); ++i)
+{
+    this->playlistModel->remove(i->row()-lastRow);
+    lastRow=i->row();
+} 
+}
