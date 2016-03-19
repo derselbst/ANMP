@@ -65,7 +65,7 @@
      </layout>
     </item>
     <item>
-     <widget class="QSlider" name="horizontalSlider">
+     <widget class="QSlider" name="seekBar">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>

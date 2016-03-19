@@ -227,8 +227,20 @@ void Player::fadeout ()
  */
 void Player::seekTo (frame_t frame)
 {
-    this->playhead=frame;
-    return;
+  if(this->currentSong!=nullptr && 
+     this->currentSong->count==FramesToItems(this->currentSong->getFrames()))
+  {
+    this->_seekTo(frame);
+}
+}
+
+
+/**
+ * @param  frame seeks the playhead to frame "frame"
+ */
+void Player::_seekTo (frame_t frame)
+{
+    this->playhead=frame;  
 }
 
 
@@ -237,7 +249,7 @@ void Player::seekTo (frame_t frame)
  */
 void Player::resetPlayhead ()
 {
-    this->seekTo(0);
+    this->_seekTo(0);
 }
 
 core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)
@@ -293,7 +305,7 @@ void Player::playLoop (core::tree<loop_t>& loop)
         while(this->isPlaying && (forever || mycount--))
             {
                 // if we play this loop multiple time, make sure we start at the beginning again
-                this->seekTo((*(*subloop)).start);
+                this->_seekTo((*(*subloop)).start);
                 this->playLoop(*subloop);
                 // at this point: playhead=subloop.end
             }
@@ -372,6 +384,11 @@ void Player::playFrames (frame_t framesToPlay)
 
         // update the playhead
         this->playhead+=framesWritten;
+	if(this->playheadChanged!=nullptr)
+	{
+	  this->playheadChanged(this->callbackContext, this->playhead);
+	}
+	
         // update our local copy of playhead
         memorizedPlayhead+=framesWritten;
         // update frames-left-to-play

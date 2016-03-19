@@ -42,6 +42,7 @@ private:
     void play();
     void pause();
     void stop();
+    static void onSeek(void*, frame_t);
 
 
 private slots:
@@ -58,6 +59,7 @@ private slots:
     void on_stopButton_clicked();
     void on_tableView_activated(const QModelIndex &index);
     void on_tableView_remove(const QModelIndexList &);
+    void on_seekBar_sliderMoved(int position);
 };
 
 #endif // MAINWINDOW_H

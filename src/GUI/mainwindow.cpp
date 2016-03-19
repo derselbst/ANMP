@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include "PlaylistFactory.h"
 #include "Playlist.h"
+#include "Song.h"
 #include <QFileDialog>
 #include <QProgressDialog>
 #include <QMessageBox>
@@ -9,11 +10,21 @@
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
 
+#include <iostream>
+void MainWindow::onSeek(void* context, frame_t pos)
+{
+    static_cast<MainWindow*>(context)->ui->seekBar->setSliderPosition(pos);
+}
+
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     this->ui->setupUi(this);
+
+    this->player->playheadChanged=MainWindow::onSeek;
+    this->player->callbackContext=this;
 
     this->buildFileBrowser();
     this->buildPlaylistView();
@@ -74,7 +85,6 @@ void MainWindow::on_actionAdd_Songs_triggered()
 
       progress.setValue(fileNames.count());
 }
-
 
 void MainWindow::on_actionPlay_triggered()
 {
@@ -153,9 +163,14 @@ void MainWindow::on_stopButton_clicked()
 
 void MainWindow::play()
 {
+    Song* s = this->playlistModel->current();
+    if(s==nullptr) return;
+
+    this->ui->seekBar->setMaximum(s->getFrames());
     this->player->play();
     this->ui->playButton->setText("Pause");
     this->ui->playButton->setChecked(true);
+
 }
 
 void MainWindow::pause()
@@ -177,7 +192,16 @@ void MainWindow::on_tableView_remove(const QModelIndexList& elements)
   int lastRow=0;
 for(QModelIndexList::const_iterator i=elements.cbegin(); i!=elements.cend(); ++i)
 {
+  if(i->isValid())
+  {
     this->playlistModel->remove(i->row()-lastRow);
     lastRow=i->row();
 } 
+}
+}
+
+void MainWindow::on_seekBar_sliderMoved(int position)
+{
+    cout << "seek " << position << endl;
+    this->player->seekTo(position);
 }

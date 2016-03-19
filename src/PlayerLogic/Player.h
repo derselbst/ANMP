@@ -2,7 +2,7 @@
 #define PLAYER_H
 
 #include "types.h"
-
+class MainWindow;
 #include <future>
 
 namespace core
@@ -75,6 +75,8 @@ public:
      * @param  frame seeks the playhead to frame "frame"
      */
     void seekTo (frame_t frame);
+    void (*playheadChanged) (void*, frame_t) = nullptr;
+    void* callbackContext = nullptr;
 
 
 private:
@@ -104,6 +106,7 @@ private:
 
     void init();
 
+    void _seekTo (frame_t frame);
     void _setCurrentSong (Song* song);
 
     /**
