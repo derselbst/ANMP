@@ -179,21 +179,21 @@ void PlaylistModel::clear()
     }
 }
 
-Song* PlaylistModel::next () 
+Song* PlaylistModel::setCurrentSong (unsigned int id) 
 {
-  this->beginResetModel();
+   this->beginResetModel();
   
-  Song* newSong = Playlist::next();
+  Song* newSong = Playlist::setCurrentSong(id);
   
-  this->endResetModel();
+   this->endResetModel();
   
   return newSong;
 }
-// TODO: acutally smth like this should be done here for next()
-// Song* PlaylistModel::next () 
+// TODO: acutally smth like this should be done here for setCurrentSong()
+// Song* PlaylistModel::setCurrentSong () 
 // {
 //   int oldSong = this->currentSong;
-//   Song* newSong = Playlist::next();
+//   Song* newSong = Playlist::setCurrentSong();
 //   
 // //     clear color of old song
 //   this->setData(this->index(oldSong, 0), this->calculateRowColor(oldSong),Qt::BackgroundRole);
@@ -203,18 +203,6 @@ Song* PlaylistModel::next ()
 //     
 //     return newSong;
 // }
-
-Song* PlaylistModel::previous () 
-{
-  this->beginResetModel();
-  
-  Song* newSong = Playlist::previous();
-  
-  this->endResetModel();
-  
-  return newSong;
-}
-
 
 QColor PlaylistModel::calculateRowColor(int row) const
 {

@@ -36,15 +36,12 @@ public:
 
     void add (Song* song) override;
 
-//     void remove (Song* song) override;
-
     void remove (int i) override;
 
     void clear() override;
 
-    Song* next () override;
+    Song* setCurrentSong (unsigned int id) override;
 
-    Song* previous () override;
 /*
     Song* getSong(unsigned int id) override;
 
