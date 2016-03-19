@@ -3,6 +3,7 @@
 
 #include <QModelIndex>
 #include <QAbstractTableModel>
+#include <QColor>
 
 #include "Playlist.h"
 
@@ -11,6 +12,8 @@ class Song;
 
 class PlaylistModel : public QAbstractTableModel, public Playlist
 {
+  Q_OBJECT
+  
 public:
     PlaylistModel(QObject *parent = 0);
     
@@ -38,16 +41,17 @@ public:
     void remove (int i) override;
 
     void clear() override;
-/*
+
     Song* next () override;
 
     Song* previous () override;
-
+/*
     Song* getSong(unsigned int id) override;
 
     Song* current () override;*/
     
 private:
+  QColor calculateRowColor(int row) const;
 
 };
 

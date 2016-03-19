@@ -2,6 +2,8 @@
 
 #include "Song.h"
 
+#include <QBrush>
+
 PlaylistModel::PlaylistModel(QObject *parent)
     : QAbstractTableModel(parent)
 {
@@ -18,8 +20,11 @@ int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
 }
 
 
+#include <iostream>
 QVariant PlaylistModel::data(const QModelIndex &index, int role) const
 {
+  
+      cout << "    DATA " << index.row() << " " << index.column() << role << endl;
     if (!index.isValid() || this->queue.size() <= index.row())
     {
       return QVariant();
@@ -39,6 +44,12 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
 	  break;
       }
     }
+    else if (role == Qt::BackgroundRole)
+    {
+           int row = index.row();
+           QColor color = this->calculateRowColor(row);           
+           return QBrush(color);
+        }
     return QVariant();
 }
 
@@ -113,21 +124,21 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
 }
 
 
-
 bool PlaylistModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-//     if (index.isValid() /*&& index.row() != index.column()*/ /*&& role == Qt::EditRole*/)
-//     {
-//       
-//         int offset = offsetOf(index.row(), index.column());
-//         distances[offset] = value.toInt();
-// 
-//         QModelIndex transposedIndex = createIndex(index.column(),
-//                                                   index.row());
-//         emit dataChanged(index, index);
-//         emit dataChanged(transposedIndex, transposedIndex);
-//         return true;
-//     }
+    if (!index.isValid() /*&& index.row() != index.column()*/ /*&& role == Qt::EditRole*/)
+    {
+      return false;
+    }
+    
+    if(role==Qt::BackgroundRole)
+    {
+      cout << "EMIT " << index.row() << " " << index.column() << endl;
+      // TODO WHY DOES THIS HAS NO FUCKING EFFECT???
+      emit(dataChanged(index, index));
+    }
+    
+
   // WARNING: the view will only properly be updated if we return true!
     return true;
 }
@@ -166,4 +177,50 @@ void PlaylistModel::clear()
         Playlist::remove(0);
         this->removeRows(0, 1);
     }
+}
+
+// Song* PlaylistModel::next () 
+// {
+//   this->beginResetModel();
+//   
+//   Song* newSong = Playlist::next();
+//   
+//   this->endResetModel();
+//   
+//   return newSong;
+// }
+// TODO: acutally smth like this should be done here for next()
+Song* PlaylistModel::next () 
+{
+  int oldSong = this->currentSong;
+  Song* newSong = Playlist::next();
+  
+//     clear color of old song
+  this->setData(this->index(oldSong, 0), this->calculateRowColor(oldSong),Qt::BackgroundRole);
+
+//     color new song in view
+    this->setData(this->index(this->currentSong, 0), this->calculateRowColor(this->currentSong),Qt::BackgroundRole);
+    
+    return newSong;
+}
+
+Song* PlaylistModel::previous () 
+{
+  this->beginResetModel();
+  
+  Song* newSong = Playlist::previous();
+  
+  this->endResetModel();
+  
+  return newSong;
+}
+
+
+QColor PlaylistModel::calculateRowColor(int row) const
+{
+  if(this->currentSong == row)
+  {
+    return QColor(255, 0, 0, 127);
+  }
+  return QColor(Qt::white);
 }

@@ -26,6 +26,6 @@ SOURCES += main.cpp\
         PlaylistView.cpp\
         PlaylistModel.cpp
 
-HEADERS  += mainwindow.h PlaylistView.h
+HEADERS  += mainwindow.h PlaylistView.h PlaylistModel.h
 
 FORMS    += mainwindow.ui
