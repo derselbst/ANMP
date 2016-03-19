@@ -122,6 +122,10 @@ void MainWindow::on_actionClear_Playlist_triggered()
 
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
 {
+    if(!index.isValid())
+  {
+    return;
+  }
     QString sPath = drivesModel->fileInfo(index).absoluteFilePath();
     ui->listView->setRootIndex(filesModel->setRootPath(sPath));
 }
@@ -129,6 +133,10 @@ void MainWindow::on_treeView_clicked(const QModelIndex &index)
 
 void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 {
+    if(!index.isValid())
+  {
+    return;
+  }
     this->stop();
     Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
     this->player->setCurrentSong(songToPlay);
@@ -138,6 +146,10 @@ void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 
 void MainWindow::on_tableView_activated(const QModelIndex &index)
 {
+  if(!index.isValid())
+  {
+    return;
+  }
     this->stop();
     Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
     this->player->setCurrentSong(songToPlay);
