@@ -179,30 +179,30 @@ void PlaylistModel::clear()
     }
 }
 
-// Song* PlaylistModel::next () 
-// {
-//   this->beginResetModel();
-//   
-//   Song* newSong = Playlist::next();
-//   
-//   this->endResetModel();
-//   
-//   return newSong;
-// }
-// TODO: acutally smth like this should be done here for next()
 Song* PlaylistModel::next () 
 {
-  int oldSong = this->currentSong;
+  this->beginResetModel();
+  
   Song* newSong = Playlist::next();
   
-//     clear color of old song
-  this->setData(this->index(oldSong, 0), this->calculateRowColor(oldSong),Qt::BackgroundRole);
-
-//     color new song in view
-    this->setData(this->index(this->currentSong, 0), this->calculateRowColor(this->currentSong),Qt::BackgroundRole);
-    
-    return newSong;
+  this->endResetModel();
+  
+  return newSong;
 }
+// TODO: acutally smth like this should be done here for next()
+// Song* PlaylistModel::next () 
+// {
+//   int oldSong = this->currentSong;
+//   Song* newSong = Playlist::next();
+//   
+// //     clear color of old song
+//   this->setData(this->index(oldSong, 0), this->calculateRowColor(oldSong),Qt::BackgroundRole);
+// 
+// //     color new song in view
+//     this->setData(this->index(this->currentSong, 0), this->calculateRowColor(this->currentSong),Qt::BackgroundRole);
+//     
+//     return newSong;
+// }
 
 Song* PlaylistModel::previous () 
 {
