@@ -2,7 +2,6 @@
 
 #include <algorithm>
 
-#define EMPTY_GUARD     if(this->queue.empty()) { return nullptr; }
 
 Playlist::~Playlist()
 {
@@ -24,6 +23,8 @@ void Playlist::remove (Song* song)
  */
 void Playlist::remove (int i)
 {
+  if(this->queue.empty()) { return; }
+  
     this->queue.erase(this->queue.begin()+(i % this->queue.size()));
 }
 
@@ -35,46 +36,50 @@ void Playlist::clear()
 
 /**
  */
+Song* Playlist::current ()
+{
+    return this->getSong(this->currentSong);
+}
+
+/**
+ */
 Song* Playlist::next ()
 {
-    EMPTY_GUARD
-
+    if(this->queue.empty()) { return nullptr; }
+  
     this->currentSong = (this->currentSong+1) % this->queue.size();
 
-    return this->queue[this->currentSong];
+    return this->getSong(this->currentSong);
 }
 
 /**
  */
 Song* Playlist::previous ()
 {
-    EMPTY_GUARD
+    if(this->queue.empty()) { return nullptr; }
 
     this->currentSong = (this->currentSong+this->queue.size()-1) % this->queue.size();
 
-    return this->queue[this->currentSong];
+    return this->getSong(this->currentSong);
 }
 
 Song* Playlist::getSong(unsigned int id)
 {
     if(this->queue.size() > id)
     {
-        // TODO: this is a simple getter function, that should NOT implicitly set id
-        // as currentSong
-        this->currentSong = id;
-
         return this->queue[id];
     }
 
     return nullptr;
 }
 
-/**
- */
-Song* Playlist::current ()
+Song* Playlist::setCurrentSong(unsigned int id)
 {
-    EMPTY_GUARD
-
-    return this->queue[this->currentSong];
+    Song* s = this->getSong(id);
+    if(s!=nullptr)
+    {
+      this->currentSong = id;
+    }
+    
+    return s;
 }
-

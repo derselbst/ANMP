@@ -35,6 +35,10 @@ public:
 
     /**
      */
+    Song* current () override;
+    
+    /**
+     */
     Song* next () override;
 
     /**
@@ -42,10 +46,9 @@ public:
     Song* previous () override;
 
     Song* getSong(unsigned int id) override;
+    
+    Song* setCurrentSong(unsigned int id) override;
 
-    /**
-     */
-    Song* current () override;
 
 protected:
     SongQueue_t queue;

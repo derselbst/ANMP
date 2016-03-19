@@ -130,7 +130,7 @@ void MainWindow::on_treeView_clicked(const QModelIndex &index)
 void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 {
     this->stop();
-    Song* songToPlay = this->playlistModel->getSong(index.row());
+    Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
     this->player->setCurrentSong(songToPlay);
     this->play();
 
@@ -139,7 +139,7 @@ void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 void MainWindow::on_tableView_activated(const QModelIndex &index)
 {
     this->stop();
-    Song* songToPlay = this->playlistModel->getSong(index.row());
+    Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
     this->player->setCurrentSong(songToPlay);
     this->play();
 }
