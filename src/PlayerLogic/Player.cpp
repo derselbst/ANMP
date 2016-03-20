@@ -144,6 +144,12 @@ void Player::_setCurrentSong (Song* song)
     this->currentSong->open();
     // go ahead and start filling the pcm buffer
     this->currentSong->fillBuffer();
+    
+    // now we are ready to do the callback
+    if(this->currentSongChanged!=nullptr)
+    {
+      this->currentSongChanged(this->callbackContext);
+    }
 
     // if the audio has already been initialized
     if(this->audioDriver!=nullptr)

@@ -76,6 +76,7 @@ public:
      */
     void seekTo (frame_t frame);
     void (*playheadChanged) (void*, frame_t) = nullptr;
+    void (*currentSongChanged) (void*) = nullptr;
     void* callbackContext = nullptr;
 
 

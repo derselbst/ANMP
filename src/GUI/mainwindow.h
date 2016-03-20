@@ -44,7 +44,7 @@ private:
     void pause();
     void stop();
     static void onSeek(void*, frame_t);
-    static void on_currentSongChanged(void*, int oldSong);
+    static void onCurrentSongChanged(void*);
 
 
 private slots:

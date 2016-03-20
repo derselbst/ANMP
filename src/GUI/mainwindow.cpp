@@ -17,9 +17,9 @@ void MainWindow::onSeek(void* context, frame_t pos)
     static_cast<MainWindow*>(context)->ui->seekBar->setSliderPosition(pos);
 }
 
-void MainWindow::on_currentSongChanged(void* context, int oldSong)
+void MainWindow::onCurrentSongChanged(void* context)
 {
-        Song* s = this->playlistModel->current();
+        Song* s = static_cast<MainWindow*>(context)->playlistModel->current();
         if(s==nullptr) return;
 
     static_cast<MainWindow*>(context)->ui->seekBar->setMaximum(s->getFrames());
@@ -32,13 +32,12 @@ MainWindow::MainWindow(QWidget *parent) :
     this->ui->setupUi(this);
 
     this->player->playheadChanged=MainWindow::onSeek;
+    this->player->currentSongChanged=MainWindow::onCurrentSongChanged;
     this->player->callbackContext=this;
 
     this->buildFileBrowser();
     this->buildPlaylistView();
     this->createShortcuts();
-
-    connect(this->playlistModel, &PlaylistModel::currentSongChanged, this, &MainWindow::on_currentSongChanged);
 }
 
 MainWindow::~MainWindow()
