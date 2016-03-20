@@ -182,11 +182,11 @@ void PlaylistModel::clear()
 Song* PlaylistModel::setCurrentSong (unsigned int id) 
 {
    this->beginResetModel();
-  
+
   Song* newSong = Playlist::setCurrentSong(id);
-  
+
    this->endResetModel();
-  
+
   return newSong;
 }
 // TODO: acutally smth like this should be done here for setCurrentSong()

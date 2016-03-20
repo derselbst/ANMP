@@ -38,11 +38,13 @@ private:
 
     void buildPlaylistView();
     void buildFileBrowser();
-    
+    void createShortcuts();
+
     void play();
     void pause();
     void stop();
     static void onSeek(void*, frame_t);
+    static void on_currentSongChanged(void*, int oldSong);
 
 
 private slots:
@@ -60,6 +62,7 @@ private slots:
     void on_tableView_activated(const QModelIndex &index);
     void on_tableView_remove(const QModelIndexList &);
     void on_seekBar_sliderMoved(int position);
+
 };
 
 #endif // MAINWINDOW_H

@@ -46,7 +46,7 @@ public:
     Song* getSong(unsigned int id) override;
 
     Song* current () override;*/
-    
+
 private:
   QColor calculateRowColor(int row) const;
 

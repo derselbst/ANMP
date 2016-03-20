@@ -16,8 +16,6 @@ signals:
 
 protected:
     void keyPressEvent(QKeyEvent * event) override;
-    
-
 
 };
 

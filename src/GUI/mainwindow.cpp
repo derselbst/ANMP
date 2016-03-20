@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QProgressDialog>
 #include <QMessageBox>
+#include <QShortcut>
 
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
@@ -16,6 +17,13 @@ void MainWindow::onSeek(void* context, frame_t pos)
     static_cast<MainWindow*>(context)->ui->seekBar->setSliderPosition(pos);
 }
 
+void MainWindow::on_currentSongChanged(void* context, int oldSong)
+{
+        Song* s = this->playlistModel->current();
+        if(s==nullptr) return;
+
+    static_cast<MainWindow*>(context)->ui->seekBar->setMaximum(s->getFrames());
+}
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -28,6 +36,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->buildFileBrowser();
     this->buildPlaylistView();
+    this->createShortcuts();
+
+    connect(this->playlistModel, &PlaylistModel::currentSongChanged, this, &MainWindow::on_currentSongChanged);
 }
 
 MainWindow::~MainWindow()
@@ -35,6 +46,26 @@ MainWindow::~MainWindow()
     delete this->ui;
     delete this->player;
     delete this->playlistModel;
+}
+
+void MainWindow::createShortcuts()
+{
+    QShortcut *playShortcut = new QShortcut(QKeySequence(Qt::Key_MediaPlay), this);
+    connect(playShortcut, &QShortcut::activated, this, &MainWindow::on_actionPlay_triggered);
+
+    QShortcut *pauseShortcut = new QShortcut(QKeySequence(Qt::Key_MediaPause), this);
+    connect(pauseShortcut, &QShortcut::activated, this, &MainWindow::on_actionPause_triggered);
+
+    QShortcut *playpauseShortcut = new QShortcut(QKeySequence(Qt::Key_MediaTogglePlayPause), this);
+    //connect(playpauseShortcut, &QShortcut::activated, this, &MainWindow::on_playButton_toggled);
+
+
+    QShortcut *nextShortcut = new QShortcut(QKeySequence(Qt::Key_MediaNext), this);
+    connect(nextShortcut, &QShortcut::activated, this, &MainWindow::on_actionNext_Song_triggered);
+
+    QShortcut *prevShortcut = new QShortcut(QKeySequence(Qt::Key_MediaPrevious), this);
+    connect(prevShortcut, &QShortcut::activated, this, &MainWindow::on_actionPrevious_Song_triggered);
+
 }
 
 void MainWindow::buildFileBrowser()
@@ -70,7 +101,7 @@ void MainWindow::on_actionAdd_Songs_triggered()
   QProgressDialog progress("Adding files...", "Abort", 0, fileNames.count(), this);
      progress.setWindowModality(Qt::WindowModal);
      progress.show();
-
+      QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
       for(int i=0; !progress.wasCanceled() && i<fileNames.count(); i++)
       {
           // only redraw progress dialog on every tenth song
@@ -175,10 +206,6 @@ void MainWindow::on_stopButton_clicked()
 
 void MainWindow::play()
 {
-    Song* s = this->playlistModel->current();
-    if(s==nullptr) return;
-
-    this->ui->seekBar->setMaximum(s->getFrames());
     this->player->play();
     this->ui->playButton->setText("Pause");
     this->ui->playButton->setChecked(true);
@@ -217,3 +244,4 @@ void MainWindow::on_seekBar_sliderMoved(int position)
     cout << "seek " << position << endl;
     this->player->seekTo(position);
 }
+
