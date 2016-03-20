@@ -24,7 +24,7 @@ int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
 QVariant PlaylistModel::data(const QModelIndex &index, int role) const
 {
   
-      cout << "    DATA " << index.row() << " " << index.column() << role << endl;
+//       cout << "    DATA " << index.row() << " " << index.column() << role << endl;
     if (!index.isValid() || this->queue.size() <= index.row())
     {
       return QVariant();

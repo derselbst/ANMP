@@ -11,6 +11,10 @@
 #include "LibSNDWrapper.h"
 #endif
 
+#ifdef USE_VGMSTREAM
+#include "VGMStreamWrapper.h"
+#endif
+
 #include "Common.h"
 
 #include <cstring>
@@ -143,18 +147,20 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size
             pcm->close();
             delete pcm;
 #endif
-//       TODO: implement me
-//       pcm=new VGMStreamWrapper(filePath);
-//       try
-//       {
-// 	pcm.open();
-//       }
-//       catch
-//       {
-// 	pcm.close();
-// 	delete pcm;
-            pcm=nullptr;
-//       }
+#ifdef USE_VGMSTREAM
+	    pcm=new VGMStreamWrapper(filePath, offset, len);
+	    try
+	    {
+	      pcm->open();
+	    }
+	    catch(exception& e)
+	    {
+	      cerr << e.what() << endl;
+	      pcm->close();
+	      delete pcm;
+	      pcm=nullptr;
+	    }
+#endif
 #ifdef USE_LIBSND
         }
 #endif

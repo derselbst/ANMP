@@ -13,7 +13,7 @@ INCLUDEPATH += ../InputLibraryWrapper/
 INCLUDEPATH += ../Common/
 INCLUDEPATH += ../AudioOutput/
 
-LIBS += ../../bin/libanmp.a  ../../../../Programme/lazyusf2/liblazyusf2.a ../../../../Programme/psflib/libpsflib.a -lasound -lsndfile -lz -lcue
+LIBS += ../../bin/libanmp.a  ../../../../Programme/lazyusf2/liblazyusf2.a ../../../../Programme/psflib/libpsflib.a ../../../../Programme/vgmstream/src/libvgmstream.a -lasound -lsndfile -lz -lcue -lvorbisfile -lmpg123 -lpthread -lm
 
 
 

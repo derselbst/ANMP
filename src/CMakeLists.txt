@@ -25,6 +25,7 @@ SET(LIBANMP_SRC
 ############################
 option(USE_LIBSND "Use libsnd to support common audio formats (FLAC, WAVE, OGG, etc.)" ON)
 option(USE_LAZYUSF "Use lazyusf2 to support USF (Ultra64 Sound Format)" ON)
+option(USE_VGMSTREAM "Use vgmstream to support innombrable streamed audio formats from video games." ON)
 option(USE_CUE "Use libcue to support loading cue sheets" ON)
 
 
@@ -83,6 +84,29 @@ if(USE_LAZYUSF)
         endif(NOT PSFLIB_LIBRARIES)
   endif(LAZYUSF_LIBRARIES AND PSFLIB_LIBRARIES)
 endif(USE_LAZYUSF)
+
+
+if(USE_VGMSTREAM)
+  set (VGMSTREAM_INSTALL_DIR "" CACHE FILEPATH "Directory where vgmstream is installed")
+  
+  FIND_LIBRARY(VGMSTREAM_LIBRARIES vgmstream ${VGMSTREAM_INSTALL_DIR})
+  find_package(ZLIB REQUIRED)
+  
+  if(VGMSTREAM_LIBRARIES)
+	set (VGMSTREAM_INCLUDE_DIR "/usr/include/vgmstream" CACHE FILEPATH "Directory where header files for vgmstream are installed")
+	INCLUDE_DIRECTORIES(${VGMSTREAM_INCLUDE_DIR})
+	
+        add_definitions(-DUSE_VGMSTREAM)
+        set(LIBANMP_SRC ${LIBANMP_SRC} InputLibraryWrapper/VGMStreamWrapper.cpp)
+        
+        set(LD_FLAGS ${LD_FLAGS} ${VGMSTREAM_LIBRARIES})
+        
+        message("\tvgmstream include dir: ${VGMSTREAM_INCLUDE_DIR}")
+        message("\tvgmstream libraries  : ${VGMSTREAM_LIBRARIES}")
+  else(VGMSTREAM_LIBRARIES)
+            message(SEND_ERROR "vgmstream not found. Define VGMSTREAM_INSTALL_DIR or turn USE_VGMSTREAM off.")
+  endif(VGMSTREAM_LIBRARIES)
+endif(USE_VGMSTREAM)
 
 
 if(USE_CUE)
