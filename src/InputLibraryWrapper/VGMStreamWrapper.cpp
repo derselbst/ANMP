@@ -17,26 +17,35 @@ VGMStreamWrapper::VGMStreamWrapper(string filename, size_t fileOffset, size_t fi
 
 VGMStreamWrapper::~VGMStreamWrapper ()
 {
-  
+  this->releaseBuffer();
+  this->close();
 }
 
 void VGMStreamWrapper::open()
 {
-    handle = init_vgmstream(this->Filename.c_str());
+  if(this->handle!=nullptr)
+  {
+    return;
+  }
+
+    this->handle = init_vgmstream(this->Filename.c_str());
 
     if (handle==nullptr)
     {
         throw runtime_error(string("Error: ") + __func__ + string(": failed opening \"") + this->Filename + "\"");
     }
     
-    this->Format.Channels = handle->channels;
-    this->Format.SampleRate = handle->sample_rate;
+    this->Format.Channels = this->handle->channels;
+    this->Format.SampleRate = this->handle->sample_rate;
 }
 
 void VGMStreamWrapper::close()
 {
+    if(this->handle!=nullptr)
+  {
     close_vgmstream (this->handle);
     this->handle=nullptr;
+  }
 }
 
 void VGMStreamWrapper::fillBuffer()
@@ -113,7 +122,7 @@ vector<loop_t> VGMStreamWrapper::getLoopArray () const
 // 
 //     if (ignore_loop) handle->loop_flag=0;
     
-if(handle->loop_flag==1) // does stream contain loop information?
+if(this->handle!=nullptr && this->handle->loop_flag==1) // does stream contain loop information?
 {
     loop_t l;
     l.start = handle->loop_start_sample;
@@ -154,5 +163,9 @@ if(handle->loop_flag==1) // does stream contain loop information?
 
 frame_t VGMStreamWrapper::getFrames() const
 {
+  if(this->handle==nullptr)
+  {
+    return 0;
+  }
   return this->handle->num_samples;
 }

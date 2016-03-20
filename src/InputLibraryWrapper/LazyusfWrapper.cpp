@@ -34,6 +34,11 @@ static psf_file_callbacks stdio_callbacks =
 
 void LazyusfWrapper::open()
 {
+  if(this->usfHandle!=nullptr)
+  {
+    return;
+  }
+  
     this->usfHandle = new unsigned char[usf_get_state_size()];
     usf_clear(this->usfHandle);
 

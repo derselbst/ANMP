@@ -26,6 +26,12 @@ LibSNDWrapper::~LibSNDWrapper ()
 
 void LibSNDWrapper::open ()
 {
+  // avoid multiple calls to open()
+  if(this->sndfile!=nullptr)
+  {
+    return;
+  }
+  
     if (!(this->sndfile = sf_open (this->Filename.c_str(), SFM_READ, &sfinfo)))
     {
         throw runtime_error(string("Error: ") + __func__ + string(": ") + string(sf_strerror (NULL)) + " (in File \"" + this->Filename + ")\"");
@@ -42,7 +48,12 @@ void LibSNDWrapper::open ()
 
 void LibSNDWrapper::close()
 {
+  if(this->sndfile!=nullptr)
+  {
     sf_close (this->sndfile);
+    this->sndfile=nullptr;
+  }
+  memset (&sfinfo, 0, sizeof (sfinfo)) ;
 }
 
 void LibSNDWrapper::fillBuffer()
@@ -138,6 +149,11 @@ frame_t LibSNDWrapper::getFrames () const
 {
     int framesAvail = this->sfinfo.frames - msToFrames(this->fileOffset, this->Format.SampleRate);
 
+    if(framesAvail < 0)
+    {
+      framesAvail=0;
+    }
+    
     size_t totalFrames = this->fileLen==0 ? framesAvail : msToFrames(this->fileLen, this->Format.SampleRate);
 
     if(totalFrames > framesAvail)
