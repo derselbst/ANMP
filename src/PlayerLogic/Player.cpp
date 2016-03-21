@@ -286,15 +286,7 @@ core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)
 }
 
 
-/**
- * make sure you called seekTo(startFrame) before calling this!
- * @param  startFrame intended: the frame with which we want to start the playback
- *
- * actually: does nothing, just for debug purposes, the actual start is determined
- * by playhead
- * @param  stopFrame play until we've reached stopFrame, although this frame will
- * not be played
- */
+
 void Player::playLoop (core::tree<loop_t>& loop)
 {   USERS_ARE_STUPID
 
@@ -331,8 +323,12 @@ void Player::playLoop (core::tree<loop_t>& loop)
 
 
 /**
- * @param  startFrame
- * @param  stopFrame
+ * make sure you called seekTo(startFrame) before calling this!
+ * @param  startFrame intended: the frame with which we want to start the playback
+ * actually: does nothing, just for debug purposes, the actual start is determined
+ * by playhead
+ * @param  stopFrame play until we've reached stopFrame, although this frame will
+ * not be played
  */
 void Player::playFrames (frame_t startFrame, frame_t stopFrame)
 {   USERS_ARE_STUPID
