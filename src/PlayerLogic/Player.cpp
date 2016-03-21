@@ -71,7 +71,15 @@ void Player::play ()
 {
     if(this->currentSong==nullptr)
     {
-        return;
+      Song* s=this->playlist->current();
+      if(s!=nullptr)
+      {
+	this->setCurrentSong(s);
+      }
+      else
+      {
+	return;
+      }
     }
 
     if(this->audioDriver==nullptr)
@@ -208,7 +216,7 @@ void Player::pause ()
  * prepares the player for the next song to be played, but doesnt start playback
  */
 void Player::next ()
-{   USERS_ARE_STUPID
+{
     this->setCurrentSong(this->playlist->next());
 }
 
@@ -216,7 +224,7 @@ void Player::next ()
 /**
  */
 void Player::previous ()
-{   USERS_ARE_STUPID
+{
     this->setCurrentSong(this->playlist->previous());
 }
 
