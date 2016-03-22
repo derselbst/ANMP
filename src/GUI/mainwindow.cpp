@@ -19,9 +19,17 @@ void MainWindow::onSeek(void* context, frame_t pos)
 void MainWindow::onCurrentSongChanged(void* context)
 {
         Song* s = static_cast<MainWindow*>(context)->playlistModel->current();
-        if(s==nullptr) return;
-
-    static_cast<MainWindow*>(context)->ui->seekBar->setMaximum(s->getFrames());
+        if(s==nullptr)
+        {
+            // TODO set Window Title
+            static_cast<MainWindow*>(context)->ui->seekBar->setSliderPosition(0);
+            static_cast<MainWindow*>(context)->ui->seekBar->setMaximum(0);
+        }
+        else
+        {
+            // TODO set Window Title
+            static_cast<MainWindow*>(context)->ui->seekBar->setMaximum(s->getFrames());
+        }
 }
 
 MainWindow::MainWindow(QWidget *parent) :
