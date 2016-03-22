@@ -11,7 +11,6 @@
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
 
-#include <iostream>
 void MainWindow::onSeek(void* context, frame_t pos)
 {
     static_cast<MainWindow*>(context)->ui->seekBar->setSliderPosition(pos);
@@ -240,7 +239,6 @@ for(QModelIndexList::const_iterator i=elements.cbegin(); i!=elements.cend(); ++i
 
 void MainWindow::on_seekBar_sliderMoved(int position)
 {
-    cout << "seek " << position << endl;
     this->player->seekTo(position);
 }
 
