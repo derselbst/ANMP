@@ -27,9 +27,7 @@ Player::Player (IPlaylist* playlist)
 
 Player::~Player ()
 {
-    this->stop();
-
-    WAIT(this->futurePlayInternal);
+    this->pause();
 
     if(this->audioDriver!=nullptr)
     {
@@ -38,11 +36,9 @@ Player::~Player ()
     delete this->audioDriver;
 }
 
-void Player::init()
+void Player::_initAudio()
 {
-    this->pause();
-
-    WAIT(this->futurePlayInternal);
+    this->_pause();
 
     delete this->audioDriver;
 
@@ -58,10 +54,6 @@ void Player::init()
     }
 
     this->audioDriver->open();
-
-    SongFormat& fmt = this->currentSong->Format;
-    this->audioDriver->init(fmt.SampleRate, fmt.Channels, fmt.SampleFormat);
-    this->resetPlayhead();
 }
 
 bool Player::getIsPlaying()
@@ -73,6 +65,18 @@ bool Player::getIsPlaying()
  */
 void Player::play ()
 {
+    if (this->isPlaying)
+    {
+        return;
+    }
+    
+    WAIT(this->futurePlayInternal);
+    
+    if(this->audioDriver==nullptr)
+    {
+        this->_initAudio();
+    }
+    
     if(this->currentSong==nullptr)
     {
       Song* s=this->playlist->current();
@@ -85,18 +89,6 @@ void Player::play ()
 	return;
       }
     }
-
-    if(this->audioDriver==nullptr)
-    {
-        this->init();
-    }
-
-    if (this->isPlaying)
-    {
-        return;
-    }
-
-    WAIT(this->futurePlayInternal);
 
     this->isPlaying=true;
 
@@ -156,12 +148,6 @@ void Player::_setCurrentSong (Song* song)
     this->currentSong->open();
     // go ahead and start filling the pcm buffer
     this->currentSong->fillBuffer();
-    
-    // now we are ready to do the callback
-    if(this->currentSongChanged!=nullptr)
-    {
-      this->currentSongChanged(this->callbackContext);
-    }
 
     // if the audio has already been initialized
     if(this->audioDriver!=nullptr)
@@ -178,11 +164,22 @@ void Player::_setCurrentSong (Song* song)
             catch(exception& e)
             {
                 cout << e.what() << endl;
-                this->stop();
+                this->_pause();
                 return;
 
             }
         }
+    }
+    else
+    {
+      cerr << "THIS SHOULD NEVER HAPPEN! audioDriver==nullptr" << endl;
+      return;
+    }
+    
+    // now we are ready to do the callback
+    if(this->currentSongChanged!=nullptr)
+    {
+      this->currentSongChanged(this->callbackContext);
     }
 }
 
@@ -204,6 +201,16 @@ void Player::stop ()
  */
 void Player::pause ()
 {
+    this->_pause();
+    WAIT(this->futurePlayInternal);
+}
+
+/** @brief pauses the playback
+ * stops the playback at the next opportunity
+ *
+ */
+void Player::_pause ()
+{
     this->isPlaying=false;
 
     if(this->audioDriver!=nullptr)
@@ -212,9 +219,7 @@ void Player::pause ()
         // usually by dropping the last few frames
         this->audioDriver->stop();
     }
-    WAIT(this->futurePlayInternal);
 }
-
 
 /**
  * prepares the player for the next song to be played, but doesnt start playback

@@ -106,10 +106,10 @@ private:
     future<void> futurePlayInternal;
 
 
-    void init();
-
+    void _initAudio();
     void _seekTo (frame_t frame);
     void _setCurrentSong (Song* song);
+    void _pause ();
 
     /**
      * resets the playhead to beginning of currentSong
