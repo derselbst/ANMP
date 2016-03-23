@@ -27,14 +27,23 @@ public:
     ~MainWindow();
 
 private:
+    // time in milliseconds to seek normally
+    const int SeekNormal = 2* 1000;
+    // time in milliseconds for fast seek
+    const int SeekFast = 60 * 1000;
+
     Ui::MainWindow *ui;
     
     PlaylistModel* playlistModel = new PlaylistModel(this);
     Player* player = new Player(this->playlistModel);
 
+    QFileSystemModel *drivesModel = new QFileSystemModel(this);
+    QFileSystemModel *filesModel = new QFileSystemModel(this);
 
-    QFileSystemModel        *drivesModel = new QFileSystemModel(this);
-    QFileSystemModel        *filesModel = new QFileSystemModel(this);
+
+    static void onSeek(void*, frame_t);
+    static void onCurrentSongChanged(void*);
+
 
     void buildPlaylistView();
     void buildFileBrowser();
@@ -42,9 +51,9 @@ private:
 
     void play();
     void pause();
+    void tooglePlayPause();
     void stop();
-    static void onSeek(void*, frame_t);
-    static void onCurrentSongChanged(void*);
+    void relativeSeek(int ms);
 
 
 private slots:
@@ -57,12 +66,16 @@ private slots:
     void on_treeView_clicked(const QModelIndex &index);
     void on_tableView_doubleClicked(const QModelIndex &index);
     void on_actionPrevious_Song_triggered();
-    void on_playButton_toggled(bool checked);
+    void on_playButton_toggled(bool);
     void on_stopButton_clicked();
     void on_tableView_activated(const QModelIndex &index);
     void on_tableView_remove(const QModelIndexList &);
     void on_seekBar_sliderMoved(int position);
 
+    void seekForward();
+    void seekBackward();
+    void fastSeekForward();
+    void fastSeekBackward();
 };
 
 #endif // MAINWINDOW_H

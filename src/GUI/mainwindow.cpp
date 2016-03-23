@@ -1,5 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+
+#include "Common.h"
 #include "PlaylistFactory.h"
 #include "Playlist.h"
 #include "Song.h"
@@ -13,22 +15,29 @@
 
 void MainWindow::onSeek(void* context, frame_t pos)
 {
-    static_cast<MainWindow*>(context)->ui->seekBar->setSliderPosition(pos);
+    QSlider* playheadSlider = static_cast<MainWindow*>(context)->ui->seekBar;
+    bool oldState = playheadSlider->blockSignals(true);
+    playheadSlider->setSliderPosition(pos);
+    playheadSlider->blockSignals(oldState);
 }
 
 void MainWindow::onCurrentSongChanged(void* context)
 {
+    QSlider* playheadSlider = static_cast<MainWindow*>(context)->ui->seekBar;
+
         Song* s = static_cast<MainWindow*>(context)->playlistModel->current();
         if(s==nullptr)
         {
             // TODO set Window Title
-            static_cast<MainWindow*>(context)->ui->seekBar->setSliderPosition(0);
-            static_cast<MainWindow*>(context)->ui->seekBar->setMaximum(0);
+            bool oldState = playheadSlider->blockSignals(true);
+            playheadSlider->setSliderPosition(0);
+            playheadSlider->setMaximum(0);
+            playheadSlider->blockSignals(oldState);
         }
         else
         {
             // TODO set Window Title
-            static_cast<MainWindow*>(context)->ui->seekBar->setMaximum(s->getFrames());
+            playheadSlider->setMaximum(s->getFrames());
         }
 }
 
@@ -36,8 +45,10 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    // init UI
     this->ui->setupUi(this);
 
+    // set callbacks
     this->player->playheadChanged=MainWindow::onSeek;
     this->player->currentSongChanged=MainWindow::onCurrentSongChanged;
     this->player->callbackContext=this;
@@ -56,22 +67,32 @@ MainWindow::~MainWindow()
 
 void MainWindow::createShortcuts()
 {
+    // PLAY PAUSE STOP SHORTS
     QShortcut *playShortcut = new QShortcut(QKeySequence(Qt::Key_MediaPlay), this);
-    connect(playShortcut, &QShortcut::activated, this, &MainWindow::on_actionPlay_triggered);
+    connect(playShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPause);
 
-    QShortcut *pauseShortcut = new QShortcut(QKeySequence(Qt::Key_MediaPause), this);
-    connect(pauseShortcut, &QShortcut::activated, this, &MainWindow::on_actionPause_triggered);
+    playShortcut = new QShortcut(QKeySequence(Qt::Key_Space), this);
+    connect(playShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPause);
 
-    QShortcut *playpauseShortcut = new QShortcut(QKeySequence(Qt::Key_MediaTogglePlayPause), this);
-    //connect(playpauseShortcut, &QShortcut::activated, this, &MainWindow::on_playButton_toggled);
-
-
+    // CHANGE CURRENT SONG SHORTS
     QShortcut *nextShortcut = new QShortcut(QKeySequence(Qt::Key_MediaNext), this);
     connect(nextShortcut, &QShortcut::activated, this, &MainWindow::on_actionNext_Song_triggered);
 
     QShortcut *prevShortcut = new QShortcut(QKeySequence(Qt::Key_MediaPrevious), this);
     connect(prevShortcut, &QShortcut::activated, this, &MainWindow::on_actionPrevious_Song_triggered);
 
+    // SEEK SHORTCUTS
+    QShortcut *seekForward = new QShortcut(QKeySequence(Qt::Key_Right), this);
+    connect(seekForward, &QShortcut::activated, this, &MainWindow::seekForward);
+
+    QShortcut *seekBackward = new QShortcut(QKeySequence(Qt::Key_Left), this);
+    connect(seekBackward, &QShortcut::activated, this, &MainWindow::seekBackward);
+
+    QShortcut *fastSeekForward = new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_Right), this);
+    connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::fastSeekForward);
+
+    QShortcut *fastSeekBackward = new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_Right), this);
+    connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::fastSeekBackward);
 }
 
 void MainWindow::buildFileBrowser()
@@ -193,16 +214,9 @@ void MainWindow::on_tableView_activated(const QModelIndex &index)
     this->play();
 }
 
-void MainWindow::on_playButton_toggled(bool checked)
+void MainWindow::on_playButton_toggled(bool)
 {
-    if(checked)
-    {
-        this->play();
-    }
-    else
-    {
-        this->pause();
-    }
+    this->tooglePlayPause();
 }
 
 void MainWindow::on_stopButton_clicked()
@@ -210,26 +224,55 @@ void MainWindow::on_stopButton_clicked()
     this->stop();
 }
 
+void MainWindow::tooglePlayPause()
+{
+    if(this->player->getIsPlaying())
+    {
+        this->pause();
+    }
+    else
+    {
+        this->play();
+    }
+}
+
 void MainWindow::play()
 {
     this->player->play();
-    this->ui->playButton->setText("Pause");
-    this->ui->playButton->setChecked(true);
+
+    QPushButton* playbtn = this->ui->playButton;
+    playbtn->setText("Pause");
+    bool oldState = playbtn->blockSignals(true);
+    playbtn->setChecked(true);
+    playbtn->blockSignals(oldState);
 
 }
 
 void MainWindow::pause()
 {
     this->player->pause();
-    this->ui->playButton->setText("Play");
-    this->ui->playButton->setChecked(false);
+
+    QPushButton* playbtn = this->ui->playButton;
+    playbtn->setText("Play");
+    bool oldState = playbtn->blockSignals(true);
+    playbtn->setChecked(false);
+    playbtn->blockSignals(oldState);
 }
 
 void MainWindow::stop()
 {
     this->player->stop();
-    this->ui->playButton->setText("Play");
-    this->ui->playButton->setChecked(false);
+
+    QPushButton* playbtn = this->ui->playButton;
+    playbtn->setText("Play");
+    bool oldState = playbtn->blockSignals(true);
+    playbtn->setChecked(false);
+    playbtn->blockSignals(oldState);
+
+    QSlider* playheadSlider = this->ui->seekBar;
+    oldState = playheadSlider->blockSignals(true);
+    playheadSlider->setSliderPosition(0);
+    playheadSlider->blockSignals(oldState);
 }
 
 void MainWindow::on_tableView_remove(const QModelIndexList& elements)
@@ -250,3 +293,48 @@ void MainWindow::on_seekBar_sliderMoved(int position)
     this->player->seekTo(position);
 }
 
+void MainWindow::relativeSeek(int ms)
+{
+    Song* s = this->playlistModel->current();
+    if(s==nullptr)
+    {
+        return;
+    }
+
+    int relpos = static_cast<int>(msToFrames(abs(ms), s->Format.SampleRate));
+    if(ms<0)
+    {
+        relpos *= -1;
+    }
+
+    int pos = this->ui->seekBar->sliderPosition()+relpos;
+    if(pos < 0)
+    {
+        pos=0;
+    }
+    else if(pos > this->ui->seekBar->maximum())
+    {
+        pos=this->ui->seekBar->maximum();
+    }
+    this->player->seekTo(pos);
+}
+
+void MainWindow::seekForward()
+{
+    this->relativeSeek(SeekNormal);
+}
+
+void MainWindow::seekBackward()
+{
+    this->relativeSeek(-SeekNormal);
+}
+
+void MainWindow::fastSeekForward()
+{
+    this->relativeSeek(SeekFast);
+}
+
+void MainWindow::fastSeekBackward()
+{
+    this->relativeSeek(-SeekFast);
+}
