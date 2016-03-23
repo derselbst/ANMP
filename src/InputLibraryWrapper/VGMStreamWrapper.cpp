@@ -61,7 +61,7 @@ void VGMStreamWrapper::fillBuffer()
         // immediatly start filling the pcm buffer
         this->futureFillBuffer = async(launch::async, &VGMStreamWrapper::asyncFillBuffer, this);
 
-        // give libsnd at least a minor headstart
+        // give vgmstream at least a minor headstart
         this_thread::sleep_for (chrono::milliseconds(5));
     }
 }

@@ -166,7 +166,6 @@ void Player::_setCurrentSong (Song* song)
                 cout << e.what() << endl;
                 this->_pause();
                 return;
-
             }
         }
     }
