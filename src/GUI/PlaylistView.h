@@ -13,6 +13,7 @@ public:
     
 signals:
   void remove(QModelIndexList&);
+  void swap(QModelIndexList&, int);
 
 protected:
     void keyPressEvent(QKeyEvent * event) override;
