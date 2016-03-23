@@ -32,6 +32,7 @@ public:
      */
     void play ();
 
+    bool getIsPlaying();
 
     /**
      * @return Song
@@ -84,7 +85,7 @@ private:
 
     float PreAmpVolume;
 
-    // pointer to the song we are currently isPlaying
+    // pointer to the song we are currently playing
     // instance is owned by this.playlist
     Song* currentSong = nullptr;
 

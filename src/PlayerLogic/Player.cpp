@@ -64,6 +64,10 @@ void Player::init()
     this->resetPlayhead();
 }
 
+bool Player::getIsPlaying()
+{
+  return this->isPlaying;
+}
 
 /**
  */
@@ -300,13 +304,14 @@ void Player::playLoop (core::tree<loop_t>& loop)
         // if the user requested to seek past the current loop, skip it at all
         if(this->playhead > (*(*subloop)).stop)
         {
+	    cerr << "this code seems to be redundant... NO IT ISNT!!!" << endl;
             continue;
         }
 
         this->playFrames(playhead, (*(*subloop)).start);
         // at this point: playhead==subloop.start
 
-        uint32_t mycount = Config::overridingGlobalLoopCount!=-1 ? Config::overridingGlobalLoopCount : (*(*subloop)).count;
+        uint32_t mycount = Config::overridingGlobalLoopCount!=-1 ? Config::overridingGlobalLoopCount : (*(*subloop)).count+1; // +1 because the subloop we are just going to play, should be played one additional time by the parent of subloop (i.e. the loop we are currently in)
         bool forever = mycount==0;
         while(this->isPlaying && (forever || mycount--))
             {
@@ -314,6 +319,9 @@ void Player::playLoop (core::tree<loop_t>& loop)
                 this->_seekTo((*(*subloop)).start);
                 this->playLoop(*subloop);
                 // at this point: playhead=subloop.end
+
+                // actually we could leave this loop with playhead==subloop.start, which would avoid subloop.count+1 up ^ there ^, however
+                // this would cause an infinite loop since getNextLoop() would return the same subloop again and again
             }
     }
 
