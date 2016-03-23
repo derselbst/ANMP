@@ -123,6 +123,28 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
     return true;
 }
 
+bool PlaylistModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationRow)
+{
+//     Node *sourceParentNode = static_cast<Node*>(sourceParent.internalPointer());
+//     Node *destinationParentNode = static_cast<Node*>(destinationParent.internalPointer());
+// 
+//     // if source and destination parents are the same, move elements locally
+//     if(sourceParentNode == destinationParentNode)
+//     {
+//             beginMoveRows(sourceParent, sourceRow, sourceRow+count-1, destinationParent, destinationRow);
+//             this->move(sourceRow, count, destinationRow);
+//             endMoveRows();
+//     }
+//     else
+//     {
+//         // otherwise, move the node under the parent
+//         beginMoveRows(sourceParent, sourceRow, sourceRow+count-1, destinationParent, destinationRow);
+//         sourceParentNode->GetChild(sourceRow)->SetParent(destinationParentNode);
+//         endMoveRows();
+//     }
+//     Scene::GetInstance()->GetRoot()->PrintChildren();
+    return false;
+}
 
 bool PlaylistModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
