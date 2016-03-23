@@ -47,11 +47,14 @@ void ALSAOutput::open()
 
 void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime)
 {
+  cout << __PRETTY_FUNCTION__ << ": srate:" << sampleRate << " ; channels: " << (int)channels << endl;
     // changing hw settings can only safely be done when pcm is not running
     // therefore stop the pcm and drain all pending frames
     // DO NOT drop pending frames, due to latency some frames might still be played,
     // dropping them will cause (at least in non-realtime mode) a hearable crack
-    this->drain();
+  
+    // UPDATE (2016-03-23): draining may take very long for some reason (>10s !!!) thus try dropping
+    this->drop();
 
     int err;
 
