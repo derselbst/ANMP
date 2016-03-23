@@ -71,12 +71,7 @@ void Player::play ()
     }
     
     WAIT(this->futurePlayInternal);
-    
-    if(this->audioDriver==nullptr)
-    {
-        this->_initAudio();
-    }
-    
+        
     if(this->currentSong==nullptr)
     {
       Song* s=this->playlist->current();
@@ -149,7 +144,12 @@ void Player::_setCurrentSong (Song* song)
     // go ahead and start filling the pcm buffer
     this->currentSong->fillBuffer();
 
-    // if the audio has already been initialized
+    if(this->audioDriver==nullptr)
+    {
+        this->_initAudio();
+    }
+    
+    // if the audio has bee properly been initialized
     if(this->audioDriver!=nullptr)
     {
         SongFormat& format = this->currentSong->Format;
