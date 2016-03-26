@@ -32,7 +32,7 @@ public:
     bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex()) override;
     bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationRow) override;
     
-    
+    void move(std::deque<Song*>& que, signed int source, unsigned int count, int steps);
 
     void add (Song* song) override;
 

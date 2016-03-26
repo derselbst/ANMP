@@ -123,27 +123,49 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
     return true;
 }
 
+void PlaylistModel::move(std::deque<Song*>& que, signed int source, unsigned int count, int steps)
+{
+    if(source < 0 || que.size() < source+count)
+    {
+        return;
+    }
+    if(steps<0) // left shift
+    {
+        rotate(source+steps >= 0 ?
+                    std::next(que.begin(),source+steps) :
+                    que.begin(),
+               std::next(que.begin(),source),
+               std::next(que.begin(),source+count+1)
+              );
+
+    }
+    else if(steps>0) // right shift
+    {
+        rotate(std::next(que.begin(),source),
+               std::next(que.begin(),source+count+1),
+               source+count+steps < que.size() ?
+                    std::next(que.begin(),source+count+steps+1) :
+                    que.end()
+              );
+    }
+
+}
+
 bool PlaylistModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationRow)
 {
-//     Node *sourceParentNode = static_cast<Node*>(sourceParent.internalPointer());
-//     Node *destinationParentNode = static_cast<Node*>(destinationParent.internalPointer());
-// 
-//     // if source and destination parents are the same, move elements locally
-//     if(sourceParentNode == destinationParentNode)
-//     {
-//             beginMoveRows(sourceParent, sourceRow, sourceRow+count-1, destinationParent, destinationRow);
-//             this->move(sourceRow, count, destinationRow);
-//             endMoveRows();
-//     }
-//     else
-//     {
-//         // otherwise, move the node under the parent
-//         beginMoveRows(sourceParent, sourceRow, sourceRow+count-1, destinationParent, destinationRow);
-//         sourceParentNode->GetChild(sourceRow)->SetParent(destinationParentNode);
-//         endMoveRows();
-//     }
-//     Scene::GetInstance()->GetRoot()->PrintChildren();
-    return false;
+     // if source and destination parents are the same, move elements locally
+     if(true)
+     {
+             beginMoveRows(sourceParent, sourceRow, sourceRow+count-1, destinationParent, destinationRow);
+             this->move(this->queue, sourceRow, count, destinationRow-sourceRow);
+             endMoveRows();
+     }
+     else
+     {
+         // otherwise, move the node under the parent
+         return false;
+     }
+    return true;
 }
 
 bool PlaylistModel::setData(const QModelIndex &index, const QVariant &value, int role)
