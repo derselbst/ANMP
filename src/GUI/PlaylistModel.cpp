@@ -258,5 +258,9 @@ QColor PlaylistModel::calculateRowColor(int row) const
   {
     return QColor(255, 0, 0, 127);
   }
+  else if(row % 2 == 0)
+  {
+      return QColor(222,222,222);
+  }
   return QColor(Qt::white);
 }
