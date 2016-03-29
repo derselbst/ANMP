@@ -10,14 +10,12 @@ class PlaylistView : public QTableView
   
 public:
     PlaylistView(QWidget * parent = 0);
-    
-signals:
-  void remove(QModelIndexList&);
-  void swap(QModelIndexList&, int);
 
 protected:
     void keyPressEvent(QKeyEvent * event) override;
 
+private:
+    void moveItems(int steps);
 };
 
 

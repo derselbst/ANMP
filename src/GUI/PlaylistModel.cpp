@@ -110,13 +110,19 @@ bool PlaylistModel::insertRows(int row, int count, const QModelIndex & parent)
 
 bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
 {
-    if(row>this->rowCount(QModelIndex()))
+    if(row+count>this->rowCount(QModelIndex()))
     {
       return false;
     }
 
     //notify views and proxy models that a line will be inserted
       beginRemoveRows(parent, row, row+(count-1));
+
+      for(int i=row+(count-1); i>=row; i--)
+      {
+          Playlist::remove(i);
+      }
+
     //finish insertion, notify views/models
       endRemoveRows();
 
@@ -207,8 +213,6 @@ void PlaylistModel::add(Song* s)
 
 void PlaylistModel::remove(int i)
 {
-    Playlist::remove(i);
-
     this->removeRows(i, 1);
 }
 
