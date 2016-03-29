@@ -146,6 +146,7 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size
             cerr << e.what() << endl;
             pcm->close();
             delete pcm;
+            pcm=nullptr;
 #endif
 #ifdef USE_VGMSTREAM
 	    pcm=new VGMStreamWrapper(filePath, offset, len);
