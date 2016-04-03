@@ -104,21 +104,27 @@ public:
 
     /**
      * opens the current file using the corresponding lib
+     * 
+     * specificly: defines samplerate, defines channelcount, provides a value for this->getFrames()
      */
     virtual void open () = 0;
 
 
     /**
+     * frees all ressources acquired by this->open()
      */
     virtual void close () = 0;
 
 
-    /** synchronos read call to library goes here
+    /**
+     * synchronous part: allocates the pcm buffer and fills it up to have enough for about 0.5 seconds of playback
+     * asynchronous part: fills rest of pcm buffer
      */
     virtual void fillBuffer () = 0;
 
 
     /**
+     * frees all ressources acquires by this->fillBuffer()
      */
     virtual void releaseBuffer () = 0;
 
