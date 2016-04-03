@@ -66,8 +66,8 @@ void VGMStreamWrapper::fillBuffer()
         // immediatly start filling the pcm buffer
         this->futureFillBuffer = async(launch::async, &VGMStreamWrapper::render, this, 0);
 
-        // give vgmstream at least a minor headstart
-//         this_thread::sleep_for (chrono::milliseconds(1));
+        // allow the render thread to do his work
+        this_thread::yield();
     }
 }
 
@@ -147,32 +147,6 @@ if(this->handle!=nullptr && this->handle->loop_flag==1) // does stream contain l
     res.push_back(l);
 }
 
-//     if(res.empty())
-//     {
-//         SF_INSTRUMENT inst;
-//         int ret = sf_command (this->sndfile, SFC_GET_INSTRUMENT, &inst, sizeof (inst)) ;
-//         if(ret == SF_TRUE && inst.loop_count > 0)
-//         {
-// 
-//             for (int i=0; i<inst.loop_count; i++)
-//             {
-//                 loop_t l;
-//                 l.start = inst.loops[i].start;
-//                 l.stop  = inst.loops[i].end;
-// 
-//                 // WARNING: AGAINST RIFF SPEC ahead!!!
-//                 // quoting RIFFNEW.pdf: "dwEnd: Specifies the endpoint of the loop
-//                 // in samples (this sample will also be played)."
-//                 // however (nearly) every piece of software out there ignores that and
-//                 // specifies the sample excluded from the loop
-//                 // THUS: submit to peer pressure
-//                 l.stop -= 1;
-// 
-//                 l.count = inst.loops[i].count;
-//                 res.push_back(l);
-//             }
-//         }
-//     }
     return res;
 }
 
