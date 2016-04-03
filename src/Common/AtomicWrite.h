@@ -8,7 +8,7 @@
 class AtomicWrite
 {
 public:
-  enum LogLevel {INFO, WARNING, ERROR, FATAL};
+  enum LogLevel {DEBUG, INFO, WARNING, ERROR, FATAL};
   
     static AtomicWrite& getSingleton();
 
