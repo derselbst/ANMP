@@ -2,6 +2,7 @@
 
 #include "Common.h"
 #include "Config.h"
+#include "AtomicWrite.h"
 
 extern "C"
 {
@@ -54,35 +55,48 @@ void VGMStreamWrapper::fillBuffer()
     {
         this->count = this->getFrames() * this->Format.Channels;
         this->data = new int16_t[this->count];
+	CLOG(AtomicWrite::LogLevel::DEBUG, "vgmstream allocated buffer at 0x" << this->data << endl);
 
         // usually this shouldnt block at all
         WAIT(this->futureFillBuffer);
 
+	// (pre-)render the first 1/3 second
+	this->render(msToFrames(333, this->Format.SampleRate));
+	
         // immediatly start filling the pcm buffer
-        this->futureFillBuffer = async(launch::async, &VGMStreamWrapper::asyncFillBuffer, this);
+        this->futureFillBuffer = async(launch::async, &VGMStreamWrapper::render, this, 0);
 
         // give vgmstream at least a minor headstart
-        this_thread::sleep_for (chrono::milliseconds(5));
+//         this_thread::sleep_for (chrono::milliseconds(1));
     }
 }
 
-void VGMStreamWrapper::asyncFillBuffer()
+void VGMStreamWrapper::render(frame_t framesToRender)
 {
-    unsigned int itemsToRender = Config::FramesToRender*this->Format.Channels;
+  if(framesToRender==0)
+  {
+    // render rest of file
+    framesToRender = this->getFrames()-this->framesAlreadyRendered;
+  }
+  else
+  {
+    framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);
+  }
+  
+  int16_t* pcm = static_cast<int16_t*>(this->data);
+  pcm += this->framesAlreadyRendered * this->Format.Channels;
+  
+  int framesToDoNow;
+  while(framesToRender>0 && !this->stopFillBuffer)
+  {
+        framesToDoNow = (framesToRender/Config::FramesToRender)>0 ? Config::FramesToRender : framesToRender%Config::FramesToRender;
+    
+        render_vgmstream(pcm, framesToDoNow, this->handle);
+        pcm += framesToDoNow * this->Format.Channels;
+        this->framesAlreadyRendered += framesToDoNow;
 
-    int fullFillCount = this->count/itemsToRender;
-    for(int i = 0; i<fullFillCount && !this->stopFillBuffer; i++)
-    {
-        render_vgmstream(static_cast<int16_t*>(this->data)+i*itemsToRender, Config::FramesToRender, this->handle);
-	swap_samples_le(static_cast<int16_t*>(this->data),itemsToRender);
-    }
-
-    if(!this->stopFillBuffer)
-    {
-        unsigned int lastItemsToRender = this->count % itemsToRender;
-        render_vgmstream(static_cast<int16_t*>(this->data)+fullFillCount*itemsToRender, lastItemsToRender/this->Format.Channels, this->handle);
-	swap_samples_le(static_cast<int16_t*>(this->data),lastItemsToRender);
-    }
+        framesToRender -= framesToDoNow;
+  }
 }
 
 void VGMStreamWrapper::releaseBuffer()
@@ -93,6 +107,7 @@ void VGMStreamWrapper::releaseBuffer()
     delete [] static_cast<int16_t*>(this->data);
     this->data=nullptr;
     this->count = 0;
+    this->framesAlreadyRendered=0;
 
     this->stopFillBuffer=false;
 }

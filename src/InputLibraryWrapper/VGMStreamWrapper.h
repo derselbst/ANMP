@@ -66,7 +66,8 @@ private:
   // a flag that indicates a prematurely abort of async buffer fill
   bool stopFillBuffer = false;
 
-  void asyncFillBuffer();
+  frame_t framesAlreadyRendered=0;
+  void render(frame_t framesToRender=0);
 
 };
 
