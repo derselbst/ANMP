@@ -14,7 +14,7 @@ SET(LIBANMP_SRC
        Common/Common.cpp
        Common/PlaylistFactory.cpp
        InputLibraryWrapper/Song.cpp
-       InputLibraryWrapper/SongFormat.cpp
+       InputLibraryWrapper/SongFormat.cpp       
        PlayerLogic/Config.cpp
        PlayerLogic/Player.cpp
        PlayerLogic/Playlist.cpp
@@ -23,10 +23,32 @@ SET(LIBANMP_SRC
 ############################
 ### HANDLE CODEC SUPPORT ###
 ############################
-option(USE_LIBSND "Use libsnd to support common audio formats (FLAC, WAVE, OGG, etc.)" ON)
+option(USE_LIBMAD "Use libmad to support MPEG audio formats" ON)
+option(USE_LIBSND "Use libsndfile to support common audio formats (FLAC, WAVE, OGG, etc.)" ON)
 option(USE_LAZYUSF "Use lazyusf2 to support USF (Ultra64 Sound Format)" ON)
 option(USE_VGMSTREAM "Use vgmstream to support innombrable streamed audio formats from video games." ON)
 option(USE_CUE "Use libcue to support loading cue sheets" ON)
+
+if(USE_LIBMAD)
+  set (LIBMAD_INSTALL_DIR "" CACHE FILEPATH "Directory where libmad is installed")
+  
+  FIND_LIBRARY(LIBMADFILE_LIBRARIES mad ${LIBMAD_INSTALL_DIR})
+  
+  if(LIBMADFILE_LIBRARIES)
+	set (LIBMADFILE_INCLUDE_DIR "/usr/include" CACHE FILEPATH "Directory where header files for libmad are installed")
+	INCLUDE_DIRECTORIES(${LIBMADFILE_INCLUDE_DIR})
+	
+        add_definitions(-DUSE_LIBMAD)
+        set(LIBANMP_SRC ${LIBANMP_SRC} InputLibraryWrapper/LibMadWrapper.cpp)
+        
+        set(LD_FLAGS ${LD_FLAGS} ${LIBMADFILE_LIBRARIES})
+        
+        message("\tlibmad include dir  : ${LIBMADFILE_INCLUDE_DIR}")
+        message("\tlibmad libraries    : ${LIBMADFILE_LIBRARIES}")
+  else(LIBMADFILE_LIBRARIES)
+        message(SEND_ERROR "libmad not found. Define LIBMAD_INSTALL_DIR or turn USE_LIBMAD off.")
+  endif(LIBMADFILE_LIBRARIES)
+endif(USE_LIBMAD)
 
 
 if(USE_LIBSND)

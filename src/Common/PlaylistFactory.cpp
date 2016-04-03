@@ -11,6 +11,10 @@
 #include "LibSNDWrapper.h"
 #endif
 
+#ifdef USE_LIBMAD
+#include "LibMadWrapper.h"
+#endif
+
 #ifdef USE_VGMSTREAM
 #include "VGMStreamWrapper.h"
 #endif
@@ -87,6 +91,23 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
 }
 #endif
 
+#define TRY_WITH(LIBWRAPPER)\
+if(pcm==nullptr)\
+{\
+    pcm = new LIBWRAPPER(filePath, offset, len);\
+    try\
+    {\
+	pcm->open();\
+    }\
+    catch(exception& e)\
+    {\
+	cerr << e.what() << endl;\
+	pcm->close();\
+	delete pcm;\
+	pcm=nullptr;\
+    }\
+}
+
 Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size_t offset, size_t len)
 {
     string ext = getFileExtension(filePath);
@@ -130,40 +151,25 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size
 //     }
     }
 #endif
+#ifdef USE_LIBMAD
+    else if(iEquals(ext, "mp3"))
+    {
+        goto l_LIBMAD;
+    }
+#endif
     else // so many formats to test here, try and error
     {
 #ifdef USE_LIBSND
-        // TODO: pass offset to libsnd
-        pcm = new LibSNDWrapper(filePath, offset, len);
-
-        try
-        {
-            pcm->open();
-        }
-        //TODO catch correct exception
-        catch(exception& e)
-        {
-            cerr << e.what() << endl;
-            pcm->close();
-            delete pcm;
-            pcm=nullptr;
+      TRY_WITH(LibSNDWrapper)
 #endif
+      
 #ifdef USE_VGMSTREAM
-	    pcm=new VGMStreamWrapper(filePath, offset, len);
-	    try
-	    {
-	      pcm->open();
-	    }
-	    catch(exception& e)
-	    {
-	      cerr << e.what() << endl;
-	      pcm->close();
-	      delete pcm;
-	      pcm=nullptr;
-	    }
+      TRY_WITH(VGMStreamWrapper)
 #endif
-#ifdef USE_LIBSND
-        }
+      
+#ifdef USE_LIBMAD
+      l_LIBMAD:
+      TRY_WITH(LibMadWrapper)
 #endif
     }
 
