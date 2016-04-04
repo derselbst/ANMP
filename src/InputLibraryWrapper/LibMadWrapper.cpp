@@ -2,10 +2,9 @@
 
 #include "Config.h"
 #include "Common.h"
+
 #include "AtomicWrite.h"
 
-
-#include <cstring>
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
 
@@ -41,14 +40,14 @@ void LibMadWrapper::open ()
     this->infile = fopen(this->Filename.c_str(), "rb");
     if (this->infile == nullptr)
     {
-        throw runtime_error("fopen failed, errno: " + string(strerror(errno)) +"\n");
+      THROW_RUNTIME_ERROR("fopen failed, errno: " << string(strerror(errno)));
     }
 
     int fd = fileno(this->infile);
     struct stat stat;
     if (fstat(fd, &stat) == -1 || stat.st_size == 0)
     {
-        throw runtime_error(string("Error: ") + __func__ + string(": ") + string("fstat failed for File \"" + this->Filename + ")\""));
+      THROW_RUNTIME_ERROR("fstat failed for File \"" << this->Filename << ")\"");
     }
     
     this->mpeglen = stat.st_size;
@@ -56,7 +55,7 @@ void LibMadWrapper::open ()
     this->mpegbuf = static_cast<unsigned char*>(mmap(0, this->mpeglen, PROT_READ, MAP_SHARED, fd, 0));
     if (this->mpegbuf == MAP_FAILED)
     {
-        throw runtime_error(string("Error: ") + __func__ + string(": ") + string("mmap failed for File \"" + this->Filename + ")\""));
+      THROW_RUNTIME_ERROR("mmap failed for File \"" << this->Filename << ")\"");
     }
 
     struct mad_header header;
@@ -74,7 +73,7 @@ void LibMadWrapper::open ()
         
         if(ret!=0)
 	{
-	  throw runtime_error(string("Error: ") + __func__ + string(": ") + string("unable to find a valid frame-header for File \"" + this->Filename + ")\""));
+	  THROW_RUNTIME_ERROR("unable to find a valid frame-header for File \"" + this->Filename + ")\"");
 	}
         
         this->Format.Channels = MAD_NCHANNELS(&header);
@@ -101,12 +100,12 @@ void LibMadWrapper::open ()
 	  // sanity checks
 	  if(this->Format.Channels != MAD_NCHANNELS(&header))
 	  {
-	    throw runtime_error(string("Error: ") + __func__ + string(": ") + string("channelcount varies within File \"" + this->Filename + ")\""));
+	    THROW_RUNTIME_ERROR("channelcount varies within File \"" << this->Filename << ")\"");
 	  }
 	  
 	  if(this->Format.SampleRate != header.samplerate)
 	  {
-	    throw runtime_error(string("Error: ") + __func__ + string(": ") + string("samplerate varies within File \"" + this->Filename + ")\""));
+	    THROW_RUNTIME_ERROR("samplerate varies within File \"" << this->Filename << ")\"");
 	  }
 	  
           this->numFrames += 32 * MAD_NSBSAMPLES(&header);
@@ -215,7 +214,7 @@ void LibMadWrapper::asyncFillBuffer()
 
         if(item>this->count)
         {
-            CLOG(AtomicWrite::LogLevel::ERROR, "THIS SHOULD NEVER HAPPEN: read " << item <<" items but only expected " << this->count << "\n");
+            CLOG(LogLevel::ERROR, "THIS SHOULD NEVER HAPPEN: read " << item << " items but only expected " << this->count << "\n");
             break;
         }
 

@@ -33,7 +33,7 @@ void VGMStreamWrapper::open()
 
     if (handle==nullptr)
     {
-        throw runtime_error(string("Error: ") + __func__ + string(": failed opening \"") + this->Filename + "\"");
+      THROW_RUNTIME_ERROR("failed opening \"" << this->Filename << "\"");
     }
 
     this->Format.Channels = this->handle->channels;
@@ -55,7 +55,7 @@ void VGMStreamWrapper::fillBuffer()
     {
         this->count = this->getFrames() * this->Format.Channels;
         this->data = new int16_t[this->count];
-        CLOG(AtomicWrite::LogLevel::DEBUG, "vgmstream allocated buffer at 0x" << this->data << endl);
+        CLOG(LogLevel::DEBUG, "vgmstream allocated buffer at 0x" << this->data << endl);
 
         // usually this shouldnt block at all
         WAIT(this->futureFillBuffer);

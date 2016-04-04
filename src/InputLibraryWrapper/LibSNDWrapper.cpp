@@ -34,12 +34,12 @@ void LibSNDWrapper::open ()
   
     if (!(this->sndfile = sf_open (this->Filename.c_str(), SFM_READ, &sfinfo)))
     {
-        throw runtime_error(string("Error: ") + __func__ + string(": ") + string(sf_strerror (NULL)) + " (in File \"" + this->Filename + ")\"");
+      THROW_RUNTIME_ERROR(sf_strerror (NULL) << " (in File \"" << this->Filename << ")\"");
     };
 
     if (sfinfo.channels < 1 || sfinfo.channels >= 6)
     {
-        throw runtime_error(string("Error: ") + __func__ + string(": channels == ") + to_string(sfinfo.channels));
+      THROW_RUNTIME_ERROR("channels == " << sfinfo.channels);
     };
 
     this->Format.Channels = sfinfo.channels;
@@ -94,7 +94,7 @@ void LibSNDWrapper::asyncFillBuffer()
 
         if(readcount != this->count)
 	{
-        CLOG(AtomicWrite::LogLevel::ERROR, "THIS SHOULD NEVER HAPPEN: only read " << readcount/sfinfo.channels << " frames, although there are " << sfinfo.frames << " frames in the file\n");
+        CLOG(LogLevel::ERROR, "THIS SHOULD NEVER HAPPEN: only read " << readcount/sfinfo.channels << " frames, although there are " << sfinfo.frames << " frames in the file\n");
 	}
         //         this->count = readcount;
     }

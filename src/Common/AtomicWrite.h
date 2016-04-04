@@ -2,13 +2,19 @@
 #include <sstream>
 #include <mutex>
 
-#define CLOG(LEVEL,MSG) {stringstream ss; ss << MSG; AtomicWrite::getSingleton().write(LEVEL, string(__PRETTY_FUNCTION__) + ": " + ss.str());}
-#define LOG(MSG) CLOG(AtomicWrite::LogLevel::INFO, MSG)
+#define INFUNCTION string(__PRETTY_FUNCTION__)+": "
+#define LOG_MSG(MSG) stringstream logmsg; logmsg << INFUNCTION << MSG
+#define CLOG(LEVEL,MSG) {LOG_MSG(MSG); AtomicWrite::getSingleton().write(LEVEL, logmsg.str());}
+#define LOG(MSG) CLOG(LogLevel::INFO, MSG)
+
+#define THROW_RUNTIME_ERROR(MSG) {LOG_MSG(MSG);throw runtime_error(logmsg.str());}
+
+
+enum LogLevel {DEBUG, INFO, WARNING, ERROR, FATAL};
 
 class AtomicWrite
 {
 public:
-  enum LogLevel {DEBUG, INFO, WARNING, ERROR, FATAL};
   
     static AtomicWrite& getSingleton();
 
@@ -25,4 +31,3 @@ private:
         AtomicWrite(AtomicWrite const&)    = delete;
         void operator=(AtomicWrite const&) = delete;
 };
-

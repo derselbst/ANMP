@@ -3,7 +3,7 @@
 #include "CommonExceptions.h"
 #include "Config.h"
 #include "Common.h"
-
+#include "AtomicWrite.h"
 
 #include <usf.h>
 #include <psflib.h>
@@ -44,7 +44,7 @@ void LazyusfWrapper::open()
 
     if ( psf_load( this->Filename.c_str(), &stdio_callbacks, 0x21, &LazyusfWrapper::usf_loader, this->usfHandle, &LazyusfWrapper::usf_info, this, 1 ) <= 0 )
     {
-        throw runtime_error(string("Error: psf_load failed on file \"") + this->Filename + ")\"");
+      THROW_RUNTIME_ERROR("psf_load failed on file \"" << this->Filename << ")\"");
     }
 
     usf_set_compare(this->usfHandle, this->enable_compare);

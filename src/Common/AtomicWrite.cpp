@@ -21,10 +21,32 @@ void AtomicWrite::write(std::string s, std::ostream& o)
 }
 
 
-void AtomicWrite::write(enum LogLevel, std::string s, std::ostream& o)
+void AtomicWrite::write(enum LogLevel l, std::string s, std::ostream& o)
 {
-  // C++11 only
-  // mtx gets locked, and will be unlocked when lock is destroyed
+std::ostream* out = &o;
+  
+  std::string logLev;
+  switch(l)
+  {
+    case DEBUG:
+      logLev="Debug";
+      break;
+    case INFO:
+      logLev="Info";
+      break;
+    case WARNING:
+      logLev="Warning";
+      break;
+    case ERROR:
+      logLev="Error";
+      out = &std::cerr;
+      break;
+    case FATAL:
+      logLev="Fatal Error";
+      out = &std::cerr;
+      break;
+  }
+  
   std::lock_guard<std::mutex> lock(this->mtx); 
-  o << s;
+  (*out) << logLev << ": " << s;
 }
