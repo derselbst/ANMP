@@ -27,10 +27,10 @@ public:
     ~MainWindow();
 
 private:
-    // time in milliseconds to seek normally
-    const int SeekNormal = 2* 1000;
-    // time in milliseconds for fast seek
-    const int SeekFast = 60 * 1000;
+    // percentage to seek normally
+    const float SeekNormal = 0.02;
+    // percentage for fast seek
+    const float SeekFast = 0.1;
 
     Ui::MainWindow *ui;
     
@@ -69,7 +69,6 @@ private slots:
     void on_playButton_toggled(bool);
     void on_stopButton_clicked();
     void on_tableView_activated(const QModelIndex &index);
-    void on_tableView_remove(const QModelIndexList &);
     void on_seekBar_sliderMoved(int position);
 
     void seekForward();

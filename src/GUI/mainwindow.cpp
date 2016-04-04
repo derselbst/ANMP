@@ -23,12 +23,14 @@ void MainWindow::onSeek(void* context, frame_t pos)
 
 void MainWindow::onCurrentSongChanged(void* context)
 {
-    QSlider* playheadSlider = static_cast<MainWindow*>(context)->ui->seekBar;
+    MainWindow* ctx = static_cast<MainWindow*>(context);
+    QSlider* playheadSlider = ctx->ui->seekBar;
 
         Song* s = static_cast<MainWindow*>(context)->playlistModel->current();
         if(s==nullptr)
         {
-            // TODO set Window Title
+            ctx->setWindowTitle("ANMP");
+
             bool oldState = playheadSlider->blockSignals(true);
             playheadSlider->setSliderPosition(0);
             playheadSlider->setMaximum(0);
@@ -36,7 +38,16 @@ void MainWindow::onCurrentSongChanged(void* context)
         }
         else
         {
-            // TODO set Window Title
+            QString title = QString::fromStdString(s->Metadata.Title);
+            QString interpret = QString::fromStdString(s->Metadata.Artist);
+            if(title == "" || interpret == "")
+            {
+                ctx->setWindowTitle(QString::fromStdString(s->Filename) + " :: ANMP");
+            }
+            else
+            {
+                ctx->setWindowTitle(interpret + " - " + title  + " :: ANMP");
+            }
             playheadSlider->setMaximum(s->getFrames());
         }
 }
@@ -88,10 +99,10 @@ void MainWindow::createShortcuts()
     QShortcut *seekBackward = new QShortcut(QKeySequence(Qt::Key_Left), this);
     connect(seekBackward, &QShortcut::activated, this, &MainWindow::seekBackward);
 
-    QShortcut *fastSeekForward = new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_Right), this);
+    QShortcut *fastSeekForward = new QShortcut(QKeySequence(Qt::Key_D), this);
     connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::fastSeekForward);
 
-    QShortcut *fastSeekBackward = new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_Right), this);
+    QShortcut *fastSeekBackward = new QShortcut(QKeySequence(Qt::Key_A), this);
     connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::fastSeekBackward);
 }
 
@@ -174,8 +185,9 @@ void MainWindow::on_actionPrevious_Song_triggered()
 }
 
 void MainWindow::on_actionClear_Playlist_triggered()
-{                                                                                                                                                                                
-      this->playlistModel->clear();
+{
+    this->stop();
+    this->playlistModel->clear();
 }
 
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
@@ -275,36 +287,17 @@ void MainWindow::stop()
     playheadSlider->blockSignals(oldState);
 }
 
-void MainWindow::on_tableView_remove(const QModelIndexList& elements)
-{
-  int lastRow=0;
-for(QModelIndexList::const_iterator i=elements.cbegin(); i!=elements.cend(); ++i)
-{
-  if(i->isValid())
-  {
-    this->playlistModel->remove(i->row()-lastRow);
-    lastRow=i->row();
-} 
-}
-}
-
 void MainWindow::on_seekBar_sliderMoved(int position)
 {
     this->player->seekTo(position);
 }
 
-void MainWindow::relativeSeek(int ms)
+void MainWindow::relativeSeek(int relpos)
 {
     Song* s = this->playlistModel->current();
     if(s==nullptr)
     {
         return;
-    }
-
-    int relpos = static_cast<int>(msToFrames(abs(ms), s->Format.SampleRate));
-    if(ms<0)
-    {
-        relpos *= -1;
     }
 
     int pos = this->ui->seekBar->sliderPosition()+relpos;
@@ -321,20 +314,20 @@ void MainWindow::relativeSeek(int ms)
 
 void MainWindow::seekForward()
 {
-    this->relativeSeek(SeekNormal);
+    this->relativeSeek(this->ui->seekBar->maximum() * SeekNormal);
 }
 
 void MainWindow::seekBackward()
 {
-    this->relativeSeek(-SeekNormal);
+    this->relativeSeek(-this->ui->seekBar->maximum() * SeekNormal);
 }
 
 void MainWindow::fastSeekForward()
 {
-    this->relativeSeek(SeekFast);
+    this->relativeSeek(this->ui->seekBar->maximum() * SeekFast);
 }
 
 void MainWindow::fastSeekBackward()
 {
-    this->relativeSeek(-SeekFast);
+    this->relativeSeek(-this->ui->seekBar->maximum() * SeekFast);
 }
