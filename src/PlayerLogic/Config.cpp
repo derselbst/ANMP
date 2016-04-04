@@ -14,6 +14,15 @@ AudioDriver_t Config::audioDriver = AudioDriver_t::ALSA;
 // that have to be prepared (i.e. rendered) by a single call to Song::fillBuffer()
 const frame_t Config::FramesToRender = 2048;
 
+// in synchronous part of Song::fillBuffer(): prepare as many samples as needed to have enough for
+// PreRenderTime of playing back duration, before asynchronously filling up the rest of PCM buffer
+//
+// time in milliseconds
+//
+// high values will slow down the start of playing back the next song, but will assure that the
+// asynchronous part of Song::fillBuffer() has enough headstart (i.e. the PCM buffer is well filled)
+// so there are no audible glitches later on (such as parts of old songs or cracks and clicks...)
+unsigned int Config::PreRenderTime = 333;
 
 //**********************************
 //       HOW-TO-PLAY SECTION       *

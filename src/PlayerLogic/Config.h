@@ -25,6 +25,7 @@ struct Config
     static bool useLoopInfo;
     static int overridingGlobalLoopCount;
     static const frame_t FramesToRender;
+    static unsigned int PreRenderTime;
     static unsigned int defaultFadeTime;
 
 

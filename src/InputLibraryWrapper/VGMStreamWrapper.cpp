@@ -60,8 +60,8 @@ void VGMStreamWrapper::fillBuffer()
         // usually this shouldnt block at all
         WAIT(this->futureFillBuffer);
 
-        // (pre-)render the first 1/3 second
-        this->render(msToFrames(333, this->Format.SampleRate));
+        // (pre-)render the first few milliseconds
+        this->render(msToFrames(Config::PreRenderTime, this->Format.SampleRate));
 
         // immediatly start filling the pcm buffer
         this->futureFillBuffer = async(launch::async, &VGMStreamWrapper::render, this, 0);
