@@ -97,14 +97,12 @@ void PlaylistView::keyPressEvent(QKeyEvent * event)
     }
       break;
 
-     case Qt::Key_U:
-            this->moveItems(-1);
+  case Qt::Key_W:
+      this->moveItems(-1);
       break;
 
-  case Qt::Key_D:
+  case Qt::Key_S:
       this->moveItems(1);
-      break;
-  case Qt::CTRL + Qt::Key_Down:
       break;
 
     default:

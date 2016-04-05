@@ -59,6 +59,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // init UI
     this->ui->setupUi(this);
 
+    this->setWindowState(Qt::WindowMaximized);
+
     // set callbacks
     this->player->playheadChanged=MainWindow::onSeek;
     this->player->currentSongChanged=MainWindow::onCurrentSongChanged;
@@ -99,10 +101,10 @@ void MainWindow::createShortcuts()
     QShortcut *seekBackward = new QShortcut(QKeySequence(Qt::Key_Left), this);
     connect(seekBackward, &QShortcut::activated, this, &MainWindow::seekBackward);
 
-    QShortcut *fastSeekForward = new QShortcut(QKeySequence(Qt::Key_D), this);
+    QShortcut *fastSeekForward = new QShortcut(QKeySequence(Qt::ALT + Qt::Key_Right), this);
     connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::fastSeekForward);
 
-    QShortcut *fastSeekBackward = new QShortcut(QKeySequence(Qt::Key_A), this);
+    QShortcut *fastSeekBackward = new QShortcut(QKeySequence(Qt::ALT + Qt::Key_Left), this);
     connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::fastSeekBackward);
 }
 
