@@ -24,8 +24,11 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp\
         PlaylistView.cpp\
-        PlaylistModel.cpp
+        PlaylistModel.cpp \
+        configdialog.cpp
 
-HEADERS  += mainwindow.h PlaylistView.h PlaylistModel.h
+HEADERS  += mainwindow.h PlaylistView.h PlaylistModel.h configdialog.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui configdialog.ui
+
+DISTFILES +=
