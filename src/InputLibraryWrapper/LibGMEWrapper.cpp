@@ -5,7 +5,6 @@
 #include "Common.h"
 #include "AtomicWrite.h"
 
-#include <gme.h>
 
 
 // NOTE! for this class we use Song::fileOffset as track offset (i.e. track num) for libgme
@@ -40,7 +39,7 @@ void LibGMEWrapper::open()
     return;
   }
   
-  gme_err_t msg = gme_open_file(this->Filename, &this->handle, Config::gmeSampleRate);
+  gme_err_t msg = gme_open_file(this->Filename.c_str(), &this->handle, Config::gmeSampleRate);
   if(msg)
   {
       THROW_RUNTIME_ERROR("libgme failed on file \"" << this->Filename << ")\"" << " with message " << msg);
@@ -60,7 +59,7 @@ void LibGMEWrapper::open()
   gme_set_stereo_depth( this->handle, Config::gmeEchoDepth );
   
   /* Start track and begin fade at 10 seconds */
-  gme_err_t msg = gme_start_track( this->handle, this->fileOffset );
+  msg = gme_start_track( this->handle, this->fileOffset );
   if(msg)
   {
       THROW_RUNTIME_ERROR("libgme failed to set track no. " << this->fileOffset << " for file \"" << this->Filename << "\" with message: " << msg);
@@ -68,14 +67,14 @@ void LibGMEWrapper::open()
   
   this->printWarning( this->handle );
   
-  gme_err_t msg = gme_track_info( this->handle, &this->info, this->fileOffset );
+  msg = gme_track_info( this->handle, &this->info, this->fileOffset );
   if(msg || this->info == nullptr)
   {
       THROW_RUNTIME_ERROR("libgme failed to retrieve track info for track no. " << this->fileOffset << " for file \"" << this->Filename << "\" with message: " << msg);
   }
 
-  this->filelen = this->info->length==-1 ? this->filelen : this->info->length;
-  gme_set_fade(this->handle, this->filelen);
+  this->fileLen = this->info->length==-1 ? this->fileLen : this->info->length;
+  gme_set_fade(this->handle, this->fileLen);
   
   this->Format.SampleRate = Config::gmeSampleRate;
 }
@@ -100,7 +99,7 @@ void LibGMEWrapper::fillBuffer()
         this->data = new int16_t[this->count];
     }
 
-    gme_play(this->handle, Config::FramesToRender, this->data);
+    gme_play(this->handle, Config::FramesToRender, static_cast<int16_t*>(this->data));
 }
 
 void LibGMEWrapper::releaseBuffer()

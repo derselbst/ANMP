@@ -3,6 +3,9 @@
 
 #include "Song.h"
 
+
+#include <gme.h>
+
 /**
   * class LibGMEWrapper
   *
