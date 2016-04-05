@@ -55,7 +55,7 @@ void VGMStreamWrapper::fillBuffer()
     {
         this->count = this->getFrames() * this->Format.Channels;
         this->data = new int16_t[this->count];
-        CLOG(LogLevel::DEBUG, "vgmstream allocated buffer at 0x" << this->data << endl);
+        CLOG(LogLevel::DEBUG, "vgmstream allocated buffer at " << this->data << endl);
 
         // usually this shouldnt block at all
         WAIT(this->futureFillBuffer);
