@@ -23,53 +23,76 @@ SET(LIBANMP_SRC
 ############################
 ### HANDLE CODEC SUPPORT ###
 ############################
+option(USE_LIBGME "Use libgme to support several video game emulated music formats" ON)
 option(USE_LIBMAD "Use libmad to support MPEG audio formats" ON)
 option(USE_LIBSND "Use libsndfile to support common audio formats (FLAC, WAVE, OGG, etc.)" ON)
 option(USE_LAZYUSF "Use lazyusf2 to support USF (Ultra64 Sound Format)" ON)
-option(USE_VGMSTREAM "Use vgmstream to support innombrable streamed audio formats from video games." ON)
+option(USE_VGMSTREAM "Use vgmstream to support innumerable streamed audio formats from video games." ON)
 option(USE_CUE "Use libcue to support loading cue sheets" ON)
+
+if(USE_LIBGME)
+  set (LIBGME_INSTALL_DIR "" CACHE FILEPATH "Directory where libgme is installed")
+  
+  FIND_LIBRARY(LIBGME_LIBRARIES gme ${LIBGME_INSTALL_DIR})
+  
+  if(LIBGME_LIBRARIES)
+	set (LIBGME_INCLUDE_DIR "/usr/include/gme" CACHE FILEPATH "Directory where header files for libgme are installed")
+	INCLUDE_DIRECTORIES(${LIBGME_INCLUDE_DIR})
+	
+        add_definitions(-DUSE_LIBGME)
+        set(LIBANMP_SRC ${LIBANMP_SRC} InputLibraryWrapper/LibGMEWrapper.cpp)
+        
+        set(LD_FLAGS ${LD_FLAGS} ${LIBGME_LIBRARIES})
+        
+        message("\tlibgme include dir  : ${LIBGME_INCLUDE_DIR}")
+        message("\tlibgme libraries    : ${LIBGME_LIBRARIES}")
+  else(LIBGME_LIBRARIES)
+        message(SEND_ERROR "libgme not found. Define LIBGME_INSTALL_DIR or turn USE_LIBGME off.")
+  endif(LIBGME_LIBRARIES)
+endif(USE_LIBGME)
+
 
 if(USE_LIBMAD)
   set (LIBMAD_INSTALL_DIR "" CACHE FILEPATH "Directory where libmad is installed")
   
-  FIND_LIBRARY(LIBMADFILE_LIBRARIES mad ${LIBMAD_INSTALL_DIR})
+  FIND_LIBRARY(LIBMAD_LIBRARIES mad ${LIBMAD_INSTALL_DIR})
   
-  if(LIBMADFILE_LIBRARIES)
+  if(LIBMAD_LIBRARIES)
 	set (LIBMADFILE_INCLUDE_DIR "/usr/include" CACHE FILEPATH "Directory where header files for libmad are installed")
 	INCLUDE_DIRECTORIES(${LIBMADFILE_INCLUDE_DIR})
 	
         add_definitions(-DUSE_LIBMAD)
         set(LIBANMP_SRC ${LIBANMP_SRC} InputLibraryWrapper/LibMadWrapper.cpp)
         
-        set(LD_FLAGS ${LD_FLAGS} ${LIBMADFILE_LIBRARIES})
+        set(LD_FLAGS ${LD_FLAGS} ${LIBMAD_LIBRARIES})
         
         message("\tlibmad include dir  : ${LIBMADFILE_INCLUDE_DIR}")
-        message("\tlibmad libraries    : ${LIBMADFILE_LIBRARIES}")
-  else(LIBMADFILE_LIBRARIES)
+        message("\tlibmad libraries    : ${LIBMAD_LIBRARIES}")
+  else(LIBMAD_LIBRARIES)
         message(SEND_ERROR "libmad not found. Define LIBMAD_INSTALL_DIR or turn USE_LIBMAD off.")
-  endif(LIBMADFILE_LIBRARIES)
+  endif(LIBMAD_LIBRARIES)
 endif(USE_LIBMAD)
 
 
 if(USE_LIBSND)
   set (LIBSND_INSTALL_DIR "" CACHE FILEPATH "Directory where libsndfile is installed")
   
-  FIND_LIBRARY(LIBSNDFILE_LIBRARIES sndfile ${LIBSND_INSTALL_DIR})
+  FIND_LIBRARY(LIBSND_LIBRARIES sndfile ${LIBSND_INSTALL_DIR})
   
-  if(LIBSNDFILE_LIBRARIES)
+  if(LIBSND_LIBRARIES)
 	set (LIBSNDFILE_INCLUDE_DIR "/usr/include" CACHE FILEPATH "Directory where header files for libsndfile are installed")
 	INCLUDE_DIRECTORIES(${LIBSNDFILE_INCLUDE_DIR})
 	
         add_definitions(-DUSE_LIBSND)
         set(LIBANMP_SRC ${LIBANMP_SRC} InputLibraryWrapper/LibSNDWrapper.cpp)
         
-        set(LD_FLAGS ${LD_FLAGS} ${LIBSNDFILE_LIBRARIES})
+        set(LD_FLAGS ${LD_FLAGS} ${LIBSND_LIBRARIES})
         
         message("\tLibSND include dir  : ${LIBSNDFILE_INCLUDE_DIR}")
-        message("\tLibSND libraries    : ${LIBSNDFILE_LIBRARIES}")
-  else(LIBSNDFILE_LIBRARIES)
+        message("\tLibSND libraries    : ${LIBSND_LIBRARIES}")
+  else(LIBSND_LIBRARIES)
         message(SEND_ERROR "libsndfile not found. Define LIBSND_INSTALL_DIR or turn USE_LIBSND off.")
-  endif(LIBSNDFILE_LIBRARIES)
+  endif(LIBSND_LIBRARIES)
 endif(USE_LIBSND)
 
 
