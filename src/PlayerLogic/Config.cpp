@@ -50,3 +50,15 @@ unsigned int fadeTimePause = 3500;
 // whether to use High-Level-Emulation or not
 // true: speed up emulation at the cost of accuracy and potential emulation bugs
 bool Config::useHle = false;
+
+//**********************************
+//    LIBGME-SPECIFIC SECTION      *
+//**********************************
+
+unsigned int Config::gmeSampleRate = 48000;
+
+bool Config::gmeAccurateEmulation = true;
+
+/* Adjust stereo echo depth, where 0.0 = off and 1.0 = maximum. Has no effect for
+GYM, SPC, and Sega Genesis VGM music */
+float Config::gmeEchoDepth = 0.2;
