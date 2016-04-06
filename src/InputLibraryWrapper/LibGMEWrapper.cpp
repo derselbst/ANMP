@@ -73,6 +73,7 @@ void LibGMEWrapper::open()
       THROW_RUNTIME_ERROR("libgme failed to retrieve track info for track no. " << this->fileOffset << " for file \"" << this->Filename << "\" with message: " << msg);
   }
 
+  // TODO implement playforever
   this->fileLen = this->info->length==-1 ? this->fileLen : this->info->length;
   gme_set_fade(this->handle, this->fileLen);
   
@@ -168,14 +169,14 @@ void LibGMEWrapper::releaseBuffer()
 
 frame_t LibGMEWrapper::getFrames () const
 {
-    return msToFrames(this->fileLen, this->Format.SampleRate);
+    return Config::gmePlayForever ? msToFrames(-1, this->Format.SampleRate) : msToFrames(this->fileLen, this->Format.SampleRate);
 }
 
 vector<loop_t> LibGMEWrapper::getLoopArray () const
 {
     vector<loop_t> res;
 
-    if(this->wholeSong())
+    if(this->wholeSong() && this->info->intro_length!=-1 && this->info->loop_length!=-1)
     {
 	loop_t l;
 	l.start = msToFrames(this->info->intro_length, this->Format.SampleRate);
@@ -189,5 +190,5 @@ vector<loop_t> LibGMEWrapper::getLoopArray () const
 // true if we can hold the whole song in memory
 bool LibGMEWrapper::wholeSong() const
 {
-    return true;
+    return !Config::gmePlayForever;
 }

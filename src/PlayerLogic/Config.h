@@ -35,6 +35,7 @@ struct Config
     static bool gmeAccurateEmulation;
     static unsigned int gmeSampleRate;
     static float gmeEchoDepth;
+    static bool gmePlayForever;
 
 };
 
