@@ -17,7 +17,7 @@
 #include <string.h> // strerror
 
 
-LibMadWrapper::LibMadWrapper (string filename, size_t fileOffset, size_t fileLen) : Song(filename, fileOffset, fileLen)
+LibMadWrapper::LibMadWrapper (string filename, size_t fileOffset, size_t fileLen) : StandardWrapper(filename, fileOffset, fileLen)
 {
     this->Format.SampleFormat = SampleFormat_t::int16;
 }
@@ -140,23 +140,10 @@ void LibMadWrapper::close()
 
 void LibMadWrapper::fillBuffer()
 {
-    if(this->data==nullptr)
-    {
-        this->count = this->getFrames() * this->Format.Channels;
-        this->data = new int16_t[this->count];
-
-        // usually this shouldnt block at all
-        WAIT(this->futureFillBuffer);
-
-        // immediatly start filling the pcm buffer
-        this->futureFillBuffer = async(launch::async, &LibMadWrapper::asyncFillBuffer, this);
-
-        // give libmad at least a minor headstart
-        this_thread::sleep_for (chrono::milliseconds(1));
-    }
+    StandardWrapper<int16_t>::fillBuffer(this);
 }
 
-void LibMadWrapper::asyncFillBuffer()
+void LibMadWrapper::render(frame_t framesToRender)
 {
     struct mad_frame frame;
     struct mad_synth synth;
@@ -226,14 +213,7 @@ void LibMadWrapper::asyncFillBuffer()
 
 void LibMadWrapper::releaseBuffer()
 {
-    this->stopFillBuffer=true;
-    WAIT(this->futureFillBuffer);
-
-    delete [] static_cast<int16_t*>(this->data);
-    this->data=nullptr;
-    this->count = 0;
-
-    this->stopFillBuffer=false;
+    StandardWrapper<int16_t>::releaseBuffer();
 }
 
 vector<loop_t> LibMadWrapper::getLoopArray () const

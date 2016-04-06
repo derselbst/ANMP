@@ -1,7 +1,7 @@
 #ifndef VGMSTREAMWRAPPER_H
 #define VGMSTREAMWRAPPER_H
 
-#include "Song.h"
+#include "StandardWrapper.h"
 
 extern "C"
 {
@@ -15,7 +15,7 @@ extern "C"
   *
   */
 
-class VGMStreamWrapper : public Song
+class VGMStreamWrapper : public StandardWrapper<int16_t>
 {
 public:
 
@@ -59,15 +59,11 @@ public:
      */
     frame_t getFrames () const override;
 
+  void render(frame_t framesToRender=0) override;
+    
 private:
   VGMSTREAM * handle=nullptr;
   
-  future<void> futureFillBuffer;
-  // a flag that indicates a prematurely abort of async buffer fill
-  bool stopFillBuffer = false;
-
-  frame_t framesAlreadyRendered=0;
-  void render(frame_t framesToRender=0);
 
 };
 

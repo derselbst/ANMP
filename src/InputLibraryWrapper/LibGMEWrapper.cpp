@@ -8,7 +8,7 @@
 
 
 // NOTE! for this class we use Song::fileOffset as track offset (i.e. track num) for libgme
-LibGMEWrapper::LibGMEWrapper(string filename, size_t offset, size_t len) : Song(filename, offset, len)
+LibGMEWrapper::LibGMEWrapper(string filename, size_t offset, size_t len) : StandardWrapper(filename, offset, len)
 {
     this->Format.SampleFormat = SampleFormat_t::int16;
 
@@ -96,23 +96,7 @@ void LibGMEWrapper::fillBuffer()
 {
     if(this->wholeSong())
     {
-        if(this->data==nullptr)
-        {
-            this->count = this->getFrames() * this->Format.Channels;
-            this->data = new int16_t[this->count];
-
-            // usually this shouldnt block at all
-            WAIT(this->futureFillBuffer);
-            
-            // (pre-)render the first few milliseconds
-            this->render(msToFrames(Config::PreRenderTime, this->Format.SampleRate));
-
-            // immediatly start filling the pcm buffer
-            this->futureFillBuffer = async(launch::async, &LibGMEWrapper::render, this, 0);
-
-            // allow the render thread to do his work
-            this_thread::yield();
-        }
+            StandardWrapper<int16_t>::fillBuffer(this);
     }
     else
     {
@@ -127,44 +111,12 @@ void LibGMEWrapper::fillBuffer()
 
 void LibGMEWrapper::render(frame_t framesToRender)
 {
-    if(framesToRender==0)
-    {
-        // render rest of file
-        framesToRender = this->getFrames()-this->framesAlreadyRendered;
-    }
-    else
-    {
-        framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);
-    }
-
-    int16_t* pcm = static_cast<int16_t*>(this->data);
-    pcm += this->framesAlreadyRendered * this->Format.Channels;
-
-    int framesToDoNow;
-    while(framesToRender>0 && !this->stopFillBuffer)
-    {
-        framesToDoNow = (framesToRender/Config::FramesToRender)>0 ? Config::FramesToRender : framesToRender%Config::FramesToRender;
-
-        gme_play(this->handle, framesToDoNow * this->Format.Channels, pcm);
-        
-        pcm += framesToDoNow * this->Format.Channels;
-        this->framesAlreadyRendered += framesToDoNow;
-
-        framesToRender -= framesToDoNow;
-    }
+    STANDARDWRAPPER_RENDER(int16_t, gme_play(this->handle, framesToDoNow * this->Format.Channels, pcm))
 }
 
 void LibGMEWrapper::releaseBuffer()
 {
-    this->stopFillBuffer=true;
-    WAIT(this->futureFillBuffer);
-
-    delete [] static_cast<int16_t*>(this->data);
-    this->data=nullptr;
-    this->count = 0;
-    this->framesAlreadyRendered=0;
-
-    this->stopFillBuffer=false;
+    StandardWrapper<int16_t>::releaseBuffer();
 }
 
 frame_t LibGMEWrapper::getFrames () const

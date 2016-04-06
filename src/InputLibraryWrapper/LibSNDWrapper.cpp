@@ -10,7 +10,7 @@
 #include <chrono>
 
 
-LibSNDWrapper::LibSNDWrapper (string filename, size_t fileOffset, size_t fileLen) : Song(filename, fileOffset, fileLen)
+LibSNDWrapper::LibSNDWrapper (string filename, size_t fileOffset, size_t fileLen) : StandardWrapper(filename, fileOffset, fileLen)
 {
     this->Format.SampleFormat = SampleFormat_t::float32;
     memset (&sfinfo, 0, sizeof (sfinfo)) ;
@@ -60,56 +60,19 @@ void LibSNDWrapper::fillBuffer()
 {
     if(this->data==nullptr)
     {
-        this->count = this->getFrames() * this->Format.Channels;
-        this->data = new float[this->count];
-
-        // usually this shouldnt block at all
-        WAIT(this->futureFillBuffer);
-
-        // immediatly start filling the pcm buffer
-        this->futureFillBuffer = async(launch::async, &LibSNDWrapper::asyncFillBuffer, this);
-
-        // give libsnd at least a minor headstart
-        this_thread::sleep_for (chrono::milliseconds(1));
+        sf_seek(this->sndfile, msToFrames(this->fileOffset, this->Format.SampleRate), SEEK_SET);
+        StandardWrapper<float>::fillBuffer(this);
     }
 }
 
-void LibSNDWrapper::asyncFillBuffer()
+void LibSNDWrapper::render(frame_t framesToRender)
 {
-    sf_seek(this->sndfile, msToFrames(this->fileOffset, this->Format.SampleRate), SEEK_SET);
-
-    int readcount=0;
-    unsigned int itemsToRender = Config::FramesToRender*this->Format.Channels;
-
-    int fullFillCount = this->count/itemsToRender;
-    for(int i = 0; i<fullFillCount && !this->stopFillBuffer; i++)
-    {
-        readcount += sf_read_float(this->sndfile, static_cast<float*>(this->data)+i*itemsToRender, itemsToRender);
-    }
-
-    if(!this->stopFillBuffer)
-    {
-        unsigned int lastItemsToRender = this->count % itemsToRender;
-        readcount += sf_read_float(this->sndfile, static_cast<float*>(this->data)+fullFillCount*itemsToRender, lastItemsToRender);
-
-        if(readcount != this->count)
-	{
-        CLOG(LogLevel::ERROR, "THIS SHOULD NEVER HAPPEN: only read " << readcount/sfinfo.channels << " frames, although there are " << sfinfo.frames << " frames in the file\n");
-	}
-        //         this->count = readcount;
-    }
+    STANDARDWRAPPER_RENDER(float, sf_read_float(this->sndfile, pcm, framesToDoNow*this->Format.Channels))
 }
 
 void LibSNDWrapper::releaseBuffer()
 {
-    this->stopFillBuffer=true;
-    WAIT(this->futureFillBuffer);
-
-    delete [] static_cast<float*>(this->data);
-    this->data=nullptr;
-    this->count = 0;
-
-    this->stopFillBuffer=false;
+    StandardWrapper<float>::releaseBuffer();
 }
 
 vector<loop_t> LibSNDWrapper::getLoopArray () const

@@ -1,7 +1,7 @@
 #ifndef LIBMADWRAPPER_H
 #define LIBMADWRAPPER_H
 
-#include "Song.h"
+#include "StandardWrapper.h"
 
 #include <mad.h>
 #include <future>
@@ -12,7 +12,7 @@
   *
   */
 
-class LibMadWrapper : public Song
+class LibMadWrapper : public StandardWrapper<int16_t>
 {
 public:
 
@@ -65,6 +65,8 @@ public:
      */
     frame_t getFrames () const override;
 
+    void render(frame_t framesToRender) override;
+
 private:
     FILE* infile = nullptr;
     unsigned char * mpegbuf = nullptr;
@@ -73,16 +75,9 @@ private:
 
     frame_t numFrames=0;
 
-
-    future<void> futureFillBuffer;
-    // a flag that indicates a prematurely abort of async buffer fill
-    bool stopFillBuffer = false;
-
     static enum mad_flow madCallbackInput();
     static enum mad_flow madCallbackOutput();
     static signed int toInt16Sample(mad_fixed_t sample);
-
-    void asyncFillBuffer();
 
 };
 

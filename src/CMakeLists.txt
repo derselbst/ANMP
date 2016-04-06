@@ -14,6 +14,7 @@ SET(LIBANMP_SRC
        Common/Common.cpp
        Common/PlaylistFactory.cpp
        InputLibraryWrapper/Song.cpp
+       InputLibraryWrapper/StandardWrapper.cpp
        InputLibraryWrapper/SongFormat.cpp       
        PlayerLogic/Config.cpp
        PlayerLogic/Player.cpp

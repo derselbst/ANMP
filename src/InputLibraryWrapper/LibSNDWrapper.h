@@ -1,7 +1,7 @@
 #ifndef LIBSNDWRAPPER_H
 #define LIBSNDWRAPPER_H
 
-#include "Song.h"
+#include "StandardWrapper.h"
 
 #include <sndfile.h>
 #include <future>
@@ -12,7 +12,7 @@
   *
   */
 
-class LibSNDWrapper : public Song
+class LibSNDWrapper : public StandardWrapper<float>
 {
 public:
 
@@ -65,16 +65,10 @@ public:
      */
     frame_t getFrames () const override;
 
+    void render(frame_t framesToRender) override;
 private:
     SNDFILE* sndfile = nullptr;
     SF_INFO sfinfo;
-
-    future<void> futureFillBuffer;
-    // a flag that indicates a prematurely abort of async buffer fill
-    bool stopFillBuffer = false;
-
-    void asyncFillBuffer();
-
 };
 
 #endif // LIBSNDWRAPPER_H

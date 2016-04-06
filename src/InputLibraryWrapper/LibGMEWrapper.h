@@ -1,7 +1,7 @@
 #ifndef LIBGMEWRAPPER_H
 #define LIBGMEWRAPPER_H
 
-#include "Song.h"
+#include "StandardWrapper.h"
 
 #include <future>
 #include <gme.h>
@@ -10,7 +10,7 @@
   * class LibGMEWrapper
   *
   */
-class LibGMEWrapper : public Song
+class LibGMEWrapper : public StandardWrapper<int16_t>
 {
 public:
 
@@ -52,22 +52,16 @@ public:
     
     vector<loop_t> getLoopArray () const override;
 
+    void render(frame_t framesToRender) override;
 private:
     // length in ms to fade
     unsigned long fade_ms = 0;
 
     Music_Emu * handle = nullptr;
     gme_info_t* info = nullptr;
-    
-    future<void> futureFillBuffer;
-    // a flag that indicates a prematurely abort of async buffer fill
-    bool stopFillBuffer = false;
-
-    frame_t framesAlreadyRendered=0;
 
     static void printWarning( Music_Emu* emu );
-    
-    void render(frame_t framesToRender=0);
+
     bool wholeSong() const;
 
 
