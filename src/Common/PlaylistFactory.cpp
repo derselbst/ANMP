@@ -166,7 +166,10 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size
 #ifdef USE_VGMSTREAM
       TRY_WITH(VGMStreamWrapper)
 #endif
-      
+
+// !!! libmad always has to be last !!!
+// libmad eats up every garbage of binary (= non MPEG audio shit)
+// thus always make sure libmad is the very last try to read any audio file
 #ifdef USE_LIBMAD
       l_LIBMAD:
       TRY_WITH(LibMadWrapper)
