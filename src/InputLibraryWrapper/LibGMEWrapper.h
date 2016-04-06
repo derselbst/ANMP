@@ -49,6 +49,8 @@ public:
      * @return unsigned int
      */
     frame_t getFrames () const override;
+    
+    vector<loop_t> getLoopArray () const override;
 
 private:
     // length in ms to fade
