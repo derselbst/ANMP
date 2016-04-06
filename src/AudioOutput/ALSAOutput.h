@@ -35,6 +35,8 @@ public:
 
     int write (int16_t* buffer, frame_t frames) override;
 
+    template<typename T> int write(T* buffer, frame_t frames);
+    
     void setVolume(uint8_t) override;
 
     void start () override;
@@ -42,6 +44,7 @@ public:
 
 private:
 
+    static int epipe_count = 0;
     snd_pcm_t* alsa_dev = nullptr;
 
     void drain ();
