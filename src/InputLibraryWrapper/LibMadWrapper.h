@@ -74,9 +74,6 @@ private:
     struct mad_stream stream;
 
     frame_t numFrames=0;
-
-    static enum mad_flow madCallbackInput();
-    static enum mad_flow madCallbackOutput();
     static signed int toInt16Sample(mad_fixed_t sample);
 
 };
