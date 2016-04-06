@@ -18,7 +18,6 @@
 #include     <sys/soundcard.h>
 #endif
 
-
 ALSAOutput::ALSAOutput ()
 {
 }

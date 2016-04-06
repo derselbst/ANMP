@@ -42,7 +42,7 @@ public:
 
 private:
 
-    static int epipe_count = 0;
+    int epipe_count = 0;
     snd_pcm_t* alsa_dev = nullptr;
 
     template<typename T> int write(T* buffer, frame_t frames);
