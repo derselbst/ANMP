@@ -99,7 +99,7 @@ void LibGMEWrapper::fillBuffer()
         if(this->data==nullptr)
         {
             this->count = this->getFrames() * this->Format.Channels;
-            this->data = new float[this->count];
+            this->data = new int16_t[this->count];
 
             // usually this shouldnt block at all
             WAIT(this->futureFillBuffer);
