@@ -3,7 +3,7 @@
 
 #include "Song.h"
 
-
+#include <future>
 #include <gme.h>
 
 /**
@@ -59,7 +59,16 @@ private:
     Music_Emu * handle = nullptr;
     gme_info_t* info = nullptr;
     
+    future<void> futureFillBuffer;
+    // a flag that indicates a prematurely abort of async buffer fill
+    bool stopFillBuffer = false;
+
+    frame_t framesAlreadyRendered=0;
+
     static void printWarning( Music_Emu* emu );
+    
+    void render(frame_t framesToRender=0);
+    bool wholeSong() const;
 
 
 };

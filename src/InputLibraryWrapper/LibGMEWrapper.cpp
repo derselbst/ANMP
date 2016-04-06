@@ -93,20 +93,77 @@ void LibGMEWrapper::close()
 
 void LibGMEWrapper::fillBuffer()
 {
-    if(this->data==nullptr)
+    if(this->wholeSong())
     {
-        this->count = Config::FramesToRender*this->Format.Channels;
-        this->data = new int16_t[this->count];
+        if(this->data==nullptr)
+        {
+            this->count = this->getFrames() * this->Format.Channels;
+            this->data = new float[this->count];
+
+            // usually this shouldnt block at all
+            WAIT(this->futureFillBuffer);
+            
+            // (pre-)render the first few milliseconds
+            this->render(msToFrames(Config::PreRenderTime, this->Format.SampleRate));
+
+            // immediatly start filling the pcm buffer
+            this->futureFillBuffer = async(launch::async, &LibGMEWrapper::render, this, 0);
+
+            // allow the render thread to do his work
+            this_thread::yield();
+        }
+    }
+    else
+    {
+        if(this->data==nullptr)
+        {
+            this->count = Config::FramesToRender*this->Format.Channels;
+            this->data = new int16_t[this->count];
+        }
+        gme_play(this->handle, Config::FramesToRender, static_cast<int16_t*>(this->data));
+    }
+}
+
+void LibGMEWrapper::render(frame_t framesToRender)
+{
+    if(framesToRender==0)
+    {
+        // render rest of file
+        framesToRender = this->getFrames()-this->framesAlreadyRendered;
+    }
+    else
+    {
+        framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);
     }
 
-    gme_play(this->handle, Config::FramesToRender, static_cast<int16_t*>(this->data));
+    int16_t* pcm = static_cast<int16_t*>(this->data);
+    pcm += this->framesAlreadyRendered * this->Format.Channels;
+
+    int framesToDoNow;
+    while(framesToRender>0 && !this->stopFillBuffer)
+    {
+        framesToDoNow = (framesToRender/Config::FramesToRender)>0 ? Config::FramesToRender : framesToRender%Config::FramesToRender;
+
+        gme_play(this->handle, framesToDoNow * this->Format.Channels, pcm);
+        
+        pcm += framesToDoNow * this->Format.Channels;
+        this->framesAlreadyRendered += framesToDoNow;
+
+        framesToRender -= framesToDoNow;
+    }
 }
 
 void LibGMEWrapper::releaseBuffer()
 {
+    this->stopFillBuffer=true;
+    WAIT(this->futureFillBuffer);
+
     delete [] static_cast<int16_t*>(this->data);
     this->data=nullptr;
     this->count = 0;
+    this->framesAlreadyRendered=0;
+
+    this->stopFillBuffer=false;
 }
 
 frame_t LibGMEWrapper::getFrames () const
@@ -118,11 +175,19 @@ vector<loop_t> LibGMEWrapper::getLoopArray () const
 {
     vector<loop_t> res;
 
+    if(this->wholeSong())
+    {
 	loop_t l;
 	l.start = msToFrames(this->info->intro_length, this->Format.SampleRate);
 	l.stop  = msToFrames(this->info->intro_length + this->info->loop_length, this->Format.SampleRate);
 	l.count = 2;
 	res.push_back(l);
-	
+    }
     return res;
+}
+
+// true if we can hold the whole song in memory
+bool LibGMEWrapper::wholeSong() const
+{
+    return true;
 }
