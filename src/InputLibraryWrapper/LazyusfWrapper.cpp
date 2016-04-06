@@ -141,9 +141,9 @@ int LazyusfWrapper::usf_info(void * context, const char * name, const char * val
     LazyusfWrapper* infoContext = reinterpret_cast<LazyusfWrapper*>(context);
 
     if (iEquals(name, "length"))
-        infoContext->fileLen += parse_time_crap(value);
+        infoContext->fileLen = parse_time_crap(value);
     else if (iEquals(name, "fade"))
-        infoContext->fade_ms += parse_time_crap(value);
+        infoContext->fade_ms = parse_time_crap(value);
     else if (iEquals(name, "_enablecompare") && *value)
         infoContext->enable_compare = 1;
     else if (iEquals(name, "_enablefifofull") && *value)
