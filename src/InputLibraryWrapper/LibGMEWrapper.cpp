@@ -99,7 +99,7 @@ void LibGMEWrapper::fillBuffer()
         this->data = new int16_t[this->count];
     }
 
-    gme_play(this->handle, Config::FramesToRender, static_cast<int16_t*>(this->data));
+    gme_play(this->handle, this->count, static_cast<int16_t*>(this->data));
 }
 
 void LibGMEWrapper::releaseBuffer()

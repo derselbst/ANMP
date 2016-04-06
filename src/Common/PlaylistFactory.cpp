@@ -15,6 +15,10 @@
 #include "LibMadWrapper.h"
 #endif
 
+#ifdef USE_LIBGME
+#include "LibGMEWrapper.h"
+#endif
+
 #ifdef USE_VGMSTREAM
 #include "VGMStreamWrapper.h"
 #endif
@@ -151,6 +155,26 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size
 //     }
     }
 #endif
+#ifdef USE_LIBGME
+    else if((iEquals(ext, "gbs") || iEquals(ext, "nsf")) && offset == 0 && len == 0)
+    {
+        Music_Emu * emu=nullptr;
+        gme_err_t msg = gme_open_file(filePath.c_str(), &emu, gme_info_only);
+	if(msg || emu == nullptr)
+	{
+	    return pcm;
+	}
+
+	int trackCount = gme_track_count(emu);
+      
+        gme_delete(emu);
+	
+	for(int i=0; i<trackCount; i++)
+	{
+	  PlaylistFactory::addSong(playlist, filePath, i, 3*60*1000);
+	}
+    }
+#endif
 #ifdef USE_LIBMAD
     else if(iEquals(ext, "mp3"))
     {
@@ -170,6 +194,10 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size
 #ifdef USE_LIBMAD
       l_LIBMAD:
       TRY_WITH(LibMadWrapper)
+#endif
+      
+#ifdef USE_LIBGME
+      TRY_WITH(LibGMEWrapper)
 #endif
     }
 
