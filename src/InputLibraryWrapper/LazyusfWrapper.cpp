@@ -55,11 +55,14 @@ void LazyusfWrapper::open()
         usf_set_hle_audio(this->usfHandle, 1);
     }
 
-    // obtain samplerate
-    int32_t srate;
-    usf_render(this->usfHandle, 0, 0, &srate);
-    // TODO: UGLY CAST AHEAD!
-    this->Format.SampleRate = static_cast<unsigned int>(srate);
+    if(this->Format.SampleRate == 0)
+    {
+	// obtain samplerate
+	int32_t srate;
+	usf_render(this->usfHandle, 0, 0, &srate);
+	// TODO: UGLY CAST AHEAD!
+	this->Format.SampleRate = static_cast<unsigned int>(srate);
+    }
 }
 
 void LazyusfWrapper::close()
@@ -93,7 +96,7 @@ void LazyusfWrapper::releaseBuffer()
 
 frame_t LazyusfWrapper::getFrames () const
 {
-    return msToFrames(fileLen, this->Format.SampleRate);
+    return msToFrames(this->fileLen, this->Format.SampleRate);
 }
 
 
