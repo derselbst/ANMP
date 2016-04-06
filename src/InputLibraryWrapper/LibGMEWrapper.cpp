@@ -113,3 +113,16 @@ frame_t LibGMEWrapper::getFrames () const
 {
     return msToFrames(this->fileLen, this->Format.SampleRate);
 }
+
+vector<loop_t> LibGMEWrapper::getLoopArray () const
+{
+    vector<loop_t> res;
+
+	loop_t l;
+	l.start = msToFrames(this->info->intro_length, this->Format.SampleRate);
+	l.stop  = msToFrames(this->info->intro_length + this->info->loop_length, this->Format.SampleRate);
+	l.count = 2;
+	res.push_back(l);
+	
+    return res;
+}
