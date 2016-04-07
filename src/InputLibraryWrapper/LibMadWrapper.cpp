@@ -145,6 +145,12 @@ void LibMadWrapper::fillBuffer()
 
 void LibMadWrapper::render(frame_t framesToRender)
 {
+  // TODO per frame rendering not yet supported
+  if(framesToRender!=0)
+  {
+    return;
+  }
+  
     struct mad_frame frame;
     struct mad_synth synth;
 
