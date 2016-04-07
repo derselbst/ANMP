@@ -12,12 +12,14 @@ using namespace std;
 
 struct SongInfo
 {
+    string Track;
     string Title;
     string Artist;
     string Album;
     string Composer;
     string Year;
     string Genre;
+    string Comment;
 };
 
 #endif // SONGINFO_H

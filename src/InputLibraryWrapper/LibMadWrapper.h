@@ -60,6 +60,8 @@ public:
 
     void render(frame_t framesToRender) override;
 
+    void buildMetadata() override;
+
 private:
     FILE* infile = nullptr;
     unsigned char * mpegbuf = nullptr;

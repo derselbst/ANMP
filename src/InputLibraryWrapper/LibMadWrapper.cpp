@@ -186,7 +186,8 @@ void LibMadWrapper::render(frame_t framesToRender)
         left_ch   = pcm->samples[0];
         right_ch  = pcm->samples[1];
 
-        while (!this->stopFillBuffer && nsamples--) {
+        while (!this->stopFillBuffer && nsamples--)
+	{
             signed int sample;
 
             /* output sample(s) in 16-bit signed little-endian PCM */
@@ -226,6 +227,12 @@ void LibMadWrapper::releaseBuffer()
 frame_t LibMadWrapper::getFrames () const
 {
     return this->numFrames;
+}
+
+void LibMadWrapper::buildMetadata()
+{
+  // TODO we have to find ID3 tag in the mpeg file, but this should be done while trying decoding mpeg-frame-headers
+  // whenever libmad returns lost_sync error, there might be a id3 tag
 }
 
 /* FROM minimad.c

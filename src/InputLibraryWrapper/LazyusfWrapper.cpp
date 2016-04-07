@@ -142,12 +142,38 @@ int LazyusfWrapper::usf_info(void * context, const char * name, const char * val
 
     if (iEquals(name, "length"))
         infoContext->fileLen = parse_time_crap(value);
+    
     else if (iEquals(name, "fade"))
         infoContext->fade_ms = parse_time_crap(value);
+    
+    else if (iEquals(name, "title"))
+        this->Metadata.Title = string(value);
+    
+    else if (iEquals(name, "artist"))
+        this->Metadata.Artist = this->Metadata.Composer = string(value);
+    
+    else if (iEquals(name, "game"))
+        this->Metadata.Album = string(value);
+    
+    else if (iEquals(name, "year"))
+        this->Metadata.Year = string(value);
+    
+    else if (iEquals(name, "genre"))
+        this->Metadata.Genre = string(value);
+    
+    else if (iEquals(name, "track"))
+        this->Metadata.Track = string(value);
+    
+    else if (iEquals(name, "comment"))
+        this->Metadata.Comment = string(value);
+    
     else if (iEquals(name, "_enablecompare") && *value)
         infoContext->enable_compare = 1;
+    
     else if (iEquals(name, "_enablefifofull") && *value)
         infoContext->enable_fifo_full = 1;
+    
+    // TODO some usf files have "volume" information, figure out how to use them (e.g. DonkeyKong64 - s30 Baboon Balloon.miniusf)
 
     return 0;
 }

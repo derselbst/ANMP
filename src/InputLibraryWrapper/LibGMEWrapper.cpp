@@ -5,6 +5,8 @@
 #include "Common.h"
 #include "AtomicWrite.h"
 
+#include <iomanip>
+
 
 
 // NOTE! for this class we use Song::fileOffset as track offset (i.e. track num) for libgme
@@ -137,6 +139,20 @@ vector<loop_t> LibGMEWrapper::getLoopArray () const
 	res.push_back(l);
     }
     return res;
+}
+
+void LibGMEWrapper::buildMetadata()
+{
+    this->Metadata.Title = string(this->info->song);
+    this->Metadata.Artist = this->Metadata.Composer = string(this->info->author);
+    this->Metadata.Album = string(this->info->game);
+    this->Metadata.Year = string(this->info->copyright);
+    this->Metadata.Genre = "Videogame";
+    this->Metadata.Comment = string(this->info->comment);
+    
+    stringstream ss;
+    ss << setw(3) << setfill('0') << this->fileOffset;
+    this->Metadata.Track = ss.str();
 }
 
 // true if we can hold the whole song in memory

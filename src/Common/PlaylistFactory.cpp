@@ -211,6 +211,7 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size
     }
 
     pcm->buildLoopTree();
+    pcm->buildMetadata();
 
     pcm->close();
 

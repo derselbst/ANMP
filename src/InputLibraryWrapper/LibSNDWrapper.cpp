@@ -126,3 +126,16 @@ frame_t LibSNDWrapper::getFrames () const
 
     return totalFrames;
 }
+
+void LibSNDWrapper::buildMetadata()
+{
+  #define READ_METADATA(name, id) if(sf_get_string(this->sndfile, id) != nullptr) name = string(sf_get_string(this->sndfile, id))
+
+  		READ_METADATA (this->Metadata.Title, SF_STR_TITLE);
+		READ_METADATA (this->Metadata.Artist, SF_STR_ARTIST);
+		READ_METADATA (this->Metadata.Year, SF_STR_DATE);
+		READ_METADATA (this->Metadata.Album, SF_STR_ALBUM);
+		READ_METADATA (this->Metadata.Genre, SF_STR_GENRE);
+		READ_METADATA (this->Metadata.Track, SF_STR_TRACKNUMBER);
+		READ_METADATA (this->Metadata.Comment, SF_STR_COMMENT);
+}

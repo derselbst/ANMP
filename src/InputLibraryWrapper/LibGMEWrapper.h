@@ -53,6 +53,9 @@ public:
     vector<loop_t> getLoopArray () const override;
 
     void render(frame_t framesToRender) override;
+    
+    void buildMetadata() override;
+
 private:
     // length in ms to fade
     unsigned long fade_ms = 0;

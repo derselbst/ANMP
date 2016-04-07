@@ -110,3 +110,8 @@ frame_t VGMStreamWrapper::getFrames() const
     }
     return this->handle->num_samples;
 }
+
+void VGMStreamWrapper::buildMetadata()
+{
+  // as of 07-04-2016 vgmstream doesnt seem to provide any useable metadata, so we cant do anything here
+}

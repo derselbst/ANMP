@@ -47,6 +47,8 @@ public:
      */
     frame_t getFrames () const override;
 
+    void buildMetadata() override;
+
 private:
     // set by usf_info
     unsigned int enable_compare = 0;

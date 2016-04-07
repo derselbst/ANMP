@@ -66,6 +66,8 @@ public:
     frame_t getFrames () const override;
 
     void render(frame_t framesToRender) override;
+
+    void buildMetadata() override;
 private:
     SNDFILE* sndfile = nullptr;
     SF_INFO sfinfo;

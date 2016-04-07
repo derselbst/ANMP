@@ -128,6 +128,17 @@ public:
      */
     virtual void releaseBuffer () = 0;
 
+    /**
+     * frees all ressources acquires by this->fillBuffer()
+     */
+    virtual void buildMetadata () = 0;
+
+
+    /**
+     * @return vector
+     */
+    virtual vector<loop_t> getLoopArray () const;
+
 
     /**
      * @return vector
@@ -142,13 +153,6 @@ public:
     virtual frame_t getFrames () const = 0;
 
 private:
-
-    /**
-     * @return vector
-     */
-    virtual vector<loop_t> getLoopArray () const;
-
-
     static bool myLoopSort(loop_t i,loop_t j);
     static bool loopsMatch(const loop_t& parent, const loop_t& child);
     static core::tree<loop_t>& findRootLoopNode(core::tree<loop_t>& loopTree, const loop_t& subLoop);
