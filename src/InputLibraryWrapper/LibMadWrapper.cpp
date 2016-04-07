@@ -216,12 +216,6 @@ void LibMadWrapper::releaseBuffer()
     StandardWrapper<int16_t>::releaseBuffer();
 }
 
-vector<loop_t> LibMadWrapper::getLoopArray () const
-{
-    vector<loop_t> res;
-
-    return res;
-}
 
 frame_t LibMadWrapper::getFrames () const
 {

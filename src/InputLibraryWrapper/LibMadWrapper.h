@@ -52,13 +52,6 @@ public:
      */
     void releaseBuffer () override;
 
-
-    /**
-     * @return vector
-     */
-    vector<loop_t> getLoopArray () const override;
-
-
     /**
      * returns number of frames this song lasts, they dont necessarily have to be in the pcm buffer at one time
      * @return unsigned int
