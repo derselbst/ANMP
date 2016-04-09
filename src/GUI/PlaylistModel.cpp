@@ -3,6 +3,8 @@
 #include "Song.h"
 
 #include <QBrush>
+#include <sstream>
+#include <iomanip>
 
 PlaylistModel::PlaylistModel(QObject *parent)
     : QAbstractTableModel(parent)
@@ -16,7 +18,7 @@ int PlaylistModel::rowCount(const QModelIndex & /* parent */) const
 }
 int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
 {
-    return 2;
+    return 4;
 }
 
 
@@ -37,9 +39,40 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
       switch(index.column())
       {
     case 0:
-	  return QString::fromStdString(songToUse->Filename);
+      {
+          string s="";
+          if(songToUse->Metadata.Track != "")
+          {
+              s += songToUse->Metadata.Track;
+              s += " - ";
+          }
+
+          if(songToUse->Metadata.Title == "")
+          {
+              string tmp = songToUse->Filename;
+              tmp = basename(tmp.c_str());
+              s += tmp;
+          }
+          else
+          {
+              s += songToUse->Metadata.Title;
+          }
+
+          return QString::fromStdString(s);
+      }
     case 1:
-	  return QString::fromStdString(songToUse->Metadata.Artist);
+        return QString::fromStdString(songToUse->Metadata.Album);
+    case 2:
+        return QString::fromStdString(songToUse->Metadata.Artist);
+    case 3:
+      {
+          unsigned int sec = songToUse->getFrames() / songToUse->Format.SampleRate;
+          unsigned int min = sec/60;
+          sec %= 60;
+          stringstream ss;
+          ss << min << ":" << setw(2) << setfill('0') << sec;
+          return QString::fromStdString(ss.str());
+      }
 	default:
 	  break;
       }
@@ -64,9 +97,13 @@ QVariant PlaylistModel::headerData(int section, Qt::Orientation orientation, int
 	switch(section)
 	{
       case 0:
-	    return QString("Filename");
+        return QString("Title");
       case 1:
-	    return QString("Interpret");
+        return QString("Album");
+      case 2:
+        return QString("Interpret");
+      case 3:
+        return QString("Duration");
 	  default:
 	    return QString("");
 	}
