@@ -7,10 +7,18 @@
 
 #include <iomanip>
 
-
+LibGMEWrapper::LibGMEWrapper(string filename) : StandardWrapper(filename)
+{
+    this->initAttr();
+}
 
 // NOTE! for this class we use Song::fileOffset as track offset (i.e. track num) for libgme
-LibGMEWrapper::LibGMEWrapper(string filename, size_t offset, size_t len) : StandardWrapper(filename, offset, len)
+LibGMEWrapper::LibGMEWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len) : StandardWrapper(filename, offset, len)
+{
+     this->initAttr();
+}
+
+void LibGMEWrapper::initAttr()
 {
     this->Format.SampleFormat = SampleFormat_t::int16;
 
@@ -61,23 +69,42 @@ void LibGMEWrapper::open()
   gme_set_stereo_depth( this->handle, Config::gmeEchoDepth );
   
   /* Start track and begin fade at 10 seconds */
-  msg = gme_start_track( this->handle, this->fileOffset );
+  int offset = this->fileOffset.hasValue ? this->fileOffset.Value : 0;
+  msg = gme_start_track( this->handle, offset );
   if(msg)
   {
-      THROW_RUNTIME_ERROR("libgme failed to set track no. " << this->fileOffset << " for file \"" << this->Filename << "\" with message: " << msg);
+      THROW_RUNTIME_ERROR("libgme failed to set track no. " << offset << " for file \"" << this->Filename << "\" with message: " << msg);
   }
   
   this->printWarning( this->handle );
   
-  msg = gme_track_info( this->handle, &this->info, this->fileOffset );
+  msg = gme_track_info( this->handle, &this->info, offset );
   if(msg || this->info == nullptr)
   {
-      THROW_RUNTIME_ERROR("libgme failed to retrieve track info for track no. " << this->fileOffset << " for file \"" << this->Filename << "\" with message: " << msg);
+      THROW_RUNTIME_ERROR("libgme failed to retrieve track info for track no. " << offset << " for file \"" << this->Filename << "\" with message: " << msg);
   }
 
-  // TODO implement playforever
-  this->fileLen = this->info->length==-1 ? this->fileLen : this->info->length;
-  gme_set_fade(this->handle, this->fileLen);
+  if(Config::gmePlayForever)
+  {
+    gme_set_fade(this->handle, -1);
+  }
+  else
+  {
+    if(!this->fileLen.hasValue)
+    { // if we have no playing duration
+      if(this->info->length==-1)
+      { // ... and the file has no default duration
+	// use 3 minutes as default
+	this->fileLen.Value = 3*60*1000;
+      }
+      else
+      {
+	// use the duration from file
+	this->fileLen.Value = this->info->length;
+      }
+    }
+    gme_set_fade(this->handle, this->fileLen.Value);
+  }
   
   this->Format.SampleRate = Config::gmeSampleRate;
 }
@@ -123,7 +150,7 @@ void LibGMEWrapper::releaseBuffer()
 
 frame_t LibGMEWrapper::getFrames () const
 {
-    return Config::gmePlayForever ? msToFrames(-1, this->Format.SampleRate) : msToFrames(this->fileLen, this->Format.SampleRate);
+    return Config::gmePlayForever ? msToFrames(-1, this->Format.SampleRate) : msToFrames(this->fileLen.Value, this->Format.SampleRate);
 }
 
 vector<loop_t> LibGMEWrapper::getLoopArray () const
@@ -150,9 +177,12 @@ void LibGMEWrapper::buildMetadata()
     this->Metadata.Genre = "Videogame";
     this->Metadata.Comment = string(this->info->comment);
     
-    stringstream ss;
-    ss << setw(3) << setfill('0') << this->fileOffset;
-    this->Metadata.Track = ss.str();
+    if(this->fileOffset.hasValue)
+    {
+	stringstream ss;
+	ss << setw(2) << setfill('0') << this->fileOffset.Value;
+	this->Metadata.Track = ss.str();
+    }
 }
 
 // true if we can hold the whole song in memory

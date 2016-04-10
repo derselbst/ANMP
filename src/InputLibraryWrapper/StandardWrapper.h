@@ -48,8 +48,9 @@ class StandardWrapper : public Song
 {
 public:
 
-    StandardWrapper (string filename, size_t fileOffset=0, size_t fileLen=0);
-
+    StandardWrapper(string filename);
+    StandardWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
+    
     virtual ~StandardWrapper ();
 
 

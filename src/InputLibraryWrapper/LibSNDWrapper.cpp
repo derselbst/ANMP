@@ -10,11 +10,19 @@
 #include <chrono>
 
 
-LibSNDWrapper::LibSNDWrapper (string filename, size_t fileOffset, size_t fileLen) : StandardWrapper(filename, fileOffset, fileLen)
+LibSNDWrapper::LibSNDWrapper(string filename) : StandardWrapper(filename)
+{
+    this->initAttr();
+}
+
+LibSNDWrapper::LibSNDWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len) : StandardWrapper(filename, offset, len)
+{
+     this->initAttr();
+}
+
+void LibSNDWrapper::initAttr()
 {
     this->Format.SampleFormat = SampleFormat_t::float32;
-    memset (&sfinfo, 0, sizeof (sfinfo)) ;
-    // TODO: just for sure: check whether other instance vars are init properly
 }
 
 LibSNDWrapper::~LibSNDWrapper ()
@@ -32,6 +40,7 @@ void LibSNDWrapper::open ()
     return;
   }
   
+    memset(&sfinfo, 0, sizeof (sfinfo));
     if (!(this->sndfile = sf_open (this->Filename.c_str(), SFM_READ, &sfinfo)))
     {
       THROW_RUNTIME_ERROR(sf_strerror (NULL) << " (in File \"" << this->Filename << ")\"");
@@ -53,15 +62,17 @@ void LibSNDWrapper::close()
     sf_close (this->sndfile);
     this->sndfile=nullptr;
   }
-  memset (&sfinfo, 0, sizeof (sfinfo)) ;
 }
 
 void LibSNDWrapper::fillBuffer()
 {
     if(this->data==nullptr)
     {
-        sf_seek(this->sndfile, msToFrames(this->fileOffset, this->Format.SampleRate), SEEK_SET);
-        StandardWrapper<float>::fillBuffer(this);
+      if(this->fileOffset.hasValue)
+      {
+        sf_seek(this->sndfile, msToFrames(this->fileOffset.Value, this->Format.SampleRate), SEEK_SET);
+      }
+      StandardWrapper<float>::fillBuffer(this);
     }
 }
 
@@ -110,14 +121,19 @@ vector<loop_t> LibSNDWrapper::getLoopArray () const
 
 frame_t LibSNDWrapper::getFrames () const
 {
-    int framesAvail = this->sfinfo.frames - msToFrames(this->fileOffset, this->Format.SampleRate);
+    int framesAvail = this->sfinfo.frames;
+    
+    if(this->fileOffset.hasValue)
+    {
+      framesAvail -= msToFrames(this->fileOffset.Value, this->Format.SampleRate);
+    }
 
     if(framesAvail < 0)
     {
       framesAvail=0;
     }
     
-    size_t totalFrames = this->fileLen==0 ? framesAvail : msToFrames(this->fileLen, this->Format.SampleRate);
+    size_t totalFrames = this->fileLen.hasValue ? msToFrames(this->fileLen.Value, this->Format.SampleRate) : framesAvail;
 
     if(totalFrames > framesAvail)
     {

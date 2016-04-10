@@ -23,7 +23,9 @@ public:
     /**
      * Empty Constructor
      */
-    LibMadWrapper (string filename, size_t fileOffset=0, size_t fileLen=0);
+    LibMadWrapper(string filename);
+    LibMadWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
+    void initAttr();
 
     /**
      * Empty Destructor

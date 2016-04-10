@@ -17,7 +17,17 @@
 #include <string.h> // strerror
 
 
-LibMadWrapper::LibMadWrapper (string filename, size_t fileOffset, size_t fileLen) : StandardWrapper(filename, fileOffset, fileLen)
+LibMadWrapper::LibMadWrapper(string filename) : StandardWrapper(filename)
+{
+    this->initAttr();
+}
+
+LibMadWrapper::LibMadWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len) : StandardWrapper(filename, offset, len)
+{
+     this->initAttr();
+}
+
+void LibMadWrapper::initAttr()
 {
     this->Format.SampleFormat = SampleFormat_t::int16;
 }

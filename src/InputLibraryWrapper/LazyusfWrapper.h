@@ -13,9 +13,10 @@ public:
 
     // Constructors/Destructors
     //
-
-    LazyusfWrapper(string filename, size_t fileOffset=0, size_t fileLen=0);
-
+    LazyusfWrapper(string filename);
+    LazyusfWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
+    void initAttr();
+    
     /**
      * Empty Destructor
      */

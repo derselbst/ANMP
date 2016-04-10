@@ -80,15 +80,22 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
         int strangeFramesStart = track_get_start (track);
 
         int strangeFramesLen = track_get_length (track);
-        if(strangeFramesLen==-1)
+	Nullable<size_t> len;
+        if(strangeFramesLen == -1 || strangeFramesLen == 0)
         {
-            strangeFramesLen=0;
+            len = nullptr;
         }
+        else
+	{
+	  len = strangeFramesLen;
+	  len.Value *= 1000;
+	  len.Value /= 75;
+	}
 
 
         strcpy(temp, filePath.c_str());
 
-        PlaylistFactory::addSong(playlist, string(dirname(temp)).append("/").append(val), strangeFramesStart*1000/75, strangeFramesLen*1000/75);
+        PlaylistFactory::addSong(playlist, string(dirname(temp)).append("/").append(val), strangeFramesStart*1000/75, len);
     }
     cd_delete (cd);
 #undef cue_assert
@@ -112,7 +119,7 @@ if(pcm==nullptr)\
     }\
 }
 
-Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, size_t offset, size_t len)
+Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nullable<size_t> offset, Nullable<size_t> len)
 {
     string ext = getFileExtension(filePath);
     Song* pcm=nullptr;

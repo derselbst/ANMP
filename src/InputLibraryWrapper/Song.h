@@ -6,6 +6,7 @@
 #include <string>
 
 #include "types.h"
+#include "Nullable.h"
 #include "tree.h"
 #include "SongFormat.h"
 #include "SongInfo.h"
@@ -22,7 +23,8 @@ class Song
 protected:
     // even if there were no pure virtual methods, allow
     // construction for child classes only
-    Song(string filename, size_t fileOffset=0, size_t fileLen=0);
+    Song(string filename);
+    Song(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
 
 public:
 
@@ -40,10 +42,10 @@ public:
     string Filename;
 
     // how many milliseconds to skip when reading pcm from file
-    size_t fileOffset;
+    Nullable<size_t> fileOffset = Nullable<size_t>();
 
     // how many milliseconds following offset shall be used for playing
-    size_t fileLen;
+    Nullable<size_t> fileLen = Nullable<size_t>();
 //--------------------------------------------------------------------
 
 //--------------------------------------------------------------------

@@ -2,6 +2,7 @@
 #define PLAYLISTFACTORY_H
 
 #include <string>
+#include "Nullable.h"
 
 using namespace std;
 
@@ -31,7 +32,7 @@ public:
      * @param  filePath
      * @param  offset
      */
-    static Song* addSong (IPlaylist& playlist, const string filePath, size_t offset = 0, size_t len = 0);
+    static Song* addSong (IPlaylist& playlist, const string filePath, Nullable<size_t> offset = Nullable<size_t>(), Nullable<size_t> len = Nullable<size_t>());
 
 #ifdef USE_CUE
     static void parseCue (IPlaylist& playlist, const string&filePath);

@@ -23,7 +23,9 @@ public:
     /**
      * Empty Constructor
      */
-    LibSNDWrapper (string filename, size_t fileOffset=0, size_t fileLen=0);
+    LibSNDWrapper(string filename);
+    LibSNDWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
+    void initAttr();
 
     /**
      * Empty Destructor

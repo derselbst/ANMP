@@ -8,7 +8,17 @@
 #include <usf.h>
 #include <psflib.h>
 
-LazyusfWrapper::LazyusfWrapper(string filename, size_t offset, size_t len) : Song(filename, offset, len)
+LazyusfWrapper::LazyusfWrapper(string filename) : StandardWrapper(filename)
+{
+    this->initAttr();
+}
+
+LazyusfWrapper::LazyusfWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len) : StandardWrapper(filename, offset, len)
+{
+     this->initAttr();
+}
+
+void LazyusfWrapper::initAttr()
 {
     this->Format.SampleFormat = SampleFormat_t::int16;
 

@@ -7,9 +7,15 @@
 
 
 template<typename SAMPLEFORMAT>
-StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename, size_t fileOffset, size_t fileLen) : Song(filename, fileOffset, fileLen)
+StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename) : Song(filename)
 {
 }
+
+template<typename SAMPLEFORMAT>
+StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len) : Song(filename, offset, len)
+{
+}
+
 
 template<typename SAMPLEFORMAT>
 StandardWrapper<SAMPLEFORMAT>::~StandardWrapper ()

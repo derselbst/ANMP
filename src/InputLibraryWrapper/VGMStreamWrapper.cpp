@@ -11,7 +11,17 @@ extern "C"
 // Constructors/Destructors
 //
 
-VGMStreamWrapper::VGMStreamWrapper(string filename, size_t fileOffset, size_t fileLen) : StandardWrapper(filename, fileOffset, fileLen)
+VGMStreamWrapper::VGMStreamWrapper(string filename) : StandardWrapper(filename)
+{
+    this->initAttr();
+}
+
+VGMStreamWrapper::VGMStreamWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len) : StandardWrapper(filename, offset, len)
+{
+     this->initAttr();
+}
+
+void VGMStreamWrapper::initAttr()
 {
     this->Format.SampleFormat = SampleFormat_t::int16;
 }
@@ -35,9 +45,12 @@ void VGMStreamWrapper::open()
     {
       THROW_RUNTIME_ERROR("failed opening \"" << this->Filename << "\"");
     }
-
+    
     this->Format.Channels = this->handle->channels;
     this->Format.SampleRate = this->handle->sample_rate;
+    
+    // hold a copy
+    this->fileLen = (this->handle->num_samples*1000.0) / this->Format.SampleRate;
 }
 
 void VGMStreamWrapper::close()
@@ -104,11 +117,7 @@ vector<loop_t> VGMStreamWrapper::getLoopArray () const
 
 frame_t VGMStreamWrapper::getFrames() const
 {
-    if(this->handle==nullptr)
-    {
-        return 0;
-    }
-    return this->handle->num_samples;
+    return msToFrames(this->fileLen.Value, this->Format.SampleRate);
 }
 
 void VGMStreamWrapper::buildMetadata()

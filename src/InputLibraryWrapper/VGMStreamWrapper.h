@@ -19,8 +19,10 @@ class VGMStreamWrapper : public StandardWrapper<int16_t>
 {
 public:
 
-    VGMStreamWrapper (string filename, size_t fileOffset=0, size_t fileLen=0);
-
+    VGMStreamWrapper(string filename);
+    VGMStreamWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
+    void initAttr();
+    
     virtual ~VGMStreamWrapper ();
 
 
