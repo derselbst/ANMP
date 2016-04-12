@@ -71,15 +71,16 @@ void LibMadWrapper::open ()
     struct mad_header header;
     mad_header_init(&header);
 
-    mad_stream_init(&this->stream);
+    this->stream = new struct mad_stream;
+    mad_stream_init(this->stream);
     /* load buffer with MPEG audio data */
-    mad_stream_buffer(&this->stream, this->mpegbuf, this->mpeglen);
+    mad_stream_buffer(this->stream, this->mpegbuf, this->mpeglen);
 
     if(this->numFrames==0)
     {
       int ret;
       // try to find a valid header
-        while((ret=mad_header_decode(&header, &this->stream))!=0 && MAD_RECOVERABLE(this->stream.error));
+        while((ret=mad_header_decode(&header, this->stream))!=0 && MAD_RECOVERABLE(this->stream->error));
         
         if(ret!=0)
 	{
@@ -95,9 +96,9 @@ void LibMadWrapper::open ()
 
         while(1)
 	{
-	  if(mad_header_decode(&header, &this->stream)!=0)
+	  if(mad_header_decode(&header, this->stream)!=0)
 	  {
-	    if(MAD_RECOVERABLE(this->stream.error))
+	    if(MAD_RECOVERABLE(this->stream->error))
 	    {
 	      continue;
 	    }
@@ -122,17 +123,22 @@ void LibMadWrapper::open ()
         }
 
         // somehow reset libmad stream
-        mad_stream_finish(&this->stream);
-        mad_stream_init(&this->stream);
+        mad_stream_finish(this->stream);
+        mad_stream_init(this->stream);
         /* load buffer with MPEG audio data */
-        mad_stream_buffer(&this->stream, this->mpegbuf, this->mpeglen);
+        mad_stream_buffer(this->stream, this->mpegbuf, this->mpeglen);
     }
     mad_header_finish(&header);
 }
 
 void LibMadWrapper::close()
 {
-    mad_stream_finish(&this->stream);
+    if(this->stream != nullptr)
+    {
+      mad_stream_finish(this->stream);
+      delete this->stream;
+      this->stream = nullptr;
+    }
 
     if(this->mpegbuf!=nullptr)
     {
@@ -170,11 +176,11 @@ void LibMadWrapper::render(frame_t framesToRender)
     unsigned int item=0;
     while (!this->stopFillBuffer)
     {
-      int ret = mad_frame_decode(&frame, &this->stream);
+      int ret = mad_frame_decode(&frame, this->stream);
       
 	  if(ret!=0)
 	  {
-	    if(MAD_RECOVERABLE(this->stream.error))
+	    if(MAD_RECOVERABLE(this->stream->error))
 	    {
 	      continue;
 	    }

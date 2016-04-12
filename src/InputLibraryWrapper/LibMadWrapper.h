@@ -68,7 +68,7 @@ private:
     FILE* infile = nullptr;
     unsigned char * mpegbuf = nullptr;
     int mpeglen = 0;
-    struct mad_stream stream;
+    struct mad_stream* stream = nullptr;
 
     frame_t numFrames=0;
     static signed int toInt16Sample(mad_fixed_t sample);
