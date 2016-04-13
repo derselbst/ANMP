@@ -22,7 +22,7 @@ const frame_t Config::FramesToRender = 2048;
 // high values will slow down the start of playing back the next song, but will assure that the
 // asynchronous part of Song::fillBuffer() has enough headstart (i.e. the PCM buffer is well filled)
 // so there are no audible glitches later on (such as parts of old songs or cracks and clicks...)
-unsigned int Config::PreRenderTime = 333;
+unsigned int Config::PreRenderTime = 500;
 
 //**********************************
 //       HOW-TO-PLAY SECTION       *
