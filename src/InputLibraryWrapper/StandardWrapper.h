@@ -3,10 +3,6 @@
 
 #include "Song.h"
 
-extern "C"
-{
-  #include <vgmstream.h>
-}
 #include <future>
 // struct VGMSTREAM;
 
