@@ -27,9 +27,9 @@ void LazyusfWrapper::initAttr()
 }
 
 LazyusfWrapper::~LazyusfWrapper ()
-{
-    this->close();
+{  
     this->releaseBuffer();
+    this->close();
 }
 
 static psf_file_callbacks stdio_callbacks =
@@ -87,34 +87,42 @@ void LazyusfWrapper::close()
 
 void LazyusfWrapper::fillBuffer()
 {
-    if(this->data==nullptr)
-    {
-        this->count = Config::FramesToRender*this->Format.Channels;
-        this->data = new int16_t[this->count];
-    }
-
-    // TODO: UGLY CAST AHEAD!
-    usf_render(this->usfHandle, static_cast<int16_t*>(this->data), Config::FramesToRender, reinterpret_cast<int32_t*>(&this->Format.SampleRate));
+    StandardWrapper<int16_t>::fillBuffer(this);
 }
 
 void LazyusfWrapper::releaseBuffer()
 {
-    delete [] static_cast<int16_t*>(this->data);
-    this->data=nullptr;
-    this->count = 0;
+    StandardWrapper<int16_t>::releaseBuffer();
+}
+
+void LazyusfWrapper::render(frame_t framesToRender)
+{
+    // TODO: UGLY CAST AHEAD!
+    STANDARDWRAPPER_RENDER(int16_t, usf_render(this->usfHandle, pcm, framesToDoNow, reinterpret_cast<int32_t*>(&this->Format.SampleRate)))
 }
 
 frame_t LazyusfWrapper::getFrames () const
 {
-    return msToFrames(this->fileLen, this->Format.SampleRate);
+  if(this->fileLen.hasValue)
+  {
+    return msToFrames(this->fileLen.Value, this->Format.SampleRate);
+  }
+  else
+  {
+    return msToFrames(3*60*1000, this->Format.SampleRate);
+  }
 }
 
+void LazyusfWrapper::buildMetadata()
+{
+  // noting to do here, everything is done in usf_info()
+}
 
 /// ugly C-helper functions
 
-void * LazyusfWrapper::stdio_fopen( const char * path, const char * mode )
+void * LazyusfWrapper::stdio_fopen( const char * path )
 {
-    return fopen( path, mode );
+    return fopen( path, "rb" );
 }
 
 size_t LazyusfWrapper::stdio_fread( void *p, size_t size, size_t count, void *f )
@@ -157,25 +165,25 @@ int LazyusfWrapper::usf_info(void * context, const char * name, const char * val
         infoContext->fade_ms = parse_time_crap(value);
     
     else if (iEquals(name, "title"))
-        this->Metadata.Title = string(value);
+        infoContext->Metadata.Title = string(value);
     
     else if (iEquals(name, "artist"))
-        this->Metadata.Artist = this->Metadata.Composer = string(value);
+        infoContext->Metadata.Artist = infoContext->Metadata.Composer = string(value);
     
     else if (iEquals(name, "game"))
-        this->Metadata.Album = string(value);
+        infoContext->Metadata.Album = string(value);
     
     else if (iEquals(name, "year"))
-        this->Metadata.Year = string(value);
+        infoContext->Metadata.Year = string(value);
     
     else if (iEquals(name, "genre"))
-        this->Metadata.Genre = string(value);
+        infoContext->Metadata.Genre = string(value);
     
     else if (iEquals(name, "track"))
-        this->Metadata.Track = string(value);
+        infoContext->Metadata.Track = string(value);
     
     else if (iEquals(name, "comment"))
-        this->Metadata.Comment = string(value);
+        infoContext->Metadata.Comment = string(value);
     
     else if (iEquals(name, "_enablecompare") && *value)
         infoContext->enable_compare = 1;

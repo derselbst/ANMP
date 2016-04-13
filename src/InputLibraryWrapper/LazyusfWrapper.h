@@ -1,13 +1,13 @@
 #ifndef LAZYUSFWRAPPER_H
 #define LAZYUSFWRAPPER_H
 
-#include "Song.h"
+#include "StandardWrapper.h"
 
 /**
   * class LazyusfWrapper
   *
   */
-class LazyusfWrapper : public Song
+class LazyusfWrapper : public StandardWrapper<int16_t>
 {
 public:
 
@@ -49,6 +49,9 @@ public:
     frame_t getFrames () const override;
 
     void buildMetadata() override;
+    
+    void render(frame_t framesToRender=0) override;
+
 
 private:
     // set by usf_info
@@ -62,7 +65,7 @@ private:
     unsigned char* usfHandle = nullptr;
 
 public:
-    static void * stdio_fopen( const char * path, const char * mode );
+    static void * stdio_fopen( const char * path );
 
     static size_t stdio_fread( void *p, size_t size, size_t count, void *f );
 
