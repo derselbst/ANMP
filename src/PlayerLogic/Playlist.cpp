@@ -1,4 +1,5 @@
 #include "Playlist.h"
+#include "Song.h"
 
 #include <algorithm>
 
@@ -17,6 +18,7 @@ void Playlist::add (Song* song)
 void Playlist::remove (Song* song)
 {
     this->queue.erase(std::remove(this->queue.begin(), this->queue.end(), song), this->queue.end());
+    delete song;
 }
 
 /**
@@ -25,12 +27,21 @@ void Playlist::remove (int i)
 {
   if(this->queue.empty()) { return; }
   
-    this->queue.erase(this->queue.begin()+(i % this->queue.size()));
+  SongQueue_t::iterator it = this->queue.begin()+(i % this->queue.size());
+  Song* s = *it;
+    this->queue.erase(it);
+    delete s;
 }
 
 void Playlist::clear()
 {
-    this->queue.clear();
+  Song* s;
+  for(SongQueue_t::iterator it = this->queue.begin(); it!=this->queue.end(); ++it)
+  {
+    s = *it;
+    this->queue.erase(it);
+    delete s;
+  }
 }
 
 
@@ -45,6 +56,8 @@ Song* Playlist::current ()
  */
 Song* Playlist::next ()
 {
+  if(this->queue.empty()) { return nullptr; }
+  
     return this->setCurrentSong((this->currentSong+1) % this->queue.size());
 }
 
@@ -52,6 +65,8 @@ Song* Playlist::next ()
  */
 Song* Playlist::previous ()
 {
+  if(this->queue.empty()) { return nullptr; }
+  
     return this->setCurrentSong((this->currentSong+this->queue.size()-1) % this->queue.size());
 }
 
