@@ -136,7 +136,7 @@ void MainWindow::buildPlaylistView()
 void MainWindow::on_actionAdd_Songs_triggered()
 {
   const QString dir;
-  const QStringList fileNames = QFileDialog::getOpenFileNames(this, "Open WAV File", dir, "");//Wave Files (*.wav);;Text Files (*.txt)
+  const QStringList fileNames = QFileDialog::getOpenFileNames(this, "Open Audio Files", dir, "");//Wave Files (*.wav);;Text Files (*.txt)
 
   QProgressDialog progress("Adding files...", "Abort", 0, fileNames.count(), this);
      progress.setWindowModality(Qt::WindowModal);
@@ -145,7 +145,7 @@ void MainWindow::on_actionAdd_Songs_triggered()
       for(int i=0; !progress.wasCanceled() && i<fileNames.count(); i++)
       {
           // only redraw progress dialog on every tenth song
-          if(i%10==0)
+          if(i%(static_cast<int>(fileNames.count()*0.1)+1)==0)
           {
                  progress.setValue(i);
                  QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
@@ -174,30 +174,39 @@ void MainWindow::on_actionPause_triggered()
 
 void MainWindow::on_actionNext_Song_triggered()
 {
+    bool oldState = this->player->getIsPlaying();
     this->stop();
     this->player->next();
-    this->play();
+    if(oldState)
+    {
+      this->play();
+    }
 }
 
 void MainWindow::on_actionPrevious_Song_triggered()
 {
+    bool oldState = this->player->getIsPlaying();
     this->stop();
     this->player->previous();
-    this->play();
+    if(oldState)
+    {
+      this->play();
+    }
 }
 
 void MainWindow::on_actionClear_Playlist_triggered()
 {
     this->stop();
+    this->player->setCurrentSong(nullptr);
     this->playlistModel->clear();
 }
 
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
 {
     if(!index.isValid())
-  {
-    return;
-  }
+    {
+      return;
+    }
     QString sPath = drivesModel->fileInfo(index).absoluteFilePath();
     ui->listView->setRootIndex(filesModel->setRootPath(sPath));
 }
@@ -206,9 +215,9 @@ void MainWindow::on_treeView_clicked(const QModelIndex &index)
 void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 {
     if(!index.isValid())
-  {
-    return;
-  }
+    {
+      return;
+    }
     this->stop();
     Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
     this->player->setCurrentSong(songToPlay);
