@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-QT       += core gui
+QT       += core gui opengl
 CONFIG   += c++11
 CONFIG   += debug
 
@@ -13,7 +13,7 @@ INCLUDEPATH += ../InputLibraryWrapper/
 INCLUDEPATH += ../Common/
 INCLUDEPATH += ../AudioOutput/
 
-LIBS += ../../bin/libanmp.a  ../../../../Programme/lazyusf2/liblazyusf2.a ../../../../Programme/psflib/libpsflib.a ../../../../Programme/vgmstream/src/libvgmstream.a -lasound -lsndfile -lz -lcue -lvorbisfile -lmpg123 -lpthread -lm -lmad -lgme
+LIBS += ../../bin/libanmp.a  ../../../../Programme/lazyusf2/liblazyusf2.a ../../../../Programme/psflib/libpsflib.a ../../../../Programme/vgmstream/src/libvgmstream.a applets/analyzer/libanalyzer.a -lasound -lsndfile -lz -lcue -lvorbisfile -lmpg123 -lpthread -lm -lmad -lgme
 
 
 

@@ -166,7 +166,14 @@
     <property name="title">
      <string>Show</string>
     </property>
+    <widget class="QMenu" name="menuVisualization">
+     <property name="title">
+      <string>Visualization</string>
+     </property>
+     <addaction name="actionBlocky"/>
+    </widget>
     <addaction name="actionControl_Panel"/>
+    <addaction name="menuVisualization"/>
    </widget>
    <addaction name="menuHello"/>
    <addaction name="menuPlayer"/>
@@ -222,6 +229,11 @@
   <action name="actionControl_Panel">
    <property name="text">
     <string>Control Panel</string>
+   </property>
+  </action>
+  <action name="actionBlocky">
+   <property name="text">
+    <string>Blocky</string>
    </property>
   </action>
  </widget>

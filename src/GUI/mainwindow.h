@@ -13,6 +13,7 @@
 #include <QAbstractItemView>
 #include <QFileSystemModel>
 
+class AnalyzerBase;
 
 namespace Ui {
 class MainWindow;
@@ -32,7 +33,8 @@ private:
     // percentage for fast seek
     const float SeekFast = 0.1;
 
-    Ui::MainWindow *ui;
+    Ui::MainWindow *ui = nullptr;
+    AnalyzerBase * analyzerWindow = nullptr;
     
     PlaylistModel* playlistModel = new PlaylistModel(this);
     Player* player = new Player(this->playlistModel);
@@ -75,6 +77,7 @@ private slots:
     void seekBackward();
     void fastSeekForward();
     void fastSeekBackward();
+    void on_actionBlocky_triggered();
 };
 
 #endif // MAINWINDOW_H

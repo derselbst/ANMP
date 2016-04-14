@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "applets/analyzer/BlockAnalyzer.h"
 
 #include "Common.h"
 #include "PlaylistFactory.h"
@@ -19,6 +20,11 @@ void MainWindow::onSeek(void* context, frame_t pos)
     bool oldState = playheadSlider->blockSignals(true);
     playheadSlider->setSliderPosition(pos);
     playheadSlider->blockSignals(oldState);
+
+    if(static_cast<MainWindow*>(context)->analyzerWindow!=nullptr)
+    {
+        static_cast<MainWindow*>(context)->analyzerWindow->processData(static_cast<MainWindow*>(context)->playlistModel->current(), pos);
+    }
 }
 
 void MainWindow::onCurrentSongChanged(void* context)
@@ -341,4 +347,10 @@ void MainWindow::fastSeekForward()
 void MainWindow::fastSeekBackward()
 {
     this->relativeSeek(-this->ui->seekBar->maximum() * SeekFast);
+}
+
+void MainWindow::on_actionBlocky_triggered()
+{
+    this->analyzerWindow = new BlockAnalyzer(this);
+    this->analyzerWindow->show();
 }
