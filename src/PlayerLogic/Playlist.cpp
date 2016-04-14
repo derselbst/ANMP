@@ -39,9 +39,10 @@ void Playlist::clear()
   for(SongQueue_t::iterator it = this->queue.begin(); it!=this->queue.end(); ++it)
   {
     s = *it;
-    this->queue.erase(it);
     delete s;
   }
+  
+  this->queue.clear();
 }
 
 
