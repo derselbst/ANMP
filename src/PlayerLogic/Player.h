@@ -2,7 +2,8 @@
 #define PLAYER_H
 
 #include "types.h"
-class MainWindow;
+#include "Event.h"
+
 #include <future>
 
 namespace core
@@ -76,9 +77,9 @@ public:
      * @param  frame seeks the playhead to frame "frame"
      */
     void seekTo (frame_t frame);
-    void (*playheadChanged) (void*, frame_t) = nullptr;
-    void (*currentSongChanged) (void*) = nullptr;
-    void* callbackContext = nullptr;
+    
+    Event<frame_t> onPlayheadChanged;
+    Event<> onCurrentSongChanged;
 
 
 private:

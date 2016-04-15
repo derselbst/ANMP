@@ -96,9 +96,8 @@ void Player::play ()
  * @return Song
  */
 Song* Player::getCurrentSong ()
-{   USERS_ARE_STUPID
-//  return this->currentSong;
-    throw NotImplementedException();
+{
+   return this->currentSong;
 }
 
 
@@ -176,10 +175,7 @@ void Player::_setCurrentSong (Song* song)
     }
     
     // now we are ready to do the callback
-    if(this->currentSongChanged!=nullptr)
-    {
-      this->currentSongChanged(this->callbackContext);
-    }
+      this->onCurrentSongChanged.Fire();
 }
 
 
@@ -406,10 +402,8 @@ void Player::playFrames (frame_t framesToPlay)
 
         // update the playhead
         this->playhead+=framesWritten;
-	if(this->playheadChanged!=nullptr)
-	{
-	  this->playheadChanged(this->callbackContext, this->playhead);
-	}
+	// notify observers
+	this->onPlayheadChanged.Fire(this->playhead);
 	
         // update our local copy of playhead
         memorizedPlayhead+=framesWritten;
