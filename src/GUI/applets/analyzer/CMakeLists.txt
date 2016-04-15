@@ -39,7 +39,7 @@ set(analyzer_SRCS
 #     BallsAnalyzer.cpp
     BlockAnalyzer.cpp
 #     DiscoAnalyzer.cpp
-# #     ASCIIAnalyzer.cpp
+    ASCIIAnalyzer.cpp
     PaletteHandler.cpp
     fht.cpp
 )
