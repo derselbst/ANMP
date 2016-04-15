@@ -2,6 +2,7 @@
 #define TYPES_H
 
 #include <cstdint>
+#include "int24_t.hpp"
 
 typedef void pcm_t;
 typedef unsigned int frame_t;
@@ -44,6 +45,7 @@ typedef enum SampleFormat
 {
     unknown,
     int16,
+    int24,
     float32,
 } SampleFormat_t;
 
