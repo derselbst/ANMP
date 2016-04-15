@@ -25,10 +25,13 @@ SOURCES += main.cpp\
         mainwindow.cpp\
         PlaylistView.cpp\
         PlaylistModel.cpp \
-        configdialog.cpp
+        configdialog.cpp \
+    overlaycontrol.cpp
 
-HEADERS  += mainwindow.h PlaylistView.h PlaylistModel.h configdialog.h
+HEADERS  += mainwindow.h PlaylistView.h PlaylistModel.h configdialog.h \
+    overlaycontrol.h
 
-FORMS    += mainwindow.ui configdialog.ui
+FORMS    += mainwindow.ui configdialog.ui \
+    overlaycontrol.ui
 
 DISTFILES +=
