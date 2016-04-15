@@ -26,12 +26,12 @@ SOURCES += main.cpp\
         PlaylistView.cpp\
         PlaylistModel.cpp \
         configdialog.cpp \
-    applets/analyzer/AnalyzerApplet.cpp
+    applets/analyzer/AnalyzerApplet.cpp overlaycontrol.cpp
 
 HEADERS  += mainwindow.h PlaylistView.h PlaylistModel.h configdialog.h \
-    applets/analyzer/AnalyzerApplet.h
+    applets/analyzer/AnalyzerApplet.h overlaycontrol.h
 
 FORMS    += mainwindow.ui configdialog.ui \
-    applets/analyzer/AnalyzerApplet.ui
+    applets/analyzer/AnalyzerApplet.ui overlaycontrol.ui
 
 DISTFILES +=
