@@ -38,10 +38,12 @@ class Song;
 class AnalyzerBase : public QGLWidget
 {
     Q_OBJECT
-
+public:
+  
+    ~AnalyzerBase();
+    
 protected:
     AnalyzerBase( QWidget* );
-    ~AnalyzerBase();
 
     void interpolate( const QVector<float>&, QVector<float>& ) const;
 

@@ -13,7 +13,7 @@
 #include <QAbstractItemView>
 #include <QFileSystemModel>
 
-class AnalyzerBase;
+class AnalyzerApplet;
 
 namespace Ui {
 class MainWindow;
@@ -34,7 +34,7 @@ private:
     const float SeekFast = 0.1;
 
     Ui::MainWindow *ui = nullptr;
-    AnalyzerBase * analyzerWindow = nullptr;
+    AnalyzerApplet * analyzerWindow = nullptr;
     
     PlaylistModel* playlistModel = new PlaylistModel(this);
     Player* player = new Player(this->playlistModel);
