@@ -311,8 +311,9 @@ void Player::playLoop (core::tree<loop_t>& loop)
         this->playFrames(playhead, (*(*subloop)).start);
         // at this point: playhead==subloop.start
 
-        uint32_t mycount = Config::overridingGlobalLoopCount!=-1 ? Config::overridingGlobalLoopCount : (*(*subloop)).count+1; // +1 because the subloop we are just going to play, should be played one additional time by the parent of subloop (i.e. the loop we are currently in)
+        uint32_t mycount = Config::overridingGlobalLoopCount!=-1 ? Config::overridingGlobalLoopCount : (*(*subloop)).count;
         bool forever = mycount==0;
+	mycount += 1; // +1 because the subloop we are just going to play, should be played one additional time by the parent of subloop (i.e. the loop we are currently in)
         while(this->isPlaying && (forever || mycount--))
             {
                 // if we play this loop multiple time, make sure we start at the beginning again
