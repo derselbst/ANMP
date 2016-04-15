@@ -14,15 +14,15 @@ class AnalyzerApplet : public QMainWindow
 {
     Q_OBJECT
 
-    enum AnalyzerType { Block, Ascii};
-
 public:
+    enum AnalyzerType { Block, Ascii };
+
     explicit AnalyzerApplet(Player* player, QWidget *parent = 0);
     ~AnalyzerApplet();
     
     void startGraphics();
     void stopGraphics();
-    void setCurrentAnalyzer( enum AnalyzerType& type );
+    void setAnalyzer( enum AnalyzerType type );
     
 
 private:
@@ -32,6 +32,7 @@ private:
     Player* player;
 
     void newGeometry();
+
     void resizeEvent(QResizeEvent* event) override;
     void closeEvent(QCloseEvent* e) override;
     

@@ -74,6 +74,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    this->player->onPlayheadChanged -= this;
+    this->player->onCurrentSongChanged -= this;
+
+    delete this->analyzerWindow;
     delete this->ui;
     delete this->player;
     delete this->playlistModel;
@@ -130,8 +134,13 @@ void MainWindow::buildFileBrowser()
 void MainWindow::buildPlaylistView()
 {
     this->ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-        this->ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-      this->ui->tableView->setModel(playlistModel); 
+    this->ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    this->ui->tableView->setModel(playlistModel);
+}
+
+void MainWindow::closeEvent(QCloseEvent* e)
+{
+    qApp->quit();
 }
 
 void MainWindow::on_actionAdd_Songs_triggered()
@@ -346,6 +355,18 @@ void MainWindow::fastSeekBackward()
 
 void MainWindow::on_actionBlocky_triggered()
 {
-    this->analyzerWindow = new AnalyzerApplet(this->player, 0);
+    delete this->analyzerWindow;
+    this->analyzerWindow = new AnalyzerApplet(this->player, nullptr);
+    this->analyzerWindow->setAnalyzer(AnalyzerApplet::AnalyzerType::Block);
+    this->analyzerWindow->startGraphics();
+    this->analyzerWindow->show();
+}
+
+void MainWindow::on_actionASCII_triggered()
+{
+    delete this->analyzerWindow;
+    this->analyzerWindow = new AnalyzerApplet(this->player, nullptr);
+    this->analyzerWindow->setAnalyzer(AnalyzerApplet::AnalyzerType::Ascii);
+    this->analyzerWindow->startGraphics();
     this->analyzerWindow->show();
 }

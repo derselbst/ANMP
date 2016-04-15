@@ -27,6 +27,9 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+protected:
+    void closeEvent(QCloseEvent* e) override;
+
 private:
     // percentage to seek normally
     const float SeekNormal = 0.02;
@@ -78,6 +81,7 @@ private slots:
     void fastSeekForward();
     void fastSeekBackward();
     void on_actionBlocky_triggered();
+    void on_actionASCII_triggered();
 };
 
 #endif // MAINWINDOW_H

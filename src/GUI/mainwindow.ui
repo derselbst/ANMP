@@ -170,6 +170,7 @@
      <property name="title">
       <string>Visualization</string>
      </property>
+     <addaction name="actionASCII"/>
      <addaction name="actionBlocky"/>
     </widget>
     <addaction name="actionControl_Panel"/>
@@ -233,7 +234,12 @@
   </action>
   <action name="actionBlocky">
    <property name="text">
-    <string>Blocky</string>
+    <string>Block</string>
+   </property>
+  </action>
+  <action name="actionASCII">
+   <property name="text">
+    <string>ASCII</string>
    </property>
   </action>
  </widget>

@@ -13,11 +13,7 @@ AnalyzerApplet::AnalyzerApplet(Player* player, QWidget *parent) :
     ui(new Ui::AnalyzerApplet)
 {
     ui->setupUi(this);
-    this->analyzerWidget = new BlockAnalyzer(this);
-    this->ui->horizontalLayout->addWidget(this->analyzerWidget);
-
     this->player = player;
-    this->startGraphics();
 }
 
 AnalyzerApplet::~AnalyzerApplet()
@@ -38,7 +34,7 @@ void AnalyzerApplet::resizeEvent(QResizeEvent* event)
 void AnalyzerApplet::closeEvent(QCloseEvent* e)
 {
   QMainWindow::closeEvent(e);
-  
+
   this->stopGraphics();
 }
 
@@ -68,12 +64,16 @@ void AnalyzerApplet::newGeometry()
     this->analyzerWidget->setGeometry( analyzerGeometry );
 }
 
-void AnalyzerApplet::setCurrentAnalyzer( enum AnalyzerType& type )
+void AnalyzerApplet::setAnalyzer(AnalyzerType type )
 {
 //     if( m_analyzerName == name )
 //         return;
 
-    delete this->analyzerWidget;
+    if(this->analyzerWidget!=nullptr)
+    {
+        this->ui->horizontalLayout->removeWidget(this->analyzerWidget);
+        delete this->analyzerWidget;
+    }
 
     switch(type)
     {
@@ -82,7 +82,12 @@ void AnalyzerApplet::setCurrentAnalyzer( enum AnalyzerType& type )
     case Block:
         this->analyzerWidget = new BlockAnalyzer(this);
         break;
+    case Ascii:
+        this->analyzerWidget = new ASCIIAnalyzer(this);
+        break;
     }
+
+    this->ui->horizontalLayout->addWidget(this->analyzerWidget);
 
     this->newGeometry();
     this->analyzerWidget->show();
