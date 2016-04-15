@@ -27,7 +27,7 @@
 ASCIIAnalyzer* ASCIIAnalyzer::instance = 0;
 
 ASCIIAnalyzer::ASCIIAnalyzer( QWidget *parent )
-    : Analyzer::Base( parent )
+    : AnalyzerBase( parent )
     , m_columns( 0 )         //int
     , m_rows( 0 )            //int
 {

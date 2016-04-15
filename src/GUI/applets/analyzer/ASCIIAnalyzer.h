@@ -28,7 +28,7 @@ class QMouseEvent;
 class QPalette;
 class QResizeEvent;
 
-class ASCIIAnalyzer : public Analyzer::Base
+class ASCIIAnalyzer : public AnalyzerBase
 {
 public:
     ASCIIAnalyzer( QWidget* );
