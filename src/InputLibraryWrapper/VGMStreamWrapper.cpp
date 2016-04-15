@@ -105,7 +105,9 @@ vector<loop_t> VGMStreamWrapper::getLoopArray () const
     if(this->handle!=nullptr && this->handle->loop_flag==1) // does stream contain loop information?
     {
         loop_t l;
-        l.start = handle->loop_start_sample;
+        l.start = handle->loop_start_sample
+        l.start -= 1; // otherwise one would hear a crack in super smash bros brawl
+        
         l.stop = handle->loop_end_sample;
         //TODO let the user adjust loopcount
         l.count = 2;
