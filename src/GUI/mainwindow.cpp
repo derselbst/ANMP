@@ -13,6 +13,7 @@
 
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
+#include <utility>      // std::pair
 
 void MainWindow::onSeek(void* context, frame_t pos)
 {
@@ -63,9 +64,8 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setWindowState(Qt::WindowMaximized);
 
     // set callbacks
-    this->player->playheadChanged=MainWindow::onSeek;
-    this->player->currentSongChanged=MainWindow::onCurrentSongChanged;
-    this->player->callbackContext=this;
+    this->player->onPlayheadChanged += make_pair(this, &MainWindow::onSeek);
+     this->player->onCurrentSongChanged += make_pair(this, &MainWindow::onCurrentSongChanged);
 
     this->buildFileBrowser();
     this->buildPlaylistView();
@@ -346,6 +346,6 @@ void MainWindow::fastSeekBackward()
 
 void MainWindow::on_actionBlocky_triggered()
 {
-    this->analyzerWindow = new AnalyzerApplet(this->player, this);
+    this->analyzerWindow = new AnalyzerApplet(this->player, 0);
     this->analyzerWindow->show();
 }

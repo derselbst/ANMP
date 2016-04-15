@@ -2,6 +2,11 @@
 #include "ui_AnalyzerApplet.h"
 
 #include "BlockAnalyzer.h"
+#include "ASCIIAnalyzer.h"
+
+#include "Player.h"
+
+#include <utility>      // std::pair
 
 AnalyzerApplet::AnalyzerApplet(Player* player, QWidget *parent) :
     QMainWindow(parent),
@@ -11,12 +16,14 @@ AnalyzerApplet::AnalyzerApplet(Player* player, QWidget *parent) :
     this->analyzerWidget = new BlockAnalyzer(this);
     this->ui->horizontalLayout->addWidget(this->analyzerWidget);
 
-    // TODO: register callbacks
     this->player = player;
+    this->startGraphics();
 }
 
 AnalyzerApplet::~AnalyzerApplet()
 {
+  this->stopGraphics();
+  
     delete this->analyzerWidget;
     delete this->ui;
 }
@@ -26,6 +33,25 @@ void AnalyzerApplet::resizeEvent(QResizeEvent* event)
   QMainWindow::resizeEvent(event);
 
   this->newGeometry();
+}
+
+void AnalyzerApplet::closeEvent(QCloseEvent* e)
+{
+  QMainWindow::closeEvent(e);
+  
+  this->stopGraphics();
+}
+
+void AnalyzerApplet::startGraphics()
+{
+  this->player->onPlayheadChanged += make_pair(this, &AnalyzerApplet::redraw);
+  this->analyzerWidget->connectSignals();
+}
+
+void AnalyzerApplet::stopGraphics()
+{
+    this->player->onPlayheadChanged -= this;
+    this->analyzerWidget->disconnectSignals();
 }
 
 void AnalyzerApplet::newGeometry()
@@ -60,4 +86,11 @@ void AnalyzerApplet::setCurrentAnalyzer( enum AnalyzerType& type )
 
     this->newGeometry();
     this->analyzerWidget->show();
+}
+
+void AnalyzerApplet::redraw(void* ctx, frame_t pos)
+{  
+  AnalyzerApplet* context = static_cast<AnalyzerApplet*>(ctx);
+
+  context->analyzerWidget->processData(context->player->getCurrentSong(), pos);
 }
