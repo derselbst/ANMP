@@ -38,11 +38,11 @@ public:
     static void freeTexture( GLuint id ) { instance->deleteTexture( id ); }
 
     // Signed ints because most of what we compare them against are ints
-    static const int BLOCK_HEIGHT = 2;
-    static const int BLOCK_WIDTH  = 4;
+    static const int BLOCK_HEIGHT = 4;
+    static const int BLOCK_WIDTH  = 6;
     static const int MIN_ROWS     = 30;  //arbitrary
     static const int MIN_COLUMNS  = 32;  //arbitrary
-    static const int MAX_COLUMNS  = 256; //must be 2**n
+    static const int MAX_COLUMNS  = 512; //must be 2**n
     static const int FADE_SIZE    = 90;
 
 protected:
