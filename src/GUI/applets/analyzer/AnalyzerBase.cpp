@@ -147,7 +147,7 @@ AnalyzerBase::transform( QVector<float> &scope ) //virtual
 
 void AnalyzerBase::processData( const Song* s, frame_t playhead )
 {
-  if(s->Format.SampleFormat != int16)
+  if(s==nullptr || s->Format.SampleFormat != int16)
   {
     return;
   }
@@ -155,7 +155,7 @@ void AnalyzerBase::processData( const Song* s, frame_t playhead )
   
     QVector<float> scope( m_fht->size() );
 
-    for( unsigned int x = 0,i = 0; x < Config::FramesToRender*s->Format.Channels; x+=s->Format.Channels,i++ )
+    for( unsigned int x = 0,i = 0; x < Config::FramesToRender*s->Format.Channels && playhead + i < s->getFrames(); x+=s->Format.Channels,i++ )
     {
         if( s->Format.Channels == 1 )  // Mono
         {
@@ -165,6 +165,9 @@ void AnalyzerBase::processData( const Song* s, frame_t playhead )
         {
             scope[i] = double( pcmBuf[x] + pcmBuf[x+1] ) / ( 2 * ( 1 << 15 ) ); // Average between the channels
         }
+        
+        // attenuate the signal
+        scope[i] /= 10;
     }
 
     transform( scope );
