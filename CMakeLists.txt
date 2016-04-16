@@ -11,4 +11,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 # include_directories("${PROJECT_INCLUDE_DIR}")
 # include_directories("${PROJECT_SOURCE_DIR}")
 
+# Search in the `cmake' directory for additional CMake modules.
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+
+
 add_subdirectory(src)

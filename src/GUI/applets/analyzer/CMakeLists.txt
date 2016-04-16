@@ -1,8 +1,5 @@
 project(context-analyzer)
 
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-
 # qt5_use_modules(app Core Gui Widgets OpenGL)
 
 
@@ -19,8 +16,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
   
   # OpenGL & GLEW library
   find_package(OpenGL REQUIRED)
-  
-  set(CMAKE_AUTOMOC ON)
 
   # The Qt5Widgets_INCLUDES also includes the include directories for
   # dependencies QtCore and QtGui
@@ -34,7 +29,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 
 set(analyzer_SRCS
-#     AnalyzerApplet.cpp
+    AnalyzerApplet.cpp
     AnalyzerBase.cpp
 #     BallsAnalyzer.cpp
     BlockAnalyzer.cpp
@@ -44,21 +39,11 @@ set(analyzer_SRCS
     fht.cpp
 )
 
-
-# kde4_add_plugin(amarok_context_applet_analyzer ${analyzer_SRCS})
-# 
-# if(APPLE)
-#     SET_TARGET_PROPERTIES(amarok_context_applet_analyzer PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
-# endif(APPLE)
-
-
-# target_link_libraries(amarok_context_applet_analyzer
-#     amarokcore
-#     amaroklib
-#     ${KDE4_PLASMA_LIBS}
-#     ${QT_QTOPENGL_LIBRARY}
-#     ${OPENGL_gl_LIBRARY}
-# )
+qt5_wrap_ui(UI_HEADERS
+    AnalyzerApplet.ui
+)
 
 SET(LIBANAL analyzer)
 ADD_LIBRARY(${LIBANAL} ${analyzer_SRCS})
+
+# SET(LD_FLAGS "${LD_FLAGS} ${LIBANAL}" PARENT_SCOPE)

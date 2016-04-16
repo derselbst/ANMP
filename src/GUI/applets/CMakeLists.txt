@@ -1,6 +1,6 @@
-add_subdirectory( lyrics )
+# add_subdirectory( lyrics )
 
-if( QT_QTOPENGL_FOUND )
+# if( QT_QTOPENGL_FOUND )
     add_subdirectory( analyzer )
-endif()
+# endif()
 

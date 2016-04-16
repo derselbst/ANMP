@@ -6,9 +6,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Weffc++ -Waggr
 
 INCLUDE_DIRECTORIES(SYSTEM Common PlayerLogic InputLibraryWrapper AudioOutput)
 
-
 SET(LIBANMP_SRC
-
        AudioOutput/IAudioOutput.cpp
        Common/AtomicWrite.cpp
        Common/Common.cpp
@@ -136,19 +134,27 @@ if(USE_VGMSTREAM)
   set (VGMSTREAM_INSTALL_DIR "" CACHE FILEPATH "Directory where vgmstream is installed")
   
   FIND_LIBRARY(VGMSTREAM_LIBRARIES vgmstream ${VGMSTREAM_INSTALL_DIR})
+  FIND_LIBRARY(VORBISFILE_LIBRARIES vorbisfile)
+  FIND_LIBRARY(MPG123_LIBRARIES mpg123)
+  find_library(M_LIB m)
   find_package(ZLIB REQUIRED)
+  find_package(Threads REQUIRED)
   
   if(VGMSTREAM_LIBRARIES)
 	set (VGMSTREAM_INCLUDE_DIR "/usr/include/vgmstream" CACHE FILEPATH "Directory where header files for vgmstream are installed")
-	INCLUDE_DIRECTORIES(${VGMSTREAM_INCLUDE_DIR})
+	INCLUDE_DIRECTORIES(${VGMSTREAM_INCLUDE_DIR} ${ZLIB_INCLUDE_DIRS})
 	
         add_definitions(-DUSE_VGMSTREAM)
         set(LIBANMP_SRC ${LIBANMP_SRC} InputLibraryWrapper/VGMStreamWrapper.cpp)
         
-        set(LD_FLAGS ${LD_FLAGS} ${VGMSTREAM_LIBRARIES})
+        set(LD_FLAGS ${LD_FLAGS} ${VGMSTREAM_LIBRARIES} ${ZLIB_LIBRARIES} ${MPG123_LIBRARIES} ${VORBISFILE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${M_LIB})
         
-        message("\tvgmstream include dir: ${VGMSTREAM_INCLUDE_DIR}")
-        message("\tvgmstream libraries  : ${VGMSTREAM_LIBRARIES}")
+        message("\tvgmstream  include dir: ${VGMSTREAM_INCLUDE_DIR}")
+        message("\tvgmstream  libraries  : ${VGMSTREAM_LIBRARIES}")
+        message("\tzlib       include dir: ${ZLIB_INCLUDE_DIRS}")
+        message("\tzlib       libraries  : ${ZLIB_LIBRARIES}")
+        message("\tvorbisfile libraries  : ${VORBISFILE_LIBRARIES}")
+        message("\tmpg123     libraries  : ${MPG123_LIBRARIES}")
   else(VGMSTREAM_LIBRARIES)
             message(SEND_ERROR "vgmstream not found. Define VGMSTREAM_INSTALL_DIR or turn USE_VGMSTREAM off.")
   endif(VGMSTREAM_LIBRARIES)
@@ -202,12 +208,14 @@ endif(USE_ALSA)
 ### TODO: check that there is at least one codec and one audio lib support activated
 
 # define name of the anmp core library
-SET(LIBANMP anmp)
+SET(LIBANMP anmpcore)
 ADD_LIBRARY(${LIBANMP} ${LIBANMP_SRC})
 
+set(LD_FLAGS ${LD_FLAGS} ${LIBANMP})
+
+add_subdirectory(GUI)
 
 
-
-add_executable(main test.cpp)
-target_link_libraries(main ${LIBANMP} ${LD_FLAGS})
+# add_executable(main test.cpp)
+# target_link_libraries(main ${LIBANMP} ${LD_FLAGS})
 
