@@ -65,11 +65,69 @@
      </layout>
     </item>
     <item>
-     <widget class="QSlider" name="seekBar">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-     </widget>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QLabel" name="labelTimePast">
+        <property name="minimumSize">
+         <size>
+          <width>45</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>0:00</string>
+        </property>
+        <property name="textFormat">
+         <enum>Qt::PlainText</enum>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSlider" name="seekBar">
+        <property name="styleSheet">
+         <string notr="true">QSlider::groove:horizontal {
+    border: 0px;
+    height: 13px; /* the groove expands to the size of the slider by default. by giving it a height, it has a fixed size */
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #b8b8b8, stop:1 #dfdfdf);
+    margin: 2px 0;
+}
+
+QSlider::handle:horizontal {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #eeeeee, stop:1 #8f8f8f);
+    border: 1px solid #606060;
+    width: 17px;
+    margin: -3px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */
+    border-radius: 8px;
+}</string>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelTimeLeft">
+        <property name="minimumSize">
+         <size>
+          <width>45</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>-0:00</string>
+        </property>
+        <property name="textFormat">
+         <enum>Qt::PlainText</enum>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
@@ -134,7 +192,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>19</height>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHello">
@@ -168,7 +226,7 @@
     </property>
     <widget class="QMenu" name="menuVisualization">
      <property name="title">
-      <string>Visualization</string>
+      <string>&amp;Visualization</string>
      </property>
      <addaction name="actionASCII"/>
      <addaction name="actionBlocky"/>
@@ -229,17 +287,17 @@
   </action>
   <action name="actionControl_Panel">
    <property name="text">
-    <string>Control Panel</string>
+    <string>&amp;Control Panel</string>
    </property>
   </action>
   <action name="actionBlocky">
    <property name="text">
-    <string>Block</string>
+    <string>&amp;Block</string>
    </property>
   </action>
   <action name="actionASCII">
    <property name="text">
-    <string>ASCII</string>
+    <string>&amp;ASCII</string>
    </property>
   </action>
  </widget>
