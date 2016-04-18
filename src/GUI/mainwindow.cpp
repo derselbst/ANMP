@@ -14,13 +14,42 @@
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
 #include <utility>      // std::pair
+#include <sstream>
+#include <iomanip>
 
-void MainWindow::onSeek(void* context, frame_t pos)
+void MainWindow::onSeek(void* ctx, frame_t pos)
 {
-    QSlider* playheadSlider = static_cast<MainWindow*>(context)->ui->seekBar;
+    MainWindow* context = static_cast<MainWindow*>(ctx);
+
+    QSlider* playheadSlider = context->ui->seekBar;
     bool oldState = playheadSlider->blockSignals(true);
     playheadSlider->setSliderPosition(pos);
     playheadSlider->blockSignals(oldState);
+
+    Song* s = context->player->getCurrentSong();
+    if(s==nullptr)
+    {
+        return;
+    }
+    int leftSec = (s->getFrames()-pos)/s->Format.SampleRate;
+    int leftMin = leftSec / 60;
+    leftSec %= 60;
+
+    int pastSec = pos/s->Format.SampleRate;
+    int pastMin = pastSec / 60;
+    pastSec %= 60;
+
+    stringstream ssTimePast;
+    ssTimePast << pastMin << ":" << setw(2) << setfill('0') << pastSec;
+
+    stringstream ssTimeLeft;
+    ssTimeLeft << leftMin << ":" << setw(2) << setfill('0') << leftSec;
+
+    QString strTimePast = QString::fromStdString(ssTimePast.str());
+    context->ui->labelTimePast->setText(strTimePast);
+
+    QString strTimeLeft = QString("-") + QString::fromStdString(ssTimeLeft.str());
+    context->ui->labelTimeLeft->setText(strTimeLeft);
 }
 
 void MainWindow::onCurrentSongChanged(void* context)
@@ -28,7 +57,7 @@ void MainWindow::onCurrentSongChanged(void* context)
     MainWindow* ctx = static_cast<MainWindow*>(context);
     QSlider* playheadSlider = ctx->ui->seekBar;
 
-        Song* s = static_cast<MainWindow*>(context)->playlistModel->current();
+        Song* s = ctx->playlistModel->current();
         if(s==nullptr)
         {
             ctx->setWindowTitle("ANMP");

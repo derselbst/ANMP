@@ -47,7 +47,7 @@ private:
 
 
     static void onSeek(void*, frame_t);
-    static void onCurrentSongChanged(void*);
+    static void onCurrentSongChanged(void *);
 
 
     void buildPlaylistView();
