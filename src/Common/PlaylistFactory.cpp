@@ -25,6 +25,8 @@
 
 #include "Common.h"
 
+#include <sstream>
+#include <iomanip>
 #include <cstring>
 #include <iostream>
 #include <libgen.h>
@@ -65,18 +67,43 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
         Track* track = cd_get_track (cd, i+1);
         cue_assert ("error getting track", track != NULL);
 
-        char* val = track_get_filename (track);
-        cue_assert ("error getting track filename", val != NULL);
+        char* realAudioFile = track_get_filename (track);
+        cue_assert ("error getting track filename", realAudioFile != NULL);
 
-//       cdtext = track_get_cdtext (track);
-//       cue_assert ("error getting track CDTEXT", cdtext != NULL);
+      Cdtext* cdtext = track_get_cdtext (track);
+      cue_assert ("error getting track CDTEXT", cdtext != NULL);
 
-//       val = cdtext_get (PTI_PERFORMER, cdtext);
-//       cue_assert ("error getting track performer", val != NULL);
+      SongInfo overridingMetadata;
+      {
+	  stringstream ss;
+	  ss << setw(2) << setfill('0') << i+1;
+	  overridingMetadata.Track = ss.str();
+	
+	  char* val = cdtext_get (PTI_PERFORMER, cdtext);
+	  if(val != NULL)
+	  {
+	    overridingMetadata.Artist = string(val);
+	  }
+	  
+	  val = cdtext_get (PTI_COMPOSER, cdtext);
+	  if(val != NULL)
+	  {
+	    overridingMetadata.Composer = string(val);
+	  }
 
-//       val = cdtext_get (PTI_TITLE, cdtext);
-//       cue_assert ("error getting track title", val != NULL);
-
+	  val = cdtext_get (PTI_TITLE, cdtext);
+	  if(val != NULL)
+	  {
+	    overridingMetadata.Title = string(val);
+	  }
+	  
+	  val = cdtext_get (PTI_GENRE, cdtext);
+	  if(val != NULL)
+	  {
+	    overridingMetadata.Genre = string(val);
+	  }
+      }
+      
         int strangeFramesStart = track_get_start (track);
 
         int strangeFramesLen = track_get_length (track);
@@ -95,7 +122,7 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
 
         strcpy(temp, filePath.c_str());
 
-        PlaylistFactory::addSong(playlist, string(dirname(temp)).append("/").append(val), strangeFramesStart*1000/75, len);
+        PlaylistFactory::addSong(playlist, string(dirname(temp)).append("/").append(realAudioFile), strangeFramesStart*1000/75, len, overridingMetadata);
     }
     cd_delete (cd);
 #undef cue_assert
@@ -119,7 +146,7 @@ if(pcm==nullptr)\
     }\
 }
 
-Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nullable<size_t> offset, Nullable<size_t> len)
+Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nullable<size_t> offset, Nullable<size_t> len, Nullable<SongInfo> overridingMetadata)
 {
     string ext = getFileExtension(filePath);
     Song* pcm=nullptr;
@@ -163,7 +190,7 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Null
     }
 #endif
 #ifdef USE_LIBGME
-    else if((iEquals(ext, "gbs") || iEquals(ext, "nsf")) && offset == 0 && len == 0)
+    else if((iEquals(ext, "gbs") || iEquals(ext, "nsf")) && !offset.hasValue && !len.hasValue)
     {
         Music_Emu * emu=nullptr;
         gme_err_t msg = gme_open_file(filePath.c_str(), &emu, gme_info_only);
@@ -219,6 +246,43 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Null
 
     pcm->buildLoopTree();
     pcm->buildMetadata();
+    
+    // correct metadata if possible
+    if(overridingMetadata.hasValue)
+    {
+      if(overridingMetadata.Value.Title != "")
+      {
+	pcm->Metadata.Title = overridingMetadata.Value.Title;
+      }
+      if(overridingMetadata.Value.Track != "")
+      {
+	pcm->Metadata.Track = overridingMetadata.Value.Track;
+      }
+      if(overridingMetadata.Value.Artist != "")
+      {
+	pcm->Metadata.Artist = overridingMetadata.Value.Artist;
+      }
+      if(overridingMetadata.Value.Album != "")
+      {
+	pcm->Metadata.Album = overridingMetadata.Value.Album;
+      }
+      if(overridingMetadata.Value.Composer != "")
+      {
+	pcm->Metadata.Composer = overridingMetadata.Value.Composer;
+      }
+      if(overridingMetadata.Value.Year != "")
+      {
+	pcm->Metadata.Year = overridingMetadata.Value.Year;
+      }
+      if(overridingMetadata.Value.Genre != "")
+      {
+	pcm->Metadata.Genre = overridingMetadata.Value.Genre;
+      }
+      if(overridingMetadata.Value.Comment != "")
+      {
+	pcm->Metadata.Comment = overridingMetadata.Value.Comment;
+      }
+    }
 
     pcm->close();
 
