@@ -3,6 +3,7 @@
 #include "applets/analyzer/AnalyzerApplet.h"
 
 #include "Common.h"
+#include "Config.h"
 #include "PlaylistFactory.h"
 #include "Playlist.h"
 #include "Song.h"
@@ -364,22 +365,22 @@ void MainWindow::relativeSeek(int relpos)
 
 void MainWindow::seekForward()
 {
-    this->relativeSeek(this->ui->seekBar->maximum() * SeekNormal);
+    this->relativeSeek(max(this->ui->seekBar->maximum() * SeekNormal, Config::FramesToRender));
 }
 
 void MainWindow::seekBackward()
 {
-    this->relativeSeek(-this->ui->seekBar->maximum() * SeekNormal);
+    this->relativeSeek(-1 * max(this->ui->seekBar->maximum() * SeekNormal, Config::FramesToRender));
 }
 
 void MainWindow::fastSeekForward()
 {
-    this->relativeSeek(this->ui->seekBar->maximum() * SeekFast);
+    this->relativeSeek(max(this->ui->seekBar->maximum() * SeekFast, Config::FramesToRender));
 }
 
 void MainWindow::fastSeekBackward()
 {
-    this->relativeSeek(-this->ui->seekBar->maximum() * SeekFast);
+    this->relativeSeek(-1 * max(this->ui->seekBar->maximum() * SeekFast, Config::FramesToRender));
 }
 
 void MainWindow::on_actionBlocky_triggered()
