@@ -7,6 +7,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 # Tell CMake to run moc when necessary:
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
 # As moc files are generated in the binary dir, tell CMake
 # to always look for includes there:
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -49,7 +50,7 @@ qt5_wrap_ui(UI_HEADERS
 add_subdirectory(applets)
 
 
-add_executable(ANMP ${UI_HEADERS} ${GUI_SRCS})
+add_executable(ANMP ${UI_HEADERS} ${GUI_SRCS} icons.qrc)
 qt5_use_modules(ANMP Core Gui Widgets OpenGL)
 
 target_link_libraries(ANMP

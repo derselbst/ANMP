@@ -35,3 +35,6 @@ FORMS    += mainwindow.ui configdialog.ui \
     applets/analyzer/AnalyzerApplet.ui overlaycontrol.ui
 
 DISTFILES +=
+
+RESOURCES += \
+    icons.qrc

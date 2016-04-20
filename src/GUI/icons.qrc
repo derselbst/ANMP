@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/basic">
+        <file>img/backw.svg</file>
+        <file>img/fbackw.svg</file>
+        <file>img/fforw.svg</file>
+        <file>img/forw.svg</file>
+        <file>img/pause.svg</file>
+        <file>img/play.svg</file>
+        <file>img/previous.svg</file>
+        <file>img/stop.svg</file>
+        <file>img/next.svg</file>
+    </qresource>
+</RCC>
