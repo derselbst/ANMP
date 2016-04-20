@@ -14,8 +14,6 @@
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
 #include <utility>      // std::pair
-#include <sstream>
-#include <iomanip>
 
 void MainWindow::onSeek(void* ctx, frame_t pos)
 {
@@ -31,24 +29,11 @@ void MainWindow::onSeek(void* ctx, frame_t pos)
     {
         return;
     }
-    int leftSec = (s->getFrames()-pos)/s->Format.SampleRate;
-    int leftMin = leftSec / 60;
-    leftSec %= 60;
 
-    int pastSec = pos/s->Format.SampleRate;
-    int pastMin = pastSec / 60;
-    pastSec %= 60;
-
-    stringstream ssTimePast;
-    ssTimePast << pastMin << ":" << setw(2) << setfill('0') << pastSec;
-
-    stringstream ssTimeLeft;
-    ssTimeLeft << leftMin << ":" << setw(2) << setfill('0') << leftSec;
-
-    QString strTimePast = QString::fromStdString(ssTimePast.str());
+    QString strTimePast = QString::fromStdString(framesToTimeStr(pos,s->Format.SampleRate));
     context->ui->labelTimePast->setText(strTimePast);
 
-    QString strTimeLeft = QString("-") + QString::fromStdString(ssTimeLeft.str());
+    QString strTimeLeft = QString("-") + QString::fromStdString(framesToTimeStr(s->getFrames()-pos, s->Format.SampleRate));
     context->ui->labelTimeLeft->setText(strTimeLeft);
 }
 
@@ -213,24 +198,12 @@ void MainWindow::on_actionPause_triggered()
 
 void MainWindow::on_actionNext_Song_triggered()
 {
-    bool oldState = this->player->getIsPlaying();
-    this->stop();
-    this->player->next();
-    if(oldState)
-    {
-      this->play();
-    }
+    this->next();
 }
 
 void MainWindow::on_actionPrevious_Song_triggered()
 {
-    bool oldState = this->player->getIsPlaying();
-    this->stop();
-    this->player->previous();
-    if(oldState)
-    {
-      this->play();
-    }
+    this->previous();
 }
 
 void MainWindow::on_actionClear_Playlist_triggered()
@@ -303,7 +276,7 @@ void MainWindow::play()
     this->player->play();
 
     QPushButton* playbtn = this->ui->playButton;
-    playbtn->setText("Pause");
+//    playbtn->setText("Pause");
     bool oldState = playbtn->blockSignals(true);
     playbtn->setChecked(true);
     playbtn->blockSignals(oldState);
@@ -315,7 +288,7 @@ void MainWindow::pause()
     this->player->pause();
 
     QPushButton* playbtn = this->ui->playButton;
-    playbtn->setText("Play");
+//    playbtn->setText("Play");
     bool oldState = playbtn->blockSignals(true);
     playbtn->setChecked(false);
     playbtn->blockSignals(oldState);
@@ -326,7 +299,7 @@ void MainWindow::stop()
     this->player->stop();
 
     QPushButton* playbtn = this->ui->playButton;
-    playbtn->setText("Play");
+//    playbtn->setText("Play");
     bool oldState = playbtn->blockSignals(true);
     playbtn->setChecked(false);
     playbtn->blockSignals(oldState);
@@ -335,6 +308,28 @@ void MainWindow::stop()
     oldState = playheadSlider->blockSignals(true);
     playheadSlider->setSliderPosition(0);
     playheadSlider->blockSignals(oldState);
+}
+
+void MainWindow::next()
+{
+    bool oldState = this->player->getIsPlaying();
+    this->stop();
+    this->player->next();
+    if(oldState)
+    {
+      this->play();
+    }
+}
+
+void MainWindow::previous()
+{
+    bool oldState = this->player->getIsPlaying();
+    this->stop();
+    this->player->previous();
+    if(oldState)
+    {
+      this->play();
+    }
 }
 
 void MainWindow::on_seekBar_sliderMoved(int position)
@@ -398,4 +393,34 @@ void MainWindow::on_actionASCII_triggered()
     this->analyzerWindow->setAnalyzer(AnalyzerApplet::AnalyzerType::Ascii);
     this->analyzerWindow->startGraphics();
     this->analyzerWindow->show();
+}
+
+void MainWindow::on_forwardButton_clicked()
+{
+    this->seekForward();
+}
+
+void MainWindow::on_fforwardButton_clicked()
+{
+    this->fastSeekForward();
+}
+
+void MainWindow::on_nextButton_clicked()
+{
+    this->next();
+}
+
+void MainWindow::on_previousButton_clicked()
+{
+    this->previous();
+}
+
+void MainWindow::on_fbackwardButton_clicked()
+{
+    this->fastSeekBackward();
+}
+
+void MainWindow::on_backwardButton_clicked()
+{
+    this->seekBackward();
 }

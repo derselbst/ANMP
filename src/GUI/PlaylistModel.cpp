@@ -1,6 +1,7 @@
 #include "PlaylistModel.h"
 
 #include "Song.h"
+#include "Common.h"
 
 #include <QBrush>
 #include <sstream>
@@ -25,7 +26,6 @@ int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
 #include <iostream>
 QVariant PlaylistModel::data(const QModelIndex &index, int role) const
 {
-  
 //       cout << "    DATA " << index.row() << " " << index.column() << role << endl;
     if (!index.isValid() || this->queue.size() <= index.row())
     {
@@ -66,12 +66,7 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
         return QString::fromStdString(songToUse->Metadata.Artist);
     case 3:
       {
-          unsigned int sec = songToUse->getFrames() / songToUse->Format.SampleRate;
-          unsigned int min = sec/60;
-          sec %= 60;
-          stringstream ss;
-          ss << min << ":" << setw(2) << setfill('0') << sec;
-          return QString::fromStdString(ss.str());
+          return QString::fromStdString(framesToTimeStr(songToUse->getFrames(),songToUse->Format.SampleRate));
       }
 	default:
 	  break;
@@ -226,7 +221,7 @@ bool PlaylistModel::setData(const QModelIndex &index, const QVariant &value, int
     }
     
 
-  // WARNING: the view will only properly be updated if we return true!
+    // WARNING: the view will only properly be updated if we return true!
     return true;
 }
 

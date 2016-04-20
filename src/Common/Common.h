@@ -22,4 +22,6 @@ string getFileExtension(const string& filePath);
 
 unsigned long parse_time_crap(const char *input);
 
+string framesToTimeStr(frame_t f, const unsigned int& sampleRate);
+
 frame_t msToFrames(const size_t& ms, const unsigned int& sampleRate);

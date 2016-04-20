@@ -54,10 +54,6 @@ private:
     void buildFileBrowser();
     void createShortcuts();
 
-    void play();
-    void pause();
-    void tooglePlayPause();
-    void stop();
     void relativeSeek(int ms);
 
 
@@ -80,8 +76,22 @@ private slots:
     void seekBackward();
     void fastSeekForward();
     void fastSeekBackward();
+
+    void play();
+    void pause();
+    void tooglePlayPause();
+    void stop();
+    void previous();
+    void next();
+
     void on_actionBlocky_triggered();
     void on_actionASCII_triggered();
+    void on_forwardButton_clicked();
+    void on_fforwardButton_clicked();
+    void on_nextButton_clicked();
+    void on_previousButton_clicked();
+    void on_fbackwardButton_clicked();
+    void on_backwardButton_clicked();
 };
 
 #endif // MAINWINDOW_H

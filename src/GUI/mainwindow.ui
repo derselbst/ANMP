@@ -18,15 +18,59 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QPushButton" name="playButton">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+       <widget class="QPushButton" name="previousButton">
+        <property name="icon">
+         <iconset resource="icons.qrc">
+          <normaloff>:/basic/img/previous.svg</normaloff>:/basic/img/previous.svg</iconset>
         </property>
-        <property name="text">
-         <string>Play</string>
+        <property name="iconSize">
+         <size>
+          <width>64</width>
+          <height>64</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="fbackwardButton">
+        <property name="icon">
+         <iconset resource="icons.qrc">
+          <normaloff>:/basic/img/fbackw.svg</normaloff>:/basic/img/fbackw.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>64</width>
+          <height>64</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="backwardButton">
+        <property name="icon">
+         <iconset resource="icons.qrc">
+          <normaloff>:/basic/img/backw.svg</normaloff>:/basic/img/backw.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>64</width>
+          <height>64</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="playButton">
+        <property name="icon">
+         <iconset resource="icons.qrc">
+          <normaloff>:/basic/img/play.svg</normaloff>
+          <normalon>:/basic/img/pause_new.svg</normalon>:/basic/img/play.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>64</width>
+          <height>64</height>
+         </size>
         </property>
         <property name="checkable">
          <bool>true</bool>
@@ -34,31 +78,58 @@
        </widget>
       </item>
       <item>
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
+       <widget class="QPushButton" name="stopButton">
+        <property name="icon">
+         <iconset resource="icons.qrc">
+          <normaloff>:/basic/img/stop.svg</normaloff>:/basic/img/stop.svg</iconset>
         </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Fixed</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
+        <property name="iconSize">
          <size>
-          <width>20</width>
-          <height>40</height>
+          <width>64</width>
+          <height>64</height>
          </size>
         </property>
-       </spacer>
+       </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="stopButton">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+       <widget class="QPushButton" name="forwardButton">
+        <property name="icon">
+         <iconset resource="icons.qrc">
+          <normaloff>:/basic/img/forw.svg</normaloff>:/basic/img/forw.svg</iconset>
         </property>
-        <property name="text">
-         <string>Stop</string>
+        <property name="iconSize">
+         <size>
+          <width>64</width>
+          <height>64</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="fforwardButton">
+        <property name="icon">
+         <iconset resource="icons.qrc">
+          <normaloff>:/basic/img/fforw.svg</normaloff>:/basic/img/fforw.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>64</width>
+          <height>64</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="nextButton">
+        <property name="icon">
+         <iconset resource="icons.qrc">
+          <normaloff>:/basic/img/next.svg</normaloff>:/basic/img/next.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>64</width>
+          <height>64</height>
+         </size>
         </property>
        </widget>
       </item>
@@ -89,19 +160,62 @@
        <widget class="QSlider" name="seekBar">
         <property name="styleSheet">
          <string notr="true">QSlider::groove:horizontal {
-    border: 0px;
-    height: 13px; /* the groove expands to the size of the slider by default. by giving it a height, it has a fixed size */
-    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #b8b8b8, stop:1 #dfdfdf);
-    margin: 2px 0;
+border: 0px solid #bbb;
+background: white;
+height: 21px;
+border-radius: 10px;
+}
+
+QSlider::sub-page:horizontal {
+/*background: qlineargradient(x1: 0, y1: 0,    x2: 0, y2: 1,
+    stop: 0 #66e, stop: 1 #bbf);*/
+background: qlineargradient(x1: 0, y1: 0.2, x2: 1, y2: 0,
+    stop: 0 #00cc44, stop: 1 #99ffbb);
+border: 0px solid #777;
+height: 21px;
+border-radius: 10px;
+}
+
+QSlider::add-page:horizontal {
+background: #fff;
+border: 0px solid #777;
+height: 21px;
+border-radius: 10px;
 }
 
 QSlider::handle:horizontal {
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #eeeeee, stop:1 #8f8f8f);
-    border: 1px solid #606060;
-    width: 17px;
-    margin: -3px 0; /* handle is placed by default on the contents rect of the groove. Expand outside the groove */
-    border-radius: 8px;
-}</string>
+background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+    stop:0 #eee, stop:1 #ccc);
+border: 1px solid #777;
+width: 14px;
+margin-top: 3px;
+margin-bottom: 3px;
+border-radius: 7px;
+}
+
+QSlider::handle:horizontal:hover {
+background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+    stop:0 #fff, stop:1 #ddd);
+border: 1px solid #444;
+border-radius: 0px;
+}
+
+QSlider::sub-page:horizontal:disabled {
+background: #bbb;
+border-color: #999;
+}
+
+QSlider::add-page:horizontal:disabled {
+background: #eee;
+border-color: #999;
+}
+
+QSlider::handle:horizontal:disabled {
+background: #eee;
+border: 1px solid #aaa;
+border-radius: 4px;
+}
+</string>
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -192,14 +306,13 @@ QSlider::handle:horizontal {
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>30</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHello">
     <property name="title">
      <string>Fi&amp;le</string>
     </property>
-    <addaction name="actionLoad_Files"/>
     <addaction name="actionClose"/>
    </widget>
    <widget class="QMenu" name="menuPlaylist">
@@ -207,6 +320,7 @@ QSlider::handle:horizontal {
      <string>Pla&amp;ylist</string>
     </property>
     <addaction name="actionAdd_Songs"/>
+    <addaction name="separator"/>
     <addaction name="actionClear_Playlist"/>
    </widget>
    <widget class="QMenu" name="menuPlayer">
@@ -311,6 +425,8 @@ QSlider::handle:horizontal {
    </slots>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

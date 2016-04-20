@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <sstream>
+#include <iomanip>
 
 #ifdef _POSIX_VERSION
 #include <strings.h>
@@ -96,6 +98,18 @@ unsigned long parse_time_crap(const char *input)
     }
 
     return value;
+}
+
+string framesToTimeStr(frame_t frames, const unsigned int& sampleRate)
+{
+    int sec = frames/sampleRate;
+    int min = sec / 60;
+    sec %= 60;
+
+    stringstream ssTime;
+    ssTime << min << ":" << setw(2) << setfill('0') << sec;
+
+    return ssTime.str();
 }
 
 /**
