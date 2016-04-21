@@ -64,7 +64,10 @@
         <property name="icon">
          <iconset resource="icons.qrc">
           <normaloff>:/basic/img/play.svg</normaloff>
-          <normalon>:/basic/img/pause_new.svg</normalon>:/basic/img/play.svg</iconset>
+          <normalon>:/basic/img/pause.svg</normalon>
+          <disabledon>:/basic/img/pause.svg</disabledon>
+          <activeon>:/basic/img/pause.svg</activeon>
+          <selectedon>:/basic/img/pause.svg</selectedon>:/basic/img/play.svg</iconset>
         </property>
         <property name="iconSize">
          <size>
