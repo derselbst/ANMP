@@ -19,7 +19,7 @@ int PlaylistModel::rowCount(const QModelIndex & /* parent */) const
 }
 int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
 {
-    return 4;
+    return 5;
 }
 
 
@@ -65,6 +65,8 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
     case 2:
         return QString::fromStdString(songToUse->Metadata.Artist);
     case 3:
+        return QString::fromStdString(songToUse->Metadata.Genre);
+    case 4:
       {
           return QString::fromStdString(framesToTimeStr(songToUse->getFrames(),songToUse->Format.SampleRate));
       }
@@ -98,6 +100,8 @@ QVariant PlaylistModel::headerData(int section, Qt::Orientation orientation, int
       case 2:
         return QString("Interpret");
       case 3:
+        return QString("Genre");
+      case 4:
         return QString("Duration");
 	  default:
 	    return QString("");
