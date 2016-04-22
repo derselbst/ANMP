@@ -19,6 +19,11 @@
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <widget class="QPushButton" name="previousButton">
+        <property name="styleSheet">
+         <string notr="true">QPushButton{
+	background-color: #e3efff;
+}</string>
+        </property>
         <property name="icon">
          <iconset resource="icons.qrc">
           <normaloff>:/basic/img/previous.svg</normaloff>:/basic/img/previous.svg</iconset>
@@ -61,6 +66,12 @@
       </item>
       <item>
        <widget class="QPushButton" name="playButton">
+        <property name="styleSheet">
+         <string notr="true">QPushButton{
+background-color: #ccffcb;
+}
+</string>
+        </property>
         <property name="icon">
          <iconset resource="icons.qrc">
           <normaloff>:/basic/img/play.svg</normaloff>
@@ -82,6 +93,12 @@
       </item>
       <item>
        <widget class="QPushButton" name="stopButton">
+        <property name="styleSheet">
+         <string notr="true">QPushButton {
+background-color: rgb(255, 209, 205);
+}
+</string>
+        </property>
         <property name="icon">
          <iconset resource="icons.qrc">
           <normaloff>:/basic/img/stop.svg</normaloff>:/basic/img/stop.svg</iconset>
@@ -124,6 +141,11 @@
       </item>
       <item>
        <widget class="QPushButton" name="nextButton">
+        <property name="styleSheet">
+         <string notr="true">QPushButton{
+	background-color: #e3efff;
+}</string>
+        </property>
         <property name="icon">
          <iconset resource="icons.qrc">
           <normaloff>:/basic/img/next.svg</normaloff>:/basic/img/next.svg</iconset>

@@ -276,7 +276,6 @@ void MainWindow::play()
     this->player->play();
 
     QPushButton* playbtn = this->ui->playButton;
-//    playbtn->setText("Pause");
     bool oldState = playbtn->blockSignals(true);
     playbtn->setChecked(true);
     playbtn->blockSignals(oldState);
@@ -288,7 +287,6 @@ void MainWindow::pause()
     this->player->pause();
 
     QPushButton* playbtn = this->ui->playButton;
-//    playbtn->setText("Play");
     bool oldState = playbtn->blockSignals(true);
     playbtn->setChecked(false);
     playbtn->blockSignals(oldState);
@@ -299,7 +297,6 @@ void MainWindow::stop()
     this->player->stop();
 
     QPushButton* playbtn = this->ui->playButton;
-//    playbtn->setText("Play");
     bool oldState = playbtn->blockSignals(true);
     playbtn->setChecked(false);
     playbtn->blockSignals(oldState);
@@ -308,6 +305,23 @@ void MainWindow::stop()
     oldState = playheadSlider->blockSignals(true);
     playheadSlider->setSliderPosition(0);
     playheadSlider->blockSignals(oldState);
+
+
+    QString nothing = QString::fromStdString(framesToTimeStr(0,1));
+
+    QLabel* l = this->ui->labelTimePast;
+    l->setText(nothing);
+
+    l = this->ui->labelTimeLeft;
+    Song* s = this->player->getCurrentSong();
+    if(s==nullptr)
+    {
+        l->setText(nothing);
+    }
+    else
+    {
+        l->setText(QString::fromStdString(framesToTimeStr(s->getFrames(), s->Format.SampleRate)));
+    }
 }
 
 void MainWindow::next()
