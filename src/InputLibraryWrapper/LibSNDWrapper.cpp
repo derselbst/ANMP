@@ -2,6 +2,7 @@
 
 #include "Config.h"
 #include "Common.h"
+#include "CommonExceptions.h"
 #include "AtomicWrite.h"
 
 
@@ -22,7 +23,7 @@ LibSNDWrapper::LibSNDWrapper(string filename, Nullable<size_t> offset, Nullable<
 
 void LibSNDWrapper::initAttr()
 {
-    this->Format.SampleFormat = SampleFormat_t::float32;
+    this->Format.SampleFormat = SampleFormat_t::int32;
 }
 
 LibSNDWrapper::~LibSNDWrapper ()
@@ -46,13 +47,26 @@ void LibSNDWrapper::open ()
       THROW_RUNTIME_ERROR(sf_strerror (NULL) << " (in File \"" << this->Filename << ")\"");
     };
 
-    if (sfinfo.channels < 1 || sfinfo.channels >= 6)
+    if (sfinfo.channels < 1 || sfinfo.channels > 6)
     {
       THROW_RUNTIME_ERROR("channels == " << sfinfo.channels);
     };
 
     this->Format.Channels = sfinfo.channels;
     this->Format.SampleRate = sfinfo.samplerate;
+
+    // set scale factor for file containing floats as recommended by:
+    // http://www.mega-nerd.com/libsndfile/api.html#note2
+    switch(this->sfinfo.format & SF_FORMAT_SUBMASK)
+    {
+      case SF_FORMAT_FLOAT:
+	/* fall through */
+      case SF_FORMAT_DOUBLE:
+	sf_command(this->sndfile, SFC_SET_SCALE_FLOAT_INT_READ, nullptr, SF_TRUE);
+	break;
+      default:
+	break;
+    }
 }
 
 void LibSNDWrapper::close()
@@ -72,18 +86,39 @@ void LibSNDWrapper::fillBuffer()
       {
         sf_seek(this->sndfile, msToFrames(this->fileOffset.Value, this->Format.SampleRate), SEEK_SET);
       }
-      StandardWrapper<float>::fillBuffer(this);
+      StandardWrapper<int32_t>::fillBuffer(this);
     }
 }
 
 void LibSNDWrapper::render(frame_t framesToRender)
 {
-    STANDARDWRAPPER_RENDER(float, sf_read_float(this->sndfile, pcm, framesToDoNow*this->Format.Channels))
+    STANDARDWRAPPER_RENDER(int32_t,
+			           
+        int tempBuf[Config::FramesToRender*6/*Channels*/];
+        sf_read_int(this->sndfile, tempBuf, framesToDoNow*this->Format.Channels);
+	for(unsigned int i=0; i<framesToDoNow*this->Format.Channels; i++)
+	{
+	  // see http://www.mega-nerd.com/libsndfile/api.html#note1:
+	  // Whenever integer data is moved from one sized container to another sized container, the 
+	  // most significant bit in the source container will become the most significant bit in the destination container.
+	  if(sizeof(int)==4)
+	  {
+	    pcm[i] = static_cast<int32_t>(tempBuf[i]);
+	  }
+	  else if(sizeof(int)==8)
+	  {
+	    pcm[i] = static_cast<int32_t>(tempBuf[i] >> 32);
+	  }
+	  else
+	  {
+	    throw NotImplementedException();
+	  }
+	})
 }
 
 void LibSNDWrapper::releaseBuffer()
 {
-    StandardWrapper<float>::releaseBuffer();
+    StandardWrapper<int32_t>::releaseBuffer();
 }
 
 vector<loop_t> LibSNDWrapper::getLoopArray () const

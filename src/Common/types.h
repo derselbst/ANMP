@@ -46,6 +46,7 @@ typedef enum SampleFormat
     unknown,
     int16,
     int24,
+    int32,
     float32,
 } SampleFormat_t;
 

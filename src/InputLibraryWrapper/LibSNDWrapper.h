@@ -12,7 +12,7 @@
   *
   */
 
-class LibSNDWrapper : public StandardWrapper<float>
+class LibSNDWrapper : public StandardWrapper<int32_t>
 {
 public:
 

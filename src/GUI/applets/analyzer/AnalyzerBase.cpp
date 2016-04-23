@@ -147,14 +147,16 @@ AnalyzerBase::transform( QVector<float> &scope ) //virtual
 
 void AnalyzerBase::processData( const Song* s, frame_t playhead )
 {
-  if(s==nullptr || s->Format.SampleFormat != int16)
+  if(s==nullptr)
   {
     return;
   }
-  int16_t* pcmBuf = static_cast<int16_t*>(s->data) + playhead * s->Format.Channels;
   
-    QVector<float> scope( m_fht->size() );
-
+  QVector<float> scope(m_fht->size());
+  if(s->Format.SampleFormat != int16)
+  {
+    int16_t* pcmBuf = static_cast<int16_t*>(s->data) + playhead * s->Format.Channels;
+  
     for( unsigned int x = 0,i = 0; x < Config::FramesToRender*s->Format.Channels && playhead + i < s->getFrames(); x+=s->Format.Channels,i++ )
     {
         if( s->Format.Channels == 1 )  // Mono
@@ -169,7 +171,26 @@ void AnalyzerBase::processData( const Song* s, frame_t playhead )
         // attenuate the signal
         scope[i] /= 10;
     }
-
+  }
+  else
+  {
+        int32_t* pcmBuf = static_cast<int32_t*>(s->data) + playhead * s->Format.Channels;
+  
+    for( unsigned int x = 0,i = 0; x < Config::FramesToRender*s->Format.Channels && playhead + i < s->getFrames(); x+=s->Format.Channels,i++ )
+    {
+        if( s->Format.Channels == 1 )  // Mono
+        {
+            scope[i] = double( pcmBuf[x] >> 15 );
+        }
+        else    // Anything > Mono is treated as Stereo
+        {
+            scope[i] = double( (pcmBuf[x] + pcmBuf[x+1]) >> 15 ) / ( 2 * ( 1 << 15 ) ); // Average between the channels
+        }
+        
+        // attenuate the signal
+        scope[i] /= 10;
+    }
+  }
     transform( scope );
     analyze( scope );
 }

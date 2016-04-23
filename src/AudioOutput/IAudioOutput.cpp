@@ -28,6 +28,13 @@ int IAudioOutput::write (pcm_t* frameBuffer, frame_t frames, int offset)
         return this->write(buf, frames);
         break;
     }
+    case int32:
+    {
+        int32_t* buf = static_cast<int32_t*>(frameBuffer);
+        buf += offset;
+        return this->write(buf, frames);
+        break;
+    }
     case unknown:
         throw invalid_argument("pcmFormat mustnt be unknown");
         break;

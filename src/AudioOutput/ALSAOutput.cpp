@@ -90,6 +90,9 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
     case int16:
         err = snd_pcm_hw_params_set_format (this->alsa_dev, hw_params, SND_PCM_FORMAT_S16);
         break;
+    case int32:
+	err = snd_pcm_hw_params_set_format (this->alsa_dev, hw_params, SND_PCM_FORMAT_S32);
+	break;
     case unknown:
       THROW_RUNTIME_ERROR("ALSAOutput::init(): Sample Format not set");
         
@@ -218,6 +221,11 @@ int ALSAOutput::write (float* buffer, frame_t frames)
 int ALSAOutput::write (int16_t* buffer, frame_t frames)
 {
   return this->write<int16_t>(buffer, frames);
+}
+
+int ALSAOutput::write (int32_t* buffer, frame_t frames)
+{
+  return this->write<int32_t>(buffer, frames);
 }
 
 template<typename T> int ALSAOutput::write(T* buffer, frame_t frames)

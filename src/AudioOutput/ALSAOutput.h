@@ -35,6 +35,8 @@ public:
 
     int write (int16_t* buffer, frame_t frames) override;
     
+    int write (int32_t* buffer, frame_t frames) override;
+    
     void setVolume(uint8_t) override;
 
     void start () override;
