@@ -20,6 +20,10 @@ using int24_t = struct _int24_t
 	_int24_t(uint16_t integer)
 		: data(integer)
 	{ }
+	_int24_t()
+		: data(0)
+	{ }
+	
 	explicit _int24_t(int32_t integer)
 		: data(integer)
 	{ }
