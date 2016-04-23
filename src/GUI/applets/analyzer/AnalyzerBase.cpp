@@ -20,10 +20,6 @@
 #include "Config.h"
 #include "Song.h"
 
-// #include "core/support/Debug.h"
-// #include "EngineController.h"
-// #include "MainWindow.h"
-
 #include <cmath> // interpolate()
 
 // #include <KWindowSystem>
@@ -40,18 +36,8 @@ AnalyzerBase::AnalyzerBase( QWidget *parent )
     : QGLWidget( parent )
     , m_fht( new FHT( log2( Config::FramesToRender ) ) )
     , m_renderTimer( new QTimer( this ) )
-    , m_demoTimer( new QTimer( this ) )
 {
-//     connect( EngineController::instance(), SIGNAL( playbackStateChanged() ), this, SLOT( playbackStateChanged() ) );
-
     setFps( 60 ); // Default unless changed by subclass
-    m_demoTimer->setInterval( 33 );  // ~30 fps
-
-//     enableDemo( !EngineController::instance()->isPlaying() );
-
-// #ifdef Q_WS_X11
-//     connect( KWindowSystem::self(), SIGNAL( currentDesktopChanged( int ) ), this, SLOT( currentDesktopChanged() ) );
-// #endif
 
     connect( m_renderTimer, SIGNAL( timeout() ), this, SLOT( updateGL() ) );
 
@@ -70,28 +56,19 @@ AnalyzerBase::~AnalyzerBase()
 void
 AnalyzerBase::connectSignals()
 {
-//     DEBUG_BLOCK
-
     if( m_renderTimer->isActive() )
         return;
-
-//     connect( EngineController::instance(), SIGNAL( audioDataReady( const QMap<Phonon::AudioDataOutput::Channel, QVector<qint16> > & ) ),
-//         this, SLOT( processData( const QMap<Phonon::AudioDataOutput::Channel, QVector<qint16> > & ) ) );
-//     connect( m_demoTimer, SIGNAL( timeout() ), this, SLOT( demo() ) );
+    
     m_renderTimer->start();
 }
 
 void
 AnalyzerBase::disconnectSignals()
 {
-//     DEBUG_BLOCK
-
-//     disconnect( EngineController::instance(), SIGNAL( audioDataReady( const QMap<Phonon::AudioDataOutput::Channel, QVector<qint16> > & ) ),
-//         this, SLOT( processData( const QMap<Phonon::AudioDataOutput::Channel, QVector<qint16> > & ) ) );
-//     m_demoTimer->disconnect( this );
     m_renderTimer->stop();
 }
 
+// TODO this seems to be quite usefull
 // void
 // AnalyzerBase::currentDesktopChanged()
 // {
@@ -104,32 +81,8 @@ AnalyzerBase::disconnectSignals()
 //         disconnectSignals();
 // }
 
-// void
-// AnalyzerBase::playbackStateChanged()
-// {
-//     enableDemo( !EngineController::instance()->isPlaying() );
-// }
 
-// void
-// AnalyzerBase::enableDemo( bool enable )
-// {
-//     enable ? m_demoTimer->start() : m_demoTimer->stop();
-// }
-
-// void
-// AnalyzerBase::hideEvent( QHideEvent * )
-// {
-//     QTimer::singleShot( 0, this, SLOT( disconnectSignals() ) );
-// }
-// 
-// void
-// AnalyzerBase::showEvent( QShowEvent * )
-// {
-//     QTimer::singleShot( 0, this, SLOT( connectSignals() ) );
-// }
-
-void
-AnalyzerBase::transform( QVector<float> &scope ) //virtual
+void AnalyzerBase::transform( QVector<float> &scope ) //virtual
 {
     //this is a standard transformation that should give
     //an FFT scope that has bands for pretty analyzers
@@ -195,32 +148,7 @@ void AnalyzerBase::processData( const Song* s, frame_t playhead )
     analyze( scope );
 }
 
-// void
-// AnalyzerBase::demo() //virtual
-// {
-//     static int t = 201;
-// 
-//     if( t > 300 )
-//         t = 1; //0 = wasted calculations
-// 
-//     if( t < 201 )
-//     {
-//         QVector<float> s( 512 );
-// 
-//         const double dt = double( t ) / 200;
-//         for( int i = 0; i < s.size(); ++i )
-//             s[i] = dt * ( sin( M_PI + ( i * M_PI ) / s.size() ) + 1.0 );
-// 
-//         analyze( s );
-//     }
-//     else
-//         analyze( QVector<float>( 1, 0 ) );
-// 
-//     ++t;
-// }
-
-void
-AnalyzerBase::interpolate( const QVector<float> &inVec, QVector<float> &outVec ) const
+void AnalyzerBase::interpolate( const QVector<float> &inVec, QVector<float> &outVec ) const
 {
     double pos = 0.0;
     const double step = ( double )inVec.size() / outVec.size();
@@ -245,8 +173,7 @@ AnalyzerBase::interpolate( const QVector<float> &inVec, QVector<float> &outVec )
     }
 }
 
-void
-AnalyzerBase::setFps( int fps )
+void AnalyzerBase::setFps( int fps )
 {
     m_renderTimer->setInterval( 1000 / fps );
 }

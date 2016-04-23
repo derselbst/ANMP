@@ -55,22 +55,11 @@ protected:
     FHT    *m_fht;
     QTimer *m_renderTimer;
 
-protected slots:
-//     virtual void demo();
-
 public slots:
     void connectSignals();
     void disconnectSignals();
 //     void currentDesktopChanged();
     void processData( const Song* thescope, frame_t playhead );
-//     void playbackStateChanged();
-
-private:
-//     void enableDemo( bool enable );
-//     void hideEvent( QHideEvent* );
-//     void showEvent( QShowEvent* );
-
-    QTimer *m_demoTimer;
 };
 
 
