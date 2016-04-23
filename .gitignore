@@ -1,5 +1,8 @@
 ANMP
 main
+build/
+bin/
+src/test.cpp
 
 CMakeCache.txt
 CMakeFiles
