@@ -39,7 +39,7 @@ AnalyzerBase::AnalyzerBase( QWidget *parent )
 {
     setFps( 60 ); // Default unless changed by subclass
 
-    connect( m_renderTimer, SIGNAL( timeout() ), this, SLOT( updateGL() ) );
+    connect(m_renderTimer, &QTimer::timeout, this, &QGLWidget::updateGL);
 
     //initialize openGL context before managing GL calls
     makeCurrent();
@@ -105,45 +105,45 @@ void AnalyzerBase::processData( const Song* s, frame_t playhead )
     return;
   }
   
+  #define PREPARE_SCOPE(PCMBUF) \
+  for(unsigned int frame = 0; (frame < Config::FramesToRender) && ((playhead + frame) < s->getFrames()); frame++)\
+  {\
+    /* init the frame'th element */\
+    scope[frame] = float( *PCMBUF );\
+  \
+    /* point to next item */\
+    PCMBUF++;\
+  \
+    for(unsigned int item = 1; item < s->Format.Channels; item++)\
+    {\
+      scope[frame] += float( *PCMBUF );\
+      PCMBUF++;\
+    }\
+  \
+    /* Average between the channels */\
+    scope[frame] /= s->Format.Channels;\
+  \
+    /* attenuate the signal: normalize the float by dividing through the maximum value of the type PCMBUF points to */\
+    scope[frame] /= std::numeric_limits<std::remove_pointer<decltype(PCMBUF)>::type>::max();\
+  \
+    /* further attenuation */\
+    scope[frame] /= 20;\
+  }
+  
   QVector<float> scope(m_fht->size());
-  if(s->Format.SampleFormat != int16)
+  if(s->Format.SampleFormat == int16)
   {
     int16_t* pcmBuf = static_cast<int16_t*>(s->data) + playhead * s->Format.Channels;
-  
-    for( unsigned int x = 0,i = 0; x < Config::FramesToRender*s->Format.Channels && playhead + i < s->getFrames(); x+=s->Format.Channels,i++ )
-    {
-        if( s->Format.Channels == 1 )  // Mono
-        {
-            scope[i] = double( pcmBuf[x] );
-        }
-        else    // Anything > Mono is treated as Stereo
-        {
-            scope[i] = double( pcmBuf[x] + pcmBuf[x+1] ) / ( 2 * ( 1 << 15 ) ); // Average between the channels
-        }
-        
-        // attenuate the signal
-        scope[i] /= 10;
-    }
+    
+    PREPARE_SCOPE(pcmBuf);
   }
-  else
+  else if(s->Format.SampleFormat == int32)
   {
-        int32_t* pcmBuf = static_cast<int32_t*>(s->data) + playhead * s->Format.Channels;
-  
-    for( unsigned int x = 0,i = 0; x < Config::FramesToRender*s->Format.Channels && playhead + i < s->getFrames(); x+=s->Format.Channels,i++ )
-    {
-        if( s->Format.Channels == 1 )  // Mono
-        {
-            scope[i] = double( pcmBuf[x] >> 15 );
-        }
-        else    // Anything > Mono is treated as Stereo
-        {
-            scope[i] = double( (pcmBuf[x] + pcmBuf[x+1]) >> 15 ) / ( 2 * ( 1 << 15 ) ); // Average between the channels
-        }
-        
-        // attenuate the signal
-        scope[i] /= 10;
-    }
+    int32_t* pcmBuf = static_cast<int32_t*>(s->data) + playhead * s->Format.Channels;
+    
+    PREPARE_SCOPE(pcmBuf);
   }
+  
     transform( scope );
     analyze( scope );
 }
