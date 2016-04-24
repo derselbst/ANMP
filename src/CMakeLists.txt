@@ -27,6 +27,7 @@ option(USE_LIBMAD "Use libmad to support MPEG audio formats" ON)
 option(USE_LIBSND "Use libsndfile to support common audio formats (FLAC, WAVE, OGG, etc.)" ON)
 option(USE_LAZYUSF "Use lazyusf2 to support USF (Ultra64 Sound Format)" ON)
 option(USE_VGMSTREAM "Use vgmstream to support innumerable streamed audio formats from video games." ON)
+option(USE_FFMPEG "Use ffmpeg to support innumerable streamed audio formats, also from video streams." ON)
 option(USE_CUE "Use libcue to support loading cue sheets" ON)
 
 if(USE_LIBGME)
@@ -159,6 +160,26 @@ if(USE_VGMSTREAM)
             message(SEND_ERROR "vgmstream not found. Define VGMSTREAM_INSTALL_DIR or turn USE_VGMSTREAM off.")
   endif(VGMSTREAM_LIBRARIES)
 endif(USE_VGMSTREAM)
+
+
+if(USE_FFMPEG)
+  find_package(FFmpeg REQUIRED)
+  
+  if(FFMPEG_FOUND)
+    message("Found FFMPEG/LibAV libraries")
+    INCLUDE_DIRECTORIES(${FFMPEG_INCLUDE_DIR})
+
+    add_definitions(-DUSE_FFMPEG)
+    SET(LIBANMP_SRC ${LIBANMP_SRC} InputLibraryWrapper/FFMpegWrapper.cpp)
+
+    set(LD_FLAGS ${LD_FLAGS} ${FFMPEG_LIBRARIES})
+
+    message("\tFFMPEG include dir : ${FFMPEG_INCLUDE_DIR}")
+    message("\tFFMPEG libraries   : ${FFMPEG_LIBRARIES}")
+  else(FFMPEG_FOUND)
+    message(SEND_ERROR "FFMPEG / LibAV not found!")
+  endif(FFMPEG_FOUND)
+endif(USE_FFMPEG)
 
 
 if(USE_CUE)
