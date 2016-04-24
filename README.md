@@ -20,15 +20,15 @@ Implementing new formats shall be done by implementing the abstract base class *
 ## Build Dependencies
 
 * cmake >= 2.8
-* gcc >= 4.8
+* gcc >= 4.8.1
 * [libcue](https://github.com/lipnitsk/libcue) (only for cuesheet support)
 * ALSA
 * QT5 (for GUI support only)
 
 #### At least one of the following libraries
-(depending on which audio formats ANMP shall be able to read)
+(depending on which audio formats ANMP shall be able to play)
 * libsndfile (strongly recommended to play most common audio formats)
-* [mad](https://sourceforge.net/projects/mad/files/libmad/)
+* [mad](https://sourceforge.net/projects/mad/files/libmad/) >= 0.15.1b
 * ffmpeg >= 2.8.6 (specifically libavcodec, libavformat, libavutil, libswresample)
 * [lazyusf2](https://gitlab.kode54.net/kode54/lazyusf2)
 * [libgme](https://github.com/kode54/Game_Music_Emu)
