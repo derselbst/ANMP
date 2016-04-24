@@ -15,6 +15,7 @@
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
 #include <utility>      // std::pair
+#include <cmath>
 
 void MainWindow::onSeek(void* ctx, frame_t pos)
 {
@@ -374,22 +375,22 @@ void MainWindow::relativeSeek(int relpos)
 
 void MainWindow::seekForward()
 {
-    this->relativeSeek(max(this->ui->seekBar->maximum() * SeekNormal, Config::FramesToRender));
+    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekNormal), Config::FramesToRender));
 }
 
 void MainWindow::seekBackward()
 {
-    this->relativeSeek(-1 * max(this->ui->seekBar->maximum() * SeekNormal, Config::FramesToRender));
+    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekNormal), Config::FramesToRender));
 }
 
 void MainWindow::fastSeekForward()
 {
-    this->relativeSeek(max(this->ui->seekBar->maximum() * SeekFast, Config::FramesToRender));
+    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekFast), Config::FramesToRender));
 }
 
 void MainWindow::fastSeekBackward()
 {
-    this->relativeSeek(-1 * max(this->ui->seekBar->maximum() * SeekFast, Config::FramesToRender));
+    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekFast), Config::FramesToRender));
 }
 
 void MainWindow::on_actionBlocky_triggered()
