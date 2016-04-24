@@ -44,10 +44,12 @@ typedef enum AudioDriver
 typedef enum SampleFormat
 {
     unknown,
+    uint8,
     int16,
     int24,
     int32,
     float32,
+    float64,
 } SampleFormat_t;
 
 #endif
