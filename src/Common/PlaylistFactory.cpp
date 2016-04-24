@@ -23,6 +23,10 @@
 #include "VGMStreamWrapper.h"
 #endif
 
+#ifdef USE_FFMPEG
+#include "FFMpegWrapper.h"
+#endif
+
 #include "Common.h"
 
 #include <sstream>
@@ -227,6 +231,10 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Null
 
 #ifdef USE_LIBGME
       TRY_WITH(LibGMEWrapper)
+#endif
+      
+#ifdef USE_FFMPEG
+      TRY_WITH(FFMpegWrapper)
 #endif
 
 // !!! libmad always has to be last !!!
