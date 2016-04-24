@@ -35,7 +35,6 @@ Implementing new formats shall be done by implementing the abstract base class *
 * [vgmstream](https://gitlab.kode54.net/kode54/vgmstream)
 
 ## Building from Source
-### Building core
 ```shell
 mkdir build && cd build
 cmake ..
