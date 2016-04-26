@@ -154,14 +154,15 @@ void FFMpegWrapper::fillBuffer()
 
 void FFMpegWrapper::render(frame_t framesToRender)
 {
+    int framesToDo;
     if(framesToRender==0)
     {
         /* render rest of file */
-        framesToRender = this->getFrames()-this->framesAlreadyRendered;
+        framesToDo = this->getFrames()-this->framesAlreadyRendered;
     }
     else
     {
-        framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);
+        framesToDo = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);
     }
   
     //data packet read from the stream
@@ -182,11 +183,10 @@ void FFMpegWrapper::render(frame_t framesToRender)
     int16_t* pcm = static_cast<int16_t*>(this->data);
     pcm += this->framesAlreadyRendered * this->Format.Channels;
     
-    int framesToDo = framesToRender;
-    while(av_read_frame(this->handle,&packet)>=0 &&
+    while(!this->stopFillBuffer &&
           framesToDo > 0 && 
-          !this->stopFillBuffer &&
-          pcm < static_cast<int16_t*>(this->data) + this->count
+          pcm < static_cast<int16_t*>(this->data) + this->count &&
+          av_read_frame(this->handle,&packet)==0
     )
     {
       if(packet.stream_index==this->audioStreamID)
@@ -199,15 +199,10 @@ void FFMpegWrapper::render(frame_t framesToRender)
 	}
 
 	if(frameFinished != 0)
-	{
-	  swr_convert(this->swr, reinterpret_cast<uint8_t**>(&pcm), frame->nb_samples, const_cast<const uint8_t**>(frame->extended_data), frame->nb_samples);
+	{	  
+ 	  swr_convert(this->swr, reinterpret_cast<uint8_t**>(&pcm), frame->nb_samples, const_cast<const uint8_t**>(frame->extended_data), frame->nb_samples);
 	  
-	  
-	  size_t unpadded_linesize = frame->nb_samples * frame->channels;// * sizeof(int16_t); //* av_get_bytes_per_sample((AVSampleFormat)frame->format);
-	  
-	  //play the decoded bytes
-// 	  memcpy(pcm, frame->extended_data[0], unpadded_linesize);
-	  
+ 	  size_t unpadded_linesize = frame->nb_samples * frame->channels;// * sizeof(int16_t); //* av_get_bytes_per_sample((AVSampleFormat)frame->format); 
 	  pcm += unpadded_linesize;
 	  
 	  framesToDo -= frame->nb_samples;
@@ -223,7 +218,7 @@ void FFMpegWrapper::render(frame_t framesToRender)
       //someother stream,probably a video stream
       }
       
-      av_free_packet(&packet);
+      av_packet_unref(&packet);
     }
     av_frame_free(&frame);
 }
