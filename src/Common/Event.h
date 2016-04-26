@@ -2,7 +2,40 @@
 #include <map>
 
 
-
+/** @brief a helper class for realizing C# like events
+ * 
+ * register a callback function with operator += and deregister with -=
+ * 
+ * any callback function will always take one parameter, i.e. a void* which can be used for
+ * passing around the this pointer, if you dont need it, just register the function with nullptr
+ * 
+ * @code
+ * void someCallbackFunction(void* context);
+ * void SomeClass::someStaticMemberFunction(void* context);
+ * Event<> someEvent;
+ * 
+ * someEvent += std::make_pair(this, &SomeClass::someStaticMemberFunction);
+ * someEvent += std::make_pair(nullptr, &someCallbackFunction);
+ * 
+ * someEvent.Fire();
+ * 
+ * someEvent -= this;
+ * someEvent -= std::make_pair(nullptr, &someCallbackFunction);
+ * ...
+ * 
+ * void someOtherCallbackFunction(void* context, int i, bool b, string s);
+ * void SomeOtherClass::someOtherStaticMemberFunction(void* context, int i, bool b, string s);
+ * Event<int i, bool b, string s> someOtherEvent;
+ * 
+ * someOtherEvent += std::make_pair(this, &SomeOtherClass::someOtherStaticMemberFunction);
+ * someOtherEvent += std::make_pair(someObject, &someOtherCallbackFunction);
+ * 
+ * someOtherEvent.Fire();
+ * 
+ * someOtherEvent -= someObject;
+ * someOtherEvent -= this;
+ * @endcode
+ */
 template<typename... Args>
 class Event
 {    
