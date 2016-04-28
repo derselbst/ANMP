@@ -95,7 +95,7 @@ void Player::play ()
 /**
  * @return Song
  */
-Song* Player::getCurrentSong ()
+const Song* Player::getCurrentSong ()
 {
    return this->currentSong;
 }

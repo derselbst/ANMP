@@ -26,7 +26,7 @@ void MainWindow::onSeek(void* ctx, frame_t pos)
     playheadSlider->setSliderPosition(pos);
     playheadSlider->blockSignals(oldState);
 
-    Song* s = context->player->getCurrentSong();
+    const Song* s = context->player->getCurrentSong();
     if(s==nullptr)
     {
         return;
@@ -44,7 +44,7 @@ void MainWindow::onCurrentSongChanged(void* context)
     MainWindow* ctx = static_cast<MainWindow*>(context);
     QSlider* playheadSlider = ctx->ui->seekBar;
 
-        Song* s = ctx->playlistModel->current();
+        const Song* s = ctx->player->getCurrentSong();
         if(s==nullptr)
         {
             ctx->setWindowTitle("ANMP");
@@ -315,7 +315,7 @@ void MainWindow::stop()
     l->setText(nothing);
 
     l = this->ui->labelTimeLeft;
-    Song* s = this->player->getCurrentSong();
+    const Song* s = this->player->getCurrentSong();
     if(s==nullptr)
     {
         l->setText(nothing);
@@ -355,7 +355,7 @@ void MainWindow::on_seekBar_sliderMoved(int position)
 
 void MainWindow::relativeSeek(int relpos)
 {
-    Song* s = this->playlistModel->current();
+    const Song* s = this->player->getCurrentSong();
     if(s==nullptr)
     {
         return;

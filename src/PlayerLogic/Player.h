@@ -38,7 +38,7 @@ public:
     /**
      * @return Song
      */
-    Song* getCurrentSong ();
+    const Song* getCurrentSong ();
 
 
     /**
