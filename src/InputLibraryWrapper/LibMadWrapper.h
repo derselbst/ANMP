@@ -12,7 +12,7 @@
   *
   */
 
-class LibMadWrapper : public StandardWrapper<int16_t>
+class LibMadWrapper : public StandardWrapper<int32_t>
 {
 public:
 

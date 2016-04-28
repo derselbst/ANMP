@@ -29,7 +29,7 @@ LibMadWrapper::LibMadWrapper(string filename, Nullable<size_t> offset, Nullable<
 
 void LibMadWrapper::initAttr()
 {
-    this->Format.SampleFormat = SampleFormat_t::int16;
+    this->Format.SampleFormat = SampleFormat_t::int32;
 }
 
 LibMadWrapper::~LibMadWrapper ()
@@ -156,7 +156,7 @@ void LibMadWrapper::close()
 
 void LibMadWrapper::fillBuffer()
 {
-    StandardWrapper<int16_t>::fillBuffer(this);
+    StandardWrapper<int32_t>::fillBuffer(this);
 }
 
 void LibMadWrapper::render(frame_t framesToRender)
@@ -209,14 +209,14 @@ void LibMadWrapper::render(frame_t framesToRender)
             /* output sample(s) in 16-bit signed little-endian PCM */
 
             sample = LibMadWrapper::toInt16Sample(*left_ch++);
-            static_cast<int16_t*>(this->data)[item]=sample;
+            static_cast<int32_t*>(this->data)[item]=sample;
 	    
             item++;
 
             if (this->Format.Channels == 2)
             {
                 sample = LibMadWrapper::toInt16Sample(*right_ch++);
-                static_cast<int16_t*>(this->data)[item]=sample;
+                static_cast<int32_t*>(this->data)[item]=sample;
 
                 item++;
             }
@@ -236,7 +236,7 @@ void LibMadWrapper::render(frame_t framesToRender)
 
 void LibMadWrapper::releaseBuffer()
 {
-    StandardWrapper<int16_t>::releaseBuffer();
+    StandardWrapper<int32_t>::releaseBuffer();
 }
 
 
@@ -254,15 +254,16 @@ void LibMadWrapper::buildMetadata()
 /* FROM minimad.c
  *
  * The following utility routine performs simple rounding, clipping, and
- * scaling of MAD's high-resolution samples down to 16 bits. It does not
+ * scaling of MAD's high-resolution samples down to 24 bits. It does not
  * perform any dithering or noise shaping, which would be recommended to
  * obtain any exceptional audio quality. It is therefore not recommended to
  * use this routine if high-quality output is desired.
  */
-signed int LibMadWrapper::toInt16Sample(mad_fixed_t sample)
+#define SAMPLE_SIZE 24
+int32_t LibMadWrapper::toInt16Sample(mad_fixed_t sample)
 {
     /* round */
-    sample += (1L << (MAD_F_FRACBITS - 16));
+    sample += (1L << (MAD_F_FRACBITS - SAMPLE_SIZE));
 
     /* clip */
     if (sample >= MAD_F_ONE)
@@ -270,6 +271,11 @@ signed int LibMadWrapper::toInt16Sample(mad_fixed_t sample)
     else if (sample < -MAD_F_ONE)
         sample = -MAD_F_ONE;
 
-    /* quantize */
-    return sample >> (MAD_F_FRACBITS + 1 - 16);
+    /* quantize, i.e. cut the fractional bits we dont need anymore */
+    sample >>= (MAD_F_FRACBITS + 1 - SAMPLE_SIZE);
+    
+    /* make sure the 24th bit becomes the msb */
+    sample <<= sizeof(mad_fixed_t)*8/*==32*/ - SAMPLE_SIZE;
+    
+    return sample;
 }
