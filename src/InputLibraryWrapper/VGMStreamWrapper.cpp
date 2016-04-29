@@ -67,7 +67,7 @@ void VGMStreamWrapper::fillBuffer()
     StandardWrapper<int16_t>::fillBuffer(this);
 }
 
-void VGMStreamWrapper::render(frame_t framesToRender)
+void VGMStreamWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
     STANDARDWRAPPER_RENDER(int16_t, render_vgmstream(pcm, framesToDoNow, this->handle))
 }

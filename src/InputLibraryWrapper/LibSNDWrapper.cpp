@@ -86,16 +86,18 @@ void LibSNDWrapper::fillBuffer()
       {
         sf_seek(this->sndfile, msToFrames(this->fileOffset.Value, this->Format.SampleRate), SEEK_SET);
       }
-      StandardWrapper<int32_t>::fillBuffer(this);
     }
+    
+    StandardWrapper<int32_t>::fillBuffer(this);
 }
 
-void LibSNDWrapper::render(frame_t framesToRender)
+void LibSNDWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
     STANDARDWRAPPER_RENDER(int32_t,
 			           
         int tempBuf[Config::FramesToRender*6/*Channels*/];
         sf_read_int(this->sndfile, tempBuf, framesToDoNow*this->Format.Channels);
+	// TODO: use memcpy instead!!!
 	for(unsigned int i=0; i<framesToDoNow*this->Format.Channels; i++)
 	{
 	  // see http://www.mega-nerd.com/libsndfile/api.html#note1:

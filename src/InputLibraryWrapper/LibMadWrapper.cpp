@@ -159,7 +159,7 @@ void LibMadWrapper::fillBuffer()
     StandardWrapper<int32_t>::fillBuffer(this);
 }
 
-void LibMadWrapper::render(frame_t framesToRender)
+void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
   // TODO per frame rendering not yet supported
   if(framesToRender!=0)
@@ -209,14 +209,14 @@ void LibMadWrapper::render(frame_t framesToRender)
             /* output sample(s) in 16-bit signed little-endian PCM */
 
             sample = LibMadWrapper::toInt16Sample(*left_ch++);
-            static_cast<int32_t*>(this->data)[item]=sample;
+            static_cast<int32_t*>(bufferToFill)[item]=sample;
 	    
             item++;
 
             if (this->Format.Channels == 2)
             {
                 sample = LibMadWrapper::toInt16Sample(*right_ch++);
-                static_cast<int32_t*>(this->data)[item]=sample;
+                static_cast<int32_t*>(bufferToFill)[item]=sample;
 
                 item++;
             }

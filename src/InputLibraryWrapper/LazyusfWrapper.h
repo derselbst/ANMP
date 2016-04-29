@@ -50,7 +50,7 @@ public:
 
     void buildMetadata() override;
     
-    void render(frame_t framesToRender=0) override;
+    void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
 
 
 private:

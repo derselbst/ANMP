@@ -144,15 +144,11 @@ void FFMpegWrapper::close()
 
 void FFMpegWrapper::fillBuffer()
 {
-    if(this->data!=nullptr)
-    {
-      return;
-    }
-
       StandardWrapper<int16_t>::fillBuffer(this);
 }
 
-void FFMpegWrapper::render(frame_t framesToRender)
+// TODO: this crap is not guaranteed to generate exactly framesToRender frames, there might by more thrown out, which is bad in case of a limited buffer
+void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
     int framesToDo;
     if(framesToRender==0)
@@ -180,12 +176,12 @@ void FFMpegWrapper::render(frame_t framesToRender)
     int frameFinished=0;
     
     // cast it to stupid byte pointer
-    int16_t* pcm = static_cast<int16_t*>(this->data);
+    int16_t* pcm = static_cast<int16_t*>(bufferToFill);
     pcm += this->framesAlreadyRendered * this->Format.Channels;
     
     while(!this->stopFillBuffer &&
           framesToDo > 0 && 
-          pcm < static_cast<int16_t*>(this->data) + this->count &&
+          pcm < static_cast<int16_t*>(bufferToFill) + this->count &&
           av_read_frame(this->handle,&packet)==0
     )
     {

@@ -95,7 +95,7 @@ void LazyusfWrapper::releaseBuffer()
     StandardWrapper<int16_t>::releaseBuffer();
 }
 
-void LazyusfWrapper::render(frame_t framesToRender)
+void LazyusfWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
     // TODO: UGLY CAST AHEAD!
     STANDARDWRAPPER_RENDER(int16_t,

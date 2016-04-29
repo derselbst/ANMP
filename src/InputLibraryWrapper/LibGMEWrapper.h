@@ -54,7 +54,7 @@ public:
     
     vector<loop_t> getLoopArray () const override;
 
-    void render(frame_t framesToRender) override;
+    void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
     
     void buildMetadata() override;
 
