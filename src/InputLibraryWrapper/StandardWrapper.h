@@ -23,7 +23,7 @@
     }\
 \
     SAMPLEFORMAT* pcm = static_cast<SAMPLEFORMAT*>(bufferToFill);\
-    pcm += this->framesAlreadyRendered * this->Format.Channels;\
+    pcm += (this->framesAlreadyRendered * this->Format.Channels) % this->count;\
 \
     int framesToDoNow;\
     while(framesToRender>0 && !this->stopFillBuffer)\
@@ -32,7 +32,7 @@
 \
         LIB_SPECIFIC_RENDER_FUNCTION;\
 \
-        pcm += framesToDoNow * this->Format.Channels;\
+        pcm += (framesToDoNow * this->Format.Channels) % this->count;\
         this->framesAlreadyRendered += framesToDoNow;\
 \
         framesToRender -= framesToDoNow;\
@@ -49,15 +49,16 @@ public:
     
     virtual ~StandardWrapper ();
 
-    // used for double buffering, whenever we were unable to allocate a buffer big enough to hold the whole song in memory
-    pcm_t* preRenderBuf = nullptr;
     /**
      */
     void releaseBuffer () override;
     
     virtual void render(pcm_t* bufferToFill, frame_t framesToRender=0) = 0;
 
-protected:
+protected:  
+  // used for double buffering, whenever we were unable to allocate a buffer big enough to hold the whole song in memory
+  pcm_t* preRenderBuf = nullptr;
+
   // a flag that indicates a prematurely abort of async buffer fill
   bool stopFillBuffer = false;
 
