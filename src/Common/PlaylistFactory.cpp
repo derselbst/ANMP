@@ -178,21 +178,6 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Null
         }
     }
 #endif
-#ifdef USE_OPUS
-    else if(iEquals(ext, "opus"))
-    {
-//     TODO: implement me
-//     pcm = new OpusWrapper(filePath);
-//     try
-//     {
-//       pcm.open();
-//     }
-//     catch
-//     {
-//     // log and cancel
-//     }
-    }
-#endif
 #ifdef USE_LIBGME
     else if((iEquals(ext, "gbs") || iEquals(ext, "nsf")) && !offset.hasValue && !len.hasValue)
     {
