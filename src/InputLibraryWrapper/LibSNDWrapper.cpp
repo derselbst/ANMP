@@ -88,39 +88,38 @@ void LibSNDWrapper::fillBuffer()
       }
     }
     
-    StandardWrapper<int32_t>::fillBuffer(this);
+    StandardWrapper::fillBuffer(this);
 }
 
 void LibSNDWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
     STANDARDWRAPPER_RENDER(int32_t,
-			           
-        int tempBuf[Config::FramesToRender*6/*Channels*/];
+	// var length array ahead, it a gnu extension
+        int tempBuf[Config::FramesToRender*this->Format.Channels];
         sf_read_int(this->sndfile, tempBuf, framesToDoNow*this->Format.Channels);
-	// TODO: use memcpy instead!!!
-	for(unsigned int i=0; i<framesToDoNow*this->Format.Channels; i++)
+	
+	constexpr bool haveInt32 = sizeof(int)==4;
+	constexpr bool haveInt64 = sizeof(int)==8;
+	static_assert(haveInt32 || haveInt64, "sizeof(int) is neither 4 nor 8 bits on your platform");
+	if(haveInt32)
 	{
-	  // see http://www.mega-nerd.com/libsndfile/api.html#note1:
-	  // Whenever integer data is moved from one sized container to another sized container, the 
-	  // most significant bit in the source container will become the most significant bit in the destination container.
-	  if(sizeof(int)==4)
+	  memcpy(pcm, tempBuf, framesToDoNow*this->Format.Channels*sizeof(int));
+	}
+	else if(haveInt64)
+	{
+	  for(unsigned int i=0; i<framesToDoNow*this->Format.Channels; i++)
 	  {
-	    pcm[i] = static_cast<int32_t>(tempBuf[i]);
-	  }
-	  else if(sizeof(int)==8)
-	  {
-	    pcm[i] = static_cast<int32_t>(tempBuf[i] >> 32);
-	  }
-	  else
-	  {
-	    throw NotImplementedException();
+	    // see http://www.mega-nerd.com/libsndfile/api.html#note1:
+	    // Whenever integer data is moved from one sized container to another sized container, the 
+	    // most significant bit in the source container will become the most significant bit in the destination container.
+	      pcm[i] = static_cast<int32_t>(tempBuf[i] >> 32);
 	  }
 	})
 }
 
 void LibSNDWrapper::releaseBuffer()
 {
-    StandardWrapper<int32_t>::releaseBuffer();
+    StandardWrapper::releaseBuffer();
 }
 
 vector<loop_t> LibSNDWrapper::getLoopArray () const
