@@ -16,6 +16,7 @@
 
 // TODO: make this nicer
 #define FramesToItems(x) ((x)*this->currentSong->Format.Channels)
+#define SEEK_POSSIBLE (this->currentSong->count==FramesToItems(this->currentSong->getFrames()))
 #define USERS_ARE_STUPID if(this->audioDriver==nullptr || this->playlist==nullptr || this->currentSong==nullptr){throw NotInitializedException();}
 // Constructors/Destructors
 //
@@ -246,7 +247,7 @@ void Player::fadeout ()
 void Player::seekTo (frame_t frame)
 {
   if(this->currentSong!=nullptr && 
-     this->currentSong->count==FramesToItems(this->currentSong->getFrames()))
+     SEEK_POSSIBLE)
   {
     this->_seekTo(frame);
 }
@@ -294,11 +295,13 @@ core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)
 void Player::playLoop (core::tree<loop_t>& loop)
 {   USERS_ARE_STUPID
 
-    // while there are sub-loops that need to be played
+    // sub-loops that need to be played
     core::tree<loop_t>* subloop;
-    while(this->isPlaying &&
-            Config::useLoopInfo &&
-            ((subloop = this->getNextLoop(loop)) != nullptr))
+    
+    while(this->isPlaying && // are we still playing?
+            Config::useLoopInfo && // user wishes to use available loop info
+            SEEK_POSSIBLE && // we loop by setting the playhead, if this is not possible, since we dont hold the whole pcm, no loops are available
+            ((subloop = this->getNextLoop(loop)) != nullptr)) // are there subloops left that need to be played?
     {
 
         // if the user requested to seek past the current loop, skip it at all
