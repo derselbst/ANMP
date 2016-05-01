@@ -25,10 +25,9 @@
     SAMPLEFORMAT* pcm = static_cast<SAMPLEFORMAT*>(bufferToFill);\
     pcm += (this->framesAlreadyRendered * this->Format.Channels) % this->count;\
 \
-    int framesToDoNow;\
     while(framesToRender>0 && !this->stopFillBuffer)\
     {\
-        framesToDoNow = (framesToRender/Config::FramesToRender)>0 ? Config::FramesToRender : framesToRender%Config::FramesToRender;\
+        int framesToDoNow = (framesToRender/Config::FramesToRender)>0 ? Config::FramesToRender : framesToRender%Config::FramesToRender;\
 \
         LIB_SPECIFIC_RENDER_FUNCTION;\
 \

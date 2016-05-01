@@ -5,7 +5,9 @@
 #include "int24_t.hpp"
 
 typedef void pcm_t;
-typedef unsigned int frame_t;
+
+// usually stays unsigned, but for calculation purposes we better use signed
+typedef int64_t frame_t;
 
 typedef enum LoopType
 {
