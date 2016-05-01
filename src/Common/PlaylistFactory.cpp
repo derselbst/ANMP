@@ -164,18 +164,7 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Null
 #ifdef USE_LAZYUSF
     else if (iEquals(ext, "usf") || iEquals(ext, "miniusf"))
     {
-        pcm = new LazyusfWrapper(filePath);
-        try
-        {
-            pcm->open();
-        }
-        catch(exception& e)
-        {
-            cerr << "Could not open " << filePath << "\nwhat(): " << e.what() << endl;
-            pcm->close();
-            delete pcm;
-            pcm=nullptr;
-        }
+        TRY_WITH(LazyusfWrapper)
     }
 #endif
 #ifdef USE_LIBGME
@@ -204,28 +193,38 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Null
         goto l_LIBMAD;
     }
 #endif
-    else // so many formats to test here, try and error
-    {
+    else
+    { // so many formats to test here, try and error
+      // note the order of the librarys to test
+      // we start with libraries that only read well defined audiofiles, i.e. where every header and every single bit is set as the library expects it, so the resulting audible output sounds absolutly perfect
+      // and we end up in testing libraries which also eat up every garbage of binary streams, resulting in some ugly crack noises
+        
 #ifdef USE_LIBSND
+      // most common file types (WAVE, FLAC, Sun / NeXT AU, OGG VORBIS, AIFF, etc.)
       TRY_WITH(LibSNDWrapper)
-#endif
-      
-#ifdef USE_VGMSTREAM
-      TRY_WITH(VGMStreamWrapper)
 #endif
 
 #ifdef USE_LIBGME
+      // emulated sound formats from old video consoles (SuperFamicon, Famicon, GAMEBOY, etc.)
       TRY_WITH(LibGMEWrapper)
 #endif
       
 #ifdef USE_FFMPEG
+      // OPUS, videofiles, etc.
       TRY_WITH(FFMpegWrapper)
+#endif
+      
+#ifdef USE_VGMSTREAM
+      // most fileformats from videogames
+      // also eats raw pcm files (although they'll may have wrong samplerate
+      TRY_WITH(VGMStreamWrapper)
 #endif
 
 // !!! libmad always has to be last !!!
 // libmad eats up every garbage of binary (= non MPEG audio shit)
 // thus always make sure libmad is the very last try to read any audio file
 #ifdef USE_LIBMAD
+      // mp3 exclusive
       l_LIBMAD:
       TRY_WITH(LibMadWrapper)
 #endif
