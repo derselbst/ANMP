@@ -9,6 +9,7 @@
 #include "Song.h"
 #include "IAudioOutput.h"
 #include "ALSAOutput.h"
+#include "ebur128Output.h"
 
 #include <iostream>
 #include <limits>
@@ -47,6 +48,9 @@ void Player::_initAudio()
     {
     case ALSA:
         this->audioDriver = new ALSAOutput();
+        break;
+    case ebur128:
+        this->audioDriver = new ebur128Output(this);
         break;
     default:
         this->audioDriver=nullptr;
@@ -137,6 +141,8 @@ void Player::_setCurrentSong (Song* song)
     this->currentSong = song;
     if(this->currentSong == nullptr)
     {
+        this->_pause();
+        this->onCurrentSongChanged.Fire();
         return;
     }
 

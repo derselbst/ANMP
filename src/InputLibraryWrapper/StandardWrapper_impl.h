@@ -46,11 +46,14 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
         // and releaseBuffer already waits for the render thread to finish... however it doesnt hurt
         WAIT(this->futureFillBuffer);
 
-        this->count = this->getFrames() * this->Format.Channels;
+        if(Config::RenderWholeSong)
+        {
+            this->count = this->getFrames() * this->Format.Channels;
 
-        // try to alloc a buffer to hold the whole song's pcm in memory
-        this->data = new (std::nothrow) SAMPLEFORMAT[this->count];
-
+            // try to alloc a buffer to hold the whole song's pcm in memory
+            this->data = new (std::nothrow) SAMPLEFORMAT[this->count];
+        }
+        
         if(this->data != nullptr)
         {
             // buffer successfully allocated, fill it asynchronously
@@ -112,5 +115,11 @@ void StandardWrapper<SAMPLEFORMAT>::releaseBuffer()
     this->framesAlreadyRendered=0;
 
     this->stopFillBuffer=false;
+}
+
+template<typename SAMPLEFORMAT>
+frame_t StandardWrapper<SAMPLEFORMAT>::getFramesRendered()
+{
+ return this->framesAlreadyRendered;
 }
 #endif

@@ -10,6 +10,7 @@ SET(LIBANMP_SRC
        AudioOutput/IAudioOutput.cpp
        Common/AtomicWrite.cpp
        Common/Common.cpp
+       Common/LoudnessFile.cpp
        Common/PlaylistFactory.cpp
        InputLibraryWrapper/Song.cpp
        InputLibraryWrapper/StandardWrapper.cpp
@@ -17,6 +18,8 @@ SET(LIBANMP_SRC
        PlayerLogic/Config.cpp
        PlayerLogic/Player.cpp
        PlayerLogic/Playlist.cpp
+       
+       anmp-normalize.cpp
 )
 
 ############################
@@ -224,7 +227,7 @@ endif(USE_ALSA)
 
 #---------------------------------------------------------------------------------------------
 
-
+  SET(LIBANMP_SRC ${LIBANMP_SRC} AudioOutput/ebur128Output.cpp)
 
 ### TODO: check that there is at least one codec and one audio lib support activated
 
@@ -237,6 +240,6 @@ set(LD_FLAGS ${LD_FLAGS} ${LIBANMP})
 add_subdirectory(GUI)
 
 
-# add_executable(main test.cpp)
-# target_link_libraries(main ${LIBANMP} ${LD_FLAGS})
+add_executable(anmp-normalize anmp-normalize.cpp)
+target_link_libraries(anmp-normalize ${LIBANMP} ${LD_FLAGS})
 

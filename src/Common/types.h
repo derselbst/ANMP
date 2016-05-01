@@ -39,6 +39,7 @@ typedef enum AudioDriver
 {
     AutoDetect,
     ALSA,
+    ebur128,
     JACK,
 } AudioDriver_t;
 

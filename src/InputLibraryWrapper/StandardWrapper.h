@@ -51,6 +51,8 @@ public:
     /**
      */
     void releaseBuffer () override;
+    
+    frame_t getFramesRendered();
 
     virtual void render(pcm_t* bufferToFill, frame_t framesToRender=0) = 0;
 
