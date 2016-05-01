@@ -31,7 +31,7 @@ struct Config
 
     /// USF specific section ***
     static bool useHle;
-    
+
     static bool gmeAccurateEmulation;
     static unsigned int gmeSampleRate;
     static float gmeEchoDepth;

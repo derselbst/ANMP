@@ -39,9 +39,9 @@ class AnalyzerBase : public QGLWidget
 {
     Q_OBJECT
 public:
-  
+
     ~AnalyzerBase();
-    
+
 protected:
     AnalyzerBase( QWidget* );
 

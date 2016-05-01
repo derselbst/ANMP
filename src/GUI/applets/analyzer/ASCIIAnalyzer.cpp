@@ -73,7 +73,9 @@ ASCIIAnalyzer::resizeGL( int w, int h )
         const float PRE = 1, PRO = 1; //PRE and PRO allow us to restrict the range somewhat
 
         for( int z = 0; z < m_rows; ++z )
+        {
             m_yscale[z] = 1 - ( log10( PRE + z ) / log10( PRE + m_rows + PRO ) );
+        }
 
         m_yscale[m_rows] = 0;
 
@@ -101,7 +103,9 @@ ASCIIAnalyzer::transform( QVector<float> &s ) //pure virtual
 {
     // Based on Mark Kretschmann's work in BlockAnalyzer
     for( int x = 0; x < s.size(); ++x )
+    {
         s[x] *= 2;
+    }
 
     float *front = static_cast<float*>( &s.front() );
 
@@ -152,9 +156,13 @@ ASCIIAnalyzer::paintGL()
 
         // the higher the y, the lower the bar physically is.
         if( ( float )y > m_store[x] )
+        {
             y = uint( m_store[x] += m_step );
+        }
         else
+        {
             m_store[x] = y;
+        }
 
         // Don't draw top two #'s
         y += 2;
@@ -190,10 +198,14 @@ ASCIIAnalyzer::drawTexture( Texture* texture, int x, int y, int sx, int sy )
 
     // Draw a textured quad
     glBegin(GL_QUADS);
-    glTexCoord2f( sxf, syf ); glVertex2f( xf, yf );
-    glTexCoord2f( sxf, 1.0 ); glVertex2f( xf, yf + hf );
-    glTexCoord2f( 1.0, 1.0 ); glVertex2f( xf + wf, yf + hf );
-    glTexCoord2f( 1.0, syf ); glVertex2f( xf + wf, yf );
+    glTexCoord2f( sxf, syf );
+    glVertex2f( xf, yf );
+    glTexCoord2f( sxf, 1.0 );
+    glVertex2f( xf, yf + hf );
+    glTexCoord2f( 1.0, 1.0 );
+    glVertex2f( xf + wf, yf + hf );
+    glTexCoord2f( 1.0, syf );
+    glVertex2f( xf + wf, yf );
     glEnd();
 
     glDisable( GL_TEXTURE_2D );
@@ -232,7 +244,8 @@ ASCIIAnalyzer::paletteChange( const QPalette& ) //virtual
     p.setPen(Qt::darkGreen);
     p.setFont(font);
 
-    for( int y = 0; y < m_rows; ++y ) {
+    for( int y = 0; y < m_rows; ++y )
+    {
         QRect rect (0, y * ( BLOCK_HEIGHT + 1 ), BLOCK_WIDTH, BLOCK_HEIGHT);
         p.drawText(rect, Qt::AlignCenter, "#");
     }

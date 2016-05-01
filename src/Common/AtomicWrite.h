@@ -17,19 +17,19 @@ enum LogLevel {DEBUG, INFO, WARNING, ERROR, FATAL};
 class AtomicWrite
 {
 public:
-  
+
     static AtomicWrite& getSingleton();
 
     void write(std::string s, std::ostream& o=std::cout);
     void write(enum LogLevel, std::string s, std::ostream& o=std::cout);
-    
-private:
-  std::mutex mtx;
-  
-          AtomicWrite();
 
-        // C++ 11
-        // we dont want these
-        AtomicWrite(AtomicWrite const&)    = delete;
-        void operator=(AtomicWrite const&) = delete;
+private:
+    std::mutex mtx;
+
+    AtomicWrite();
+
+    // C++ 11
+    // we dont want these
+    AtomicWrite(AtomicWrite const&)    = delete;
+    void operator=(AtomicWrite const&) = delete;
 };

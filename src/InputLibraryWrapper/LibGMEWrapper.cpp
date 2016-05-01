@@ -15,7 +15,7 @@ LibGMEWrapper::LibGMEWrapper(string filename) : StandardWrapper(filename)
 // NOTE! for this class we use Song::fileOffset as track offset (i.e. track num) for libgme
 LibGMEWrapper::LibGMEWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len) : StandardWrapper(filename, offset, len)
 {
-     this->initAttr();
+    this->initAttr();
 }
 
 void LibGMEWrapper::initAttr()
@@ -35,78 +35,80 @@ LibGMEWrapper::~LibGMEWrapper ()
 /* Print any warning for most recent emulator action (load, start_track, play) */
 void LibGMEWrapper::printWarning( Music_Emu* emu )
 {
-	const char* warning = gme_warning( emu );
-	if ( warning )
-        {
-            CLOG(LogLevel::WARNING, warning);
-        }
+    const char* warning = gme_warning( emu );
+    if ( warning )
+    {
+        CLOG(LogLevel::WARNING, warning);
+    }
 }
 
 void LibGMEWrapper::open()
 {
-  if(this->handle!=nullptr)
-  {
-    return;
-  }
-  
-  gme_err_t msg = gme_open_file(this->Filename.c_str(), &this->handle, Config::gmeSampleRate);
-  if(msg)
-  {
-      THROW_RUNTIME_ERROR("libgme failed on file \"" << this->Filename << ")\"" << " with message " << msg);
-  }
-  
-  if(this->handle == nullptr)
-  {
-      THROW_RUNTIME_ERROR("THIS SHOULD NEVER HAPPEN! libgme handle is NULL although no error was reported");
-  }
-  
-  LibGMEWrapper::printWarning(this->handle);
-  
-  /* Enable most accurate sound emulation */
-  gme_enable_accuracy( this->handle, Config::gmeAccurateEmulation );
-
-  /* Add some stereo enhancement */
-  gme_set_stereo_depth( this->handle, Config::gmeEchoDepth );
-  
-  /* Start track and begin fade at 10 seconds */
-  int offset = this->fileOffset.hasValue ? this->fileOffset.Value : 0;
-  msg = gme_start_track( this->handle, offset );
-  if(msg)
-  {
-      THROW_RUNTIME_ERROR("libgme failed to set track no. " << offset << " for file \"" << this->Filename << "\" with message: " << msg);
-  }
-  
-  this->printWarning( this->handle );
-  
-  msg = gme_track_info( this->handle, &this->info, offset );
-  if(msg || this->info == nullptr)
-  {
-      THROW_RUNTIME_ERROR("libgme failed to retrieve track info for track no. " << offset << " for file \"" << this->Filename << "\" with message: " << msg);
-  }
-
-  if(Config::gmePlayForever)
-  {
-    gme_set_fade(this->handle, -1);
-  }
-  else
-  {
-    if(!this->fileLen.hasValue)
-    { // if we have no playing duration
-      if(this->info->length==-1)
-      { // ... and the file has no default duration
-	// use 3 minutes as default
-	this->fileLen.Value = 3*60*1000;
-      }
-      else
-      {
-	// use the duration from file
-	this->fileLen.Value = this->info->length;
-      }
+    if(this->handle!=nullptr)
+    {
+        return;
     }
-    gme_set_fade(this->handle, this->fileLen.Value);
-  }
-  
-  this->Format.SampleRate = Config::gmeSampleRate;
+
+    gme_err_t msg = gme_open_file(this->Filename.c_str(), &this->handle, Config::gmeSampleRate);
+    if(msg)
+    {
+        THROW_RUNTIME_ERROR("libgme failed on file \"" << this->Filename << ")\"" << " with message " << msg);
+    }
+
+    if(this->handle == nullptr)
+    {
+        THROW_RUNTIME_ERROR("THIS SHOULD NEVER HAPPEN! libgme handle is NULL although no error was reported");
+    }
+
+    LibGMEWrapper::printWarning(this->handle);
+
+    /* Enable most accurate sound emulation */
+    gme_enable_accuracy( this->handle, Config::gmeAccurateEmulation );
+
+    /* Add some stereo enhancement */
+    gme_set_stereo_depth( this->handle, Config::gmeEchoDepth );
+
+    /* Start track and begin fade at 10 seconds */
+    int offset = this->fileOffset.hasValue ? this->fileOffset.Value : 0;
+    msg = gme_start_track( this->handle, offset );
+    if(msg)
+    {
+        THROW_RUNTIME_ERROR("libgme failed to set track no. " << offset << " for file \"" << this->Filename << "\" with message: " << msg);
+    }
+
+    this->printWarning( this->handle );
+
+    msg = gme_track_info( this->handle, &this->info, offset );
+    if(msg || this->info == nullptr)
+    {
+        THROW_RUNTIME_ERROR("libgme failed to retrieve track info for track no. " << offset << " for file \"" << this->Filename << "\" with message: " << msg);
+    }
+
+    if(Config::gmePlayForever)
+    {
+        gme_set_fade(this->handle, -1);
+    }
+    else
+    {
+        if(!this->fileLen.hasValue)
+        {
+            // if we have no playing duration
+            if(this->info->length==-1)
+            {
+                // ... and the file has no default duration
+                // use 3 minutes as default
+                this->fileLen.Value = 3*60*1000;
+            }
+            else
+            {
+                // use the duration from file
+                this->fileLen.Value = this->info->length;
+            }
+        }
+        gme_set_fade(this->handle, this->fileLen.Value);
+    }
+
+    this->Format.SampleRate = Config::gmeSampleRate;
 }
 
 void LibGMEWrapper::close()
@@ -115,7 +117,7 @@ void LibGMEWrapper::close()
     {
         gme_delete(this->handle);
         this->handle = nullptr;
-        
+
         gme_free_info( info );
         this->info = nullptr;
     }
@@ -125,7 +127,7 @@ void LibGMEWrapper::fillBuffer()
 {
 //     if(this->wholeSong())
 //     {
-            StandardWrapper<int16_t>::fillBuffer(this);
+    StandardWrapper<int16_t>::fillBuffer(this);
 //     }
 //     else
 //     {
@@ -159,11 +161,11 @@ vector<loop_t> LibGMEWrapper::getLoopArray () const
 
     if(this->wholeSong() && this->info->intro_length!=-1 && this->info->loop_length!=-1)
     {
-	loop_t l;
-	l.start = msToFrames(this->info->intro_length, this->Format.SampleRate);
-	l.stop  = msToFrames(this->info->intro_length + this->info->loop_length, this->Format.SampleRate);
-	l.count = 2;
-	res.push_back(l);
+        loop_t l;
+        l.start = msToFrames(this->info->intro_length, this->Format.SampleRate);
+        l.stop  = msToFrames(this->info->intro_length + this->info->loop_length, this->Format.SampleRate);
+        l.count = 2;
+        res.push_back(l);
     }
     return res;
 }
@@ -176,12 +178,12 @@ void LibGMEWrapper::buildMetadata()
     this->Metadata.Year = string(this->info->copyright);
     this->Metadata.Genre = "Videogame";
     this->Metadata.Comment = string(this->info->comment);
-    
+
     if(this->fileOffset.hasValue)
     {
-	stringstream ss;
-	ss << setw(2) << setfill('0') << this->fileOffset.Value;
-	this->Metadata.Track = ss.str();
+        stringstream ss;
+        ss << setw(2) << setfill('0') << this->fileOffset.Value;
+        this->Metadata.Track = ss.str();
     }
 }
 

@@ -33,8 +33,14 @@ class ASCIIAnalyzer : public AnalyzerBase
 public:
     ASCIIAnalyzer( QWidget* );
 
-    static GLuint createTexture( const QImage &image ) { return instance->bindTexture( image ); }
-    static void freeTexture( GLuint id ) { instance->deleteTexture( id ); }
+    static GLuint createTexture( const QImage &image )
+    {
+        return instance->bindTexture( image );
+    }
+    static void freeTexture( GLuint id )
+    {
+        instance->deleteTexture( id );
+    }
 
     // Signed ints because most of what we compare them against are ints
     static const int BLOCK_HEIGHT = 12;

@@ -71,7 +71,7 @@ public:
 private:
     AVFormatContext *handle = nullptr;
     SwrContext *swr = nullptr;
-    
+
     int audioStreamID = -1;
 };
 

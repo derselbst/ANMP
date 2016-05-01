@@ -20,7 +20,7 @@ public:
     LibGMEWrapper(string filename);
     LibGMEWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
     void initAttr();
-    
+
     /**
      * Empty Destructor
      */
@@ -51,11 +51,11 @@ public:
      * @return unsigned int
      */
     frame_t getFrames () const override;
-    
+
     vector<loop_t> getLoopArray () const override;
 
     void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
-    
+
     void buildMetadata() override;
 
 private:

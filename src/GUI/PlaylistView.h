@@ -6,8 +6,8 @@
 
 class PlaylistView : public QTableView
 {
-  Q_OBJECT
-  
+    Q_OBJECT
+
 public:
     PlaylistView(QWidget * parent = 0);
 

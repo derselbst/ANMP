@@ -15,7 +15,8 @@
 
 class AnalyzerApplet;
 
-namespace Ui {
+namespace Ui
+{
 class MainWindow;
 }
 
@@ -38,7 +39,7 @@ private:
 
     Ui::MainWindow *ui = nullptr;
     AnalyzerApplet * analyzerWindow = nullptr;
-    
+
     PlaylistModel* playlistModel = new PlaylistModel(this);
     Player* player = new Player(this->playlistModel);
 

@@ -15,22 +15,25 @@
  ****************************************************************************************/
 
 #define DEBUG_PREFIX "PaletteHandler"
- 
+
 #include "PaletteHandler.h"
 
 #include <QPainter>
 
 
-namespace The {
-    static PaletteHandler* s_PaletteHandler_instance = 0;
+namespace The
+{
+static PaletteHandler* s_PaletteHandler_instance = 0;
 
-    PaletteHandler* paletteHandler()
+PaletteHandler* paletteHandler()
+{
+    if( !s_PaletteHandler_instance )
     {
-        if( !s_PaletteHandler_instance )
-            s_PaletteHandler_instance = new PaletteHandler();
-
-        return s_PaletteHandler_instance;
+        s_PaletteHandler_instance = new PaletteHandler();
     }
+
+    return s_PaletteHandler_instance;
+}
 }
 
 
@@ -73,7 +76,7 @@ PaletteHandler::updateItemView( QAbstractItemView * view )
     p.setColor( QPalette::Inactive, QPalette::Base, Qt::transparent );
 
     view->setPalette( p );
-    
+
     if ( QWidget *vp = view->viewport() )
     {
         // don't paint background - do NOT use Qt::transparent etc.
@@ -97,10 +100,14 @@ PaletteHandler::foregroundColor( const QPainter *p, bool selected )
         pal = w->palette();
     }
     else
+    {
         pal = palette();
+    }
 
     if( !selected )
+    {
         return pal.color( QPalette::Active, fg );
+    }
 
     return pal.color( QPalette::Active, QPalette::HighlightedText );
 }
@@ -120,7 +127,9 @@ PaletteHandler::highlightColor( qreal saturationPercent, qreal valuePercent )
     qreal value = highlight.valueF();
     value *= valuePercent;
     if( value > 1.0 )
+    {
         value = 1.0;
+    }
     highlight.setHsvF( highlight.hueF(), saturation, value, highlight.alphaF() );
 
     return highlight;

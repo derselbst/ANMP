@@ -45,30 +45,30 @@ public:
 
     StandardWrapper(string filename);
     StandardWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
-    
+
     virtual ~StandardWrapper ();
 
     /**
      */
     void releaseBuffer () override;
-    
+
     virtual void render(pcm_t* bufferToFill, frame_t framesToRender=0) = 0;
 
-protected:  
-  // used for double buffering, whenever we were unable to allocate a buffer big enough to hold the whole song in memory
-  pcm_t* preRenderBuf = nullptr;
+protected:
+    // used for double buffering, whenever we were unable to allocate a buffer big enough to hold the whole song in memory
+    pcm_t* preRenderBuf = nullptr;
 
-  // a flag that indicates a prematurely abort of async buffer fill
-  bool stopFillBuffer = false;
+    // a flag that indicates a prematurely abort of async buffer fill
+    bool stopFillBuffer = false;
 
-  frame_t framesAlreadyRendered=0;
+    frame_t framesAlreadyRendered=0;
 
-  template<typename WRAPPERCLASS>
-  void fillBuffer(WRAPPERCLASS* context);
+    template<typename WRAPPERCLASS>
+    void fillBuffer(WRAPPERCLASS* context);
 
 
 private:
-  future<void> futureFillBuffer;
+    future<void> futureFillBuffer;
 
 
 };

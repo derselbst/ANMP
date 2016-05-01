@@ -106,7 +106,7 @@ public:
 
     /**
      * opens the current file using the corresponding lib
-     * 
+     *
      * specificly: defines samplerate, defines channelcount, provides a value for this->getFrames()
      */
     virtual void open () = 0;

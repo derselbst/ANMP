@@ -18,7 +18,7 @@ LibSNDWrapper::LibSNDWrapper(string filename) : StandardWrapper(filename)
 
 LibSNDWrapper::LibSNDWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len) : StandardWrapper(filename, offset, len)
 {
-     this->initAttr();
+    this->initAttr();
 }
 
 void LibSNDWrapper::initAttr()
@@ -35,21 +35,21 @@ LibSNDWrapper::~LibSNDWrapper ()
 
 void LibSNDWrapper::open ()
 {
-  // avoid multiple calls to open()
-  if(this->sndfile!=nullptr)
-  {
-    return;
-  }
-  
+    // avoid multiple calls to open()
+    if(this->sndfile!=nullptr)
+    {
+        return;
+    }
+
     memset(&sfinfo, 0, sizeof (sfinfo));
     if (!(this->sndfile = sf_open (this->Filename.c_str(), SFM_READ, &sfinfo)))
     {
-      THROW_RUNTIME_ERROR(sf_strerror (NULL) << " (in File \"" << this->Filename << ")\"");
+        THROW_RUNTIME_ERROR(sf_strerror (NULL) << " (in File \"" << this->Filename << ")\"");
     };
 
     if (sfinfo.channels < 1 || sfinfo.channels > 6)
     {
-      THROW_RUNTIME_ERROR("channels == " << sfinfo.channels);
+        THROW_RUNTIME_ERROR("channels == " << sfinfo.channels);
     };
 
     this->Format.Channels = sfinfo.channels;
@@ -59,62 +59,62 @@ void LibSNDWrapper::open ()
     // http://www.mega-nerd.com/libsndfile/api.html#note2
     switch(this->sfinfo.format & SF_FORMAT_SUBMASK)
     {
-      case SF_FORMAT_FLOAT:
-	/* fall through */
-      case SF_FORMAT_DOUBLE:
-	sf_command(this->sndfile, SFC_SET_SCALE_FLOAT_INT_READ, nullptr, SF_TRUE);
-	break;
-      default:
-	break;
+    case SF_FORMAT_FLOAT:
+    /* fall through */
+    case SF_FORMAT_DOUBLE:
+        sf_command(this->sndfile, SFC_SET_SCALE_FLOAT_INT_READ, nullptr, SF_TRUE);
+        break;
+    default:
+        break;
     }
 }
 
 void LibSNDWrapper::close()
 {
-  if(this->sndfile!=nullptr)
-  {
-    sf_close (this->sndfile);
-    this->sndfile=nullptr;
-  }
+    if(this->sndfile!=nullptr)
+    {
+        sf_close (this->sndfile);
+        this->sndfile=nullptr;
+    }
 }
 
 void LibSNDWrapper::fillBuffer()
 {
     if(this->data==nullptr)
     {
-      if(this->fileOffset.hasValue)
-      {
-        sf_seek(this->sndfile, msToFrames(this->fileOffset.Value, this->Format.SampleRate), SEEK_SET);
-      }
+        if(this->fileOffset.hasValue)
+        {
+            sf_seek(this->sndfile, msToFrames(this->fileOffset.Value, this->Format.SampleRate), SEEK_SET);
+        }
     }
-    
+
     StandardWrapper::fillBuffer(this);
 }
 
 void LibSNDWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
     STANDARDWRAPPER_RENDER(int32_t,
-	// var length array ahead, it a gnu extension
-        int tempBuf[Config::FramesToRender*this->Format.Channels];
-        sf_read_int(this->sndfile, tempBuf, framesToDoNow*this->Format.Channels);
-	
-	constexpr bool haveInt32 = sizeof(int)==4;
-	constexpr bool haveInt64 = sizeof(int)==8;
-	static_assert(haveInt32 || haveInt64, "sizeof(int) is neither 4 nor 8 bits on your platform");
-	if(haveInt32)
-	{
-	  memcpy(pcm, tempBuf, framesToDoNow*this->Format.Channels*sizeof(int));
-	}
-	else if(haveInt64)
-	{
-	  for(unsigned int i=0; i<framesToDoNow*this->Format.Channels; i++)
-	  {
-	    // see http://www.mega-nerd.com/libsndfile/api.html#note1:
-	    // Whenever integer data is moved from one sized container to another sized container, the 
-	    // most significant bit in the source container will become the most significant bit in the destination container.
-	      pcm[i] = static_cast<int32_t>(tempBuf[i] >> 32);
-	  }
-	})
+                           // var length array ahead, it a gnu extension
+                           int tempBuf[Config::FramesToRender*this->Format.Channels];
+                           sf_read_int(this->sndfile, tempBuf, framesToDoNow*this->Format.Channels);
+
+                           constexpr bool haveInt32 = sizeof(int)==4;
+                           constexpr bool haveInt64 = sizeof(int)==8;
+                           static_assert(haveInt32 || haveInt64, "sizeof(int) is neither 4 nor 8 bits on your platform");
+                           if(haveInt32)
+{
+    memcpy(pcm, tempBuf, framesToDoNow*this->Format.Channels*sizeof(int));
+    }
+    else if(haveInt64)
+{
+    for(unsigned int i=0; i<framesToDoNow*this->Format.Channels; i++)
+        {
+            // see http://www.mega-nerd.com/libsndfile/api.html#note1:
+            // Whenever integer data is moved from one sized container to another sized container, the
+            // most significant bit in the source container will become the most significant bit in the destination container.
+            pcm[i] = static_cast<int32_t>(tempBuf[i] >> 32);
+        }
+    })
 }
 
 void LibSNDWrapper::releaseBuffer()
@@ -158,17 +158,17 @@ vector<loop_t> LibSNDWrapper::getLoopArray () const
 frame_t LibSNDWrapper::getFrames () const
 {
     int framesAvail = this->sfinfo.frames;
-    
+
     if(this->fileOffset.hasValue)
     {
-      framesAvail -= msToFrames(this->fileOffset.Value, this->Format.SampleRate);
+        framesAvail -= msToFrames(this->fileOffset.Value, this->Format.SampleRate);
     }
 
     if(framesAvail < 0)
     {
-      framesAvail=0;
+        framesAvail=0;
     }
-    
+
     size_t totalFrames = this->fileLen.hasValue ? msToFrames(this->fileLen.Value, this->Format.SampleRate) : framesAvail;
 
     if(totalFrames > framesAvail)
@@ -181,13 +181,13 @@ frame_t LibSNDWrapper::getFrames () const
 
 void LibSNDWrapper::buildMetadata()
 {
-  #define READ_METADATA(name, id) if(sf_get_string(this->sndfile, id) != nullptr) name = string(sf_get_string(this->sndfile, id))
+#define READ_METADATA(name, id) if(sf_get_string(this->sndfile, id) != nullptr) name = string(sf_get_string(this->sndfile, id))
 
-  		READ_METADATA (this->Metadata.Title, SF_STR_TITLE);
-		READ_METADATA (this->Metadata.Artist, SF_STR_ARTIST);
-		READ_METADATA (this->Metadata.Year, SF_STR_DATE);
-		READ_METADATA (this->Metadata.Album, SF_STR_ALBUM);
-		READ_METADATA (this->Metadata.Genre, SF_STR_GENRE);
-		READ_METADATA (this->Metadata.Track, SF_STR_TRACKNUMBER);
-		READ_METADATA (this->Metadata.Comment, SF_STR_COMMENT);
+    READ_METADATA (this->Metadata.Title, SF_STR_TITLE);
+    READ_METADATA (this->Metadata.Artist, SF_STR_ARTIST);
+    READ_METADATA (this->Metadata.Year, SF_STR_DATE);
+    READ_METADATA (this->Metadata.Album, SF_STR_ALBUM);
+    READ_METADATA (this->Metadata.Genre, SF_STR_GENRE);
+    READ_METADATA (this->Metadata.Track, SF_STR_TRACKNUMBER);
+    READ_METADATA (this->Metadata.Comment, SF_STR_COMMENT);
 }

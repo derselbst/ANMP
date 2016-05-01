@@ -19,8 +19,9 @@
 
 #include <Plasma/TextBrowser>
 
-namespace Plasma {
-    class SvgWidget;
+namespace Plasma
+{
+class SvgWidget;
 }
 
 class LyricsBrowser : public Plasma::TextBrowser

@@ -66,7 +66,9 @@ void FHT::makeCasTable( void )
 
         costab += 2, sintab += 2;
         if( sintab > m_tab + m_num * 2 )
+        {
             sintab = m_tab + 1;
+        }
     }
 }
 
@@ -86,14 +88,18 @@ float* FHT::clear( float *d )
 void FHT::scale( float *p, float d )
 {
     for( int i = 0; i < ( m_num / 2 ); i++ )
+    {
         *p++ *= d;
+    }
 }
 
 
 void FHT::ewma( float *d, float *s, float w )
 {
     for( int i = 0; i < ( m_num / 2 ); i++, d++, s++ )
+    {
         *d = *d * w + *s * ( 1 - w );
+    }
 }
 
 
@@ -116,13 +122,17 @@ void FHT::logSpectrum( float *out, float *p )
     {
         j = *r++;
         if( i == j )
+        {
             *out++ = p[i];
+        }
         else
         {
             float base = p[k - 1];
             float step = ( p[j] - base ) / ( j - ( k - 1 ) );
             for( float corr = 0; k <= j; k++, corr += step )
+            {
                 * out++ = base + corr;
+            }
         }
     }
 }
@@ -144,7 +154,9 @@ void FHT::spectrum( float *p )
 {
     power2( p );
     for( int i = 0; i < ( m_num / 2 ); i++, p++ )
+    {
         *p = ( float )sqrt( *p * .5 );
+    }
 }
 
 
@@ -152,7 +164,9 @@ void FHT::power( float *p )
 {
     power2( p );
     for( int i = 0; i < ( m_num / 2 ); i++ )
+    {
         *p++ *= .5;
+    }
 }
 
 
@@ -165,16 +179,22 @@ void FHT::power2( float *p )
     *p = ( *p * *p ), *p += *p, p++;
 
     for( i = 1, q = p + m_num - 2; i < ( m_num / 2 ); i++, --q )
+    {
         *p = ( *p * *p ) + ( *q * *q ), p++;
+    }
 }
 
 
 void FHT::transform( float *p )
 {
     if( m_num == 8 )
+    {
         transform8( p );
+    }
     else
+    {
         _transform( p, m_num, 0 );
+    }
 }
 
 
@@ -219,7 +239,9 @@ void FHT::_transform( float *p, int n, int k )
     float a, *t1, *t2, *t3, *t4, *ptab, *pp;
 
     for( i = 0, t1 = m_buf, t2 = m_buf + ndiv2, pp = &p[k]; i < ndiv2; i++ )
+    {
         *t1++ = *pp++, *t2++ = *pp++;
+    }
 
     memcpy( p + k, m_buf, sizeof( float ) * n );
 

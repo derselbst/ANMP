@@ -25,24 +25,27 @@ void Playlist::remove (Song* song)
  */
 void Playlist::remove (int i)
 {
-  if(this->queue.empty()) { return; }
-  
-  SongQueue_t::iterator it = this->queue.begin()+(i % this->queue.size());
-  Song* s = *it;
+    if(this->queue.empty())
+    {
+        return;
+    }
+
+    SongQueue_t::iterator it = this->queue.begin()+(i % this->queue.size());
+    Song* s = *it;
     this->queue.erase(it);
     delete s;
 }
 
 void Playlist::clear()
 {
-  Song* s;
-  for(SongQueue_t::iterator it = this->queue.begin(); it!=this->queue.end(); ++it)
-  {
-    s = *it;
-    delete s;
-  }
-  
-  this->queue.clear();
+    Song* s;
+    for(SongQueue_t::iterator it = this->queue.begin(); it!=this->queue.end(); ++it)
+    {
+        s = *it;
+        delete s;
+    }
+
+    this->queue.clear();
 }
 
 
@@ -57,8 +60,11 @@ Song* Playlist::current ()
  */
 Song* Playlist::next ()
 {
-  if(this->queue.empty()) { return nullptr; }
-  
+    if(this->queue.empty())
+    {
+        return nullptr;
+    }
+
     return this->setCurrentSong((this->currentSong+1) % this->queue.size());
 }
 
@@ -66,8 +72,11 @@ Song* Playlist::next ()
  */
 Song* Playlist::previous ()
 {
-  if(this->queue.empty()) { return nullptr; }
-  
+    if(this->queue.empty())
+    {
+        return nullptr;
+    }
+
     return this->setCurrentSong((this->currentSong+this->queue.size()-1) % this->queue.size());
 }
 
@@ -86,8 +95,8 @@ Song* Playlist::setCurrentSong(unsigned int id)
     Song* s = this->getSong(id);
     if(s!=nullptr)
     {
-      this->currentSong = id;
+        this->currentSong = id;
     }
-    
+
     return s;
 }

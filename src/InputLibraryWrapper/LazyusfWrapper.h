@@ -16,7 +16,7 @@ public:
     LazyusfWrapper(string filename);
     LazyusfWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
     void initAttr();
-    
+
     /**
      * Empty Destructor
      */
@@ -49,7 +49,7 @@ public:
     frame_t getFrames () const override;
 
     void buildMetadata() override;
-    
+
     void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
 
 
@@ -61,9 +61,9 @@ private:
 
     // length in ms to fade
     unsigned long fade_ms = 0;
-    
+
     // esp. useful for DK64 usf set: some tracks are very silent, thanks to Wedge009 (tagger of DK64's usf set)
-    // we are provided with some volume information, we use them as a simple amplifier by multiplying this 
+    // we are provided with some volume information, we use them as a simple amplifier by multiplying this
     // number with every sample usf_render() generates for us
     int8_t volume = 1;
 

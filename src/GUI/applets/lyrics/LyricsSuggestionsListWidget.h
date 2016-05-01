@@ -79,13 +79,19 @@ private:
 };
 
 inline QString LyricsSuggestionItem::title() const
-{ return m_data.title; }
+{
+    return m_data.title;
+}
 
 inline QString LyricsSuggestionItem::artist() const
-{ return m_data.artist; }
+{
+    return m_data.artist;
+}
 
 inline KUrl LyricsSuggestionItem::url() const
-{ return m_data.url; }
+{
+    return m_data.url;
+}
 
 Q_DECLARE_METATYPE( LyricsSuggestion )
 

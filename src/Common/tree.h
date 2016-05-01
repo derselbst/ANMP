@@ -41,7 +41,8 @@
 #pragma warning( disable : 4786 )
 #endif // WIN32
 
-namespace core {
+namespace core
+{
 
 /////////////////////////////////////////////////////////////////////////////
 // tree_iterator forward declaration
@@ -81,7 +82,8 @@ private:
     void disconnect_()
     {
         // unlink this from the master node
-        if (this->out_ != NULL) {
+        if (this->out_ != NULL)
+        {
 
             // this->out_ is going to be called alot in succession "register" it
             register tree *out = this->out_;
@@ -89,23 +91,30 @@ private:
             // Decrement the size of the outter level
             --(out->size_);
 
-            if (out->in_ == this) {
-                if (NULL == this->next_) {
+            if (out->in_ == this)
+            {
+                if (NULL == this->next_)
+                {
                     // If this is the last node of this level, zap the hidden node
                     delete this->prev_;
                     out->in_ = NULL;
                 }
-                else {
+                else
+                {
                     // Otherwise, just reattatch the head node to the next node
                     this->prev_->next_ = this->next_;
                     this->next_->prev_ = this->prev_;
                     out->in_ = this->next_;
                 }
             }
-            else {
+            else
+            {
                 // We should be able to do this absolutely.
                 this->prev_->next_ = this->next_;
-                if (NULL != this->next_) this->next_->prev_ = this->prev_;
+                if (NULL != this->next_)
+                {
+                    this->next_->prev_ = this->prev_;
+                }
             }
         }
         // Point to nothing
@@ -115,7 +124,8 @@ private:
     //////////////////////////////////////////////////////////////////////////
     // End of the tree list, private only
     //////////////////////////////////////////////////////////////////////////
-    const tree* end_() const {
+    const tree* end_() const
+    {
         return (NULL);
     }
 
@@ -133,26 +143,35 @@ private:
         level->remove(inTree->data());
 
         // if there's no inner tree, make it
-        if (NULL == level->in_) {
+        if (NULL == level->in_)
+        {
             // Dummy node, create it -- if good memory do stuff, if NULL throw
-            if (tree *temp = new tree) {
+            if (tree *temp = new tree)
+            {
                 temp->next_ = inTree;
                 inTree->prev_ = temp;
                 level->in_ = inTree;
             }
-            else throw "allocation failed";
+            else
+            {
+                throw "allocation failed";
+            }
         }
-        else {
+        else
+        {
 
             tree *temp = level->in_->prev_;
 
-            while (true) {
-                if (NULL == temp->next_) {
+            while (true)
+            {
+                if (NULL == temp->next_)
+                {
                     temp->next_ = inTree;
                     inTree->prev_ = temp;
                     break;
                 }
-                else if ( pObj(inTree->data(), temp->next_->data()) ) {
+                else if ( pObj(inTree->data(), temp->next_->data()) )
+                {
 
                     tree *hold = temp->next_;
 
@@ -166,7 +185,10 @@ private:
 
                     // If we just inserted on the first node, we need to make sure
                     // the in pointer goes to inTree
-                    if (hold == level->in_) level->in_ = inTree;
+                    if (hold == level->in_)
+                    {
+                        level->in_ = inTree;
+                    }
                     break;
                 }
                 temp = temp->next_;
@@ -184,7 +206,10 @@ private:
     iterator push_back_no_remove(const T &inT)
     {
         tree *createdTree = new tree(inT);
-        if (NULL == createdTree) throw "allocation failed";
+        if (NULL == createdTree)
+        {
+            throw "allocation failed";
+        }
         return iterator(i_push_back_no_remove(createdTree, this));
     }
 
@@ -195,19 +220,25 @@ private:
         if (NULL == level->in_)
         {
             // Dummy node, create it -- if good memory do stuff, if NULL throw
-            if (tree *temp = new tree) {
+            if (tree *temp = new tree)
+            {
                 temp->next_ = inTree;
                 inTree->prev_ = temp;
                 level->in_ = inTree;
             }
-            else throw "allocation failed";
+            else
+            {
+                throw "allocation failed";
+            }
         }
         else
         {
             tree *temp = level->in_->prev_;
 
-            while (true) {
-                if (NULL == temp->next_) {
+            while (true)
+            {
+                if (NULL == temp->next_)
+                {
                     temp->next_ = inTree;
                     inTree->prev_ = temp;
                     break;
@@ -232,19 +263,25 @@ private:
         if (NULL == level->in_)
         {
             // Dummy node, create it -- if good memory do stuff, if NULL throw
-            if (tree *temp = new tree) {
+            if (tree *temp = new tree)
+            {
                 temp->next_ = inTree;
                 inTree->prev_ = temp;
                 level->in_ = inTree;
             }
-            else throw "allocation failed";
+            else
+            {
+                throw "allocation failed";
+            }
         }
         else
         {
             tree *temp = level->in_->prev_;
 
-            while (true) {
-                if (NULL == temp->next_) {
+            while (true)
+            {
+                if (NULL == temp->next_)
+                {
                     temp->next_ = inTree;
                     inTree->prev_ = temp;
                     break;
@@ -269,12 +306,16 @@ private:
         if (NULL == level->in_)
         {
             // Dummy node, create it -- if good memory do stuff, if NULL throw
-            if (tree *temp = new tree) {
+            if (tree *temp = new tree)
+            {
                 temp->next_ = inTree;
                 inTree->prev_ = temp;
                 level->in_ = inTree;
             }
-            else throw "allocation failed";
+            else
+            {
+                throw "allocation failed";
+            }
         }
         else
         {
@@ -289,7 +330,10 @@ private:
             inTree->prev_ = temp;
             // If we just inserted on the first node, we need to make sure
             // the in pointer goes to inTree
-            if (hold == level->in_) level->in_ = inTree;
+            if (hold == level->in_)
+            {
+                level->in_ = inTree;
+            }
         }
 
         inTree->out_ = level;
@@ -311,26 +355,35 @@ private:
         level->remove(inTree->data());
 
         // if there's no inner tree, make it
-        if (NULL == level->in_) {
+        if (NULL == level->in_)
+        {
             // Dummy node, create it -- if good memory do stuff, if NULL throw
-            if (tree *temp = new tree) {
+            if (tree *temp = new tree)
+            {
                 temp->next_ = inTree;
                 inTree->prev_ = temp;
                 level->in_ = inTree;
             }
-            else throw "allocation failed";
+            else
+            {
+                throw "allocation failed";
+            }
         }
-        else {
+        else
+        {
 
             tree *temp = level->in_->prev_;
 
-            while (true) {
-                if (NULL == temp->next_) {
+            while (true)
+            {
+                if (NULL == temp->next_)
+                {
                     temp->next_ = inTree;
                     inTree->prev_ = temp;
                     break;
                 }
-                else if ( inTree->data() < temp->next_->data() ) {
+                else if ( inTree->data() < temp->next_->data() )
+                {
                     tree *hold = temp->next_;
                     // temp -> inTree -> hold
                     temp->next_ = inTree;
@@ -340,7 +393,10 @@ private:
                     inTree->prev_ = temp;
                     // If we just inserted on the first node, we need to make sure
                     // the in pointer goes to inTree
-                    if (hold == level->in_) level->in_ = inTree;
+                    if (hold == level->in_)
+                    {
+                        level->in_ = inTree;
+                    }
                     break;
                 }
                 temp = temp->next_;
@@ -371,17 +427,20 @@ protected:
 
     //////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////
-    size_t size(const tree& in) const {
+    size_t size(const tree& in) const
+    {
         return in.size();
     }
-    size_t level(const tree& in) const {
+    size_t level(const tree& in) const
+    {
         return in.level();
     }
 
     //////////////////////////////////////////////////////////////////////////
     // Points to the beginning of the list and sets the current
     //////////////////////////////////////////////////////////////////////////
-    iterator begin(const tree& in) const {
+    iterator begin(const tree& in) const
+    {
         return iterator( *(in.in_) );
     }
 
@@ -394,7 +453,8 @@ protected:
     // (this is protected), we don't have to worry about safety issues except
     // for iterator safety.
     //////////////////////////////////////////////////////////////////////////
-    const tree* prev(const tree& in) const {
+    const tree* prev(const tree& in) const
+    {
         return (in.prev_);
     }
 
@@ -407,17 +467,20 @@ protected:
     // (this is protected), we don't have to worry about safety issues except
     // for iterator safety.
     //////////////////////////////////////////////////////////////////////////
-    const tree* next(const tree& in) const {
+    const tree* next(const tree& in) const
+    {
         return (in.next_);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    iterator in(const tree& in) const {
+    iterator in(const tree& in) const
+    {
         return iterator( *(in.in_) );
     }
 
     //////////////////////////////////////////////////////////////////////////
-    iterator out(const tree& in) const {
+    iterator out(const tree& in) const
+    {
         return iterator( *(in.out_) );
     }
 
@@ -438,7 +501,10 @@ public:
     //////////////////////////////////////////////////////////////////////////
     const bool operator==(const tree &inTree) const
     {
-        if (this->data_ == inTree.data_) return true;
+        if (this->data_ == inTree.data_)
+        {
+            return true;
+        }
         return false;
     }
 
@@ -456,10 +522,12 @@ public:
     }
 
     //////////////////////////////////////////////////////////////////////////
-    iterator tree_iterator() const {
+    iterator tree_iterator() const
+    {
         return iterator( *(this) );
     }
-    iterator tree_iterator() {
+    iterator tree_iterator()
+    {
         return iterator( *(this) );
     }
 
@@ -467,7 +535,8 @@ public:
     // copy constructor - now visible
     //////////////////////////////////////////////////////////////////////////
     tree(const tree &in) : data_(in.data_), next_(0), prev_(0), in_(0), out_(0),
-        level_(0), size_(0) {
+        level_(0), size_(0)
+    {
         *this = in;
     }
 
@@ -484,14 +553,16 @@ public:
         // right before we destroy it set it's out_ to NULL
         // that way Disconnect fails immediately -- much faster
 
-        if (this->size() > 0) {
+        if (this->size() > 0)
+        {
             register tree *cur = this->in_, *prev = this->in_->prev_;
 
             // Delete the head node
             prev->out_ = NULL;
             delete prev;
 
-            for (; this->size_ > 0; --this->size_) {
+            for (; this->size_ > 0; --this->size_)
+            {
 
                 prev = cur;
                 cur = cur->next_;
@@ -506,48 +577,59 @@ public:
     void copy_tree(const tree& in)
     {
         // for each branch iterate through all nodes and copy them
-        for (iterator i = in.begin(); in.end() != i; ++i) {
+        for (iterator i = in.begin(); in.end() != i; ++i)
+        {
             iterator inserted = this->push_back_no_remove(i.data());
 
             // for each node, see if there are inners - if so, copy those too
-            if (i.size() != 0) inserted.tree_ptr()->copy_tree(*i.tree_ptr());
+            if (i.size() != 0)
+            {
+                inserted.tree_ptr()->copy_tree(*i.tree_ptr());
+            }
         }
     }
 
     //////////////////////////////////////////////////////////////////////////
     // Returns the first element of our tree
     //////////////////////////////////////////////////////////////////////////
-    iterator begin() const {
+    iterator begin() const
+    {
         return iterator( *(this->in_) );
     }
-    iterator begin() {
+    iterator begin()
+    {
         return iterator( *(this->in_) );
     }
 
     //////////////////////////////////////////////////////////////////////////
     // Returns end_of_iterator
     //////////////////////////////////////////////////////////////////////////
-    const iterator& end() const {
+    const iterator& end() const
+    {
         return tree::iterator::end_iterator();
     }
 
     //////////////////////////////////////////////////////////////////////////
     // Returns the first element of our tree
     //////////////////////////////////////////////////////////////////////////
-    iterator in() const {
+    iterator in() const
+    {
         return iterator( *(this->in_) );
     }
-    iterator in() {
+    iterator in()
+    {
         return iterator( *(this->in_) );
     }
 
     //////////////////////////////////////////////////////////////////////////
     // Returns an iterator which steps out one level
     //////////////////////////////////////////////////////////////////////////
-    iterator out() const {
+    iterator out() const
+    {
         return iterator( *(this->out_) );
     }
-    iterator out() {
+    iterator out()
+    {
         return iterator( *(this->out_) );
     }
 
@@ -561,14 +643,16 @@ public:
         // Now get rid of our children -- but be smart about it,
         // right before we destroy it set it's out_ to NULL
         // that way disconnect_ fails immediately, much faster
-        if (this->size() > 0) {
+        if (this->size() > 0)
+        {
             register tree *cur = this->in_, *prev = this->in_->prev_;
 
             // Delete the head node
             prev->out_ = NULL;
             delete prev;
 
-            for (; this->size_ > 0; --this->size_) {
+            for (; this->size_ > 0; --this->size_)
+            {
 
                 prev = cur;
                 cur = cur->next_;
@@ -583,30 +667,37 @@ public:
         }
     }
 
-    T& operator*() {
+    T& operator*()
+    {
         return this->data_;
     }
-    const T& operator*() const {
+    const T& operator*() const
+    {
         return this->data_;
     }
-    T& data() {
+    T& data()
+    {
         return this->data_;
     }
-    const T& data() const {
+    const T& data() const
+    {
         return this->data_;
     }
 
-    const T& data(const T &inData) {
+    const T& data(const T &inData)
+    {
         return (this->data_ = inData);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    size_t level() const {
+    size_t level() const
+    {
         return (this->level_);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    size_t size() const {
+    size_t size() const
+    {
         return this->size_;
     }
 
@@ -620,7 +711,10 @@ public:
     iterator push_front(const T &inT)
     {
         tree *createdTree = new tree(inT);
-        if (NULL == createdTree) throw "allocation failed";
+        if (NULL == createdTree)
+        {
+            throw "allocation failed";
+        }
         return iterator(i_push_front(createdTree, this));
     }
 
@@ -628,7 +722,10 @@ public:
     iterator push_back(const T &inT)
     {
         tree *createdTree = new tree(inT);
-        if (NULL == createdTree) throw "allocation failed";
+        if (NULL == createdTree)
+        {
+            throw "allocation failed";
+        }
         return iterator(i_push_back(createdTree, this));
     }
 
@@ -639,7 +736,10 @@ public:
     iterator insert(const T &inT, bool (*pObj)(const T&, const T&))
     {
         tree *createdTree = new tree(inT);
-        if (NULL == createdTree) throw "allocation failed";
+        if (NULL == createdTree)
+        {
+            throw "allocation failed";
+        }
         return iterator(i_insert(createdTree, this, pObj));
     }
 
@@ -648,7 +748,10 @@ public:
     iterator insert(const iterator &i)
     {
         tree *createdTree = new tree(i.data());
-        if (NULL == createdTree) throw "allocation failed";
+        if (NULL == createdTree)
+        {
+            throw "allocation failed";
+        }
 
         return iterator(i_insert(createdTree, this));
     }
@@ -659,7 +762,10 @@ public:
     iterator insert(const T &inT)
     {
         tree *createdTree = new tree(inT);
-        if (NULL == createdTree) throw "allocation failed";
+        if (NULL == createdTree)
+        {
+            throw "allocation failed";
+        }
         return iterator(i_insert(createdTree, this));
     }
 
@@ -688,13 +794,17 @@ public:
     //////////////////////////////////////////////////////////////////////////
     bool remove(const T &inData)
     {
-        if (tree *temp = this->in_) {
-            do {
-                if (inData == temp->data_) {
+        if (tree *temp = this->in_)
+        {
+            do
+            {
+                if (inData == temp->data_)
+                {
                     delete temp;
                     return true;
                 }
-            } while (NULL != (temp = temp->next_) );
+            }
+            while (NULL != (temp = temp->next_) );
         }
         return false;
     }
@@ -702,13 +812,17 @@ public:
     //////////////////////////////////////////////////////////////////////////
     bool erase(const iterator& i)
     {
-        if (tree *temp = this->in_) {
-            do {
-                if (temp == i.tree_ptr()) {
+        if (tree *temp = this->in_)
+        {
+            do
+            {
+                if (temp == i.tree_ptr())
+                {
                     delete temp;
                     return true;
                 }
-            } while (NULL != (temp = temp->next_) );
+            }
+            while (NULL != (temp = temp->next_) );
         }
         return false;
     }
@@ -717,7 +831,10 @@ public:
     iterator operator[](size_t loc) const
     {
         tree *temp;
-        for (temp = this->in_; loc > 0; --loc) temp = temp->next_;
+        for (temp = this->in_; loc > 0; --loc)
+        {
+            temp = temp->next_;
+        }
         return iterator(*temp);
     }
 
@@ -725,7 +842,10 @@ public:
     iterator operator[](size_t loc)
     {
         tree *temp;
-        for (temp = this->in_; loc > 0; --loc) temp = temp->next_;
+        for (temp = this->in_; loc > 0; --loc)
+        {
+            temp = temp->next_;
+        }
         return iterator(*temp);
     }
 
@@ -771,10 +891,16 @@ public:
     //////////////////////////////////////////////////////////////////////////
     iterator find(const T &inT, const iterator &iter) const
     {
-        if (tree *temp = iter.tree_ptr()) {
-            do {
-                if (inT == temp->data_) return iterator(*temp);
-            } while (NULL != (temp = temp->next_) );
+        if (tree *temp = iter.tree_ptr())
+        {
+            do
+            {
+                if (inT == temp->data_)
+                {
+                    return iterator(*temp);
+                }
+            }
+            while (NULL != (temp = temp->next_) );
         }
         return tree::iterator::end_iterator();
     }
@@ -782,10 +908,16 @@ public:
     //////////////////////////////////////////////////////////////////////////
     iterator find(const T &inT, const iterator &iter, bool (*obj)(const T&, const T&)) const
     {
-        if (tree *temp = iter.tree_ptr()) {
-            do {
-                if ( obj(inT, temp->data_) ) return ( iterator(*temp) );
-            } while (NULL != (temp = temp->next_) );
+        if (tree *temp = iter.tree_ptr())
+        {
+            do
+            {
+                if ( obj(inT, temp->data_) )
+                {
+                    return ( iterator(*temp) );
+                }
+            }
+            while (NULL != (temp = temp->next_) );
         }
         return tree::iterator::end_iterator();
     }
@@ -793,13 +925,22 @@ public:
     //////////////////////////////////////////////////////////////////////////
     iterator tree_find_depth(const T &inT, const iterator &iter) const
     {
-        if (tree *temp = iter.tree_ptr()) {
-            do {
-                if (inT == temp->data_) return iterator(*temp);
+        if (tree *temp = iter.tree_ptr())
+        {
+            do
+            {
+                if (inT == temp->data_)
+                {
+                    return iterator(*temp);
+                }
                 // do a depth search, search it for inT
                 iterator i = temp->tree_find_depth(inT);
-                if (i != tree::iterator::end_iterator()) return i;
-            } while (NULL != (temp = temp->next_) );
+                if (i != tree::iterator::end_iterator())
+                {
+                    return i;
+                }
+            }
+            while (NULL != (temp = temp->next_) );
         }
         return tree::iterator::end_iterator();
     }
@@ -807,13 +948,22 @@ public:
     //////////////////////////////////////////////////////////////////////////
     iterator tree_find_depth(const T &inT, const iterator &iter, bool (*obj)(const T&, const T&)) const
     {
-        if (tree *temp = iter.tree_ptr()) {
-            do {
-                if ( obj(inT, temp->data_) ) return ( iterator(*temp) );
+        if (tree *temp = iter.tree_ptr())
+        {
+            do
+            {
+                if ( obj(inT, temp->data_) )
+                {
+                    return ( iterator(*temp) );
+                }
                 // do a depth search, search it for inT
                 iterator i = temp->tree_find_depth(inT, obj);
-                if (i != tree::iterator::end_iterator()) return i;
-            } while (NULL != (temp = temp->next_) );
+                if (i != tree::iterator::end_iterator())
+                {
+                    return i;
+                }
+            }
+            while (NULL != (temp = temp->next_) );
         }
         return tree::iterator::end_iterator();
     }
@@ -822,17 +972,28 @@ public:
     iterator tree_find_breadth(const T &inT, const iterator &iter) const
     {
         // search the entire level for a find first
-        if (tree *temp = iter.tree_ptr()) {
-            do {
-                if (inT == temp->data_) return iterator(*temp);
-            } while (NULL != (temp = temp->next_) );
+        if (tree *temp = iter.tree_ptr())
+        {
+            do
+            {
+                if (inT == temp->data_)
+                {
+                    return iterator(*temp);
+                }
+            }
+            while (NULL != (temp = temp->next_) );
 
             // now search each branch for the find within it
             temp = iter.tree_ptr();
-            do {
+            do
+            {
                 iterator i = temp->tree_find_breadth(inT);
-                if (i != tree::iterator::end_iterator()) return i;
-            } while (NULL != (temp = temp->next_) );
+                if (i != tree::iterator::end_iterator())
+                {
+                    return i;
+                }
+            }
+            while (NULL != (temp = temp->next_) );
         }
         return tree::iterator::end_iterator();
     }
@@ -841,17 +1002,28 @@ public:
     iterator tree_find_breadth(const T &inT, const iterator &iter, bool (*obj)(const T&, const T&)) const
     {
         // search the entire level for a find first
-        if (tree *temp = iter.tree_ptr()) {
-            do {
-                if ( obj(inT, temp->data_) ) return iterator(*temp);
-            } while (NULL != (temp = temp->next_) );
+        if (tree *temp = iter.tree_ptr())
+        {
+            do
+            {
+                if ( obj(inT, temp->data_) )
+                {
+                    return iterator(*temp);
+                }
+            }
+            while (NULL != (temp = temp->next_) );
 
             // now search each branch for the find within it
             temp = iter.tree_ptr();
-            do {
+            do
+            {
                 iterator i = temp->tree_find_breadth(inT, obj);
-                if (i != tree::iterator::end_iterator()) return i;
-            } while (NULL != (temp = temp->next_) );
+                if (i != tree::iterator::end_iterator())
+                {
+                    return i;
+                }
+            }
+            while (NULL != (temp = temp->next_) );
         }
         return tree::iterator::end_iterator();
     }
@@ -889,10 +1061,12 @@ private:
 
 public:
 
-    TreeType* tree_ptr() const {
+    TreeType* tree_ptr() const
+    {
         return current_;
     }
-    TreeType& tree_ref() const {
+    TreeType& tree_ref() const
+    {
         return *current_;
     }
 
@@ -900,7 +1074,8 @@ public:
     // Returns the end_of_iterator for this <T,U,V> layout, this really speeds
     // up things like if (iter != tree.end() ), for (;iter != tree.end(); )
     //////////////////////////////////////////////////////////////////////////
-    static const typename tree<T>::iterator& end_iterator() {
+    static const typename tree<T>::iterator& end_iterator()
+    {
         return end_of_iterator;
     }
 
@@ -970,7 +1145,10 @@ public:
     //////////////////////////////////////////////////////////////////////////
     bool operator==(const tree_iterator& rhs) const
     {
-        if (this->current_ == rhs.current_) return true;
+        if (this->current_ == rhs.current_)
+        {
+            return true;
+        }
         return false;
     }
 
@@ -1015,37 +1193,44 @@ public:
     //////////////////////////////////////////////////////////////////////////
     // Begin iteration through the tree
     //////////////////////////////////////////////////////////////////////////
-    typename tree<T>::iterator begin() const {
+    typename tree<T>::iterator begin() const
+    {
         return this->TreeType::begin( *current_ );
     }
-    typename tree<T>::iterator begin() {
+    typename tree<T>::iterator begin()
+    {
         return this->TreeType::begin( *current_ );
     }
 
     //////////////////////////////////////////////////////////////////////////
     // Return the in iterator of this tree
     //////////////////////////////////////////////////////////////////////////
-    typename tree<T>::iterator in() const {
+    typename tree<T>::iterator in() const
+    {
         return this->TreeType::in( *current_ );
     }
-    typename tree<T>::iterator in() {
+    typename tree<T>::iterator in()
+    {
         return this->TreeType::in( *current_ );
     }
 
     //////////////////////////////////////////////////////////////////////////
     // Return the out iterator of this tree
     //////////////////////////////////////////////////////////////////////////
-    typename tree<T>::iterator out() const {
+    typename tree<T>::iterator out() const
+    {
         return this->TreeType::out( *current_ );
     }
-    typename tree<T>::iterator out() {
+    typename tree<T>::iterator out()
+    {
         return this->TreeType::out( *current_ );
     }
 
     //////////////////////////////////////////////////////////////////////////
     // Are we at the end?
     //////////////////////////////////////////////////////////////////////////
-    const typename tree<T>::iterator& end() const {
+    const typename tree<T>::iterator& end() const
+    {
         return this->TreeType::end();
     }
 
@@ -1106,49 +1291,58 @@ public:
     //////////////////////////////////////////////////////////////////////////
     // get the data of the iter
     //////////////////////////////////////////////////////////////////////////
-    T& operator*() {
+    T& operator*()
+    {
         return this->current_->data();
     }
-    const T& operator*() const {
+    const T& operator*() const
+    {
         return this->current_->data();
     }
-    T& data() {
+    T& data()
+    {
         return this->current_->data();
     }
-    const T& data() const {
+    const T& data() const
+    {
         return this->current_->data();
     }
 
     //////////////////////////////////////////////////////////////////////////
     // sets and retrieves the t and u members of the pair
     //////////////////////////////////////////////////////////////////////////
-    const T& data(const T &inData) const {
+    const T& data(const T &inData) const
+    {
         return this->current_->data(inData);
     }
 
     //////////////////////////////////////////////////////////////////////////
     // Get the size of the current tree_iter
     //////////////////////////////////////////////////////////////////////////
-    size_t size() const {
+    size_t size() const
+    {
         return this->TreeType::size( *current_ );
     }
 
     //////////////////////////////////////////////////////////////////////////
-    size_t level() const {
+    size_t level() const
+    {
         return this->TreeType::level( *current_ );
     }
 
     //////////////////////////////////////////////////////////////////////////
     // Removes the first instance of T in the tree
     //////////////////////////////////////////////////////////////////////////
-    bool remove(const T &inT) {
+    bool remove(const T &inT)
+    {
         return current_->remove(inT);
     }
 
     //////////////////////////////////////////////////////////////////////////
     // Finds the first instance of T in the tree
     //////////////////////////////////////////////////////////////////////////
-    typename tree<T>::iterator find(const T &inT) const {
+    typename tree<T>::iterator find(const T &inT) const
+    {
         return current_->find(inT);
     }
 
@@ -1157,7 +1351,8 @@ public:
         return current_->find(inT, obj);
     }
 
-    typename tree<T>::iterator tree_find_depth(const T &inT) const {
+    typename tree<T>::iterator tree_find_depth(const T &inT) const
+    {
         return current_->tree_find_depth(inT);
     }
 
@@ -1166,7 +1361,8 @@ public:
         return current_->tree_find_depth(inT, obj);
     }
 
-    typename tree<T>::iterator tree_find_breadth(const T &inT) const {
+    typename tree<T>::iterator tree_find_breadth(const T &inT) const
+    {
         return current_->tree_find_breadth(inT);
     }
 
@@ -1214,7 +1410,8 @@ public:
     //////////////////////////////////////////////////////////////////////////
     // Empty this entire tree
     //////////////////////////////////////////////////////////////////////////
-    void clear_tree() {
+    void clear_tree()
+    {
         delete this->current_;
         this->current_ = NULL;
     }
@@ -1222,7 +1419,8 @@ public:
     //////////////////////////////////////////////////////////////////////////
     // Empty this tree's children
     //////////////////////////////////////////////////////////////////////////
-    void clear_children() {
+    void clear_children()
+    {
         this->current_->clear();
     }
 };

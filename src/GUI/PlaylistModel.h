@@ -12,26 +12,26 @@ class Song;
 
 class PlaylistModel : public QAbstractTableModel, public Playlist
 {
-  Q_OBJECT
-  
+    Q_OBJECT
+
 public:
     PlaylistModel(QObject *parent = 0);
-    
+
     // *** MODEL READ SUPPORT ***
     int rowCount(const QModelIndex &parent) const override;
     int columnCount(const QModelIndex &parent) const override;
-    
+
     QVariant data(const QModelIndex &index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
-    
-    
+
+
     // *** MODEL WRITE SUPPORT ***
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
     bool insertRows(int row, int count, const QModelIndex & parent = QModelIndex()) override;
     bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex()) override;
     bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationRow) override;
-    
+
     void move(std::deque<Song*>& que, signed int source, unsigned int count, int steps);
 
     void add (Song* song) override;
@@ -42,13 +42,13 @@ public:
 
     Song* setCurrentSong (unsigned int id) override;
 
-/*
-    Song* getSong(unsigned int id) override;
+    /*
+        Song* getSong(unsigned int id) override;
 
-    Song* current () override;*/
+        Song* current () override;*/
 
 private:
-  QColor calculateRowColor(int row) const;
+    QColor calculateRowColor(int row) const;
 
 };
 

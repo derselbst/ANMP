@@ -5,7 +5,7 @@
 
 extern "C"
 {
-  #include <vgmstream.h>
+#include <vgmstream.h>
 }
 #include <future>
 // struct VGMSTREAM;
@@ -22,7 +22,7 @@ public:
     VGMStreamWrapper(string filename);
     VGMStreamWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
     void initAttr();
-    
+
     virtual ~VGMStreamWrapper ();
 
 
@@ -61,13 +61,13 @@ public:
      */
     frame_t getFrames () const override;
 
-  void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
-  
-  void buildMetadata() override;
-    
+    void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
+
+    void buildMetadata() override;
+
 private:
-  VGMSTREAM * handle=nullptr;
-  
+    VGMSTREAM * handle=nullptr;
+
 
 };
 

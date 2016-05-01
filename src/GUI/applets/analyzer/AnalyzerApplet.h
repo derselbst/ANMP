@@ -4,7 +4,8 @@
 #include <QMainWindow>
 #include "types.h"
 
-namespace Ui {
+namespace Ui
+{
 class AnalyzerApplet;
 }
 class AnalyzerBase;
@@ -19,11 +20,11 @@ public:
 
     explicit AnalyzerApplet(Player* player, QWidget *parent = 0);
     ~AnalyzerApplet();
-    
+
     void startGraphics();
     void stopGraphics();
     void setAnalyzer( enum AnalyzerType type );
-    
+
 
 private:
     Ui::AnalyzerApplet *ui = nullptr;
@@ -35,9 +36,9 @@ private:
 
     void resizeEvent(QResizeEvent* event) override;
     void closeEvent(QCloseEvent* e) override;
-    
+
     static void redraw(void* ctx, frame_t pos);
-    
+
 };
 
 #endif // ANALYZERAPPLET_H

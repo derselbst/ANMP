@@ -77,7 +77,7 @@ public:
      * @param  frame seeks the playhead to frame "frame"
      */
     void seekTo (frame_t frame);
-    
+
     Event<frame_t> onPlayheadChanged;
     Event<> onCurrentSongChanged;
 

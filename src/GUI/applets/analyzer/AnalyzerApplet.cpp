@@ -18,30 +18,30 @@ AnalyzerApplet::AnalyzerApplet(Player* player, QWidget *parent) :
 
 AnalyzerApplet::~AnalyzerApplet()
 {
-  this->stopGraphics();
-  
+    this->stopGraphics();
+
     delete this->analyzerWidget;
     delete this->ui;
 }
 
 void AnalyzerApplet::resizeEvent(QResizeEvent* event)
 {
-  QMainWindow::resizeEvent(event);
+    QMainWindow::resizeEvent(event);
 
-  this->newGeometry();
+    this->newGeometry();
 }
 
 void AnalyzerApplet::closeEvent(QCloseEvent* e)
 {
-  QMainWindow::closeEvent(e);
+    QMainWindow::closeEvent(e);
 
-  this->stopGraphics();
+    this->stopGraphics();
 }
 
 void AnalyzerApplet::startGraphics()
 {
-  this->player->onPlayheadChanged += make_pair(this, &AnalyzerApplet::redraw);
-  this->analyzerWidget->connectSignals();
+    this->player->onPlayheadChanged += make_pair(this, &AnalyzerApplet::redraw);
+    this->analyzerWidget->connectSignals();
 }
 
 void AnalyzerApplet::stopGraphics()
@@ -53,7 +53,7 @@ void AnalyzerApplet::stopGraphics()
 void AnalyzerApplet::newGeometry()
 {
 //     if(this->analyzerWidget==nullptr)
-        return;
+    return;
 
     // Use the applet's geometry for showing the analyzer widget at the same position
     QRect analyzerGeometry = geometry();
@@ -78,7 +78,7 @@ void AnalyzerApplet::setAnalyzer(AnalyzerType type )
     switch(type)
     {
     default:
-        /* fall through */
+    /* fall through */
     case Block:
         this->analyzerWidget = new BlockAnalyzer(this);
         break;
@@ -94,8 +94,8 @@ void AnalyzerApplet::setAnalyzer(AnalyzerType type )
 }
 
 void AnalyzerApplet::redraw(void* ctx, frame_t pos)
-{  
-  AnalyzerApplet* context = static_cast<AnalyzerApplet*>(ctx);
+{
+    AnalyzerApplet* context = static_cast<AnalyzerApplet*>(ctx);
 
-  context->analyzerWidget->processData(context->player->getCurrentSong(), pos);
+    context->analyzerWidget->processData(context->player->getCurrentSong(), pos);
 }

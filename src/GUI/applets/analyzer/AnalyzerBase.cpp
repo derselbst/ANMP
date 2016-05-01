@@ -57,8 +57,10 @@ void
 AnalyzerBase::connectSignals()
 {
     if( m_renderTimer->isActive() )
+    {
         return;
-    
+    }
+
     m_renderTimer->start();
 }
 
@@ -74,7 +76,7 @@ AnalyzerBase::disconnectSignals()
 // {
 //     // Optimization for X11/Linux desktops:
 //     // Don't update the analyzer if Amarok is not on the active virtual desktop.
-// 
+//
 //     if( The::mainWindow()->isOnCurrentDesktop() )
 //         connectSignals();
 //     else
@@ -100,12 +102,12 @@ void AnalyzerBase::transform( QVector<float> &scope ) //virtual
 
 void AnalyzerBase::processData( const Song* s, frame_t playhead )
 {
-  if(s==nullptr)
-  {
-    return;
-  }
-  
-  #define PREPARE_SCOPE(PCMBUF) \
+    if(s==nullptr)
+    {
+        return;
+    }
+
+#define PREPARE_SCOPE(PCMBUF) \
   for(unsigned int frame = 0; (frame < Config::FramesToRender) && ((playhead + frame) < s->getFrames()); frame++)\
   {\
     /* init the frame'th element */\
@@ -129,21 +131,21 @@ void AnalyzerBase::processData( const Song* s, frame_t playhead )
     /* further attenuation */\
     scope[frame] /= 20;\
   }
-  
-  QVector<float> scope(m_fht->size());
-  if(s->Format.SampleFormat == int16)
-  {
-    int16_t* pcmBuf = static_cast<int16_t*>(s->data) + playhead * s->Format.Channels;
-    
-    PREPARE_SCOPE(pcmBuf);
-  }
-  else if(s->Format.SampleFormat == int32)
-  {
-    int32_t* pcmBuf = static_cast<int32_t*>(s->data) + playhead * s->Format.Channels;
-    
-    PREPARE_SCOPE(pcmBuf);
-  }
-  
+
+    QVector<float> scope(m_fht->size());
+    if(s->Format.SampleFormat == int16)
+    {
+        int16_t* pcmBuf = static_cast<int16_t*>(s->data) + playhead * s->Format.Channels;
+
+        PREPARE_SCOPE(pcmBuf);
+    }
+    else if(s->Format.SampleFormat == int32)
+    {
+        int32_t* pcmBuf = static_cast<int32_t*>(s->data) + playhead * s->Format.Channels;
+
+        PREPARE_SCOPE(pcmBuf);
+    }
+
     transform( scope );
     analyze( scope );
 }
@@ -161,12 +163,16 @@ void AnalyzerBase::interpolate( const QVector<float> &inVec, QVector<float> &out
         long indexLeft = offset + 0;
 
         if( indexLeft >= inVec.size() )
+        {
             indexLeft = inVec.size() - 1;
+        }
 
         long indexRight = offset + 1;
 
         if( indexRight >= inVec.size() )
+        {
             indexRight = inVec.size() - 1;
+        }
 
         outVec[i] = inVec[indexLeft ] * ( 1.0 - error ) +
                     inVec[indexRight] * error;

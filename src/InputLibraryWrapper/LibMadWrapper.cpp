@@ -24,7 +24,7 @@ LibMadWrapper::LibMadWrapper(string filename) : StandardWrapper(filename)
 
 LibMadWrapper::LibMadWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len) : StandardWrapper(filename, offset, len)
 {
-     this->initAttr();
+    this->initAttr();
 }
 
 void LibMadWrapper::initAttr()
@@ -50,22 +50,22 @@ void LibMadWrapper::open ()
     this->infile = fopen(this->Filename.c_str(), "rb");
     if (this->infile == nullptr)
     {
-      THROW_RUNTIME_ERROR("fopen failed, errno: " << string(strerror(errno)));
+        THROW_RUNTIME_ERROR("fopen failed, errno: " << string(strerror(errno)));
     }
 
     int fd = fileno(this->infile);
     struct stat stat;
     if (fstat(fd, &stat) == -1 || stat.st_size == 0)
     {
-      THROW_RUNTIME_ERROR("fstat failed for File \"" << this->Filename << ")\"");
+        THROW_RUNTIME_ERROR("fstat failed for File \"" << this->Filename << ")\"");
     }
-    
+
     this->mpeglen = stat.st_size;
 
     this->mpegbuf = static_cast<unsigned char*>(mmap(0, this->mpeglen, PROT_READ, MAP_SHARED, fd, 0));
     if (this->mpegbuf == MAP_FAILED)
     {
-      THROW_RUNTIME_ERROR("mmap failed for File \"" << this->Filename << ")\"");
+        THROW_RUNTIME_ERROR("mmap failed for File \"" << this->Filename << ")\"");
     }
 
     struct mad_header header;
@@ -78,15 +78,15 @@ void LibMadWrapper::open ()
 
     if(this->numFrames==0)
     {
-      int ret;
-      // try to find a valid header
+        int ret;
+        // try to find a valid header
         while((ret=mad_header_decode(&header, this->stream))!=0 && MAD_RECOVERABLE(this->stream->error));
-        
+
         if(ret!=0)
-	{
-	  THROW_RUNTIME_ERROR("unable to find a valid frame-header for File \"" + this->Filename + ")\"");
-	}
-        
+        {
+            THROW_RUNTIME_ERROR("unable to find a valid frame-header for File \"" + this->Filename + ")\"");
+        }
+
         this->Format.Channels = MAD_NCHANNELS(&header);
         this->Format.SampleRate = header.samplerate;
 
@@ -95,31 +95,31 @@ void LibMadWrapper::open ()
         this->numFrames = 32 * MAD_NSBSAMPLES(&header);
 
         while(1)
-	{
-	  if(mad_header_decode(&header, this->stream)!=0)
-	  {
-	    if(MAD_RECOVERABLE(this->stream->error))
-	    {
-	      continue;
-	    }
-            else
-	    {
-                break;
+        {
+            if(mad_header_decode(&header, this->stream)!=0)
+            {
+                if(MAD_RECOVERABLE(this->stream->error))
+                {
+                    continue;
+                }
+                else
+                {
+                    break;
+                }
             }
-	  }
-	  
-	  // sanity checks
-	  if(this->Format.Channels != MAD_NCHANNELS(&header))
-	  {
-	    THROW_RUNTIME_ERROR("channelcount varies within File \"" << this->Filename << ")\"");
-	  }
-	  
-	  if(this->Format.SampleRate != header.samplerate)
-	  {
-	    THROW_RUNTIME_ERROR("samplerate varies within File \"" << this->Filename << ")\"");
-	  }
-	  
-          this->numFrames += 32 * MAD_NSBSAMPLES(&header);
+
+            // sanity checks
+            if(this->Format.Channels != MAD_NCHANNELS(&header))
+            {
+                THROW_RUNTIME_ERROR("channelcount varies within File \"" << this->Filename << ")\"");
+            }
+
+            if(this->Format.SampleRate != header.samplerate)
+            {
+                THROW_RUNTIME_ERROR("samplerate varies within File \"" << this->Filename << ")\"");
+            }
+
+            this->numFrames += 32 * MAD_NSBSAMPLES(&header);
         }
 
         // somehow reset libmad stream
@@ -135,16 +135,16 @@ void LibMadWrapper::close()
 {
     if(this->stream != nullptr)
     {
-      mad_stream_finish(this->stream);
-      delete this->stream;
-      this->stream = nullptr;
+        mad_stream_finish(this->stream);
+        delete this->stream;
+        this->stream = nullptr;
     }
 
     if(this->mpegbuf!=nullptr)
     {
         munmap(this->mpegbuf, this->mpeglen);
         this->mpegbuf=nullptr;
-	this->mpeglen=0;
+        this->mpeglen=0;
     }
 
     if(this->infile!=nullptr)
@@ -161,12 +161,12 @@ void LibMadWrapper::fillBuffer()
 
 void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
-  // TODO per frame rendering not yet supported
-  if(framesToRender!=0)
-  {
-    return;
-  }
-  
+    // TODO per frame rendering not yet supported
+    if(framesToRender!=0)
+    {
+        return;
+    }
+
     struct mad_frame frame;
     struct mad_synth synth;
 
@@ -176,20 +176,20 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     unsigned int item=0;
     while (!this->stopFillBuffer)
     {
-      int ret = mad_frame_decode(&frame, this->stream);
-      
-	  if(ret!=0)
-	  {
-	    if(MAD_RECOVERABLE(this->stream->error))
-	    {
-	      continue;
-	    }
+        int ret = mad_frame_decode(&frame, this->stream);
+
+        if(ret!=0)
+        {
+            if(MAD_RECOVERABLE(this->stream->error))
+            {
+                continue;
+            }
             else
-	    {
+            {
                 break;
             }
-	  }
-	  
+        }
+
         mad_synth_frame(&synth, &frame);
 
         /* save PCM samples from synth.pcm */
@@ -203,14 +203,14 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
         right_ch  = pcm->samples[1];
 
         while (!this->stopFillBuffer && nsamples--)
-	{
+        {
             signed int sample;
 
             /* output sample(s) in 16-bit signed little-endian PCM */
 
             sample = LibMadWrapper::toInt16Sample(*left_ch++);
             static_cast<int32_t*>(bufferToFill)[item]=sample;
-	    
+
             item++;
 
             if (this->Format.Channels == 2)
@@ -247,8 +247,8 @@ frame_t LibMadWrapper::getFrames () const
 
 void LibMadWrapper::buildMetadata()
 {
-  // TODO we have to find ID3 tag in the mpeg file, but this should be done while trying decoding mpeg-frame-headers
-  // whenever libmad returns lost_sync error, there might be a id3 tag
+    // TODO we have to find ID3 tag in the mpeg file, but this should be done while trying decoding mpeg-frame-headers
+    // whenever libmad returns lost_sync error, there might be a id3 tag
 }
 
 /* FROM minimad.c
@@ -267,15 +267,19 @@ int32_t LibMadWrapper::toInt16Sample(mad_fixed_t sample)
 
     /* clip */
     if (sample >= MAD_F_ONE)
+    {
         sample = MAD_F_ONE - 1;
+    }
     else if (sample < -MAD_F_ONE)
+    {
         sample = -MAD_F_ONE;
+    }
 
     /* quantize, i.e. cut the fractional bits we dont need anymore */
     sample >>= (MAD_F_FRACBITS + 1 - SAMPLE_SIZE);
-    
+
     /* make sure the 24th bit becomes the msb */
     sample <<= sizeof(mad_fixed_t)*8/*==32*/ - SAMPLE_SIZE;
-    
+
     return sample;
 }

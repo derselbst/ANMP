@@ -59,7 +59,7 @@ void Player::_initAudio()
 
 bool Player::getIsPlaying()
 {
-  return this->isPlaying;
+    return this->isPlaying;
 }
 
 /**
@@ -70,20 +70,20 @@ void Player::play ()
     {
         return;
     }
-    
+
     WAIT(this->futurePlayInternal);
-        
+
     if(this->currentSong==nullptr)
     {
-      Song* s=this->playlist->current();
-      if(s!=nullptr)
-      {
-	this->setCurrentSong(s);
-      }
-      else
-      {
-	return;
-      }
+        Song* s=this->playlist->current();
+        if(s!=nullptr)
+        {
+            this->setCurrentSong(s);
+        }
+        else
+        {
+            return;
+        }
     }
 
     this->isPlaying=true;
@@ -98,7 +98,7 @@ void Player::play ()
  */
 const Song* Player::getCurrentSong ()
 {
-   return this->currentSong;
+    return this->currentSong;
 }
 
 
@@ -148,7 +148,7 @@ void Player::_setCurrentSong (Song* song)
     {
         this->_initAudio();
     }
-    
+
     // if the audio has bee properly been initialized
     if(this->audioDriver!=nullptr)
     {
@@ -171,12 +171,12 @@ void Player::_setCurrentSong (Song* song)
     }
     else
     {
-      cerr << "THIS SHOULD NEVER HAPPEN! audioDriver==nullptr" << endl;
-      return;
+        cerr << "THIS SHOULD NEVER HAPPEN! audioDriver==nullptr" << endl;
+        return;
     }
-    
+
     // now we are ready to do the callback
-      this->onCurrentSongChanged.Fire();
+    this->onCurrentSongChanged.Fire();
 }
 
 
@@ -237,7 +237,8 @@ void Player::previous ()
 /**
  */
 void Player::fadeout ()
-{   USERS_ARE_STUPID
+{
+    USERS_ARE_STUPID
 }
 
 
@@ -246,11 +247,11 @@ void Player::fadeout ()
  */
 void Player::seekTo (frame_t frame)
 {
-  if(this->currentSong!=nullptr && 
-     SEEK_POSSIBLE)
-  {
-    this->_seekTo(frame);
-}
+    if(this->currentSong!=nullptr &&
+            SEEK_POSSIBLE)
+    {
+        this->_seekTo(frame);
+    }
 }
 
 
@@ -259,7 +260,7 @@ void Player::seekTo (frame_t frame)
  */
 void Player::_seekTo (frame_t frame)
 {
-    this->playhead=frame;  
+    this->playhead=frame;
 }
 
 
@@ -293,11 +294,12 @@ core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)
 
 
 void Player::playLoop (core::tree<loop_t>& loop)
-{   USERS_ARE_STUPID
+{
+    USERS_ARE_STUPID
 
     // sub-loops that need to be played
     core::tree<loop_t>* subloop;
-    
+
     while(this->isPlaying && // are we still playing?
             Config::useLoopInfo && // user wishes to use available loop info
             SEEK_POSSIBLE && // we loop by setting the playhead, if this is not possible, since we dont hold the whole pcm, no loops are available
@@ -307,7 +309,7 @@ void Player::playLoop (core::tree<loop_t>& loop)
         // if the user requested to seek past the current loop, skip it at all
         if(this->playhead > (*(*subloop)).stop)
         {
-	    cerr << "this code seems to be redundant... NO IT ISNT!!!" << endl;
+            cerr << "this code seems to be redundant... NO IT ISNT!!!" << endl;
             continue;
         }
 
@@ -316,7 +318,7 @@ void Player::playLoop (core::tree<loop_t>& loop)
 
         uint32_t mycount = Config::overridingGlobalLoopCount!=-1 ? Config::overridingGlobalLoopCount : (*(*subloop)).count;
         bool forever = mycount==0;
-	mycount += 1; // +1 because the subloop we are just going to play, should be played one additional time by the parent of subloop (i.e. the loop we are currently in)
+        mycount += 1; // +1 because the subloop we are just going to play, should be played one additional time by the parent of subloop (i.e. the loop we are currently in)
         while(this->isPlaying && (forever || mycount--))
             {
                 // if we play this loop multiple time, make sure we start at the beginning again
@@ -343,7 +345,8 @@ void Player::playLoop (core::tree<loop_t>& loop)
  * not be played
  */
 void Player::playFrames (frame_t startFrame, frame_t stopFrame)
-{   USERS_ARE_STUPID
+{
+    USERS_ARE_STUPID
 
     if(startFrame!=this->playhead)
     {
@@ -375,7 +378,8 @@ void Player::playFrames (frame_t startFrame, frame_t stopFrame)
 
 
 void Player::playFrames (frame_t framesToPlay)
-{   USERS_ARE_STUPID
+{
+    USERS_ARE_STUPID
 
     frame_t memorizedPlayhead = this->playhead;
     size_t& bufSize = this->currentSong->count;
@@ -406,9 +410,9 @@ void Player::playFrames (frame_t framesToPlay)
 
         // update the playhead
         this->playhead+=framesWritten;
-	// notify observers
-	this->onPlayheadChanged.Fire(this->playhead);
-	
+        // notify observers
+        this->onPlayheadChanged.Fire(this->playhead);
+
         // update our local copy of playhead
         memorizedPlayhead+=framesWritten;
         // update frames-left-to-play

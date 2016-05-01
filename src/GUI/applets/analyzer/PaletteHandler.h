@@ -13,7 +13,7 @@
  * You should have received a copy of the GNU General Public License along with         *
  * this program.  If not, see <http://www.gnu.org/licenses/>.                           *
  ****************************************************************************************/
- 
+
 #ifndef PALETTEHANDLER_H
 #define PALETTEHANDLER_H
 
@@ -23,8 +23,9 @@
 
 class PaletteHandler;
 
-namespace The {
-    PaletteHandler* paletteHandler();
+namespace The
+{
+PaletteHandler* paletteHandler();
 }
 
 /**
@@ -36,7 +37,7 @@ class PaletteHandler : public QObject
 {
     Q_OBJECT
 
-friend PaletteHandler* The::paletteHandler();
+    friend PaletteHandler* The::paletteHandler();
 
 public:
     ~PaletteHandler();
@@ -55,7 +56,7 @@ public:
     * Returns the foreground color for the painter by checking the painting QWidget::foregroundRole() and falling back to
     * QPalette::WindowText (or QPalette::HighlightedText if @param selected)
     * Uses the widgets palette or the application palette as fallback
-    */    
+    */
     QColor foregroundColor( const QPainter *p, bool selected = false );
 
     /**

@@ -22,10 +22,12 @@ using namespace std;
 bool iEqualsUgly(string strFirst, string strSecond)
 {
     // convert strings to upper case before compare
-    transform(strFirst.begin(), strFirst.end(), strFirst.begin(), [](unsigned char c) {
+    transform(strFirst.begin(), strFirst.end(), strFirst.begin(), [](unsigned char c)
+    {
         return std::toupper(c);
     });
-    transform(strSecond.begin(), strSecond.end(), strSecond.begin(), [](unsigned char c) {
+    transform(strSecond.begin(), strSecond.end(), strSecond.begin(), [](unsigned char c)
+    {
         return std::toupper(c);
     });
     return strFirst == strSecond;
@@ -66,34 +68,66 @@ unsigned long parse_time_crap(const char *input)
         colon_count += *ptr == ':';
         ++ptr;
     }
-    if (colon_count > 2) return BORK_TIME;
-    if (*ptr && *ptr != '.' && *ptr != ',') return BORK_TIME;
-    if (*ptr) ++ptr;
-    while (*ptr && *ptr >= '0' && *ptr <= '9') ++ptr;
-    if (*ptr) return BORK_TIME;
+    if (colon_count > 2)
+    {
+        return BORK_TIME;
+    }
+    if (*ptr && *ptr != '.' && *ptr != ',')
+    {
+        return BORK_TIME;
+    }
+    if (*ptr)
+    {
+        ++ptr;
+    }
+    while (*ptr && *ptr >= '0' && *ptr <= '9')
+    {
+        ++ptr;
+    }
+    if (*ptr)
+    {
+        return BORK_TIME;
+    }
 
     ptr = strrchr(input, ':');
     if (!ptr)
+    {
         ptr = input;
+    }
     for (;;)
     {
         char * end;
-        if (ptr != input) ++ptr;
+        if (ptr != input)
+        {
+            ++ptr;
+        }
         if (multiplier == 1000)
         {
             double temp = strtod(ptr, &end);
-            if (temp >= 60.0) return BORK_TIME;
+            if (temp >= 60.0)
+            {
+                return BORK_TIME;
+            }
             value = (long)(temp * 1000.0f);
         }
         else
         {
             unsigned long temp = strtoul(ptr, &end, 10);
-            if (temp >= 60 && multiplier < 3600000) return BORK_TIME;
+            if (temp >= 60 && multiplier < 3600000)
+            {
+                return BORK_TIME;
+            }
             value += temp * multiplier;
         }
-        if (ptr == input) break;
+        if (ptr == input)
+        {
+            break;
+        }
         ptr -= 2;
-        while (ptr > input && *ptr != ':') --ptr;
+        while (ptr > input && *ptr != ':')
+        {
+            --ptr;
+        }
         multiplier *= 60;
     }
 

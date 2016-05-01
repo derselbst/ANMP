@@ -82,7 +82,9 @@ BlockAnalyzer::resizeGL( int w, int h )
         const float PRE = 1, PRO = 1; //PRE and PRO allow us to restrict the range somewhat
 
         for( int z = 0; z < m_rows; ++z )
+        {
             m_yscale[z] = 1 - ( log10( PRE + z ) / log10( PRE + m_rows + PRO ) );
+        }
 
         m_yscale[m_rows] = 0;
 
@@ -108,7 +110,9 @@ void
 BlockAnalyzer::transform( QVector<float> &s ) //pure virtual
 {
     for( int x = 0; x < s.size(); ++x )
+    {
         s[x] *= 2;
+    }
 
     float *front = static_cast<float*>( &s.front() );
 
@@ -141,7 +145,10 @@ BlockAnalyzer::paintGL()
 
     // m_yscale looks similar to: { 0.7, 0.5, 0.25, 0.15, 0.1, 0 }
     // if it contains 6 elements there are 5 rows in the analyzer
-if(m_yscale.size()==0)return;
+    if(m_yscale.size()==0)
+    {
+        return;
+    }
     glMatrixMode( GL_MODELVIEW );
     glLoadIdentity();
 
@@ -157,9 +164,13 @@ if(m_yscale.size()==0)return;
         // this is opposite to what you'd think, higher than y
         // means the bar is lower than y (physically)
         if( ( float )y > m_store[x] )
+        {
             y = uint( m_store[x] += m_step );
+        }
         else
+        {
             m_store[x] = y;
+        }
 
         // if y is lower than m_fade_pos, then the bar has exceeded the height of the fadeout
         // if the fadeout is quite faded now, then display the new one
@@ -174,11 +185,15 @@ if(m_yscale.size()==0)return;
             const uint offset = --m_fade_intensity[x];
             const uint y = m_fade_pos[x] * ( BLOCK_HEIGHT + 1 );
             if( y < (uint)height() )
+            {
                 drawTexture( m_fade_bars[offset].data(), x * ( BLOCK_WIDTH + 1 ), y, 0, 0 );
+            }
         }
 
         if( m_fade_intensity[x] == 0 )
+        {
             m_fade_pos[x] = m_rows;
+        }
 
         // REMEMBER: y is a number from 0 to m_rows, 0 means all blocks are glowing, m_rows means none are
         drawTexture( m_barTexture.data(), x * ( BLOCK_WIDTH + 1 ), y * ( BLOCK_HEIGHT + 1 ), 0, y * ( BLOCK_HEIGHT + 1 ) );
@@ -206,10 +221,14 @@ BlockAnalyzer::drawTexture( Texture* texture, int x, int y, int sx, int sy )
 
     // Draw a textured quad
     glBegin(GL_QUADS);
-    glTexCoord2f( sxf, syf ); glVertex2f( xf, yf );
-    glTexCoord2f( sxf, 1.0 ); glVertex2f( xf, yf + hf );
-    glTexCoord2f( 1.0, 1.0 ); glVertex2f( xf + wf, yf + hf );
-    glTexCoord2f( 1.0, syf ); glVertex2f( xf + wf, yf );
+    glTexCoord2f( sxf, syf );
+    glVertex2f( xf, yf );
+    glTexCoord2f( sxf, 1.0 );
+    glVertex2f( xf, yf + hf );
+    glTexCoord2f( 1.0, 1.0 );
+    glVertex2f( xf + wf, yf + hf );
+    glTexCoord2f( 1.0, syf );
+    glVertex2f( xf + wf, yf );
     glEnd();
 
     glDisable( GL_TEXTURE_2D );
@@ -236,14 +255,17 @@ BlockAnalyzer::paletteChange( const QPalette& ) //virtual
 
     for( int y = 0; y < m_rows; ++y )
         //graduate the fg color
+    {
         p.fillRect( 0, y * ( BLOCK_HEIGHT + 1 ), BLOCK_WIDTH, BLOCK_HEIGHT, QColor( r + int( dr * y ), g + int( dg * y ), b + int( db * y ) ) );
+    }
 
     {
         const QColor bg = palette().color( QPalette::Active, QPalette::Window ).dark( 112 );
 
         //make a complimentary fadebar colour
         //TODO dark is not always correct, dumbo!
-        int h, s, v; palette().color( QPalette::Active, QPalette::Window ).dark( 150 ).getHsv( &h, &s, &v );
+        int h, s, v;
+        palette().color( QPalette::Active, QPalette::Window ).dark( 150 ).getHsv( &h, &s, &v );
         const QColor fg = QColor::fromHsv( h + 60, s, v );
 
         const double dr = fg.red() - bg.red();
@@ -260,7 +282,9 @@ BlockAnalyzer::paletteChange( const QPalette& ) //virtual
             const double Y = 1.0 - ( log10( ( FADE_SIZE ) - y ) / log10( ( FADE_SIZE ) ) );
             QPainter f( &fadeBar );
             for( int z = 0; z < m_rows; ++z )
+            {
                 f.fillRect( 0, z * ( BLOCK_HEIGHT + 1 ), BLOCK_WIDTH, BLOCK_HEIGHT, QColor( r + int( dr * Y ), g + int( dg * Y ), b + int( db * Y ) ) );
+            }
 
             m_fade_bars[y] = QSharedPointer<Texture>( new Texture( fadeBar ) );
         }
@@ -282,7 +306,9 @@ BlockAnalyzer::drawBackground()
     QPainter p( &background );
     for( int x = 0; x < m_columns; ++x )
         for( int y = 0; y < m_rows; ++y )
+        {
             p.fillRect( x * ( BLOCK_WIDTH + 1 ), y * ( BLOCK_HEIGHT + 1 ), BLOCK_WIDTH, BLOCK_HEIGHT, bgdark );
+        }
 
     m_background = QSharedPointer<Texture>( new Texture( background ) );
 }

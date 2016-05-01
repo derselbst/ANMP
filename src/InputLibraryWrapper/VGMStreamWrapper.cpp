@@ -18,7 +18,7 @@ VGMStreamWrapper::VGMStreamWrapper(string filename) : StandardWrapper(filename)
 
 VGMStreamWrapper::VGMStreamWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len) : StandardWrapper(filename, offset, len)
 {
-     this->initAttr();
+    this->initAttr();
 }
 
 void VGMStreamWrapper::initAttr()
@@ -43,12 +43,12 @@ void VGMStreamWrapper::open()
 
     if (handle==nullptr)
     {
-      THROW_RUNTIME_ERROR("failed opening \"" << this->Filename << "\"");
+        THROW_RUNTIME_ERROR("failed opening \"" << this->Filename << "\"");
     }
-    
+
     this->Format.Channels = this->handle->channels;
     this->Format.SampleRate = this->handle->sample_rate;
-    
+
     // hold a copy
     this->fileLen = (this->handle->num_samples*1000.0) / this->Format.SampleRate;
 }
@@ -105,18 +105,18 @@ vector<loop_t> VGMStreamWrapper::getLoopArray () const
     if(this->handle!=nullptr && this->handle->loop_flag==1) // does stream contain loop information?
     {
         loop_t l;
-        l.start = handle->loop_start_sample;        
+        l.start = handle->loop_start_sample;
         l.stop = handle->loop_end_sample;
-	
-	// sanity check, for some reason many super smash bros brawl audio files (e.g. B02.brstm) may specify
-	// end of loop past the actual song. in such a case use the last frame as loop.stop in hope that no
-	// glitch will be hearable
-	if(l.stop > this->getFrames())
-	{
-	  l.stop = this->getFrames();
-	  CLOG(LogLevel::WARNING, "\"" << this->Filename << "\" specifies the end of loop past the end of file. The loop was truncated to the last frame available." << endl)
-	}
-	
+
+        // sanity check, for some reason many super smash bros brawl audio files (e.g. B02.brstm) may specify
+        // end of loop past the actual song. in such a case use the last frame as loop.stop in hope that no
+        // glitch will be hearable
+        if(l.stop > this->getFrames())
+        {
+            l.stop = this->getFrames();
+            CLOG(LogLevel::WARNING, "\"" << this->Filename << "\" specifies the end of loop past the end of file. The loop was truncated to the last frame available." << endl)
+        }
+
         //TODO let the user adjust loopcount
         l.count = 2;
         res.push_back(l);
@@ -132,5 +132,5 @@ frame_t VGMStreamWrapper::getFrames() const
 
 void VGMStreamWrapper::buildMetadata()
 {
-  // as of 07-04-2016 vgmstream doesnt seem to provide any useable metadata, so we cant do anything here
+    // as of 07-04-2016 vgmstream doesnt seem to provide any useable metadata, so we cant do anything here
 }

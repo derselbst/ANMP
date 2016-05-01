@@ -78,8 +78,8 @@ public:
      * @param  channels
      */
     virtual int write (int16_t* buffer, frame_t frames) = 0;
-    
-    
+
+
     virtual int write (int32_t* buffer, frame_t frames) = 0;
 
 

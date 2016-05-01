@@ -7,7 +7,7 @@
 PlaylistView::PlaylistView(QWidget * parent)
     : QTableView(parent)
 {
-} 
+}
 
 // sort ascendingly
 bool sortQModelIndexList(QModelIndex i, QModelIndex j)
@@ -36,7 +36,7 @@ void PlaylistView::moveItems(int steps)
     }
 
     QItemSelection indexList = this->selectionModel()->selection();
-      std::sort(indexList.begin(), indexList.end(), steps>0 ? sortQItemSelectionDesc : sortQItemSelectionAsc);
+    std::sort(indexList.begin(), indexList.end(), steps>0 ? sortQItemSelectionDesc : sortQItemSelectionAsc);
 
     for(QItemSelection::const_iterator i=indexList.cbegin(); i!=indexList.cend(); ++i)
     {
@@ -55,13 +55,13 @@ void PlaylistView::moveItems(int steps)
             this->selectionModel()->select(oldIdx, QItemSelectionModel::SelectionFlag::Deselect | QItemSelectionModel::SelectionFlag::Rows);
 
 
-         playlistModel->moveRows(playlistModel->index(0,0),
-                                 srcRow,
-                                 count,
-                                 playlistModel->index(playlistModel->rowCount(QModelIndex())-1,
-                                                      playlistModel->columnCount(QModelIndex())-1),
-                                 destRow);
-         }
+            playlistModel->moveRows(playlistModel->index(0,0),
+                                    srcRow,
+                                    count,
+                                    playlistModel->index(playlistModel->rowCount(QModelIndex())-1,
+                                            playlistModel->columnCount(QModelIndex())-1),
+                                    destRow);
+        }
     }
 }
 
@@ -74,39 +74,39 @@ void PlaylistView::keyPressEvent(QKeyEvent * event)
     }
 
     int key = event->key();
-  switch(key)
-  {
+    switch(key)
+    {
     case Qt::Key_Delete:
     {
-      QItemSelection indexList = this->selectionModel()->selection();
+        QItemSelection indexList = this->selectionModel()->selection();
 
-      int lastCount = 0;
-      for(QItemSelection::const_iterator i=indexList.cbegin(); i!=indexList.cend(); ++i)
-      {
-          int btm = i->bottom();
-          int top = i->top();
+        int lastCount = 0;
+        for(QItemSelection::const_iterator i=indexList.cbegin(); i!=indexList.cend(); ++i)
+        {
+            int btm = i->bottom();
+            int top = i->top();
 
-          if(btm <0 || top <0)
-          {
-              break;
-          }
+            if(btm <0 || top <0)
+            {
+                break;
+            }
 
-          lastCount = abs(top-btm)+1;
-          playlistModel->removeRows(min(btm,top), lastCount);
-      }
+            lastCount = abs(top-btm)+1;
+            playlistModel->removeRows(min(btm,top), lastCount);
+        }
     }
-      break;
+    break;
 
-  case Qt::Key_W:
-      this->moveItems(-1);
-      break;
+    case Qt::Key_W:
+        this->moveItems(-1);
+        break;
 
-  case Qt::Key_S:
-      this->moveItems(1);
-      break;
+    case Qt::Key_S:
+        this->moveItems(1);
+        break;
 
     default:
-      QTableView::keyPressEvent(event);
-    break;
-  }
+        QTableView::keyPressEvent(event);
+        break;
+    }
 }

@@ -44,30 +44,30 @@ void MainWindow::onCurrentSongChanged(void* context)
     MainWindow* ctx = static_cast<MainWindow*>(context);
     QSlider* playheadSlider = ctx->ui->seekBar;
 
-        const Song* s = ctx->player->getCurrentSong();
-        if(s==nullptr)
-        {
-            ctx->setWindowTitle("ANMP");
+    const Song* s = ctx->player->getCurrentSong();
+    if(s==nullptr)
+    {
+        ctx->setWindowTitle("ANMP");
 
-            bool oldState = playheadSlider->blockSignals(true);
-            playheadSlider->setSliderPosition(0);
-            playheadSlider->setMaximum(0);
-            playheadSlider->blockSignals(oldState);
+        bool oldState = playheadSlider->blockSignals(true);
+        playheadSlider->setSliderPosition(0);
+        playheadSlider->setMaximum(0);
+        playheadSlider->blockSignals(oldState);
+    }
+    else
+    {
+        QString title = QString::fromStdString(s->Metadata.Title);
+        QString interpret = QString::fromStdString(s->Metadata.Artist);
+        if(title == "" || interpret == "")
+        {
+            ctx->setWindowTitle(QString::fromStdString(s->Filename) + " :: ANMP");
         }
         else
         {
-            QString title = QString::fromStdString(s->Metadata.Title);
-            QString interpret = QString::fromStdString(s->Metadata.Artist);
-            if(title == "" || interpret == "")
-            {
-                ctx->setWindowTitle(QString::fromStdString(s->Filename) + " :: ANMP");
-            }
-            else
-            {
-                ctx->setWindowTitle(interpret + " - " + title  + " :: ANMP");
-            }
-            playheadSlider->setMaximum(s->getFrames());
+            ctx->setWindowTitle(interpret + " - " + title  + " :: ANMP");
         }
+        playheadSlider->setMaximum(s->getFrames());
+    }
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -81,7 +81,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // set callbacks
     this->player->onPlayheadChanged += make_pair(this, &MainWindow::onSeek);
-     this->player->onCurrentSongChanged += make_pair(this, &MainWindow::onCurrentSongChanged);
+    this->player->onCurrentSongChanged += make_pair(this, &MainWindow::onCurrentSongChanged);
 
     this->buildFileBrowser();
     this->buildPlaylistView();
@@ -161,26 +161,26 @@ void MainWindow::closeEvent(QCloseEvent* e)
 
 void MainWindow::on_actionAdd_Songs_triggered()
 {
-  const QString dir;
-  const QStringList fileNames = QFileDialog::getOpenFileNames(this, "Open Audio Files", dir, "");//Wave Files (*.wav);;Text Files (*.txt)
+    const QString dir;
+    const QStringList fileNames = QFileDialog::getOpenFileNames(this, "Open Audio Files", dir, "");//Wave Files (*.wav);;Text Files (*.txt)
 
-  QProgressDialog progress("Adding files...", "Abort", 0, fileNames.count(), this);
-     progress.setWindowModality(Qt::WindowModal);
-     progress.show();
-      QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
-      for(int i=0; !progress.wasCanceled() && i<fileNames.count(); i++)
-      {
-          // only redraw progress dialog on every tenth song
-          if(i%(static_cast<int>(fileNames.count()*0.1)+1)==0)
-          {
-                 progress.setValue(i);
-                 QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
-          }
+    QProgressDialog progress("Adding files...", "Abort", 0, fileNames.count(), this);
+    progress.setWindowModality(Qt::WindowModal);
+    progress.show();
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+    for(int i=0; !progress.wasCanceled() && i<fileNames.count(); i++)
+    {
+        // only redraw progress dialog on every tenth song
+        if(i%(static_cast<int>(fileNames.count()*0.1)+1)==0)
+        {
+            progress.setValue(i);
+            QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+        }
 
-      PlaylistFactory::addSong(*this->playlistModel, fileNames.at(i).toUtf8().constData());
-      }
+        PlaylistFactory::addSong(*this->playlistModel, fileNames.at(i).toUtf8().constData());
+    }
 
-      progress.setValue(fileNames.count());
+    progress.setValue(fileNames.count());
 }
 
 void MainWindow::on_actionPlay_triggered()
@@ -219,7 +219,7 @@ void MainWindow::on_treeView_clicked(const QModelIndex &index)
 {
     if(!index.isValid())
     {
-      return;
+        return;
     }
     QString sPath = drivesModel->fileInfo(index).absoluteFilePath();
     ui->listView->setRootIndex(filesModel->setRootPath(sPath));
@@ -230,7 +230,7 @@ void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 {
     if(!index.isValid())
     {
-      return;
+        return;
     }
     this->stop();
     Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
@@ -241,10 +241,10 @@ void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 
 void MainWindow::on_tableView_activated(const QModelIndex &index)
 {
-  if(!index.isValid())
-  {
-    return;
-  }
+    if(!index.isValid())
+    {
+        return;
+    }
     this->stop();
     Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
     this->player->setCurrentSong(songToPlay);
@@ -333,7 +333,7 @@ void MainWindow::next()
     this->player->next();
     if(oldState)
     {
-      this->play();
+        this->play();
     }
 }
 
@@ -344,7 +344,7 @@ void MainWindow::previous()
     this->player->previous();
     if(oldState)
     {
-      this->play();
+        this->play();
     }
 }
 

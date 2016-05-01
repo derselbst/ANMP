@@ -170,7 +170,7 @@ LyricsAppletPrivate::refetchLyrics()
 {
     DEBUG_BLOCK
     ScriptManager::instance()->notifyFetchLyrics( currentTrack->artist()->name(),
-                                                  currentTrack->name(), "", currentTrack );
+            currentTrack->name(), "", currentTrack );
 }
 
 void
@@ -191,8 +191,8 @@ LyricsAppletPrivate::showUnsavedChangesWarning( Meta::TrackPtr newTrack )
     {
         // Show a warning that the track has changed while the user was editing the lyrics for the current track.
         warningMessage = i18n( "While you were editing the lyrics of <b>%1 - %2</b> the track has changed. Do you want to save your changes?",
-                                artistName,
-                                modifiedTrack->prettyName() );
+                               artistName,
+                               modifiedTrack->prettyName() );
     }
     else
     {
@@ -219,7 +219,9 @@ void LyricsAppletPrivate::_refetchMessageButtonPressed( const Plasma::MessageBut
     // Check if the user pressed "Yes".
     if( button == Plasma::ButtonYes )
         // Refetch the lyrics.
+    {
         refetchLyrics();
+    }
 }
 
 void LyricsAppletPrivate::_lyricsChangedMessageButtonPressed( const Plasma::MessageButton button )
@@ -228,7 +230,9 @@ void LyricsAppletPrivate::_lyricsChangedMessageButtonPressed( const Plasma::Mess
     // Check if the user pressed "Yes".
     if( button == Plasma::ButtonYes )
         // Update the lyrics of the track.
+    {
         modifiedTrack->setCachedLyrics( modifiedLyrics );
+    }
 
     modifiedLyrics.clear();
 }
@@ -237,11 +241,17 @@ void
 LyricsAppletPrivate::_changeLyricsAlignment()
 {
     if( ui_settings.alignLeft->isChecked() )
+    {
         alignment = Qt::AlignLeft;
+    }
     else if( ui_settings.alignCenter->isChecked() )
+    {
         alignment = Qt::AlignCenter;
+    }
     else if( ui_settings.alignRight->isChecked() )
+    {
         alignment = Qt::AlignRight;
+    }
     Amarok::config("Lyrics Applet").writeEntry( "Alignment", int(alignment) );
     browser->setAlignment( alignment );
 }
@@ -260,15 +270,21 @@ void
 LyricsAppletPrivate::_editLyrics()
 {
     if( !hasLyrics )
+    {
         browser->clear();
+    }
 
     Q_Q( LyricsApplet );
     if( q->isCollapsed() )
+    {
         q->setCollapseOff();
+    }
 
     // disable autoscroll when starting editing
     if (autoScroll)
+    {
         _toggleAutoScroll();
+    }
 
     if( !browser->isVisible() )
     {
@@ -349,7 +365,9 @@ LyricsAppletPrivate::_suggestionChosen( const LyricsSuggestion &suggestion )
     DEBUG_BLOCK
     KUrl url = suggestion.url;
     if( !url.isValid() )
+    {
         return;
+    }
 
     QString title = suggestion.title;
     QString artist = suggestion.artist;
@@ -365,7 +383,9 @@ void
 LyricsAppletPrivate::_unsetCursor()
 {
     if( suggestView->hasCursor() )
+    {
         suggestView->unsetCursor();
+    }
 }
 
 void
@@ -379,8 +399,8 @@ LyricsAppletPrivate::_trackDataChanged( Meta::TrackPtr track )
     // additionally is in edit mode) are different from the
     // lyrics of the track we have to show a warning.
     if( !isShowingUnsavedWarning && currentTrack &&
-        !browser->isReadOnly() &&
-        (currentTrack->cachedLyrics() != browser->lyrics()) )
+            !browser->isReadOnly() &&
+            (currentTrack->cachedLyrics() != browser->lyrics()) )
     {
         isShowingUnsavedWarning = true;
         showUnsavedChangesWarning( track );
@@ -402,7 +422,9 @@ LyricsAppletPrivate::_trackPositionChanged( qint64 position, bool userSeek )
 
         //prevent possible devision by 0 (example streams).
         if( engine->trackLength() == 0 )
+        {
             return;
+        }
         // Scroll to try and keep the current position in the lyrics centred.
         int newSliderPosition =
             position * (vbar->maximum() + vbar->pageStep()) / engine->trackLength() -
@@ -508,7 +530,9 @@ LyricsApplet::init()
 
     QFont font;
     if( font.fromString( lyricsConfig.readEntry("Font", QString()) ) )
+    {
         d->browser->setFont( font );
+    }
 
     EngineController* engine = The::engineController();
 
@@ -548,7 +572,9 @@ LyricsApplet::dataUpdated( const QString& name, const Plasma::DataEngine::Data& 
     Q_D( LyricsApplet );
 
     if( name != QLatin1String("lyrics") )
+    {
         return;
+    }
 
     unsetCursor();
     d->hasLyrics = false;
@@ -570,7 +596,9 @@ LyricsApplet::dataUpdated( const QString& name, const Plasma::DataEngine::Data& 
     else if( data.contains( "fetching" ) )
     {
         if( canAnimate() )
+        {
             setBusy( true );
+        }
         titleText = i18n( "Lyrics: Fetching ..." );
     }
     else if( data.contains( "error" ) )
@@ -632,7 +660,9 @@ LyricsApplet::dataUpdated( const QString& name, const Plasma::DataEngine::Data& 
     d->browser->setVisible( d->showBrowser );
 
     if( !d->showSuggestions )
+    {
         d->suggestView->clear();
+    }
 
     d->determineActionIconsState();
 }
@@ -648,7 +678,9 @@ LyricsApplet::refreshLyrics()
 {
     Q_D( LyricsApplet );
     if( !d->currentTrack || !d->currentTrack->artist() )
+    {
         return;
+    }
 
     if( d->hasLyrics )
     {

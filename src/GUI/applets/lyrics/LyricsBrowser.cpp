@@ -90,7 +90,9 @@ void LyricsBrowser::clear()
 void LyricsBrowser::setAlignment( Qt::Alignment alignment )
 {
     if( m_alignment == alignment )
+    {
         return;
+    }
 
     m_alignment = alignment;
     updateAlignment();
@@ -131,21 +133,26 @@ void LyricsBrowser::updateAlignment()
 {
     QTextCursor it( nativeWidget()->document()->firstBlock() );
     if( !it.block().isValid() )
+    {
         return;
+    }
 
     do
     {
         QTextBlockFormat fmt = it.blockFormat();
         fmt.setAlignment( m_alignment );
         it.setBlockFormat( fmt );
-    } while ( it.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor) );
+    }
+    while ( it.movePosition(QTextCursor::NextBlock, QTextCursor::KeepAnchor) );
 }
 
 void LyricsBrowser::resizeEvent( QGraphicsSceneResizeEvent *event )
 {
     Plasma::TextBrowser::resizeEvent( event );
     if( event->newSize() == event->oldSize() )
+    {
         return;
+    }
 
     if( m_topBorder && m_topBorder->isVisible() )
     {
