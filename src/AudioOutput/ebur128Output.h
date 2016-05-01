@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IAudioOutput.h"
-#include </home/tom/tmp/libebur128/ebur128/ebur128.h>
+#include <ebur128.h>
 
 class Player;
 class Song;

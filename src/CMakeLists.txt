@@ -10,7 +10,6 @@ SET(LIBANMP_SRC
        AudioOutput/IAudioOutput.cpp
        Common/AtomicWrite.cpp
        Common/Common.cpp
-       Common/LoudnessFile.cpp
        Common/PlaylistFactory.cpp
        InputLibraryWrapper/Song.cpp
        InputLibraryWrapper/StandardWrapper.cpp
@@ -18,8 +17,6 @@ SET(LIBANMP_SRC
        PlayerLogic/Config.cpp
        PlayerLogic/Player.cpp
        PlayerLogic/Playlist.cpp
-       
-       anmp-normalize.cpp
 )
 
 ############################
@@ -211,7 +208,7 @@ endif(USE_CUE)
 ### HANDLE AUDIO OUTPUT SUPPORT ###
 ###################################
 option(USE_ALSA "Compile with support to use ALSA for playback" ON)
-
+option(USE_EBUR128 "support for noise normalization through libebur128" ON)
 
 if(USE_ALSA)
   find_package(ALSA REQUIRED)
@@ -225,9 +222,34 @@ if(USE_ALSA)
   message("\tALSA  libraries   : ${ALSA_LIBRARIES}")
 endif(USE_ALSA)
 
-#---------------------------------------------------------------------------------------------
+if(USE_EBUR128)
 
-  SET(LIBANMP_SRC ${LIBANMP_SRC} AudioOutput/ebur128Output.cpp)
+  set (EBUR128_INSTALL_DIR "" CACHE FILEPATH "Directory where libsndfile is installed")
+  
+  FIND_LIBRARY(EBUR128_LIBRARIES ebur128 ${EBUR128_INSTALL_DIR})
+  
+  if(EBUR128_LIBRARIES)
+# 	set (EBUR128_INCLUDE_DIR "/usr/include/libcue-1.4" CACHE FILEPATH "Directory where header files for libcue are installed")
+	INCLUDE_DIRECTORIES(${EBUR128_INCLUDE_DIR})
+	
+        add_definitions(-DUSE_EBUR128)
+
+        SET(LIBANMP_SRC ${LIBANMP_SRC}
+                    AudioOutput/ebur128Output.cpp
+                    Common/LoudnessFile.cpp
+                    anmp-normalize.cpp
+        )
+  
+        set(LD_FLAGS ${LD_FLAGS} ${EBUR128_LIBRARIES})
+        
+        message("\tlibebur128   include dir: ${EBUR128_INCLUDE_DIR}")
+        message("\tlibebur128   libraries  : ${EBUR128_LIBRARIES}")
+  else(EBUR128_LIBRARIES)
+        message(SEND_ERROR "libebur128 not found. Define EBUR128_INSTALL_DIR or turn USE_EBUR128 off.")
+  endif(EBUR128_LIBRARIES)
+endif(USE_EBUR128)
+
+#---------------------------------------------------------------------------------------------
 
 ### TODO: check that there is at least one codec and one audio lib support activated
 
@@ -239,7 +261,7 @@ set(LD_FLAGS ${LD_FLAGS} ${LIBANMP})
 
 add_subdirectory(GUI)
 
-
-add_executable(anmp-normalize anmp-normalize.cpp)
-target_link_libraries(anmp-normalize ${LIBANMP} ${LD_FLAGS})
-
+if(USE_EBUR128)
+    add_executable(anmp-normalize ${LIBANMP_SRC})
+    target_link_libraries(anmp-normalize ${LIBANMP} ${LD_FLAGS})
+endif(USE_EBUR128)

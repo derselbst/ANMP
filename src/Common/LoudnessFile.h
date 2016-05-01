@@ -2,7 +2,7 @@
 #define PLAYLISTFACTORY_H
 
 #include <string>
-#include </home/tom/tmp/libebur128/ebur128/ebur128.h>
+#include <ebur128.h>
 
 using namespace std;
 

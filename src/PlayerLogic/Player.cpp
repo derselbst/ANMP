@@ -8,8 +8,14 @@
 #include "Playlist.h"
 #include "Song.h"
 #include "IAudioOutput.h"
-#include "ALSAOutput.h"
-#include "ebur128Output.h"
+
+#ifdef USE_ALSA
+    #include "ALSAOutput.h"
+#endif
+
+#ifdef USE_EBUR128
+    #include "ebur128Output.h"
+#endif
 
 #include <iostream>
 #include <limits>
@@ -46,12 +52,16 @@ void Player::_initAudio()
 
     switch(Config::audioDriver)
     {
+#ifdef USE_ALSA
     case ALSA:
         this->audioDriver = new ALSAOutput();
         break;
+#endif
+#ifdef USE_EBUR128
     case ebur128:
         this->audioDriver = new ebur128Output(this);
         break;
+#endif
     default:
         this->audioDriver=nullptr;
         throw NotImplementedException();
