@@ -17,6 +17,10 @@
     #include "ebur128Output.h"
 #endif
 
+#ifdef USE_LIBSND
+    #include "WaveOutput.h"
+#endif
+
 #include <iostream>
 #include <limits>
 
@@ -60,6 +64,11 @@ void Player::_initAudio()
 #ifdef USE_EBUR128
     case ebur128:
         this->audioDriver = new ebur128Output(this);
+        break;
+#endif
+#ifdef USE_LIBSND
+    case WAVE:
+        this->audioDriver = new WaveOutput(this);
         break;
 #endif
     default:

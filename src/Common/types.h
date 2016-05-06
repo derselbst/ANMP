@@ -41,6 +41,7 @@ typedef enum AudioDriver
     ALSA,
     ebur128,
     JACK,
+    WAVE,
 } AudioDriver_t;
 
 
