@@ -163,12 +163,14 @@ frame_t msToFrames(const size_t& ms, const unsigned int& sampleRate)
 }
 
 
-string mybasename(string path)
+string mybasename(const string& path)
 {
-    return string(basename( const_cast<char*>(path.c_str()) ));
+    string s = string(path.c_str());
+    return string(basename( const_cast<char*>(s.c_str()) ));
 }
 
-string mydirname(string path)
+string mydirname(const string& path)
 {
-    return string(dirname( const_cast<char*>(path.c_str()) ));
+    string s = string(path.c_str());
+    return string(dirname( const_cast<char*>(s.c_str()) ));
 }

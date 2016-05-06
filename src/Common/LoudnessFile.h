@@ -1,8 +1,10 @@
-#ifndef PLAYLISTFACTORY_H
-#define PLAYLISTFACTORY_H
+#pragma once
 
 #include <string>
+
+#ifdef USE_EBUR128
 #include <ebur128.h>
+#endif
 
 using namespace std;
 
@@ -25,12 +27,11 @@ public:
     // no assign
     LoudnessFile& operator=(const LoudnessFile&) = delete;
 
-
+#ifdef USE_EBUR128
     static void write(ebur128_state* state, string filePath) noexcept;
+#endif
     static float read(string filePath) noexcept;
     
 private:
     static string toebur128Filename(string file);
 };
-
-#endif // PLAYLISTFACTORY_H

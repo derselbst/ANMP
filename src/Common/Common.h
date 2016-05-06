@@ -26,5 +26,5 @@ string framesToTimeStr(frame_t f, const unsigned int& sampleRate);
 
 frame_t msToFrames(const size_t& ms, const unsigned int& sampleRate);
 
-string mybasename(string);
-string mydirname(string);
+string mybasename(const string&);
+string mydirname(const string&);

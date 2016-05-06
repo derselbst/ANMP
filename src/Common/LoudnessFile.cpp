@@ -2,6 +2,7 @@
 #include "Common.h"
 
 #include <cmath>
+#include <cstdio>
 
 string LoudnessFile::toebur128Filename(string filePath)
 {
@@ -13,11 +14,14 @@ string LoudnessFile::toebur128Filename(string filePath)
     return dir + "/" + file;
 }
 
+static const double TargetLUFS = -23.0f;
+
+#ifdef USE_EBUR128
 void LoudnessFile::write(ebur128_state* state, string filePath) noexcept
 {
     filePath = toebur128Filename(filePath);
     
-    FILE* f = fopen(filePath.c_str(), "w");
+    FILE* f = fopen(filePath.c_str(), "wb");
     
     if(f==nullptr)
     {
@@ -26,12 +30,18 @@ void LoudnessFile::write(ebur128_state* state, string filePath) noexcept
     }
     
     double lufsLoudness;
-    ebur128_loudness_global(state, &lufsLoudness);
-    
-    fprintf(f, "%.2f LUFS\n", lufsLoudness);
+    if(ebur128_loudness_global(state, &lufsLoudness) == EBUR128_SUCCESS)
+    {
+      fwrite(&lufsLoudness, 1, sizeof(double), f);
+    }
+    else
+    {
+      fwrite(&TargetLUFS, 1, sizeof(double), f);
+    }
     
     fclose(f);
 }
+#endif
 
 /**
  * tries to find the corresponding loudnessfile for filePath and reads its loudness info
@@ -39,25 +49,23 @@ void LoudnessFile::write(ebur128_state* state, string filePath) noexcept
  * @return gain factor, which can be simply multiplied with the pcm frames to adjust volume
  */
 float LoudnessFile::read(string filePath) noexcept
-{
-    const float TargetLUFS = -23.0f;
-    
+{    
     filePath = toebur128Filename(filePath);
     
-    FILE* f = fopen(filePath.c_str(), "r");
+    FILE* f = fopen(filePath.c_str(), "rb");
     
-    float lufsLoudness;
+    double lufsLoudness;
     if(f==nullptr)
     {
         lufsLoudness = TargetLUFS;
     }
     else
     {
-        fscanf(f, "%.2f", &lufsLoudness);
+        fread(&lufsLoudness, 1, sizeof(double), f);
         
         fclose(f);
     }
-    float dezibel = TargetLUFS - lufsLoudness;
+    double dezibel = TargetLUFS - lufsLoudness;
     
     float gain = pow(10, dezibel / 20);
     

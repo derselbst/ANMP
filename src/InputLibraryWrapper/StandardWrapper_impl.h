@@ -10,13 +10,20 @@
 template<typename SAMPLEFORMAT>
 StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename) : Song(filename)
 {
+  this->init();
 }
 
 template<typename SAMPLEFORMAT>
 StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len) : Song(filename, offset, len)
 {
+  this->init();
 }
 
+template<typename SAMPLEFORMAT>
+void StandardWrapper<SAMPLEFORMAT>::init() noexcept
+{
+  this->gain = LoudnessFile::read(this->Filename);
+}
 
 template<typename SAMPLEFORMAT>
 StandardWrapper<SAMPLEFORMAT>::~StandardWrapper ()

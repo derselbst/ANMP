@@ -10,6 +10,7 @@ SET(LIBANMP_SRC
        AudioOutput/IAudioOutput.cpp
        Common/AtomicWrite.cpp
        Common/Common.cpp
+       Common/LoudnessFile.cpp
        Common/PlaylistFactory.cpp
        InputLibraryWrapper/Song.cpp
        InputLibraryWrapper/StandardWrapper.cpp
@@ -236,7 +237,6 @@ if(USE_EBUR128)
 
         SET(LIBANMP_SRC ${LIBANMP_SRC}
                     AudioOutput/ebur128Output.cpp
-                    Common/LoudnessFile.cpp
                     anmp-normalize.cpp
         )
   
