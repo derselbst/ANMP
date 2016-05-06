@@ -85,7 +85,7 @@ if(USE_LIBSND)
 	INCLUDE_DIRECTORIES(${LIBSNDFILE_INCLUDE_DIR})
 	
         add_definitions(-DUSE_LIBSND)
-        set(LIBANMP_SRC ${LIBANMP_SRC} InputLibraryWrapper/LibSNDWrapper.cpp)
+        set(LIBANMP_SRC ${LIBANMP_SRC} InputLibraryWrapper/LibSNDWrapper.cpp AudioOutput/WaveOutput.cpp)
         
         set(LD_FLAGS ${LD_FLAGS} ${LIBSND_LIBRARIES})
         

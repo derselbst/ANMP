@@ -27,6 +27,7 @@ struct Config
     static const frame_t FramesToRender;
     static unsigned int PreRenderTime;
     static bool RenderWholeSong;
+    static bool useAudioNormalization;
 
     static unsigned int defaultFadeTime;
     static unsigned int fadeTimeStop;

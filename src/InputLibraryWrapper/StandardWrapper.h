@@ -23,7 +23,7 @@
     {\
         framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);\
     }\
-    fesetround(FE_TONEAREST);\
+    fesetround(FE_DOWNWARD);\
 \
     SAMPLEFORMAT* pcm = static_cast<SAMPLEFORMAT*>(bufferToFill);\
     pcm += (this->framesAlreadyRendered * this->Format.Channels) % this->count;\
@@ -36,12 +36,13 @@
         LIB_SPECIFIC_RENDER_FUNCTION;\
 \
         /* audio normalization */\
-        for(unsigned int i=0; i<framesToDoNow*this->Format.Channels; i++)\
+        const float absoluteGain = numeric_limits<SAMPLEFORMAT>::max() / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);\
+        for(unsigned int i=0; Config::useAudioNormalization && i<framesToDoNow*this->Format.Channels; i++)\
         {\
 	    /* simply casting the result of the multiplication could be expensive, since the pipeline of the FPU */\
 	    /* might be flushed. it not very precise either. thus better round here. */\
 	    /* see: http://www.mega-nerd.com/FPcast/ */\
-            pcm[i] = static_cast<SAMPLEFORMAT>(lrint(pcm[i] * this->gain));\
+	    pcm[i] = static_cast<SAMPLEFORMAT>(lrint(pcm[i] * absoluteGain));\
         }\
 \
         pcm += (framesToDoNow * this->Format.Channels) % this->count;\
@@ -80,7 +81,7 @@ protected:
     void fillBuffer(WRAPPERCLASS* context);
 
     // used for sound normalization
-    float gain = 1.0f;
+    float gainCorrection = 0.0f;
 
 private:
     future<void> futureFillBuffer;

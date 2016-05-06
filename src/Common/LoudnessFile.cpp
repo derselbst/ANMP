@@ -14,9 +14,9 @@ string LoudnessFile::toebur128Filename(string filePath)
     return dir + "/" + file;
 }
 
-static const double TargetLUFS = -23.0f;
+static const double Target = 1.0f;
 
-#ifdef USE_EBUR128
+#if 0
 void LoudnessFile::write(ebur128_state* state, string filePath) noexcept
 {
     filePath = toebur128Filename(filePath);
@@ -43,10 +43,45 @@ void LoudnessFile::write(ebur128_state* state, string filePath) noexcept
 }
 #endif
 
+#ifdef USE_EBUR128
+void LoudnessFile::write(ebur128_state* state, string filePath) noexcept
+{
+    filePath = toebur128Filename(filePath);
+    
+    FILE* f = fopen(filePath.c_str(), "wb");
+    
+    if(f==nullptr)
+    {
+        // TODO: log
+        return;
+    }
+    
+    double overallSamplePeak=0.0;
+    for(int c = 0; c<state->channels; c++)
+    {
+      double peak = 0.0;
+      if(ebur128_sample_peak(state, c, &peak) == EBUR128_SUCCESS)
+      {
+	overallSamplePeak = max(peak, overallSamplePeak);
+      }
+    }
+    
+    float gainCorrection = overallSamplePeak;
+    
+    if(gainCorrection<=0.0)
+    {
+      gainCorrection = Target;
+    }
+    
+    fwrite(&gainCorrection, 1, sizeof(float), f);
+    fclose(f);
+}
+#endif
+
 /**
  * tries to find the corresponding loudnessfile for filePath and reads its loudness info
  * 
- * @return gain factor, which can be simply multiplied with the pcm frames to adjust volume
+ * @return gain correction factor (i.e. a relative gain), 1.0 is full amplitude (i.e. no correction necessary),
  */
 float LoudnessFile::read(string filePath) noexcept
 {    
@@ -54,20 +89,13 @@ float LoudnessFile::read(string filePath) noexcept
     
     FILE* f = fopen(filePath.c_str(), "rb");
     
-    double lufsLoudness;
-    if(f==nullptr)
+    float gain = Target;
+    if(f!=nullptr)
     {
-        lufsLoudness = TargetLUFS;
-    }
-    else
-    {
-        fread(&lufsLoudness, 1, sizeof(double), f);
+        fread(&gain, 1, sizeof(float), f);
         
         fclose(f);
     }
-    double dezibel = TargetLUFS - lufsLoudness;
-    
-    float gain = pow(10, dezibel / 20);
     
     return gain;
 }

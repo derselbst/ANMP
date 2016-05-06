@@ -23,7 +23,7 @@ void ebur128Output::SongChanged(void* ctx)
         return;
     }
     
-    context->handle = ebur128_init(context->currentChannelCount, context->currentSampleRate, EBUR128_MODE_I);
+    context->handle = ebur128_init(context->currentChannelCount, context->currentSampleRate, EBUR128_MODE_SAMPLE_PEAK);
     
     // set channel map (note: see ebur128.h for the default map)
     if (context->currentChannelCount == 3)
@@ -65,6 +65,11 @@ void ebur128Output::open()
         if(Config::RenderWholeSong)
         {
            THROW_RUNTIME_ERROR("You MUST NOT hold the whole audio file in memory, when using ebur128Output.")
+        }
+        
+        if(Config::useAudioNormalization)
+        {
+           THROW_RUNTIME_ERROR("You MUST DISABLE audio normalization when generating normalization data")
         }
 }
 

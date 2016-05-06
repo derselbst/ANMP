@@ -29,6 +29,8 @@ unsigned int Config::PreRenderTime = 500;
 // can be set to false, if user needs to save memory, however this will also make seeking within the file impossible
 bool Config::RenderWholeSong = true;
 
+bool Config::useAudioNormalization = true;
+
 //**********************************
 //       HOW-TO-PLAY SECTION       *
 //**********************************

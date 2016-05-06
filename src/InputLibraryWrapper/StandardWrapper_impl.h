@@ -22,7 +22,7 @@ StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename, Nullable<size_t>
 template<typename SAMPLEFORMAT>
 void StandardWrapper<SAMPLEFORMAT>::init() noexcept
 {
-  this->gain = LoudnessFile::read(this->Filename);
+  this->gainCorrection = LoudnessFile::read(this->Filename);
 }
 
 template<typename SAMPLEFORMAT>
