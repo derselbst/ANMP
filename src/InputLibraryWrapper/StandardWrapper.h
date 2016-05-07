@@ -23,7 +23,7 @@
     {\
         framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);\
     }\
-    fesetround(FE_DOWNWARD);\
+    fesetround(FE_TONEAREST);\
 \
     SAMPLEFORMAT* pcm = static_cast<SAMPLEFORMAT*>(bufferToFill);\
     pcm += (this->framesAlreadyRendered * this->Format.Channels) % this->count;\
@@ -36,7 +36,9 @@
         LIB_SPECIFIC_RENDER_FUNCTION;\
 \
         /* audio normalization */\
-        const float absoluteGain = numeric_limits<SAMPLEFORMAT>::max() / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);\
+        /*const*/ float absoluteGain = (numeric_limits<SAMPLEFORMAT>::max()) / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);\
+        /* reduce risk of clipping, remove that when using true sample peak */\
+        absoluteGain -= 0.01;\
         for(unsigned int i=0; Config::useAudioNormalization && i<framesToDoNow*this->Format.Channels; i++)\
         {\
 	    /* simply casting the result of the multiplication could be expensive, since the pipeline of the FPU */\
