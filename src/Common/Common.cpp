@@ -143,7 +143,10 @@ string framesToTimeStr(frame_t frames, const unsigned int& sampleRate)
     stringstream ssTime;
     ssTime << min << ":" << setw(2) << setfill('0') << sec;
 
-    return ssTime.str();
+    // stringstream::str() return a temporary object
+    string temp = ssTime.str();
+    // return a deep copy of that string
+    return string(temp.c_str())
 }
 
 /**
