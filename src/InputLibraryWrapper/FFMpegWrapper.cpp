@@ -221,26 +221,7 @@ void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
 void FFMpegWrapper::releaseBuffer()
 {
-    switch(this->Format.SampleFormat)
-    {
-    case uint8:
-//       StandardWrapper<uint8_t>::releaseBuffer();
-        break;
-    case int16:
         StandardWrapper<int16_t>::releaseBuffer();
-        break;
-    case int32:
-//       StandardWrapper<int32_t>::releaseBuffer();
-        break;
-    case float32:
-//       StandardWrapper<float>::releaseBuffer();
-        break;
-    case float64:
-//       StandardWrapper<double>::releaseBuffer();
-        break;
-    default:
-        break;
-    }
 }
 frame_t FFMpegWrapper::getFrames () const
 {
