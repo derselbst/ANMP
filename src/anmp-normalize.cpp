@@ -10,17 +10,33 @@
 #include "Config.h"
 
 
-using namespace std;
+    
+//     #include <experimental/filesystem>
 
-int main()
+using namespace std;
+// using std::experimental::filesystem::recursive_directory_iterator;
+
+int main(int argc, char* argv[])
 {
     Config::audioDriver = ebur128;
     Config::useLoopInfo = false;
     Config::RenderWholeSong = false;
+    Config::useAudioNormalization = false;
+    
+    
+// for (auto& dirEntry : recursive_directory_iterator(myPath))
+//      cout << dirEntry << endl;
+//     
+//     return  0;
+    
     
     vector<string> filenames;
-    filenames.push_back("something");
-
+//     filenames.push_back("something");
+    for(int i=1; i<argc; i++)
+    {
+      filenames.push_back(argv[i]);
+    }
+    
     IPlaylist* plist = new Playlist();
 
     for(int i=0; i<filenames.size(); i++)
