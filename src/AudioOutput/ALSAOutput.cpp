@@ -191,9 +191,10 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
 
     snd_pcm_sw_params_free (sw_params);
 
-    // WOW, WE MADE IT TIL HERE, so update channelcount and sformat
+    // WOW, WE MADE IT TIL HERE, so update channelcount, srate and sformat
     this->currentChannelCount = channels;
     this->currentSampleFormat = s;
+    this->currentSampleRate   = sampleRate;
 }
 
 void ALSAOutput::drain()

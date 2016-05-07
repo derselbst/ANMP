@@ -8,7 +8,18 @@
 #include "Playlist.h"
 #include "Song.h"
 #include "IAudioOutput.h"
-#include "ALSAOutput.h"
+
+#ifdef USE_ALSA
+    #include "ALSAOutput.h"
+#endif
+
+#ifdef USE_EBUR128
+    #include "ebur128Output.h"
+#endif
+
+#ifdef USE_LIBSND
+    #include "WaveOutput.h"
+#endif
 
 #include <iostream>
 #include <limits>
@@ -45,9 +56,21 @@ void Player::_initAudio()
 
     switch(Config::audioDriver)
     {
+#ifdef USE_ALSA
     case ALSA:
         this->audioDriver = new ALSAOutput();
         break;
+#endif
+#ifdef USE_EBUR128
+    case ebur128:
+        this->audioDriver = new ebur128Output(this);
+        break;
+#endif
+#ifdef USE_LIBSND
+    case WAVE:
+        this->audioDriver = new WaveOutput(this);
+        break;
+#endif
     default:
         this->audioDriver=nullptr;
         throw NotImplementedException();
@@ -137,6 +160,8 @@ void Player::_setCurrentSong (Song* song)
     this->currentSong = song;
     if(this->currentSong == nullptr)
     {
+        this->_pause();
+        this->onCurrentSongChanged.Fire();
         return;
     }
 

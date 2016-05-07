@@ -14,6 +14,11 @@
 #include <strings.h>
 #endif
 
+extern "C"
+{
+#include <libgen.h>
+}
+
 using namespace std;
 
 #ifndef _POSIX_VERSION
@@ -158,4 +163,17 @@ string framesToTimeStr(frame_t frames, const unsigned int& sampleRate)
 frame_t msToFrames(const size_t& ms, const unsigned int& sampleRate)
 {
     return (ms*sampleRate)/1000;
+}
+
+
+string mybasename(const string& path)
+{
+    string s = string(path.c_str());
+    return string(basename( const_cast<char*>(s.c_str()) ));
+}
+
+string mydirname(const string& path)
+{
+    string s = string(path.c_str());
+    return string(dirname( const_cast<char*>(s.c_str()) ));
 }

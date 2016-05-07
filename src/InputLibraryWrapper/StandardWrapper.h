@@ -2,9 +2,11 @@
 #define STANDARDWRAPPER_H
 
 #include "Song.h"
+#include "LoudnessFile.h"
 
 #include <future>
-// struct VGMSTREAM;
+#include <cfenv> // fesetround
+#include <cmath> // lrint
 
 /**
   * class StandardWrapper
@@ -21,6 +23,7 @@
     {\
         framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);\
     }\
+    fesetround(FE_TONEAREST);\
 \
     SAMPLEFORMAT* pcm = static_cast<SAMPLEFORMAT*>(bufferToFill);\
     pcm += (this->framesAlreadyRendered * this->Format.Channels) % this->count;\
@@ -29,7 +32,20 @@
     {\
         int framesToDoNow = (framesToRender/Config::FramesToRender)>0 ? Config::FramesToRender : framesToRender%Config::FramesToRender;\
 \
+        /* render to raw pcm*/\
         LIB_SPECIFIC_RENDER_FUNCTION;\
+\
+        /* audio normalization */\
+        /*const*/ float absoluteGain = (numeric_limits<SAMPLEFORMAT>::max()) / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);\
+        /* reduce risk of clipping, remove that when using true sample peak */\
+        absoluteGain -= 0.01;\
+        for(unsigned int i=0; Config::useAudioNormalization && i<framesToDoNow*this->Format.Channels; i++)\
+        {\
+	    /* simply casting the result of the multiplication could be expensive, since the pipeline of the FPU */\
+	    /* might be flushed. it not very precise either. thus better round here. */\
+	    /* see: http://www.mega-nerd.com/FPcast/ */\
+	    pcm[i] = static_cast<SAMPLEFORMAT>(lrint(pcm[i] * absoluteGain));\
+        }\
 \
         pcm += (framesToDoNow * this->Format.Channels) % this->count;\
         this->framesAlreadyRendered += framesToDoNow;\
@@ -45,12 +61,12 @@ public:
 
     StandardWrapper(string filename);
     StandardWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
-
+    
     virtual ~StandardWrapper ();
 
-    /**
-     */
     void releaseBuffer () override;
+    
+    frame_t getFramesRendered();
 
     virtual void render(pcm_t* bufferToFill, frame_t framesToRender=0) = 0;
 
@@ -66,9 +82,13 @@ protected:
     template<typename WRAPPERCLASS>
     void fillBuffer(WRAPPERCLASS* context);
 
+    // used for sound normalization
+    float gainCorrection = 0.0f;
 
 private:
     future<void> futureFillBuffer;
+    
+    void init() noexcept;
 
 
 };

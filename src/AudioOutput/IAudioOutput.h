@@ -102,6 +102,7 @@ public:
 
 protected:
     uint8_t currentChannelCount = 0;
+    unsigned int currentSampleRate = 0;
     SampleFormat_t currentSampleFormat = SampleFormat_t::unknown;
 
 };

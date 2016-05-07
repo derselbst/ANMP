@@ -24,6 +24,13 @@ const frame_t Config::FramesToRender = 2048;
 // so there are no audible glitches later on (such as parts of old songs or cracks and clicks...)
 unsigned int Config::PreRenderTime = 500;
 
+// indicates whether the currently playing audiofile shall be only decoded once and held in memory as a whole (true)
+// or if only a small buffer shall be allocated holding only Config::FramesToRender frames at one time
+// can be set to false, if user needs to save memory, however this will also make seeking within the file impossible
+bool Config::RenderWholeSong = true;
+
+bool Config::useAudioNormalization = true;
+
 //**********************************
 //       HOW-TO-PLAY SECTION       *
 //**********************************
@@ -35,13 +42,13 @@ bool Config::useLoopInfo = true;
 int Config::overridingGlobalLoopCount = -1;
 
 // time in milliseconds to fade out a song (before it ends), if supported by the underlying WrapperLib
-unsigned int defaultFadeTime = 3500;
+unsigned int Config::defaultFadeTime = 3500;
 
 // time in milliseconds to fade out a song when the user hits stop
-unsigned int fadeTimeStop = 3500;
+unsigned int Config::fadeTimeStop = 3500;
 
 // time in milliseconds to fade out a song when the user hits pause
-unsigned int fadeTimePause = 3500;
+unsigned int Config::fadeTimePause = 3500;
 
 //**********************************
 //      USF-SPECIFIC SECTION       *
