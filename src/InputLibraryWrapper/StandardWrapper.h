@@ -83,7 +83,11 @@ protected:
     void fillBuffer(WRAPPERCLASS* context);
 
     // used for sound normalization
-    float gainCorrection = 0.0f;
+    // usual range: (0,1]
+    // can be slightly bigger than 1, depends on the underlying noise normalization algorithm
+    // small values indicate a silent source signal resulting in bigger amplification
+    // 1.0 means 0 dbFS: no amplification needed in this case ;)
+    float gainCorrection = 1.0f;
 
 private:
     future<void> futureFillBuffer;
