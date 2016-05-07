@@ -444,8 +444,8 @@ void Player::playInternal ()
     catch(exception& e)
     {
         cerr << "An Exception was thrown in Player::playInternal(): " << e.what() << endl;
-
-        // will be save in futurePlayInternal, not sure if anybody will ever notice though
+        this->_pause();
+        // will be saved in futurePlayInternal, not sure if anybody will ever notice though
         throw;
     }
 }
