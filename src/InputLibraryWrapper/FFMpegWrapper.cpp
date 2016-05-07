@@ -144,7 +144,7 @@ void FFMpegWrapper::close()
 
 void FFMpegWrapper::fillBuffer()
 {
-    StandardWrapper<int16_t>::fillBuffer(this);
+    StandardWrapper::fillBuffer(this);
 }
 
 // TODO: this crap is not guaranteed to generate exactly framesToRender frames, there might by more thrown out, which is bad in case of a limited buffer
@@ -219,10 +219,6 @@ void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     av_frame_free(&frame);
 }
 
-void FFMpegWrapper::releaseBuffer()
-{
-        StandardWrapper<int16_t>::releaseBuffer();
-}
 frame_t FFMpegWrapper::getFrames () const
 {
     size_t totalFrames = this->fileLen.hasValue ? msToFrames(this->fileLen.Value, this->Format.SampleRate) : 0;

@@ -117,11 +117,6 @@ void LibSNDWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     })
 }
 
-void LibSNDWrapper::releaseBuffer()
-{
-    StandardWrapper::releaseBuffer();
-}
-
 vector<loop_t> LibSNDWrapper::getLoopArray () const
 {
     vector<loop_t> res;

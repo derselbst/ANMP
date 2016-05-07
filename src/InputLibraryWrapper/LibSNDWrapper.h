@@ -49,12 +49,6 @@ public:
      */
     void fillBuffer () override;
 
-
-    /**
-     */
-    void releaseBuffer () override;
-
-
     /**
      * @return vector
      */

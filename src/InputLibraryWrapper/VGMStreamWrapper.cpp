@@ -72,11 +72,6 @@ void VGMStreamWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     STANDARDWRAPPER_RENDER(int16_t, render_vgmstream(pcm, framesToDoNow, this->handle))
 }
 
-void VGMStreamWrapper::releaseBuffer()
-{
-    StandardWrapper<int16_t>::releaseBuffer();
-}
-
 vector<loop_t> VGMStreamWrapper::getLoopArray () const
 {
     vector<loop_t> res;

@@ -156,7 +156,7 @@ void LibMadWrapper::close()
 
 void LibMadWrapper::fillBuffer()
 {
-    StandardWrapper<int32_t>::fillBuffer(this);
+    StandardWrapper::fillBuffer(this);
 }
 
 void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
@@ -233,12 +233,6 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     mad_synth_finish(&synth);
     mad_frame_finish(&frame);
 }
-
-void LibMadWrapper::releaseBuffer()
-{
-    StandardWrapper<int32_t>::releaseBuffer();
-}
-
 
 frame_t LibMadWrapper::getFrames () const
 {

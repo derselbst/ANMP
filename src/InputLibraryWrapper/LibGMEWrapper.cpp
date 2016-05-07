@@ -125,29 +125,12 @@ void LibGMEWrapper::close()
 
 void LibGMEWrapper::fillBuffer()
 {
-//     if(this->wholeSong())
-//     {
-    StandardWrapper<int16_t>::fillBuffer(this);
-//     }
-//     else
-//     {
-//         if(this->data==nullptr)
-//         {
-//             this->count = Config::FramesToRender*this->Format.Channels;
-//             this->data = new int16_t[this->count];
-//         }
-//         gme_play(this->handle, Config::FramesToRender, static_cast<int16_t*>(this->data));
-//     }
+    StandardWrapper::fillBuffer(this);
 }
 
 void LibGMEWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
     STANDARDWRAPPER_RENDER(int16_t, gme_play(this->handle, framesToDoNow * this->Format.Channels, pcm))
-}
-
-void LibGMEWrapper::releaseBuffer()
-{
-    StandardWrapper<int16_t>::releaseBuffer();
 }
 
 frame_t LibGMEWrapper::getFrames () const

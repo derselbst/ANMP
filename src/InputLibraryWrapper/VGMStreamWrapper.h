@@ -45,11 +45,6 @@ public:
 
 
     /**
-     */
-    void releaseBuffer () override;
-
-
-    /**
      * @return vector
      */
     vector<loop_t> getLoopArray () const override;
