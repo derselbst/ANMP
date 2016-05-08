@@ -210,15 +210,15 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Null
         TRY_WITH(LibGMEWrapper)
 #endif
 
-#ifdef USE_FFMPEG
-        // OPUS, videofiles, etc.
-        TRY_WITH(FFMpegWrapper)
-#endif
-
 #ifdef USE_VGMSTREAM
         // most fileformats from videogames
         // also eats raw pcm files (although they'll may have wrong samplerate
         TRY_WITH(VGMStreamWrapper)
+#endif
+
+#ifdef USE_FFMPEG
+        // OPUS, videofiles, etc.
+        TRY_WITH(FFMpegWrapper)
 #endif
 
 // !!! libmad always has to be last !!!
