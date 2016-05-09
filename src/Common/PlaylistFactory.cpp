@@ -2,6 +2,7 @@
 
 #include "IPlaylist.h"
 #include "Song.h"
+#include "CommonExceptions.h"
 
 #ifdef USE_LAZYUSF
 #include "LazyusfWrapper.h"
