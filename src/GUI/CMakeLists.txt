@@ -17,8 +17,6 @@ MY_FIND_PKG(Qt5Widgets Qt5Widgets)
 # OpenGL & GLEW library
 MY_FIND_PKG(OPENGL OpenGL)
 
-message(STATUS ${OPENGL_FOUND})
-message(STATUS ${Qt5Widgets_FOUND})
 
 if(Qt5Widgets_FOUND AND OPENGL_FOUND)
     # The Qt5Widgets_INCLUDES also includes the include directories for
