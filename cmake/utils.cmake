@@ -57,8 +57,9 @@ macro(MY_FIND_LIB prefix libname)
     if(${prefix}_LIBRARIES)
         set(${prefix}_FOUND TRUE)
     
+        add_definitions(-DUSE_${prefix})
         set (${prefix}_INCLUDE_DIR "/usr/include/${libname}" CACHE FILEPATH "Directory where header files for ${prefix} are installed")
-        INCLUDE_DIRECTORIES(${${prefix}_INCLUDE_DIR})
+        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${${prefix}_INCLUDE_DIR})
                 
         set(LD_FLAGS ${LD_FLAGS} ${${prefix}_LIBRARIES})
         
@@ -74,7 +75,8 @@ macro(MY_FIND_PKG prefix pkgname)
     if(${prefix}_LIBRARIES)
         set(${prefix}_FOUND TRUE)
     
-        INCLUDE_DIRECTORIES(${${prefix}_INCLUDE_DIR})
+        add_definitions(-DUSE_${prefix})
+        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${${prefix}_INCLUDE_DIR})
                 
         set(LD_FLAGS ${LD_FLAGS} ${${prefix}_LIBRARIES})
         

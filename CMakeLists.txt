@@ -19,7 +19,7 @@ endif()
 
 
 ### set compile flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fstack-protector-all -Wall -Warray-bounds")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -fstack-protector-all -Wall -Warray-bounds")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -Wextra -Weffc++")
 
 
@@ -32,15 +32,90 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 include(utils)
 include(FindPkgConfig)
 
+#############################
+### SCAN FOR DEPENDENCIES ###
+#############################
 
-### setup library names we will build in the subdirs
-# core library made up with following sub-libs:
-SET(LIB_ANMP_AUDIO_OUTPUT anmp-audio-output)
-SET(LIB_ANMP_COMMON       anmp-common)
-SET(LIB_ANMP_INPUT        anmp-input)
-SET(LIB_ANMP_PLAYER       anmp-player)
+###################################
+### HANDLE AUDIO OUTPUT SUPPORT ###
+###################################
+option(ENABLE_ALSA "Compile with support to use ALSA for playback" ON)
+option(ENABLE_EBUR128 "support for noise normalization through libebur128" ON)
 
-SET(LIB_ANMP_CORE ${LIB_ANMP_AUDIO_OUTPUT} ${LIB_ANMP_COMMON} ${LIB_ANMP_INPUT} ${LIB_ANMP_PLAYER})
+if(ENABLE_ALSA)
+  MY_FIND_PKG(ALSA ALSA)
+endif(ENABLE_ALSA)
+
+if(ENABLE_EBUR128)
+  MY_FIND_LIB(EBUR128 ebur128)
+endif(ENABLE_EBUR128)
+
+############################
+### HANDLE CODEC SUPPORT ###
+############################
+option(ENABLE_LIBGME "Use libgme to support several video game emulated music formats" ON)
+option(ENABLE_LIBMAD "Use libmad to support MPEG audio formats" ON)
+option(ENABLE_LIBSND "Use libsndfile to support common audio formats (FLAC, WAVE, OGG, etc.)" ON)
+option(ENABLE_LAZYUSF "Use lazyusf2 to support USF (Ultra64 Sound Format)" ON)
+option(ENABLE_VGMSTREAM "Use vgmstream to support innumerable streamed audio formats from video games." ON)
+option(ENABLE_FFMPEG "Use ffmpeg to support innumerable streamed audio formats, also from video streams." ON)
+
+if(ENABLE_LIBGME)
+    MY_FIND_LIB(LIBGME gme)
+endif(ENABLE_LIBGME)
+
+
+if(ENABLE_LIBMAD)
+  MY_FIND_LIB(LIBMAD mad)
+endif(ENABLE_LIBMAD)
+
+
+if(ENABLE_LIBSND)
+  MY_FIND_LIB(LIBSND sndfile)
+endif(ENABLE_LIBSND)
+
+
+if(ENABLE_LAZYUSF)
+    MY_FIND_LIB(LAZYUSF lazyusf2)
+    MY_FIND_LIB(PSFLIB psflib)
+    MY_FIND_PKG(ZLIB ZLIB)
+endif(ENABLE_LAZYUSF)
+
+
+if(ENABLE_VGMSTREAM)
+  MY_FIND_LIB(VGMSTREAM vgmstream)
+  MY_FIND_LIB(VORBISFILE vorbisfile)
+  MY_FIND_LIB(MPG123 mpg123)
+  MY_FIND_LIB(M m)
+  MY_FIND_PKG(ZLIB ZLIB)
+  MY_FIND_PKG(THREADS Threads)
+endif(ENABLE_VGMSTREAM)
+
+
+if(ENABLE_FFMPEG)
+  MY_FIND_PKG(FFMPEG FFmpeg)
+endif(ENABLE_FFMPEG)
+
+
+##################################
+### miscellaneous dependencies ###
+##################################
+option(ENABLE_CUE "Use libcue to support loading cue sheets" ON)
+
+if(ENABLE_CUE)
+  PKG_CHECK_MODULES(LIBCUE libcue)
+  
+  if(LIBCUE_FOUND)
+        add_definitions(-DUSE_CUE)
+        INCLUDE_DIRECTORIES(${LIBCUE_INCLUDE_DIRS})
+#         link_directories(${LIBCUE_LIBRARY_DIRS})
+        set(LD_FLAGS ${LD_FLAGS} ${LIBCUE_LIBRARIES})
+        
+        MY_PRINT(LIBCUE)
+  endif(LIBCUE_FOUND)
+endif(ENABLE_CUE)
+
+
 
 
 add_subdirectory(src)

@@ -10,6 +10,4 @@ SET(ANMP_PLAYER_SRC
 
 #---------------------------------------------------------------------------------------------
 
-ADD_LIBRARY(${LIB_ANMP_PLAYER} ${ANMP_PLAYER_SRC})
-target_link_libraries(${LIB_ANMP_PLAYER} ${LIB_ANMP_INPUT}) # because of SongFormat::operator!=
-
+add_library(${PROJECT_NAME} OBJECT ${ANMP_PLAYER_SRC})
