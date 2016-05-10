@@ -59,6 +59,6 @@ if(Qt5Widgets_FOUND AND OPENGL_FOUND)
         analyzer
         ${LIB_ANMP_CORE}
     )
-elseif(Qt5Widgets_FOUND AND OPENGL_FOUND)
+else(Qt5Widgets_FOUND AND OPENGL_FOUND)
     message(WARNING "QT GUI will not be build")
 endif(Qt5Widgets_FOUND AND OPENGL_FOUND)
