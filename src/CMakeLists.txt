@@ -29,7 +29,8 @@ if(EBUR128_FOUND)
 endif(EBUR128_FOUND)
 
 
-install(FILES Common/PlaylistFactory.h Common/types.h Common/Event.h Common/Nullable.h Common/SongInfo.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES Common/PlaylistFactory.h Common/types.h Common/Event.h Common/Nullable.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES InputLibraryWrapper/SongInfo.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(FILES PlayerLogic/IPlaylist.h PlayerLogic/Playlist.h PlayerLogic/Player.h PlayerLogic/Config.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 
