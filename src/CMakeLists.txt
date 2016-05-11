@@ -20,10 +20,15 @@ add_library(${LIB_ANMP_CORE} SHARED $<TARGET_OBJECTS:anmp-audio-output>
                                     $<TARGET_OBJECTS:anmp-input>
                                     $<TARGET_OBJECTS:anmp-player>)
 target_link_libraries(${LIB_ANMP_CORE} ${LD_FLAGS})
-
+install(TARGETS ${LIB_ANMP_CORE} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 if(EBUR128_FOUND)
     add_executable(anmp-normalize anmp-normalize.cpp)
     set(LINK_FLAGS ${LINK_FLAGS} "-Wl,-whole-archive")
     target_link_libraries(anmp-normalize ${LIB_ANMP_CORE})
+    install(TARGETS anmp-normalize DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif(EBUR128_FOUND)
+
+
+install(FILES Common/PlaylistFactory.h Common/types.h Common/Event.h Common/Nullable.h Common/SongInfo.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES PlayerLogic/IPlaylist.h PlayerLogic/Playlist.h PlayerLogic/Player.h PlayerLogic/Config.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
