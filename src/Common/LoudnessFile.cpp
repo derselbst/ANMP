@@ -46,20 +46,10 @@ void LoudnessFile::write(ebur128_state* state, string filePath) noexcept
 #ifdef USE_EBUR128
 void LoudnessFile::write(ebur128_state* state, string filePath) noexcept
 {
-    filePath = toebur128Filename(filePath);
-    
-    FILE* f = fopen(filePath.c_str(), "wb");
-    
-    if(f==nullptr)
-    {
-        // TODO: log
-        return;
-    }
-    
     double overallSamplePeak=0.0;
     for(int c = 0; c<state->channels; c++)
     {
-      double peak = 0.0;
+      double peak = -0.0;
       if(ebur128_sample_peak(state, c, &peak) == EBUR128_SUCCESS)
       {
 	overallSamplePeak = max(peak, overallSamplePeak);
@@ -67,10 +57,18 @@ void LoudnessFile::write(ebur128_state* state, string filePath) noexcept
     }
     
     float gainCorrection = overallSamplePeak;
-    
     if(gainCorrection<=0.0)
     {
-      gainCorrection = Target;
+        // TODO: log
+    	return;
+    }
+    
+    filePath = toebur128Filename(filePath);
+    FILE* f = fopen(filePath.c_str(), "wb");
+    if(f==nullptr)
+    {
+        // TODO: log
+        return;
     }
     
     fwrite(&gainCorrection, 1, sizeof(float), f);
