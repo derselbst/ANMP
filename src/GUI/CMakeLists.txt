@@ -34,13 +34,13 @@ if(QT5_FOUND)
         overlaycontrol.ui
     )
 
-    add_executable(anmp ${UI_HEADERS} ${GUI_SRCS} icons.qrc)
-    qt5_use_modules(anmp Core Gui Widgets OpenGL)
+    add_executable(anmp-qt ${UI_HEADERS} ${GUI_SRCS} icons.qrc)
+    qt5_use_modules(anmp-qt Core Gui Widgets OpenGL)
 
-    target_link_libraries(anmp
+    target_link_libraries(anmp-qt
         ${LIBANAL}
         ${LIB_ANMP_CORE}
         ${LD_FLAGS}
     )
-    install(TARGETS anmp DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install(TARGETS anmp-qt DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif(QT5_FOUND)

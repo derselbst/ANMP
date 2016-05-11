@@ -3,7 +3,7 @@ project(anmp-core)
 include_directories(${PROJECT_INCLUDE_DIR})
 
 ### setup library names we will build in the subdirs
-SET(LIB_ANMP_CORE ${PROJECT_NAME})
+SET(LIB_ANMP_CORE anmp)
 
 
 ### these subdirs make up the anmp-core library
@@ -29,9 +29,9 @@ if(EBUR128_FOUND)
 endif(EBUR128_FOUND)
 
 
-install(FILES Common/PlaylistFactory.h Common/types.h Common/Event.h Common/Nullable.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(FILES InputLibraryWrapper/SongInfo.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(FILES PlayerLogic/IPlaylist.h PlayerLogic/Playlist.h PlayerLogic/Player.h PlayerLogic/Config.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES Common/PlaylistFactory.h Common/types.h Common/Event.h Common/Nullable.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${LIB_ANMP_CORE})
+install(FILES InputLibraryWrapper/SongInfo.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${LIB_ANMP_CORE})
+install(FILES PlayerLogic/IPlaylist.h PlayerLogic/Playlist.h PlayerLogic/Player.h PlayerLogic/Config.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${LIB_ANMP_CORE})
 
 
 add_subdirectory(GUI)
