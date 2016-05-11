@@ -11,24 +11,13 @@ set(CMAKE_AUTORCC ON)
 # to always look for includes there:
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-# Qt library
-MY_FIND_PKG(Qt5Widgets Qt5Widgets)
 
-# OpenGL & GLEW library
-MY_FIND_PKG(OPENGL OpenGL)
+if(QT5_FOUND)
 
+    # name of libraries that will be build in the applets subdir
+    SET(LIBANAL analyzer)
+    add_subdirectory(applets)
 
-if(Qt5Widgets_FOUND AND OPENGL_FOUND)
-    # The Qt5Widgets_INCLUDES also includes the include directories for
-    # dependencies QtCore and QtGui
-#     include_directories(${Qt5Widgets_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR})
-
-    # We need add -DQT_WIDGETS_LIB when using QtWidgets in Qt 5.
-    add_definitions(${Qt5Widgets_DEFINITIONS})
-
-    # Executables fail to build with Qt 5 in the default configuration
-    # without -fPIE. We add that here.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
 
     set(GUI_SRCS
         configdialog.cpp
@@ -45,18 +34,12 @@ if(Qt5Widgets_FOUND AND OPENGL_FOUND)
         overlaycontrol.ui
     )
 
-    add_subdirectory(applets)
-
-
     add_executable(ANMP ${UI_HEADERS} ${GUI_SRCS} icons.qrc)
     qt5_use_modules(ANMP Core Gui Widgets OpenGL)
 
     target_link_libraries(ANMP
-        ${OPENGL_LIBRARY}
-        ${LD_FLAGS}
-        analyzer
+        ${LIBANAL}
         ${LIB_ANMP_CORE}
+        ${LD_FLAGS}
     )
-else(Qt5Widgets_FOUND AND OPENGL_FOUND)
-    message(WARNING "QT GUI will not be build")
-endif(Qt5Widgets_FOUND AND OPENGL_FOUND)
+endif(QT5_FOUND)

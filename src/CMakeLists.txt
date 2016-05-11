@@ -11,7 +11,6 @@ add_subdirectory(AudioOutput)
 add_subdirectory(Common)
 add_subdirectory(InputLibraryWrapper)
 add_subdirectory(PlayerLogic)
-# add_subdirectory(GUI)
 
 
 # set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-export-all-symbols")
@@ -32,3 +31,7 @@ endif(EBUR128_FOUND)
 
 install(FILES Common/PlaylistFactory.h Common/types.h Common/Event.h Common/Nullable.h Common/SongInfo.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(FILES PlayerLogic/IPlaylist.h PlayerLogic/Playlist.h PlayerLogic/Player.h PlayerLogic/Config.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+
+
+add_subdirectory(GUI)

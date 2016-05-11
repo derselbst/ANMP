@@ -31,6 +31,7 @@ set(PROJECT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/src/Common ${CMAKE_SOURCE_DIR}/src/P
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 include(utils)
 include(FindPkgConfig)
+include(summary)
 include(GNUInstallDirs)
 
 #############################
@@ -82,7 +83,7 @@ endif(ENABLE_LIBMAD)
 if(ENABLE_LIBSND)
   MY_FIND_LIB(LIBSND sndfile)
   
-    summary_add("libmad support" LIBMAD_FOUND)
+    summary_add("libsndfile support" LIBMAD_FOUND)
 endif(ENABLE_LIBSND)
 
 
@@ -104,7 +105,7 @@ if(ENABLE_VGMSTREAM)
   MY_FIND_PKG(ZLIB ZLIB)
   MY_FIND_PKG(THREADS Threads)
   
-  summary_add("lazyusf2 support" VGMSTREAM_FOUND)
+  summary_add("vgmstream support" VGMSTREAM_FOUND)
 endif(ENABLE_VGMSTREAM)
 
 
@@ -126,16 +127,35 @@ if(ENABLE_CUE)
   
   if(LIBCUE_FOUND)
         add_definitions(-DUSE_CUE)
-        INCLUDE_DIRECTORIES(${LIBCUE_INCLUDE_DIRS})
-#         link_directories(${LIBCUE_LIBRARY_DIRS})
+        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${LIBCUE_INCLUDE_DIRS})
         set(LD_FLAGS ${LD_FLAGS} ${LIBCUE_LIBRARIES})
         
         MY_PRINT(LIBCUE)
         
-        
         summary_add("libcue support" LIBCUE_FOUND)
   endif(LIBCUE_FOUND)
 endif(ENABLE_CUE)
+
+
+if(ENABLE_GUI)
+    # Qt library
+    MY_FIND_PKG(Qt5Widgets Qt5Widgets)
+    
+    MY_FIND_PKG(Qt5OpenGL Qt5OpenGL)
+
+    # OpenGL & GLEW library
+    MY_FIND_PKG(OPENGL OpenGL)
+    
+    # Executables fail to build with Qt 5 in the default configuration
+    # without -fPIE. We add that here.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
+    
+    # We need add -DQT_WIDGETS_LIB when using QtWidgets in Qt 5.
+    add_definitions(${Qt5Widgets_DEFINITIONS})
+
+    set(QT5_FOUND {${Qt5Widgets_FOUND} AND ${Qt5OpenGL_FOUND} AND ${OPENGL_FOUND}})
+    summary_add("QT GUI support" LIBCUE_FOUND)
+endif(ENABLE_GUI)
 
 
 message("")
