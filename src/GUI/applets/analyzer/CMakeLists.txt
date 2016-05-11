@@ -23,4 +23,4 @@ qt5_wrap_ui(UI_HEADERS
     AnalyzerApplet.ui
 )
 
-ADD_LIBRARY(${LIBANAL} ${analyzer_SRCS})
+ADD_LIBRARY(${LIBANAL} STATIC ${analyzer_SRCS})

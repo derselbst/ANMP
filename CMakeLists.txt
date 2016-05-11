@@ -92,7 +92,15 @@ if(ENABLE_LAZYUSF)
     MY_FIND_LIB(PSFLIB psflib)
     MY_FIND_PKG(ZLIB ZLIB)
     
-    set(LAZYUSF_FOUND {${LAZYUSF_FOUND} AND ${PSFLIB_FOUND} AND ${ZLIB_FOUND}})
+    # TODO: this is very ugly, any easier way??
+    if(${LAZYUSF_FOUND})
+        if(${PSFLIB_FOUND})
+            if(${ZLIB_FOUND})
+                set(LAZYUSF_FOUND TRUE)
+            endif(${ZLIB_FOUND})
+        endif(${PSFLIB_FOUND})
+    endif(${LAZYUSF_FOUND})
+    
     summary_add("lazyusf2 support" LAZYUSF_FOUND)
 endif(ENABLE_LAZYUSF)
 
@@ -153,8 +161,16 @@ if(ENABLE_GUI)
     # We need add -DQT_WIDGETS_LIB when using QtWidgets in Qt 5.
     add_definitions(${Qt5Widgets_DEFINITIONS})
 
-    set(QT5_FOUND {${Qt5Widgets_FOUND} AND ${Qt5OpenGL_FOUND} AND ${OPENGL_FOUND}})
-    summary_add("QT GUI support" LIBCUE_FOUND)
+    # TODO: this is very ugly, any easier way??
+    if(${Qt5Widgets_FOUND})
+        if(${OPENGL_FOUND})
+            if(${Qt5OpenGL_FOUND})
+                set(QT5_FOUND TRUE)
+            endif(${Qt5OpenGL_FOUND})
+        endif(${OPENGL_FOUND})
+    endif(${Qt5Widgets_FOUND})
+    
+    summary_add("QT GUI support" QT5_FOUND)
 endif(ENABLE_GUI)
 
 

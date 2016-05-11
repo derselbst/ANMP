@@ -32,8 +32,5 @@ endif(EBUR128_FOUND)
 install(FILES Common/PlaylistFactory.h Common/types.h Common/Event.h Common/Nullable.h Common/SongInfo.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(FILES PlayerLogic/IPlaylist.h PlayerLogic/Playlist.h PlayerLogic/Player.h PlayerLogic/Config.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-# if there is no qt5, there also wont be any qt5 cmake macros
-# it would cause an error if we enter this subdir, even if those qt5 macros are in an if-clause
-if(QT5_FOUND)
-    add_subdirectory(GUI)
-endif(QT5_FOUND)
+
+add_subdirectory(GUI)
