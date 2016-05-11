@@ -31,6 +31,7 @@ set(PROJECT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/src/Common ${CMAKE_SOURCE_DIR}/src/P
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 include(utils)
 include(FindPkgConfig)
+include(GNUInstallDirs)
 
 #############################
 ### SCAN FOR DEPENDENCIES ###
@@ -40,38 +41,48 @@ include(FindPkgConfig)
 ### HANDLE AUDIO OUTPUT SUPPORT ###
 ###################################
 option(ENABLE_ALSA "Compile with support to use ALSA for playback" ON)
-option(ENABLE_EBUR128 "support for noise normalization through libebur128" ON)
+option(ENABLE_EBUR128 "Enable support for noise normalization through libebur128" ON)
 
 if(ENABLE_ALSA)
   MY_FIND_PKG(ALSA ALSA)
+  
+  summary_add("ALSA support" ALSA_FOUND)
 endif(ENABLE_ALSA)
 
 if(ENABLE_EBUR128)
   MY_FIND_LIB(EBUR128 ebur128)
+  
+  summary_add("ebur128 support" EBUR128_FOUND)
 endif(ENABLE_EBUR128)
 
 ############################
 ### HANDLE CODEC SUPPORT ###
 ############################
-option(ENABLE_LIBGME "Use libgme to support several video game emulated music formats" ON)
-option(ENABLE_LIBMAD "Use libmad to support MPEG audio formats" ON)
-option(ENABLE_LIBSND "Use libsndfile to support common audio formats (FLAC, WAVE, OGG, etc.)" ON)
+option(ENABLE_LIBGME "Use blargg's game-music-emu to support several video game emulated music formats" ON)
+option(ENABLE_LIBMAD "Use MAD to support MPEG audio formats" ON)
+option(ENABLE_LIBSND "Use sndfile to support common audio formats (FLAC, WAVE, OGG, etc.)" ON)
 option(ENABLE_LAZYUSF "Use lazyusf2 to support USF (Ultra64 Sound Format)" ON)
 option(ENABLE_VGMSTREAM "Use vgmstream to support innumerable streamed audio formats from video games." ON)
 option(ENABLE_FFMPEG "Use ffmpeg to support innumerable streamed audio formats, also from video streams." ON)
 
 if(ENABLE_LIBGME)
     MY_FIND_LIB(LIBGME gme)
+    
+    summary_add("libgme support" LIBGME_FOUND)
 endif(ENABLE_LIBGME)
 
 
 if(ENABLE_LIBMAD)
   MY_FIND_LIB(LIBMAD mad)
+  
+    summary_add("libmad support" LIBMAD_FOUND)
 endif(ENABLE_LIBMAD)
 
 
 if(ENABLE_LIBSND)
   MY_FIND_LIB(LIBSND sndfile)
+  
+    summary_add("libmad support" LIBMAD_FOUND)
 endif(ENABLE_LIBSND)
 
 
@@ -79,6 +90,9 @@ if(ENABLE_LAZYUSF)
     MY_FIND_LIB(LAZYUSF lazyusf2)
     MY_FIND_LIB(PSFLIB psflib)
     MY_FIND_PKG(ZLIB ZLIB)
+    
+    set(LAZYUSF_FOUND {${LAZYUSF_FOUND} AND ${PSFLIB_FOUND} AND ${ZLIB_FOUND}})
+    summary_add("lazyusf2 support" LAZYUSF_FOUND)
 endif(ENABLE_LAZYUSF)
 
 
@@ -89,18 +103,23 @@ if(ENABLE_VGMSTREAM)
   MY_FIND_LIB(M m)
   MY_FIND_PKG(ZLIB ZLIB)
   MY_FIND_PKG(THREADS Threads)
+  
+  summary_add("lazyusf2 support" VGMSTREAM_FOUND)
 endif(ENABLE_VGMSTREAM)
 
 
 if(ENABLE_FFMPEG)
   MY_FIND_PKG(FFMPEG FFmpeg)
+  
+  summary_add("FFmpeg support" FFMPEG_FOUND)
 endif(ENABLE_FFMPEG)
 
 
 ##################################
 ### miscellaneous dependencies ###
 ##################################
-option(ENABLE_CUE "Use libcue to support loading cue sheets" ON)
+option(ENABLE_CUE "Enable support for loading cue sheets" ON)
+option(ENABLE_GUI "Enable building the QT GUI" ON)
 
 if(ENABLE_CUE)
   PKG_CHECK_MODULES(LIBCUE libcue)
@@ -112,10 +131,15 @@ if(ENABLE_CUE)
         set(LD_FLAGS ${LD_FLAGS} ${LIBCUE_LIBRARIES})
         
         MY_PRINT(LIBCUE)
+        
+        
+        summary_add("libcue support" LIBCUE_FOUND)
   endif(LIBCUE_FOUND)
 endif(ENABLE_CUE)
 
 
-
+message("")
+### Show a summary of what we got
+summary_show()
 
 add_subdirectory(src)
