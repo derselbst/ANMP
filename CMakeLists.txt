@@ -83,7 +83,7 @@ endif(ENABLE_LIBMAD)
 if(ENABLE_LIBSND)
   MY_FIND_LIB(LIBSND sndfile)
   
-    summary_add("libsndfile support" LIBMAD_FOUND)
+    summary_add("libsndfile support" LIBSND_FOUND)
 endif(ENABLE_LIBSND)
 
 
