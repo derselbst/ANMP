@@ -25,7 +25,7 @@ if(EBUR128_FOUND)
     add_executable(anmp-normalize anmp-normalize.cpp)
     set(LINK_FLAGS ${LINK_FLAGS} "-Wl,-whole-archive")
     target_link_libraries(anmp-normalize ${LIB_ANMP_CORE})
-    install(TARGETS anmp-normalize DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install(TARGETS anmp-normalize DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
 endif(EBUR128_FOUND)
 
 
