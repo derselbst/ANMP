@@ -18,8 +18,11 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 
+# Global setting: build everything position independent
+set( CMAKE_POSITION_INDEPENDENT_CODE ON )
+
 ### set compile flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC -fstack-protector-all -Wall -Warray-bounds")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fstack-protector-all -Wall -Warray-bounds")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -Wextra -Weffc++")
 
 
