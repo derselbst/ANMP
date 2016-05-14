@@ -40,6 +40,8 @@ include(GNUInstallDirs)
 #############################
 ### SCAN FOR DEPENDENCIES ###
 #############################
+find_package (Threads REQUIRED)
+set(LD_FLAGS ${LD_FLAGS} ${CMAKE_THREAD_LIBS_INIT})
 
 ###################################
 ### HANDLE AUDIO OUTPUT SUPPORT ###
@@ -114,7 +116,6 @@ if(ENABLE_VGMSTREAM)
   MY_FIND_LIB(MPG123 mpg123)
   MY_FIND_LIB(M m)
   MY_FIND_PKG(ZLIB ZLIB)
-  MY_FIND_PKG(THREADS Threads)
   
   summary_add("vgmstream support" VGMSTREAM_FOUND)
 endif(ENABLE_VGMSTREAM)
