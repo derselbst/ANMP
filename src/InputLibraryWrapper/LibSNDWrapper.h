@@ -15,21 +15,14 @@
 class LibSNDWrapper : public StandardWrapper<int32_t>
 {
 public:
-
-    // Constructors/Destructors
-    //
-
-
-    /**
-     * Empty Constructor
-     */
     LibSNDWrapper(string filename);
     LibSNDWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
     void initAttr();
 
-    /**
-     * Empty Destructor
-     */
+    // forbid copying
+    LibSNDWrapper(LibSNDWrapper const&) = delete;
+    LibSNDWrapper& operator=(LibSNDWrapper const&) = delete;
+    
     virtual ~LibSNDWrapper ();
 
     // interface methods declaration

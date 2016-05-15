@@ -499,7 +499,7 @@ public:
     //////////////////////////////////////////////////////////////////////////
     // operator==, expects operator== has been written for both t and u
     //////////////////////////////////////////////////////////////////////////
-    const bool operator==(const tree &inTree) const
+    bool operator==(const tree &inTree) const
     {
         if (this->data_ == inTree.data_)
         {

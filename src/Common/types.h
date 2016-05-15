@@ -20,15 +20,15 @@ typedef enum LoopType
 typedef struct loop
 {
     // frame to start the loop
-    frame_t start;
+    frame_t start = 0;
 
     // frame to end the loop
     // this frame WILL be played!
-    frame_t stop;
+    frame_t stop = 0;
 
     // how many times this loop is being played
     // zero indicates playing forever
-    uint32_t count;
+    uint32_t count = 0;
 
     LoopType_t type = LoopType::Forward;
 

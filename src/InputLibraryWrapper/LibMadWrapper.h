@@ -15,21 +15,14 @@
 class LibMadWrapper : public StandardWrapper<int32_t>
 {
 public:
-
-    // Constructors/Destructors
-    //
-
-
-    /**
-     * Empty Constructor
-     */
     LibMadWrapper(string filename);
     LibMadWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
     void initAttr();
 
-    /**
-     * Empty Destructor
-     */
+    // forbid copying
+    LibMadWrapper(LibMadWrapper const&) = delete;
+    LibMadWrapper& operator=(LibMadWrapper const&) = delete;
+    
     virtual ~LibMadWrapper ();
 
     // interface methods declaration

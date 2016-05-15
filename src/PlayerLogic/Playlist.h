@@ -11,9 +11,6 @@ class Playlist : public IPlaylist
 public:
     typedef deque<Song*> SongQueue_t;
 
-    // Constructors/Destructors
-    //
-    // Empty virtual destructor for proper cleanup
     virtual ~Playlist();
 
 

@@ -23,6 +23,10 @@ public:
     VGMStreamWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
     void initAttr();
 
+    // forbid copying
+    VGMStreamWrapper(VGMStreamWrapper const&) = delete;
+    VGMStreamWrapper& operator=(VGMStreamWrapper const&) = delete;
+    
     virtual ~VGMStreamWrapper ();
 
 

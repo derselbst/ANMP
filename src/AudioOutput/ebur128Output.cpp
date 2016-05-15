@@ -1,6 +1,7 @@
 #include "ebur128Output.h"
 #include "Player.h"
-#include "StandardWrapper.h"
+#include "Song.h"
+#include "Config.h"
 
 #include "LoudnessFile.h"
 #include "CommonExceptions.h"
@@ -73,7 +74,7 @@ void ebur128Output::open()
         }
 }
 
-void ebur128Output::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime)
+void ebur128Output::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool)
 {
     this->currentChannelCount = channels;
     this->currentSampleFormat = s;
@@ -152,7 +153,7 @@ int ebur128Output::write (int32_t* buffer, frame_t frames)
     THROW_RUNTIME_ERROR("ebur128: out of memory or something else");
 }
 
-void ebur128Output::setVolume(uint8_t vol)
+void ebur128Output::setVolume(uint8_t)
 {
     
 }

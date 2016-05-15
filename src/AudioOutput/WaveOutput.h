@@ -17,6 +17,10 @@ public:
 
     WaveOutput (Player*);
 
+    // forbid copying
+    WaveOutput(WaveOutput const&) = delete;
+    WaveOutput& operator=(WaveOutput const&) = delete;
+    
     virtual ~WaveOutput ();
 
     static void SongChanged(void* ctx);

@@ -17,6 +17,10 @@ public:
 
     ebur128Output (Player*);
 
+    // forbid copying
+    ebur128Output(ebur128Output const&) = delete;
+    ebur128Output& operator=(ebur128Output const&) = delete;
+    
     virtual ~ebur128Output ();
 
     static void SongChanged(void* ctx);

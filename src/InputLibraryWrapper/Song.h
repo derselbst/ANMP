@@ -39,13 +39,13 @@ public:
 // File specific level
 //--------------------------------------------------------------------
     // fullpath to underlying audio file
-    string Filename;
+    string Filename = "";
 
     // how many milliseconds to skip when reading pcm from file
-    Nullable<size_t> fileOffset = Nullable<size_t>();
+    Nullable<size_t> fileOffset;
 
     // how many milliseconds following offset shall be used for playing
-    Nullable<size_t> fileLen = Nullable<size_t>();
+    Nullable<size_t> fileLen;
 //--------------------------------------------------------------------
 
 //--------------------------------------------------------------------

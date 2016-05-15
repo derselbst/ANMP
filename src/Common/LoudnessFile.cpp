@@ -47,7 +47,7 @@ void LoudnessFile::write(ebur128_state* state, string filePath) noexcept
 void LoudnessFile::write(ebur128_state* state, string filePath) noexcept
 {
     double overallSamplePeak=0.0;
-    for(int c = 0; c<state->channels; c++)
+    for(unsigned int c = 0; c<state->channels; c++)
     {
       double peak = -0.0;
       if(ebur128_sample_peak(state, c, &peak) == EBUR128_SUCCESS)

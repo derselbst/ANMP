@@ -164,7 +164,7 @@ frame_t LibSNDWrapper::getFrames () const
         framesAvail=0;
     }
 
-    size_t totalFrames = this->fileLen.hasValue ? msToFrames(this->fileLen.Value, this->Format.SampleRate) : framesAvail;
+    frame_t totalFrames = this->fileLen.hasValue ? msToFrames(this->fileLen.Value, this->Format.SampleRate) : framesAvail;
 
     if(totalFrames > framesAvail)
     {

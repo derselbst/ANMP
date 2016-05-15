@@ -27,6 +27,10 @@ public:
 
     Player (IPlaylist* playlist);
 
+    // forbid copying
+    Player(Player const&) = delete;
+    Player& operator=(Player const&) = delete;
+    
     virtual ~Player ();
 
     /**
@@ -92,7 +96,7 @@ private:
 
     // pointer to the playlist we use
     // we dont own this playlist, we dont care about destruction
-    IPlaylist* playlist;
+    IPlaylist* playlist = nullptr;
 
     // frame offset; (song.pcm + FRAMESTOFLOATS(playhead)) points to the frame that will be played on subsequent call to playSample
     frame_t playhead = 0;

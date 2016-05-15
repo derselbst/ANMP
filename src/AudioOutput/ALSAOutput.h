@@ -20,6 +20,10 @@ public:
 
     ALSAOutput ();
 
+    // forbid copying
+    ALSAOutput(ALSAOutput const&) = delete;
+    ALSAOutput& operator=(ALSAOutput const&) = delete;
+    
     virtual ~ALSAOutput ();
 
 

@@ -62,6 +62,10 @@ public:
     StandardWrapper(string filename);
     StandardWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
     
+    // forbid copying
+    StandardWrapper(StandardWrapper const&) = delete;
+    StandardWrapper& operator=(StandardWrapper const&) = delete;
+    
     virtual ~StandardWrapper ();
 
     void releaseBuffer () override;

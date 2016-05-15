@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     
     IPlaylist* plist = new Playlist();
 
-    for(int i=0; i<filenames.size(); i++)
+    for(unsigned int i=0; i<filenames.size(); i++)
     {
         PlaylistFactory::addSong(*plist, filenames[i]);
     }

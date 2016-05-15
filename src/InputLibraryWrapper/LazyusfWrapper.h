@@ -17,9 +17,10 @@ public:
     LazyusfWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
     void initAttr();
 
-    /**
-     * Empty Destructor
-     */
+    // forbid copying
+    LazyusfWrapper(LazyusfWrapper const&) = delete;
+    LazyusfWrapper& operator=(LazyusfWrapper const&) = delete;
+    
     virtual ~LazyusfWrapper();
 
     /**

@@ -27,7 +27,7 @@
 
 // TODO: make this nicer
 #define FramesToItems(x) ((x)*this->currentSong->Format.Channels)
-#define SEEK_POSSIBLE (this->currentSong->count==FramesToItems(this->currentSong->getFrames()))
+#define SEEK_POSSIBLE (this->currentSong==nullptr ? false : this->currentSong->count==FramesToItems(this->currentSong->getFrames()))
 #define USERS_ARE_STUPID if(this->audioDriver==nullptr || this->playlist==nullptr || this->currentSong==nullptr){throw NotInitializedException();}
 // Constructors/Destructors
 //

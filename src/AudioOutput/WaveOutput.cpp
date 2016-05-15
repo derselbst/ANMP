@@ -1,6 +1,7 @@
 #include "WaveOutput.h"
 #include "Player.h"
-#include "StandardWrapper.h"
+#include "Song.h"
+#include "Config.h"
 
 #include "LoudnessFile.h"
 #include "CommonExceptions.h"
@@ -71,7 +72,7 @@ void WaveOutput::open()
         }
 }
 
-void WaveOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime)
+void WaveOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool)
 {
     this->currentChannelCount = channels;
     this->currentSampleFormat = s;
@@ -132,7 +133,7 @@ int WaveOutput::write (int32_t* buffer, frame_t frames)
         return ret;
 }
 
-void WaveOutput::setVolume(uint8_t vol)
+void WaveOutput::setVolume(uint8_t)
 {
     
 }

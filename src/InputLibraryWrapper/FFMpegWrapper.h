@@ -30,10 +30,11 @@ public:
     FFMpegWrapper(string filename);
     FFMpegWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
     void initAttr();
-
-    /**
-     * Empty Destructor
-     */
+    
+    // forbid copying
+    FFMpegWrapper(FFMpegWrapper const&) = delete;
+    FFMpegWrapper& operator=(FFMpegWrapper const&) = delete;
+    
     virtual ~FFMpegWrapper ();
 
     // interface methods declaration
