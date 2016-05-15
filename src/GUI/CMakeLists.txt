@@ -1,3 +1,6 @@
+# due to CMAKE_AUTOUIC and CMAKE_AUTORCC
+cmake_minimum_required(VERSION 3.0)
+
 project(anmp-gui)
 
 include_directories(${PROJECT_INCLUDE_DIR})
