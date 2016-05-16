@@ -65,14 +65,7 @@ Song* Playlist::next ()
         return nullptr;
     }
 
-    if(this->currentSong+1 < this->queue.size())
-    {
-     return this->setCurrentSong(this->currentSong+1);
-    }
-    else
-    {
-        return nullptr;
-    }
+    return this->setCurrentSong((this->currentSong+1) % this->queue.size());
 }
 
 /**
