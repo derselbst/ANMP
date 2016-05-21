@@ -25,9 +25,7 @@
 #include <QSharedPointer>
 #include <QSize>
 
-class QMouseEvent;
 class QPalette;
-class QResizeEvent;
 
 class BlockAnalyzer : public AnalyzerBase
 {
