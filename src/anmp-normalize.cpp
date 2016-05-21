@@ -22,6 +22,7 @@ int main(int argc, char* argv[])
     Config::useLoopInfo = false;
     Config::RenderWholeSong = false;
     Config::useAudioNormalization = false;
+    Config::useHle = true;
     
     
 // for (auto& dirEntry : recursive_directory_iterator(myPath))
@@ -43,10 +44,12 @@ int main(int argc, char* argv[])
     {
         PlaylistFactory::addSong(*plist, filenames[i]);
     }
+    
+    // terminate when reaching end of playlist
+    plist->add(nullptr);
 
+    
     Player p(plist);
-
-
     p.play();
 
     while(p.getIsPlaying())
