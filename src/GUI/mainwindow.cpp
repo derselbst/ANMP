@@ -11,6 +11,7 @@
 #include <QProgressDialog>
 #include <QMessageBox>
 #include <QShortcut>
+#include <QResizeEvent>
 
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
@@ -32,11 +33,21 @@ void MainWindow::onSeek(void* ctx, frame_t pos)
         return;
     }
 
-    QString strTimePast = QString::fromStdString(framesToTimeStr(pos,s->Format.SampleRate));
-    context->ui->labelTimePast->setText(strTimePast);
-
-    QString strTimeLeft = QString("-") + QString::fromStdString(framesToTimeStr(s->getFrames()-pos, s->Format.SampleRate));
-    context->ui->labelTimeLeft->setText(strTimeLeft);
+    string temp;
+    {
+	temp = framesToTimeStr(pos,s->Format.SampleRate);
+	QString strTimePast = QString::fromStdString(temp);
+	if((void*)temp.c_str() == (void*)strTimePast.constData())
+	puts("asdf");
+	
+	context->ui->labelTimePast->setText(strTimePast);
+    }
+    
+    {
+	temp = framesToTimeStr(s->getFrames()-pos, s->Format.SampleRate);
+	QString strTimeLeft = QString("-") + QString::fromStdString(temp);
+	context->ui->labelTimeLeft->setText(strTimeLeft);
+    }
 }
 
 void MainWindow::onCurrentSongChanged(void* context)
@@ -152,6 +163,66 @@ void MainWindow::buildPlaylistView()
     this->ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     this->ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     this->ui->tableView->setModel(playlistModel);
+}
+
+void MainWindow::resizeEvent(QResizeEvent* event)
+{  
+  int minWidthVis = 0;
+  foreach(QAbstractButton *button, this->ui->controlButtonsAlwaysVisible->buttons())
+  {
+      minWidthVis += button->minimumWidth();
+  }
+  
+  int minWidthHideSecond = minWidthVis;
+  foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
+  {
+      minWidthHideSecond += button->minimumWidth();
+  }
+
+  int minWidthHideFirst = minWidthHideSecond;
+  foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
+  {
+      minWidthHideFirst += button->minimumWidth();
+  }
+  
+  int wndWidth = event->size().width() - 140; 
+
+  if(wndWidth <= minWidthHideSecond)
+  {
+      foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
+      {
+	  button->hide();
+      }
+      foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
+      {
+	  button->hide();
+      }
+  }
+  else if(wndWidth <= minWidthHideFirst)
+  {
+      foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
+      {
+	  button->hide();
+      }
+      foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
+      {
+	  button->show();
+      }
+  }
+  else
+  {
+      foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
+      {
+	  button->show();
+      }
+      foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
+      {
+	  button->show();
+      }
+  }
+  
+  
+  QMainWindow::resizeEvent(event);
 }
 
 void MainWindow::closeEvent(QCloseEvent* e)

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>652</width>
+    <height>452</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,6 +19,12 @@
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <widget class="QPushButton" name="previousButton">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="styleSheet">
          <string notr="true">QPushButton{
 	background-color: #e3efff;
@@ -34,10 +40,19 @@
           <height>64</height>
          </size>
         </property>
+        <attribute name="buttonGroup">
+         <string notr="true">controlButtonsAlwaysVisible</string>
+        </attribute>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="fbackwardButton">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="icon">
          <iconset resource="icons.qrc">
           <normaloff>:/basic/img/fbackw.svg</normaloff>:/basic/img/fbackw.svg</iconset>
@@ -48,10 +63,19 @@
           <height>64</height>
          </size>
         </property>
+        <attribute name="buttonGroup">
+         <string notr="true">controlButtonsHideFirst</string>
+        </attribute>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="backwardButton">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="icon">
          <iconset resource="icons.qrc">
           <normaloff>:/basic/img/backw.svg</normaloff>:/basic/img/backw.svg</iconset>
@@ -62,10 +86,19 @@
           <height>64</height>
          </size>
         </property>
+        <attribute name="buttonGroup">
+         <string notr="true">controlButtonsHideSecond</string>
+        </attribute>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="playButton">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="styleSheet">
          <string notr="true">QPushButton{
 background-color: #ccffcb;
@@ -89,10 +122,19 @@ background-color: #ccffcb;
         <property name="checkable">
          <bool>true</bool>
         </property>
+        <attribute name="buttonGroup">
+         <string notr="true">controlButtonsAlwaysVisible</string>
+        </attribute>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="stopButton">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="styleSheet">
          <string notr="true">QPushButton {
 background-color: rgb(255, 209, 205);
@@ -109,10 +151,19 @@ background-color: rgb(255, 209, 205);
           <height>64</height>
          </size>
         </property>
+        <attribute name="buttonGroup">
+         <string notr="true">controlButtonsAlwaysVisible</string>
+        </attribute>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="forwardButton">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="icon">
          <iconset resource="icons.qrc">
           <normaloff>:/basic/img/forw.svg</normaloff>:/basic/img/forw.svg</iconset>
@@ -123,10 +174,19 @@ background-color: rgb(255, 209, 205);
           <height>64</height>
          </size>
         </property>
+        <attribute name="buttonGroup">
+         <string notr="true">controlButtonsHideSecond</string>
+        </attribute>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="fforwardButton">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="icon">
          <iconset resource="icons.qrc">
           <normaloff>:/basic/img/fforw.svg</normaloff>:/basic/img/fforw.svg</iconset>
@@ -137,10 +197,19 @@ background-color: rgb(255, 209, 205);
           <height>64</height>
          </size>
         </property>
+        <attribute name="buttonGroup">
+         <string notr="true">controlButtonsHideFirst</string>
+        </attribute>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="nextButton">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="styleSheet">
          <string notr="true">QPushButton{
 	background-color: #e3efff;
@@ -156,6 +225,9 @@ background-color: rgb(255, 209, 205);
           <height>64</height>
          </size>
         </property>
+        <attribute name="buttonGroup">
+         <string notr="true">controlButtonsAlwaysVisible</string>
+        </attribute>
        </widget>
       </item>
      </layout>
@@ -330,7 +402,7 @@ border-radius: 4px;
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>652</width>
      <height>19</height>
     </rect>
    </property>
@@ -454,4 +526,9 @@ border-radius: 4px;
   <include location="icons.qrc"/>
  </resources>
  <connections/>
+ <buttongroups>
+  <buttongroup name="controlButtonsAlwaysVisible"/>
+  <buttongroup name="controlButtonsHideFirst"/>
+  <buttongroup name="controlButtonsHideSecond"/>
+ </buttongroups>
 </ui>
