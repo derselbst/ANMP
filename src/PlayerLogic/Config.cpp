@@ -54,8 +54,10 @@ unsigned int Config::fadeTimePause = 3500;
 //      USF-SPECIFIC SECTION       *
 //**********************************
 
-// whether to use High-Level-Emulation or not
-// true: speed up emulation at the cost of accuracy and potential emulation bugs
+// whether to use High-Level-Emulation (HLE) or not (i.e. Low-Level-Emulation (LLE))
+// true: speed up emulation (about factor 2 or more) at the cost of accuracy and potential emulation bugs
+// unless you are audiophil, there is no reason to set this to false, since HLE became pretty accurate over the last years
+// however you should definitly set this to true when being on a mobile device
 bool Config::useHle = false;
 
 //**********************************
