@@ -171,6 +171,7 @@ void PlaylistModel::move(std::deque<Song*>& que, signed int source, unsigned int
     {
         return;
     }
+
     if(steps<0) // left shift
     {
         rotate(source+steps >= 0 ?
@@ -179,7 +180,20 @@ void PlaylistModel::move(std::deque<Song*>& que, signed int source, unsigned int
                std::next(que.begin(),source),
                std::next(que.begin(),source+count+1)
               );
-
+	
+	// update currentSong
+	if(source <= this->currentSong && this->currentSong <= source+count)
+	{
+	  // currentSong is in the selection [source, source+count]
+	  // it has moved along with the rotate call
+	  this->currentSong += steps; // is subtraction!!
+	  
+	}
+	else if(source+steps <= this->currentSong && this->currentSong <= source)
+	{
+	  // currentSong was not selected, but it intersected the move
+	  this->currentSong += (-steps)+count;
+	}
     }
     else if(steps>0) // right shift
     {
@@ -189,8 +203,20 @@ void PlaylistModel::move(std::deque<Song*>& que, signed int source, unsigned int
                std::next(que.begin(),source+count+steps+1) :
                que.end()
               );
+	
+	// update currentSong
+	if(source <= this->currentSong && this->currentSong <= source+count)
+	{
+	  // current song is in the selection [source, source+count]
+	  // it has moved along with the rotate call
+	  this->currentSong += steps;
+	}
+	else if(source+count < this->currentSong && this->currentSong <= source+count+steps)
+	{
+	  // currentSong was not selected, but it intersected the move
+	  this->currentSong -= steps+count;
+	}
     }
-
 }
 
 bool PlaylistModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationRow)
