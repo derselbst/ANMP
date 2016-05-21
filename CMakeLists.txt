@@ -23,7 +23,7 @@ set( CMAKE_POSITION_INDEPENDENT_CODE ON )
 
 ### set compile flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fstack-protector-all -Wall -Warray-bounds")
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -Wextra") # -Weffc++
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -Wextra -D_GLIBCXX_DEBUG") # -Weffc++
 
 
 ### setup project include dirs
