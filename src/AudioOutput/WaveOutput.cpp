@@ -13,6 +13,7 @@
 #include <utility>      // std::pair
 #include <cstring>
 
+
 void WaveOutput::SongChanged(void* ctx)
 {
     WaveOutput* context = static_cast<WaveOutput*>(ctx);
@@ -24,30 +25,11 @@ void WaveOutput::SongChanged(void* ctx)
         return;
     }
     
-    SF_INFO sfinfo;
-    memset(&sfinfo, 0, sizeof (sfinfo));
-    sfinfo.samplerate = context->currentSampleRate;
-    sfinfo.channels = context->currentChannelCount;
-    sfinfo.format = SF_FORMAT_WAV;
-    switch(context->currentSampleFormat)
-    {
-      case int16:
-	sfinfo.format |= SF_FORMAT_PCM_16;
-	break;
-      case int32:
-	sfinfo.format |= SF_FORMAT_PCM_32;
-	break;
-      case float32:
-	sfinfo.format |= SF_FORMAT_FLOAT;
-	break;
-      default:
-	sfinfo.format |= SF_FORMAT_PCM_16;
-	break;
-    }
-    
     string outFile = context->currentSong->Filename.c_str();
     outFile += ".wav";
-    context->handle = sf_open(outFile.c_str(), SFM_WRITE, &sfinfo);
+    context->handle = fopen(outFile.c_str(), "wb");
+    
+    fseek(context->handle, sizeof(WaveHeader), SEEK_SET);
 }
 
 WaveOutput::WaveOutput(Player* player):player(player)
@@ -57,8 +39,8 @@ WaveOutput::WaveOutput(Player* player):player(player)
 
 WaveOutput::~WaveOutput()
 {
-    this->close();
     this->player->onCurrentSongChanged -= this;
+    this->close();
 }
 
 //
@@ -81,9 +63,13 @@ void WaveOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
 
 void WaveOutput::close()
 {
-    if (this->handle != nullptr)
+    if(this->handle != nullptr && this->currentSong != nullptr)
     {
-        sf_close(this->handle);
+        WaveHeader w(this->currentSong);
+        
+        fseek(this->handle, 0, SEEK_SET);
+        fwrite(&w, sizeof(w), 1, this->handle);
+        fclose(this->handle);
         this->handle = nullptr;
     }
     
@@ -93,7 +79,8 @@ void WaveOutput::close()
 
 int WaveOutput::write (float* buffer, frame_t frames)
 {
-    int ret = sf_writef_float(this->handle, buffer, frames);
+    int ret = fwrite(buffer, sizeof(float), frames * this->currentChannelCount, this->handle);
+    ret /= this->currentChannelCount;
     
         this->framesWritten += ret;
         return ret;
@@ -101,16 +88,8 @@ int WaveOutput::write (float* buffer, frame_t frames)
 
 int WaveOutput::write (int16_t* buffer, frame_t frames)
 {
-    int ret;
-    
-    if(sizeof(short)==sizeof(int16_t))
-    {
-        ret = sf_writef_short(this->handle, reinterpret_cast<short*>(buffer), frames);
-    }
-    else if(sizeof(int)==sizeof(int16_t))
-    {
-        ret = sf_writef_int(this->handle, reinterpret_cast<int*>(buffer), frames);
-    }
+    int ret = fwrite(buffer, sizeof(int16_t), frames * this->currentChannelCount, this->handle);
+    ret /= this->currentChannelCount;
     
         this->framesWritten += ret;
         return ret;
@@ -118,16 +97,9 @@ int WaveOutput::write (int16_t* buffer, frame_t frames)
 
 int WaveOutput::write (int32_t* buffer, frame_t frames)
 {
-    int ret;
+    int ret = fwrite(buffer, sizeof(int32_t), frames * this->currentChannelCount, this->handle);
+    ret /= this->currentChannelCount;
     
-    if(sizeof(short)==sizeof(int32_t))
-    {
-        ret = sf_writef_short(this->handle, reinterpret_cast<short*>(buffer), frames);
-    }
-    else if(sizeof(int)==sizeof(int32_t))
-    {
-        ret = sf_writef_int(this->handle, reinterpret_cast<int*>(buffer), frames);
-    }
     
         this->framesWritten += ret;
         return ret;
