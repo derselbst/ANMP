@@ -5,6 +5,7 @@
 #include "IPlaylist.h"
 
 #include <queue>
+#include <mutex>
 
 class Playlist : public IPlaylist
 {
@@ -51,6 +52,8 @@ public:
 protected:
     SongQueue_t queue;
     SongQueue_t::size_type currentSong = 0;
+    
+    mutable recursive_mutex mtx;
 };
 
 #endif // PLAYLIST_H

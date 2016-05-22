@@ -11,12 +11,16 @@ Playlist::~Playlist()
 
 void Playlist::add (Song* song)
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     this->queue.push_back(song);
 }
 
 
 void Playlist::remove (Song* song)
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     this->queue.erase(std::remove(this->queue.begin(), this->queue.end(), song), this->queue.end());
     delete song;
 }
@@ -25,6 +29,8 @@ void Playlist::remove (Song* song)
  */
 void Playlist::remove (int i)
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     if(this->queue.empty())
     {
         return;
@@ -38,6 +44,8 @@ void Playlist::remove (int i)
 
 void Playlist::clear()
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     Song* s;
     for(SongQueue_t::iterator it = this->queue.begin(); it!=this->queue.end(); ++it)
     {
@@ -53,6 +61,8 @@ void Playlist::clear()
  */
 Song* Playlist::current ()
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     return this->getSong(this->currentSong);
 }
 
@@ -60,6 +70,8 @@ Song* Playlist::current ()
  */
 Song* Playlist::next ()
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     if(this->queue.empty())
     {
         return nullptr;
@@ -72,6 +84,8 @@ Song* Playlist::next ()
  */
 Song* Playlist::previous ()
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     if(this->queue.empty())
     {
         return nullptr;
@@ -82,6 +96,8 @@ Song* Playlist::previous ()
 
 Song* Playlist::getSong(unsigned int id)
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     if(this->queue.size() > id)
     {
         return this->queue[id];
@@ -92,6 +108,8 @@ Song* Playlist::getSong(unsigned int id)
 
 Song* Playlist::setCurrentSong(unsigned int id)
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     Song* s = this->getSong(id);
     if(s!=nullptr)
     {
@@ -112,6 +130,8 @@ Song* Playlist::setCurrentSong(unsigned int id)
  */
 void Playlist::move(signed int source, unsigned int count, int steps)
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     SongQueue_t& que = this->queue;
   
     if(source < 0 || que.size() < source+count)
@@ -121,7 +141,7 @@ void Playlist::move(signed int source, unsigned int count, int steps)
 
     if(steps<0) // left shift
     {
-        rotate(source+steps >= 0 ?
+        std::rotate(source+steps >= 0 ?
                std::next(que.begin(),source+steps) :
                que.begin(),
                std::next(que.begin(),source),
@@ -144,7 +164,7 @@ void Playlist::move(signed int source, unsigned int count, int steps)
     }
     else if(steps>0) // right shift
     {
-        rotate(std::next(que.begin(),source),
+       std::rotate(std::next(que.begin(),source),
                std::next(que.begin(),source+count+1),
                source+count+steps < que.size() ?
                std::next(que.begin(),source+count+steps+1) :

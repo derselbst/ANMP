@@ -15,6 +15,8 @@ PlaylistModel::PlaylistModel(QObject *parent)
 
 int PlaylistModel::rowCount(const QModelIndex & /* parent */) const
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     return this->queue.size();
 }
 int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
@@ -26,6 +28,8 @@ int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
 #include <iostream>
 QVariant PlaylistModel::data(const QModelIndex &index, int role) const
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
 //       cout << "    DATA " << index.row() << " " << index.column() << role << endl;
     if (!index.isValid() || this->queue.size() <= index.row())
     {
@@ -131,6 +135,8 @@ QVariant PlaylistModel::headerData(int section, Qt::Orientation orientation, int
 
 bool PlaylistModel::insertRows(int row, int count, const QModelIndex & parent)
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     if(row>this->rowCount(QModelIndex()))
     {
         return false;
@@ -146,6 +152,8 @@ bool PlaylistModel::insertRows(int row, int count, const QModelIndex & parent)
 
 bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     if(row+count>this->rowCount(QModelIndex()))
     {
         return false;
@@ -167,6 +175,8 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
 
 bool PlaylistModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationRow)
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     // if source and destination parents are the same, move elements locally
     if(true)
     {
@@ -226,6 +236,8 @@ void PlaylistModel::remove(int i)
 
 void PlaylistModel::clear()
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     const int Elements = this->rowCount(QModelIndex());
 
     for(int i=0; i<Elements; i++)
@@ -237,6 +249,8 @@ void PlaylistModel::clear()
 
 Song* PlaylistModel::setCurrentSong (unsigned int id)
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     this->beginResetModel();
 
     Song* newSong = Playlist::setCurrentSong(id);
@@ -248,6 +262,8 @@ Song* PlaylistModel::setCurrentSong (unsigned int id)
 // TODO: acutally smth like this should be done here for setCurrentSong()
 // Song* PlaylistModel::setCurrentSong ()
 // {
+//     lock_guard<recursive_mutex> lck(this->mtx);
+//     
 //   int oldSong = this->currentSong;
 //   Song* newSong = Playlist::setCurrentSong();
 //
@@ -262,6 +278,8 @@ Song* PlaylistModel::setCurrentSong (unsigned int id)
 
 QColor PlaylistModel::calculateRowColor(int row) const
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     if(this->currentSong == row)
     {
         return QColor(255, 0, 0, 127);
