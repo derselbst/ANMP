@@ -2,8 +2,11 @@
 
 #include "Song.h"
 #include "Common.h"
+#include "PlaylistFactory.h"
 
 #include <QBrush>
+#include <QMimeData>
+#include <QUrl>
 #include <sstream>
 #include <iomanip>
 
@@ -214,13 +217,102 @@ bool PlaylistModel::setData(const QModelIndex &index, const QVariant &value, int
 Qt::ItemFlags PlaylistModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags flags = QAbstractItemModel::flags(index);
-    flags |= Qt::ItemIsEditable;
+
+    if (index.isValid())
+    {
+        flags |= Qt::ItemIsEditable;
+        flags |= Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+    }
+    else
+    {
+        flags |= Qt::ItemIsDropEnabled;
+    }
 
     return flags;
 }
 
+Qt::DropActions PlaylistModel::supportedDropActions() const
+{
+    return Qt::CopyAction | Qt::MoveAction;
+}
+
+QStringList PlaylistModel::mimeTypes() const
+{
+    QStringList types;
+//    types << "application/vnd.text.list";
+    types << "text/uri-list";
+    return types;
+}
+
+QMimeData* PlaylistModel::mimeData(const QModelIndexList &indexes) const
+{
+    QMimeData *mimeData = new QMimeData();
+    QByteArray encodedData;
+
+    QDataStream stream(&encodedData, QIODevice::WriteOnly);
+
+    foreach (const QModelIndex &index, indexes)
+    {
+        if (index.isValid())
+        {
+            QString text = data(index, Qt::DisplayRole).toString();
+            stream << text;
+        }
+    }
+
+    mimeData->setData("application/vnd.text.list", encodedData);
+    return mimeData;
+}
+
+bool PlaylistModel::canDropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const
+{
+    Q_UNUSED(action);
+    Q_UNUSED(row);
+    Q_UNUSED(parent);
+
+    if (!data->hasFormat("text/uri-list"))
+        return false;
+
+    if (column > 0)
+        return false;
+
+    return true;
+}
 
 
+bool PlaylistModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
+{
+    if (!canDropMimeData(data, action, row, column, parent))
+        return false;
+
+    if (action == Qt::IgnoreAction)
+        return true;
+
+    int beginRow;
+
+        if (row != -1)
+        {
+            beginRow = row;
+        }
+        else if (parent.isValid())
+        {
+                beginRow = parent.row();
+        }
+        else
+        {
+                beginRow = this->rowCount(QModelIndex());
+        }
+
+   QList<QUrl> urls = data->urls();
+
+   foreach (const QUrl &url, urls)
+   {
+       PlaylistFactory::addSong(*this, url.toLocalFile().toStdString());
+       beginRow++;
+   }
+
+   return true;
+}
 
 void PlaylistModel::add(Song* s)
 {
