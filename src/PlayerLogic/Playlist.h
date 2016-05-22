@@ -13,7 +13,6 @@ public:
 
     virtual ~Playlist();
 
-
     /**
      * @param  song
      */
@@ -46,6 +45,8 @@ public:
 
     Song* setCurrentSong(unsigned int id) override;
 
+    void move(signed int source, unsigned int count, int steps);
+    
 
 protected:
     SongQueue_t queue;

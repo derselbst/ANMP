@@ -100,3 +100,68 @@ Song* Playlist::setCurrentSong(unsigned int id)
 
     return s;
 }
+
+/* @brief move songs within the playlist
+ * 
+ * rotates songs selected by [source, source+count] "steps" steps
+ * 
+ * @param[in] source: zero-based index indicating the start of the selection
+ * @param[in] count: number of elements to follow after source
+ * @param[in] steps: if positive: move them "steps" steps further to the end of the queue
+ *                   if negative: move them "steps" steps further to the start of the queue
+ */
+void Playlist::move(signed int source, unsigned int count, int steps)
+{
+    SongQueue_t& que = this->queue;
+  
+    if(source < 0 || que.size() < source+count)
+    {
+        return;
+    }
+
+    if(steps<0) // left shift
+    {
+        rotate(source+steps >= 0 ?
+               std::next(que.begin(),source+steps) :
+               que.begin(),
+               std::next(que.begin(),source),
+               std::next(que.begin(),source+count+1)
+              );
+	
+	// update currentSong
+	if(source <= this->currentSong && this->currentSong <= source+count)
+	{
+	  // currentSong is in the selection [source, source+count]
+	  // it has moved along with the rotate call
+	  this->currentSong += steps; // is subtraction!!
+	  
+	}
+	else if(source+steps <= this->currentSong && this->currentSong <= source)
+	{
+	  // currentSong was not selected, but it intersected the move
+	  this->currentSong += (-steps)+count;
+	}
+    }
+    else if(steps>0) // right shift
+    {
+        rotate(std::next(que.begin(),source),
+               std::next(que.begin(),source+count+1),
+               source+count+steps < que.size() ?
+               std::next(que.begin(),source+count+steps+1) :
+               que.end()
+              );
+	
+	// update currentSong
+	if(source <= this->currentSong && this->currentSong <= source+count)
+	{
+	  // current song is in the selection [source, source+count]
+	  // it has moved along with the rotate call
+	  this->currentSong += steps;
+	}
+	else if(source+count < this->currentSong && this->currentSong <= source+count+steps)
+	{
+	  // currentSong was not selected, but it intersected the move
+	  this->currentSong -= steps+count;
+	}
+    }
+}

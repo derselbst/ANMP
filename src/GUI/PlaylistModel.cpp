@@ -165,67 +165,13 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
     return true;
 }
 
-void PlaylistModel::move(std::deque<Song*>& que, signed int source, unsigned int count, int steps)
-{
-    if(source < 0 || que.size() < source+count)
-    {
-        return;
-    }
-
-    if(steps<0) // left shift
-    {
-        rotate(source+steps >= 0 ?
-               std::next(que.begin(),source+steps) :
-               que.begin(),
-               std::next(que.begin(),source),
-               std::next(que.begin(),source+count+1)
-              );
-	
-	// update currentSong
-	if(source <= this->currentSong && this->currentSong <= source+count)
-	{
-	  // currentSong is in the selection [source, source+count]
-	  // it has moved along with the rotate call
-	  this->currentSong += steps; // is subtraction!!
-	  
-	}
-	else if(source+steps <= this->currentSong && this->currentSong <= source)
-	{
-	  // currentSong was not selected, but it intersected the move
-	  this->currentSong += (-steps)+count;
-	}
-    }
-    else if(steps>0) // right shift
-    {
-        rotate(std::next(que.begin(),source),
-               std::next(que.begin(),source+count+1),
-               source+count+steps < que.size() ?
-               std::next(que.begin(),source+count+steps+1) :
-               que.end()
-              );
-	
-	// update currentSong
-	if(source <= this->currentSong && this->currentSong <= source+count)
-	{
-	  // current song is in the selection [source, source+count]
-	  // it has moved along with the rotate call
-	  this->currentSong += steps;
-	}
-	else if(source+count < this->currentSong && this->currentSong <= source+count+steps)
-	{
-	  // currentSong was not selected, but it intersected the move
-	  this->currentSong -= steps+count;
-	}
-    }
-}
-
 bool PlaylistModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationRow)
 {
     // if source and destination parents are the same, move elements locally
     if(true)
     {
         beginMoveRows(sourceParent, sourceRow, sourceRow+count-1, destinationParent, destinationRow);
-        this->move(this->queue, sourceRow, count, destinationRow-sourceRow);
+        this->move(sourceRow, count, destinationRow-sourceRow);
         endMoveRows();
     }
     else
