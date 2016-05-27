@@ -149,8 +149,11 @@ public:
 
 
     /**
-     * returns number of frames this song lasts, they dont necessarily have to be in the pcm buffer at one time
-     * @return unsigned int
+     * specifies the number of frames this song lasts, they dont necessarily have to be in the pcm buffer at one time
+     * 
+     * this method mustn't return zero at any time!
+     * 
+     * @return an unsigned integer (even if frame_t is signed) greater 1
      */
     virtual frame_t getFrames () const = 0;
 
