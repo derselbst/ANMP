@@ -62,8 +62,10 @@ void LibGMEWrapper::open()
 
     LibGMEWrapper::printWarning(this->handle);
 
+#if GME_VERSION >= 0x000600
     /* Enable most accurate sound emulation */
     gme_enable_accuracy( this->handle, Config::gmeAccurateEmulation );
+#endif
 
     /* Add some stereo enhancement */
     gme_set_stereo_depth( this->handle, Config::gmeEchoDepth );
