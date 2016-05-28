@@ -72,7 +72,7 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
         Track* track = cd_get_track (cd, i+1);
         cue_assert ("error getting track", track != NULL);
 
-        char* realAudioFile = track_get_filename (track);
+        const char* realAudioFile = track_get_filename (track);
         cue_assert ("error getting track filename", realAudioFile != NULL);
 
         Cdtext* cdtext = track_get_cdtext (track);
@@ -84,7 +84,7 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
             ss << setw(2) << setfill('0') << i+1;
             overridingMetadata.Track = ss.str();
 
-            char* val = cdtext_get (PTI_PERFORMER, cdtext);
+            const char* val = cdtext_get (PTI_PERFORMER, cdtext);
             if(val != NULL)
             {
                 overridingMetadata.Artist = string(val);
