@@ -154,8 +154,8 @@ void MainWindow::buildFileBrowser()
     ui->listView->setModel(filesModel);
     ui->listView->setRootIndex(filesModel->setRootPath(rootPath));
 
-    this->ui->listView->hide();
-    this->ui->treeView->hide();
+    this->ui->listView->show();
+    this->ui->treeView->show();
 }
 
 void MainWindow::buildPlaylistView()
