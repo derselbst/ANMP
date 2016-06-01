@@ -60,6 +60,8 @@ private:
 
 
 private slots:
+  friend class PlaylistModel;
+  
     void on_actionAdd_Songs_triggered();
     void on_actionPlay_triggered();
     void on_actionStop_triggered();

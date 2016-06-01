@@ -3,6 +3,7 @@
 #include "Song.h"
 #include "Common.h"
 #include "PlaylistFactory.h"
+#include "mainwindow.h"
 
 #include <QBrush>
 #include <QMimeData>
@@ -155,6 +156,16 @@ bool PlaylistModel::insertRows(int row, int count, const QModelIndex & parent)
 
 bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
 {
+  if(this->parent() != nullptr && row <= this->currentSong && this->currentSong <= row+count-1)
+  {
+    MainWindow* wnd = dynamic_cast<MainWindow*>(this->parent());
+    if(wnd != nullptr)
+    {
+      wnd->stop();
+      wnd->player->setCurrentSong(nullptr);
+    }
+  }
+  
     lock_guard<recursive_mutex> lck(this->mtx);
     
     if(row+count>this->rowCount(QModelIndex()))
