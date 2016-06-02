@@ -158,7 +158,7 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
 {
   if(this->parent() != nullptr && row <= this->currentSong && this->currentSong <= row+count-1)
   {
-    MainWindow* wnd = dynamic_cast<MainWindow*>(this->parent());
+    MainWindow* wnd = dynamic_cast<MainWindow*>(this->QObject::parent());
     if(wnd != nullptr)
     {
       wnd->stop();
