@@ -10,8 +10,10 @@ ANMP aims to be a versatile audio player, just as the other hundred thousands ou
 * arbitrary (forward) looping of songs
 * easy attempt to implement new formats
 
-In order to achieve gapless playback ANMP handles audio differently than others: Instead of retrieving only small buffers that hold the raw pcm data, ANMP fetches the pcm of the whole file and puts that into memory (well this is at least the case for streamed audio files). Todays computers have enough memory to hold raw pcm of even longer audio files. However, when the next song shall be played, the pcm buffer of the former song is released. Uncompressing big audio files can take a long time though. Thus filling the pcm buffer is usually done asyncronously. As an exception emulated sound formats (such as Ultra64 Sound Format (USF)) are not uncompressed as a whole at one time. Playing emulated sound format is usually an (esp. CPU) expensive task. Even the underlying library doesnt know anything about how the music is created, not to mention the existence of possible loop points. Furthermore the user may also wish to play such a certain emulated audio file forever. So shall we maybe fill the whole memory up with pcm?! No! Thats why during playback there is not only one single call made to fill the pcm buffer. On the contrary: before every call to the audioDriver, the pcm buffer shall be filled, if it is already filled (streamed audio) well, fine... if not we let the underlying emulator run.
-Another measure taken to achieve gapless playback is to avoid touching the underlying audioDriver as much as possible.
+In order to achieve gapless playback ANMP handles audio differently than others: Instead of retrieving only small buffers that hold the raw pcm data, ANMP fetches the pcm of the whole file and puts that into memory (well this is at least the case for streamed audio files). Todays computers have enough memory to hold raw pcm of even longer audio files. Uncompressing big audio files can take a long time. Thus filling the pcm buffer is usually done asynchronously. When the next song shall be played, the pcm buffer of the former song is released.
+
+However, ANMP also supports rendering pcm to a small buffer. The method will be used if there is not enough memory available to hold a whole song in memory.
+
 
 Cue sheets will just add the same song file multiple times to a playlist, but with different file-offsets.
 
