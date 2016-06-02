@@ -156,15 +156,20 @@ bool PlaylistModel::insertRows(int row, int count, const QModelIndex & parent)
 
 bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
 {
-  if(this->parent() != nullptr && row <= this->currentSong && this->currentSong <= row+count-1)
-  {
-    MainWindow* wnd = dynamic_cast<MainWindow*>(this->QObject::parent());
-    if(wnd != nullptr)
+    // call QObjects parent() explicitly
+    // in QT5.1 parent is overridden or hidden or something by QAbstractTableModel, which may break build
+    QObject* p = this->QObject::parent();
+    
+    // stop playback if the currently playing song is about to be removed
+    if(p != nullptr && row <= this->currentSong && this->currentSong <= row+count-1)
     {
-      wnd->stop();
-      wnd->player->setCurrentSong(nullptr);
+        MainWindow* wnd = dynamic_cast<MainWindow*>(p);
+        if(wnd != nullptr)
+        {
+            wnd->stop();
+            wnd->player->setCurrentSong(nullptr);
+        }
     }
-  }
   
     lock_guard<recursive_mutex> lck(this->mtx);
     
