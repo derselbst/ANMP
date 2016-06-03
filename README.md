@@ -33,9 +33,12 @@ see [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%
 
 * cmake >= 2.8
 * gcc >= 4.8.1
-* [libcue](https://github.com/lipnitsk/libcue) (only for cuesheet support)
 * ALSA
 * QT5 (for GUI support only), and no, there is no dependency on KDE
+
+### Optional
+* [libcue](https://github.com/lipnitsk/libcue) (for cuesheet support)
+* [libebur128](https://github.com/jiixyj/libebur128) (for generating loudness normalization files (*.ebur128) using anmp-normalize)
 
 #### At least one of the following libraries
 (depending on which audio formats ANMP shall be able to play)
