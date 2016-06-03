@@ -10,7 +10,7 @@ What ANMP does NOT support / do:
 * crawling through your music library, building a huge useless database for all artists, albums, genres, titles, etc., just because the user wants to have a nice overview over what is on his HDD (SSD); the filesystem is our database!
 * messing around with any audio files, i.e. no changing of ID3 tags, no writing of ReplayGain or whatever; additional info will always be written to separate files
 
-**Main Features**
+#### Main Features
 
 * gapless playback
 * cue sheets
