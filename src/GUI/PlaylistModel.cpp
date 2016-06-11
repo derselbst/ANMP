@@ -8,6 +8,8 @@
 #include <QBrush>
 #include <QMimeData>
 #include <QUrl>
+#include <QProgressDialog>
+#include <QApplication>
 #include <sstream>
 #include <iomanip>
 
@@ -255,7 +257,6 @@ Qt::DropActions PlaylistModel::supportedDropActions() const
 QStringList PlaylistModel::mimeTypes() const
 {
     QStringList types;
-//    types << "application/vnd.text.list";
     types << "text/uri-list";
     return types;
 }
@@ -319,14 +320,29 @@ bool PlaylistModel::dropMimeData(const QMimeData *data, Qt::DropAction action, i
                 beginRow = this->rowCount(QModelIndex());
         }
 
+        
    QList<QUrl> urls = data->urls();
+        
+        MainWindow* wnd = dynamic_cast<MainWindow*>(this->QObject::parent());
+	
+	    QProgressDialog progress("Adding files...", "Abort", 0, urls.count(), wnd);
+	    progress.setWindowModality(Qt::WindowModal);
+	    progress.show();
+	    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+    
+    for(int i=0; !progress.wasCanceled() && i<urls.count(); i++)
+    {
+	// ten redrawings
+        if(i%(static_cast<int>(urls.count()*0.1)+1)==0)
+        {
+            progress.setValue(i);
+            QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+        }
 
-   foreach (const QUrl &url, urls)
-   {
-       PlaylistFactory::addSong(*this, url.toLocalFile().toStdString());
+       PlaylistFactory::addSong(*this, urls.at(i).toLocalFile().toStdString());
        beginRow++;
-   }
-
+    }
+    
    return true;
 }
 
