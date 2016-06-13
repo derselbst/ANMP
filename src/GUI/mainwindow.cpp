@@ -18,16 +18,26 @@
 #include <utility>      // std::pair
 #include <cmath>
 
-void MainWindow::onSeek(void* ctx, frame_t pos)
+void MainWindow::callbackSeek(void* context, frame_t pos)
 {
-    MainWindow* context = static_cast<MainWindow*>(ctx);
+    MainWindow* ctx = static_cast<MainWindow*>(context);
+    QMetaObject::invokeMethod( ctx, "slotSeek", Qt::QueuedConnection, Q_ARG(long long, pos ) );
+}
 
-    QSlider* playheadSlider = context->ui->seekBar;
+void MainWindow::callbackCurrentSongChanged(void * context)
+{
+    MainWindow* ctx = static_cast<MainWindow*>(context);
+    QMetaObject::invokeMethod( ctx, "slotCurrentSongChanged", Qt::QueuedConnection);
+}
+
+void MainWindow::slotSeek(long long pos)
+{
+    QSlider* playheadSlider = this->ui->seekBar;
     bool oldState = playheadSlider->blockSignals(true);
     playheadSlider->setSliderPosition(pos);
     playheadSlider->blockSignals(oldState);
 
-    const Song* s = context->player->getCurrentSong();
+    const Song* s = this->player->getCurrentSong();
     if(s==nullptr)
     {
         return;
@@ -40,25 +50,24 @@ void MainWindow::onSeek(void* ctx, frame_t pos)
 	if((void*)temp.c_str() == (void*)strTimePast.constData())
 	puts("asdf");
 	
-	context->ui->labelTimePast->setText(strTimePast);
+    this->ui->labelTimePast->setText(strTimePast);
     }
     
     {
 	temp = framesToTimeStr(s->getFrames()-pos, s->Format.SampleRate);
 	QString strTimeLeft = QString("-") + QString::fromStdString(temp);
-	context->ui->labelTimeLeft->setText(strTimeLeft);
+    this->ui->labelTimeLeft->setText(strTimeLeft);
     }
 }
 
-void MainWindow::onCurrentSongChanged(void* context)
+void MainWindow::slotCurrentSongChanged()
 {
-    MainWindow* ctx = static_cast<MainWindow*>(context);
-    QSlider* playheadSlider = ctx->ui->seekBar;
+    QSlider* playheadSlider = this->ui->seekBar;
 
-    const Song* s = ctx->player->getCurrentSong();
+    const Song* s = this->player->getCurrentSong();
     if(s==nullptr)
     {
-        ctx->setWindowTitle("ANMP");
+        this->setWindowTitle("ANMP");
 
         bool oldState = playheadSlider->blockSignals(true);
         playheadSlider->setSliderPosition(0);
@@ -71,11 +80,11 @@ void MainWindow::onCurrentSongChanged(void* context)
         QString interpret = QString::fromStdString(s->Metadata.Artist);
         if(title == "" || interpret == "")
         {
-            ctx->setWindowTitle(QString::fromStdString(s->Filename) + " :: ANMP");
+            this->setWindowTitle(QString::fromStdString(s->Filename) + " :: ANMP");
         }
         else
         {
-            ctx->setWindowTitle(interpret + " - " + title  + " :: ANMP");
+            this->setWindowTitle(interpret + " - " + title  + " :: ANMP");
         }
         playheadSlider->setMaximum(s->getFrames());
     }
@@ -91,8 +100,8 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setWindowState(Qt::WindowMaximized);
 
     // set callbacks
-    this->player->onPlayheadChanged += make_pair(this, &MainWindow::onSeek);
-    this->player->onCurrentSongChanged += make_pair(this, &MainWindow::onCurrentSongChanged);
+    this->player->onPlayheadChanged += make_pair(this, &MainWindow::callbackSeek);
+    this->player->onCurrentSongChanged += make_pair(this, &MainWindow::callbackCurrentSongChanged);
 
     this->buildFileBrowser();
     this->buildPlaylistView();

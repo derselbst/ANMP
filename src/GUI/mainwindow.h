@@ -28,6 +28,9 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    static void callbackSeek(void*, frame_t pos);
+    static void callbackCurrentSongChanged(void*);
+
 protected:
     void resizeEvent(QResizeEvent* event) override;
     void closeEvent(QCloseEvent* e) override;
@@ -47,11 +50,6 @@ private:
     QFileSystemModel *drivesModel = new QFileSystemModel(this);
     QFileSystemModel *filesModel = new QFileSystemModel(this);
 
-
-    static void onSeek(void*, frame_t);
-    static void onCurrentSongChanged(void *);
-
-
     void buildPlaylistView();
     void buildFileBrowser();
     void createShortcuts();
@@ -61,7 +59,10 @@ private:
 
 private slots:
   friend class PlaylistModel;
-  
+
+  void slotSeek(long long);
+  void slotCurrentSongChanged();
+
     void on_actionAdd_Songs_triggered();
     void on_actionPlay_triggered();
     void on_actionStop_triggered();
