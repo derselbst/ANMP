@@ -25,6 +25,9 @@
           <height>0</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>Previous Song</string>
+        </property>
         <property name="styleSheet">
          <string notr="true">QPushButton{
 	background-color: #e3efff;
@@ -53,6 +56,9 @@
           <height>0</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>Seek Backward (fast)</string>
+        </property>
         <property name="icon">
          <iconset resource="icons.qrc">
           <normaloff>:/basic/img/fbackw.svg</normaloff>:/basic/img/fbackw.svg</iconset>
@@ -76,6 +82,9 @@
           <height>0</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>Seek Backward</string>
+        </property>
         <property name="icon">
          <iconset resource="icons.qrc">
           <normaloff>:/basic/img/backw.svg</normaloff>:/basic/img/backw.svg</iconset>
@@ -98,6 +107,9 @@
           <width>70</width>
           <height>0</height>
          </size>
+        </property>
+        <property name="toolTip">
+         <string>Play / Pause</string>
         </property>
         <property name="styleSheet">
          <string notr="true">QPushButton{
@@ -135,6 +147,9 @@ background-color: #ccffcb;
           <height>0</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>Stop</string>
+        </property>
         <property name="styleSheet">
          <string notr="true">QPushButton {
 background-color: rgb(255, 209, 205);
@@ -164,6 +179,9 @@ background-color: rgb(255, 209, 205);
           <height>0</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>Seek Forward</string>
+        </property>
         <property name="icon">
          <iconset resource="icons.qrc">
           <normaloff>:/basic/img/forw.svg</normaloff>:/basic/img/forw.svg</iconset>
@@ -187,6 +205,9 @@ background-color: rgb(255, 209, 205);
           <height>0</height>
          </size>
         </property>
+        <property name="toolTip">
+         <string>Seek Forward (fast)</string>
+        </property>
         <property name="icon">
          <iconset resource="icons.qrc">
           <normaloff>:/basic/img/fforw.svg</normaloff>:/basic/img/fforw.svg</iconset>
@@ -209,6 +230,9 @@ background-color: rgb(255, 209, 205);
           <width>70</width>
           <height>0</height>
          </size>
+        </property>
+        <property name="toolTip">
+         <string>Next Song</string>
         </property>
         <property name="styleSheet">
          <string notr="true">QPushButton{
@@ -539,12 +563,12 @@ border-radius: 4px;
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="controlButtonsHideSecond"/>
+  <buttongroup name="controlButtonsHideFirst"/>
   <buttongroup name="controlButtonsAlwaysVisible">
    <property name="exclusive">
     <bool>false</bool>
    </property>
   </buttongroup>
-  <buttongroup name="controlButtonsHideFirst"/>
+  <buttongroup name="controlButtonsHideSecond"/>
  </buttongroups>
 </ui>
