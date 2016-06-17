@@ -341,7 +341,7 @@ void ALSAOutput::setVolume(uint8_t vol)
     snd_mixer_selem_id_set_name(sid, selem_name);
 
     snd_mixer_elem_t* elem = snd_mixer_find_selem(handle, sid);
-    snd_mixer_selem_id_free(sid);
+//     snd_mixer_selem_id_free(sid);
 
     if(elem==nullptr)
     {

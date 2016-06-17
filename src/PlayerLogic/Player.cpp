@@ -23,7 +23,7 @@
 
 #include <iostream>
 #include <limits>
-
+#include <cmath>
 
 // TODO: make this nicer
 #define FramesToItems(x) ((x)*this->currentSong->Format.Channels)
@@ -108,6 +108,18 @@ void Player::play ()
             return;
         }
     }
+    
+      uint8_t vol;
+      if(100*this->PreAmpVolume > 100)
+      {
+	vol = 100;
+      }
+      else
+      {
+	vol = (uint8_t)100*this->PreAmpVolume;
+      }
+    this->audioDriver->setVolume(vol);
+  
 
     this->isPlaying=true;
 
@@ -261,9 +273,38 @@ void Player::previous ()
 
 /**
  */
-void Player::fadeout ()
+void Player::fadeout (unsigned int fadeTime)
 {
     USERS_ARE_STUPID
+    
+    if(fadeTime == 0)
+    {
+      this->audioDriver->setVolume(0);
+    }
+    
+    float vol = 0.0f;
+    for(unsigned int timePast=0; timePast <= fadeTime; timePast++)
+    {
+        switch (3)
+        {
+        case 1:
+            // linear
+            vol =  1.0f - ((float)timePast / (float)fadeTime);
+            break;
+        case 2:
+            // logarithmic
+            vol = 1.0f - pow(0.1, (1 - ((float)timePast / (float)fadeTime)) * 1);
+            break;
+        case 3:
+            // sine
+            vol =  1.0f - sin( ((float)timePast / (float)fadeTime) * M_PI / 2 );
+            break;
+	}
+	
+	uint8_t volToPush = round((vol*this->PreAmpVolume) * 100.0f);
+	this->audioDriver->setVolume(volToPush);
+	this_thread::sleep_for (chrono::milliseconds(1));
+    }
 }
 
 

@@ -366,6 +366,7 @@ void MainWindow::play()
 
 void MainWindow::pause()
 {
+    this->player->fadeout(Config::fadeTimePause);
     this->player->pause();
 
     QPushButton* playbtn = this->ui->playButton;
@@ -376,6 +377,7 @@ void MainWindow::pause()
 
 void MainWindow::stop()
 {
+    this->player->fadeout(Config::fadeTimeStop);
     this->player->stop();
 
     QPushButton* playbtn = this->ui->playButton;
