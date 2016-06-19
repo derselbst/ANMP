@@ -200,13 +200,22 @@ void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
             if(frameFinished != 0)
             {
-                swr_convert(this->swr, reinterpret_cast<uint8_t**>(&pcm), frame->nb_samples, const_cast<const uint8_t**>(frame->extended_data), frame->nb_samples);
+                // make sure we dont run over buffer
+                int framesToConvert = min(frame->nb_samples, framesToDo);
+                
+                swr_convert(this->swr, reinterpret_cast<uint8_t**>(&pcm), framesToConvert, const_cast<const uint8_t**>(frame->extended_data), framesToConvert);
 
-                size_t unpadded_linesize = frame->nb_samples * frame->channels;// * sizeof(int16_t); //* av_get_bytes_per_sample((AVSampleFormat)frame->format);
+                size_t unpadded_linesize = framesToConvert * frame->channels;// * sizeof(int16_t); //* av_get_bytes_per_sample((AVSampleFormat)frame->format);
                 pcm += unpadded_linesize;
 
-                framesToDo -= frame->nb_samples;
-                this->framesAlreadyRendered += frame->nb_samples;
+                framesToDo -= framesToConvert;
+                
+                if(framesToDo < 0)
+                {
+                    CLOG(LogLevel::ERROR, "THIS SHOULD NEVER HAPPEN! bufferoverrun ffmpegwrapper")
+                }
+                
+                this->framesAlreadyRendered += framesToConvert;
             }
             else
             {
