@@ -165,13 +165,17 @@ void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     AVPacket packet;
     av_init_packet(&packet);
 
-    const int buffer_size=192000 + FF_INPUT_BUFFER_PADDING_SIZE; // AVCODEC_MAX_AUDIO_FRAME_SIZE
-    uint8_t buffer[buffer_size];
-    packet.data=buffer;
-    packet.size =buffer_size;
+//     const int buffer_size=192000 + FF_INPUT_BUFFER_PADDING_SIZE; // AVCODEC_MAX_AUDIO_FRAME_SIZE
+//     uint8_t buffer[buffer_size];
+//     packet.data=buffer;
+//     packet.size =buffer_size;
 
     //frame, where the decoded data will be written
     AVFrame *frame=av_frame_alloc();
+    if(frame==NULL)
+    {
+        THROW_RUNTIME_ERROR("Cannot allocate AVFrame.")
+    }
 
     int frameFinished=0;
 
