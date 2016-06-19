@@ -217,6 +217,9 @@ void MainWindow::resizeEvent(QResizeEvent* event)
       {
 	  button->show();
       }
+      
+    this->ui->listView->hide();
+    this->ui->treeView->hide();
   }
   else
   {
@@ -228,6 +231,9 @@ void MainWindow::resizeEvent(QResizeEvent* event)
       {
 	  button->show();
       }
+      
+    this->ui->listView->show();
+    this->ui->treeView->show();
   }
   
   
