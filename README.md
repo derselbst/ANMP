@@ -1,8 +1,9 @@
 # ANMP
 **A**nother **N**ameless **M**usic **P**layer
 
-## Features
+![ANMP Screenshot](ANMP.png)
 
+## Features
 
 ANMP aims to be a versatile but lightweight audio player, just as the other hundred thousands out there.
 
