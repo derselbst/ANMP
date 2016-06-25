@@ -106,7 +106,7 @@ public:
     /**
      * frees all ressources acquired by this->open()
      */
-    virtual void close () = 0;
+    virtual void close () noexcept = 0 ;
 
     /** @brief fills the pcm buffer this->data
      * 
@@ -118,17 +118,17 @@ public:
     /**
      * frees all ressources acquired by this->fillBuffer()
      */
-    virtual void releaseBuffer () = 0;
+    virtual void releaseBuffer () noexcept = 0;
 
     /**
      * gathers the song metadata and populates this->Metadata
      */
-    virtual void buildMetadata () = 0;
+    virtual void buildMetadata () noexcept = 0;
 
     /**
      * returns an unsorted array of loops that could be found in this->Filename
      */
-    virtual vector<loop_t> getLoopArray () const;
+    virtual vector<loop_t> getLoopArray () const noexcept;
 
 
     /**
@@ -142,9 +142,9 @@ public:
 
 
 
-    void buildLoopTree ();
+    void buildLoopTree();
 
-    bool isPlayable ();
+    bool isPlayable() noexcept;
     
 private:
     static bool myLoopSort(loop_t i,loop_t j);

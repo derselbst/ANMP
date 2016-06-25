@@ -75,7 +75,7 @@ void LazyusfWrapper::open()
     }
 }
 
-void LazyusfWrapper::close()
+void LazyusfWrapper::close() noexcept
 {
     if(this->usfHandle != nullptr)
     {
@@ -110,7 +110,7 @@ frame_t LazyusfWrapper::getFrames () const
     }
 }
 
-void LazyusfWrapper::buildMetadata()
+void LazyusfWrapper::buildMetadata() noexcept
 {
     // noting to do here, everything is done in usf_info()
 }

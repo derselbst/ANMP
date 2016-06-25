@@ -28,7 +28,7 @@ Song::~Song ()
   * 
   * @return true if song can be played, else false
   */
-bool Song::isPlayable ()
+bool Song::isPlayable () noexcept
 {
     return this->Format.Channels <= 6 && this->Format.Channels > 0;
 }
@@ -59,7 +59,7 @@ void Song::buildLoopTree ()
 /**
  * provide a default implementation so all formats, that dont support loops dont need to override this
  */
-vector<loop_t> Song::getLoopArray () const
+vector<loop_t> Song::getLoopArray () const noexcept
 {
     vector<loop_t> res;
     return res;

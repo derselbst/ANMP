@@ -123,7 +123,7 @@ void FFMpegWrapper::open ()
 
 }
 
-void FFMpegWrapper::close()
+void FFMpegWrapper::close() noexcept
 {
     if(this->swr!=nullptr)
     {
@@ -239,7 +239,7 @@ frame_t FFMpegWrapper::getFrames () const
     return totalFrames;
 }
 
-void FFMpegWrapper::buildMetadata()
+void FFMpegWrapper::buildMetadata() noexcept
 {
 
 }

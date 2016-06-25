@@ -35,7 +35,7 @@ public:
 
     /**
      */
-    void close () override;
+    void close () noexcept override;
 
 
     /** PCM buffer fill call to underlying library goes here
@@ -48,11 +48,11 @@ public:
      */
     frame_t getFrames () const override;
 
-    vector<loop_t> getLoopArray () const override;
+    vector<loop_t> getLoopArray () const noexcept override;
 
     void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
 
-    void buildMetadata() override;
+    void buildMetadata() noexcept override;
 
 private:
     // length in ms to fade

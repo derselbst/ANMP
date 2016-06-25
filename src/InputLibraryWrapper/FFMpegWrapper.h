@@ -47,7 +47,7 @@ public:
 
     /**
      */
-    void close () override;
+    void close () noexcept override;
 
 
     /** PCM buffer fill call to underlying library goes here
@@ -62,7 +62,7 @@ public:
 
     void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
 
-    void buildMetadata() override;
+    void buildMetadata() noexcept override;
 private:
     AVFormatContext *handle = nullptr;
     SwrContext *swr = nullptr;
