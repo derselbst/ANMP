@@ -526,3 +526,8 @@ void MainWindow::on_backwardButton_clicked()
 {
     this->seekBackward();
 }
+
+void MainWindow::on_actionAdd_Playback_Stop_triggered()
+{
+    this->playlistModel->add(nullptr);
+}

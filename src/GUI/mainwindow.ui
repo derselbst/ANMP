@@ -453,6 +453,7 @@ border-radius: 4px;
      <string>Pla&amp;ylist</string>
     </property>
     <addaction name="actionAdd_Songs"/>
+    <addaction name="actionAdd_Playback_Stop"/>
     <addaction name="separator"/>
     <addaction name="actionClear_Playlist"/>
    </widget>
@@ -547,6 +548,11 @@ border-radius: 4px;
     <string>&amp;ASCII</string>
    </property>
   </action>
+  <action name="actionAdd_Playback_Stop">
+   <property name="text">
+    <string>Add Playback-Stop</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -563,12 +569,12 @@ border-radius: 4px;
  </resources>
  <connections/>
  <buttongroups>
+  <buttongroup name="controlButtonsHideSecond"/>
   <buttongroup name="controlButtonsHideFirst"/>
   <buttongroup name="controlButtonsAlwaysVisible">
    <property name="exclusive">
     <bool>false</bool>
    </property>
   </buttongroup>
-  <buttongroup name="controlButtonsHideSecond"/>
  </buttongroups>
 </ui>
