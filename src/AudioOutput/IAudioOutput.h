@@ -82,7 +82,13 @@ public:
      * @return number of frames successfully pushed to underlying audio driver
      */
     virtual int write (pcm_t* frameBuffer, frame_t frames, int offset);
-    
+
+
+protected:
+    uint8_t currentChannelCount = 0;
+    unsigned int currentSampleRate = 0;
+    SampleFormat_t currentSampleFormat = SampleFormat_t::unknown;
+        
     /**
      * pushes the pcm pointed to by buffer to the underlying audio driver and by that causes it to play
      * 
@@ -97,11 +103,6 @@ public:
     virtual int write (int16_t* buffer, frame_t frames) = 0;
     virtual int write (int32_t* buffer, frame_t frames) = 0;
 
-
-protected:
-    uint8_t currentChannelCount = 0;
-    unsigned int currentSampleRate = 0;
-    SampleFormat_t currentSampleFormat = SampleFormat_t::unknown;
 };
 
 #endif // IAUDIOOUTPUT_H
