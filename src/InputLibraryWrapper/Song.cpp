@@ -23,33 +23,20 @@ Song::~Song ()
 
 }
 
-
 /**
- * called to check whether the current song is playable or not
- * @return bool
- */
+  * called to check whether the current song is playable or not
+  * 
+  * @return true if song can be played, else false
+  */
 bool Song::isPlayable ()
 {
     return this->Format.Channels <= 6 && this->Format.Channels > 0;
 }
 
-bool operator < (loop_t const& lhs, loop_t const& rhs)
-{
-    return lhs.start < rhs.start && lhs.stop <= rhs.start;
-}
-bool operator == (loop_t const& lhs, loop_t const& rhs)
-{
-    return lhs.start == rhs.start &&
-           lhs.stop  == rhs.stop  &&
-           lhs.count == rhs.count &&
-           lhs.type  == rhs.type;
-}
-
 
 /**
- * @return core::tree
- * @param  p
- */
+  * calls Song::getLoopArray() and builds the loop tree
+  */
 void Song::buildLoopTree ()
 {
     loop_t root;
@@ -69,6 +56,9 @@ void Song::buildLoopTree ()
     }
 }
 
+/**
+ * provide a default implementation so all formats, that dont support loops dont need to override this
+ */
 vector<loop_t> Song::getLoopArray () const
 {
     vector<loop_t> res;
@@ -81,6 +71,9 @@ bool Song::myLoopSort(loop_t i,loop_t j)
     return (i.stop-i.start)>(j.stop-j.start);
 }
 
+/**
+ * tells, whether "parent" can be a parent loop for "child"
+ */
 bool Song::loopsMatch(const loop_t& parent, const loop_t& child)
 {
     // safety check
@@ -95,7 +88,8 @@ bool Song::loopsMatch(const loop_t& parent, const loop_t& child)
     {
         return true;
     }
-    // child loop should be actual parent of parent
+    // "child" should be the actual parent of "parent"
+    // something went wrong
     if(child.start < parent.start && parent.stop < child.stop)
     {
         throw LoopTreeImplementationException();
@@ -118,6 +112,9 @@ bool Song::loopsMatch(const loop_t& parent, const loop_t& child)
     throw NotImplementedException();
 }
 
+/**
+ * within loopTree, recursively find the most fitting parent for subLoop
+ */
 core::tree<loop_t>& Song::findRootLoopNode(core::tree<loop_t>& loopTree, const loop_t& subLoop)
 {
     for (core::tree<loop_t>::iterator iter = loopTree.begin(); iter != loopTree.end(); ++iter)
