@@ -9,7 +9,7 @@ IAudioOutput::IAudioOutput()
 IAudioOutput::~IAudioOutput()
 {}
 
-
+// takes care of pointer arithmetic
 int IAudioOutput::write (pcm_t* frameBuffer, frame_t frames, int offset)
 {
     switch (this->currentSampleFormat)
