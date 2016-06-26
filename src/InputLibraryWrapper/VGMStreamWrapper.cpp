@@ -97,7 +97,7 @@ vector<loop_t> VGMStreamWrapper::getLoopArray () const
 //
 //     if (ignore_loop) handle->loop_flag=0;
 
-    if(this->handle!=nullptr && this->handle->loop_flag==1) // does stream contain loop information?
+    if(this->handle!=nullptr && this->handle->loop_flag) // does stream contain loop information?
     {
         loop_t l;
         l.start = handle->loop_start_sample;
