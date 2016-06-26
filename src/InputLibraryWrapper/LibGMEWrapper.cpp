@@ -113,7 +113,7 @@ void LibGMEWrapper::open()
     this->Format.SampleRate = Config::gmeSampleRate;
 }
 
-void LibGMEWrapper::close()
+void LibGMEWrapper::close() noexcept
 {
     if(this->handle != nullptr)
     {
@@ -140,7 +140,7 @@ frame_t LibGMEWrapper::getFrames () const
     return Config::gmePlayForever ? msToFrames(-1, this->Format.SampleRate) : msToFrames(this->fileLen.Value, this->Format.SampleRate);
 }
 
-vector<loop_t> LibGMEWrapper::getLoopArray () const
+vector<loop_t> LibGMEWrapper::getLoopArray () const noexcept
 {
     vector<loop_t> res;
 
@@ -155,7 +155,7 @@ vector<loop_t> LibGMEWrapper::getLoopArray () const
     return res;
 }
 
-void LibGMEWrapper::buildMetadata()
+void LibGMEWrapper::buildMetadata() noexcept
 {
     this->Metadata.Title = string(this->info->song);
     this->Metadata.Artist = this->Metadata.Composer = string(this->info->author);

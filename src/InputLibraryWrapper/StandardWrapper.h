@@ -68,7 +68,7 @@ public:
     
     virtual ~StandardWrapper ();
 
-    void releaseBuffer () override;
+    void releaseBuffer () noexcept override;
     
     frame_t getFramesRendered();
 

@@ -11,6 +11,7 @@
 #include <QProgressDialog>
 #include <QApplication>
 #include <sstream>
+#include <iostream>
 #include <iomanip>
 
 PlaylistModel::PlaylistModel(QObject *parent)
@@ -31,7 +32,6 @@ int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
 }
 
 
-#include <iostream>
 QVariant PlaylistModel::data(const QModelIndex &index, int role) const
 {
     lock_guard<recursive_mutex> lck(this->mtx);
@@ -46,6 +46,11 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
     {
         Song* songToUse = this->queue[index.row()];
 
+	if(songToUse == nullptr)
+	{
+	  return QString("---");
+	}
+
         switch(index.column())
         {
         case 0:
@@ -59,9 +64,7 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
 
             if(songToUse->Metadata.Title == "")
             {
-                string tmp = songToUse->Filename;
-                tmp = basename(tmp.c_str());
-                s += tmp;
+                s += mybasename(songToUse->Filename);
             }
             else
             {

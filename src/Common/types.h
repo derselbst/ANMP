@@ -30,7 +30,21 @@ typedef struct loop
     // zero indicates playing forever
     uint32_t count = 0;
 
+    // never evaluated
     LoopType_t type = LoopType::Forward;
+
+    friend bool operator < (struct loop const& lhs, struct loop const& rhs)
+    {
+	return lhs.start < rhs.start && lhs.stop <= rhs.start;
+    }
+    
+    friend bool operator == (struct loop const& lhs, struct loop const& rhs)
+    {
+	return lhs.start == rhs.start &&
+	      lhs.stop  == rhs.stop  &&
+	      lhs.count == rhs.count &&
+	      lhs.type  == rhs.type;
+    }
 
 } loop_t;
 

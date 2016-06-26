@@ -53,7 +53,7 @@ void VGMStreamWrapper::open()
     this->fileLen = (this->handle->num_samples*1000.0) / this->Format.SampleRate;
 }
 
-void VGMStreamWrapper::close()
+void VGMStreamWrapper::close() noexcept
 {
     if(this->handle!=nullptr)
     {
@@ -72,7 +72,7 @@ void VGMStreamWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     STANDARDWRAPPER_RENDER(int16_t, render_vgmstream(pcm, framesToDoNow, this->handle))
 }
 
-vector<loop_t> VGMStreamWrapper::getLoopArray () const
+vector<loop_t> VGMStreamWrapper::getLoopArray () const noexcept
 {
     vector<loop_t> res;
 
@@ -97,7 +97,7 @@ vector<loop_t> VGMStreamWrapper::getLoopArray () const
 //
 //     if (ignore_loop) handle->loop_flag=0;
 
-    if(this->handle!=nullptr && this->handle->loop_flag==1) // does stream contain loop information?
+    if(this->handle!=nullptr && this->handle->loop_flag) // does stream contain loop information?
     {
         loop_t l;
         l.start = handle->loop_start_sample;
@@ -125,7 +125,7 @@ frame_t VGMStreamWrapper::getFrames() const
     return msToFrames(this->fileLen.Value, this->Format.SampleRate);
 }
 
-void VGMStreamWrapper::buildMetadata()
+void VGMStreamWrapper::buildMetadata() noexcept
 {
     // as of 07-04-2016 vgmstream doesnt seem to provide any useable metadata, so we cant do anything here
 }

@@ -107,7 +107,7 @@ buf_fill:
 }
 
 template<typename SAMPLEFORMAT>
-void StandardWrapper<SAMPLEFORMAT>::releaseBuffer()
+void StandardWrapper<SAMPLEFORMAT>::releaseBuffer() noexcept
 {
     this->stopFillBuffer=true;
     WAIT(this->futureFillBuffer);

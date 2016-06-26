@@ -131,7 +131,7 @@ void LibMadWrapper::open ()
     mad_header_finish(&header);
 }
 
-void LibMadWrapper::close()
+void LibMadWrapper::close() noexcept
 {
     if(this->stream != nullptr)
     {
@@ -239,7 +239,7 @@ frame_t LibMadWrapper::getFrames () const
     return this->numFrames;
 }
 
-void LibMadWrapper::buildMetadata()
+void LibMadWrapper::buildMetadata() noexcept
 {
     // TODO we have to find ID3 tag in the mpeg file, but this should be done while trying decoding mpeg-frame-headers
     // whenever libmad returns lost_sync error, there might be a id3 tag
