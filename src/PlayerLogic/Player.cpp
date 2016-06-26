@@ -109,17 +109,7 @@ void Player::play ()
         }
     }
     
-      uint8_t vol;
-      if(100*this->PreAmpVolume > 100)
-      {
-	vol = 100;
-      }
-      else
-      {
-	vol = (uint8_t)100*this->PreAmpVolume;
-      }
-    this->audioDriver->setVolume(vol);
-  
+    this->audioDriver->setVolume(this->PreAmpVolume);
 
     this->isPlaying=true;
 
@@ -301,7 +291,7 @@ void Player::fadeout (unsigned int fadeTime)
             break;
 	}
 	
-	uint8_t volToPush = round((vol*this->PreAmpVolume) * 100.0f);
+	float volToPush = vol*this->PreAmpVolume;
 	this->audioDriver->setVolume(volToPush);
 	this_thread::sleep_for (chrono::milliseconds(1));
     }

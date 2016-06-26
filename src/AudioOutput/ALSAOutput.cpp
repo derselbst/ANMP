@@ -232,7 +232,19 @@ int ALSAOutput::write (int32_t* buffer, frame_t frames)
 }
 
 template<typename T> int ALSAOutput::write(T* buffer, frame_t frames)
-{
+{    
+    const int items = frames*this->currentChannelCount;
+    T processedBuffer[items];
+    
+    memcpy(processedBuffer, buffer, items*sizeof(T));
+    
+    for(int i = 0; i<items; i++)
+    {
+        processedBuffer[i] = buffer[i] * this->volume;
+    }
+    
+    buffer = processedBuffer;
+    
     if (this->epipe_count > 0)
     {
         this->epipe_count--;
@@ -241,7 +253,7 @@ template<typename T> int ALSAOutput::write(T* buffer, frame_t frames)
     int total = 0;
     while (total < frames)
     {
-        int retval = snd_pcm_writei (this->alsa_dev, buffer + total * this->currentChannelCount, frames - total);
+        int retval = snd_pcm_writei(this->alsa_dev, buffer + total * this->currentChannelCount, frames - total);
 
         if (retval >= 0)
         {
@@ -298,69 +310,9 @@ template<typename T> int ALSAOutput::write(T* buffer, frame_t frames)
     return total;
 }
 
-void ALSAOutput::setVolume(uint8_t vol)
+void ALSAOutput::setVolume(float vol)
 {
-    const char card[] = "default";
-    const char selem_name[] = "Master";
-    int err;
-
-    snd_mixer_t *handle;
-    if ((err = snd_mixer_open(&handle, 0)) != 0)
-    {
-        THROW_RUNTIME_ERROR("snd_mixer_open: " << snd_strerror(err));
-    }
-
-    if ((err = snd_mixer_attach(handle, card)) != 0)
-    {
-        snd_mixer_close(handle);
-        THROW_RUNTIME_ERROR("snd_mixer_attach: " << snd_strerror(err));
-    }
-
-    if ((err = snd_mixer_selem_register(handle, nullptr, nullptr)) != 0)
-    {
-        snd_mixer_close(handle);
-        THROW_RUNTIME_ERROR("snd_mixer_selem_register: " << snd_strerror(err));
-    }
-
-
-    if ((err = snd_mixer_load(handle)) != 0)
-    {
-        snd_mixer_close(handle);
-        THROW_RUNTIME_ERROR("snd_mixer_load: " << snd_strerror(err));
-    }
-
-
-    snd_mixer_selem_id_t *sid;
-    snd_mixer_selem_id_alloca(&sid);
-    if (sid==nullptr)
-    {
-        THROW_RUNTIME_ERROR("snd_mixer_selem_id_alloca: " << snd_strerror(err));
-    }
-
-    snd_mixer_selem_id_set_index(sid, 0);
-    snd_mixer_selem_id_set_name(sid, selem_name);
-
-    snd_mixer_elem_t* elem = snd_mixer_find_selem(handle, sid);
-//     snd_mixer_selem_id_free(sid);
-
-    if(elem==nullptr)
-    {
-        THROW_RUNTIME_ERROR("Cannot find mixer element! setVolume() failed!");
-    }
-
-    long min, max;
-    if ((err = snd_mixer_selem_get_playback_volume_range(elem, &min, &max)) != 0)
-    {
-        THROW_RUNTIME_ERROR("snd_mixer_selem_get_playback_volume_range: " << snd_strerror(err));
-    }
-
-    if ((err = snd_mixer_selem_set_playback_volume_all(elem, vol * max / 100)) != 0)
-    {
-        THROW_RUNTIME_ERROR("snd_mixer_selem_set_playback_volume_all: " << snd_strerror(err));
-    }
-
-
-    snd_mixer_close(handle);
+    this->volume=vol;
 }
 
 // Accessor methods

@@ -105,7 +105,7 @@ int WaveOutput::write (int32_t* buffer, frame_t frames)
         return ret;
 }
 
-void WaveOutput::setVolume(uint8_t)
+void WaveOutput::setVolume(float)
 {
     
 }
