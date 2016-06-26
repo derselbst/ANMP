@@ -69,7 +69,7 @@ void LibSNDWrapper::open ()
     }
 }
 
-void LibSNDWrapper::close()
+void LibSNDWrapper::close() noexcept
 {
     if(this->sndfile!=nullptr)
     {
@@ -117,7 +117,7 @@ void LibSNDWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     })
 }
 
-vector<loop_t> LibSNDWrapper::getLoopArray () const
+vector<loop_t> LibSNDWrapper::getLoopArray () const noexcept
 {
     vector<loop_t> res;
 
@@ -174,7 +174,7 @@ frame_t LibSNDWrapper::getFrames () const
     return totalFrames;
 }
 
-void LibSNDWrapper::buildMetadata()
+void LibSNDWrapper::buildMetadata() noexcept
 {
 #define READ_METADATA(name, id) if(sf_get_string(this->sndfile, id) != nullptr) name = string(sf_get_string(this->sndfile, id))
 

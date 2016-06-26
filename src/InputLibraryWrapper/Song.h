@@ -60,7 +60,7 @@ public:
     // pcm specific information
     SongFormat Format;
 
-    // a tree, that holds to loops to be played
+    // a tree, that holds the loops to be played
     /*  example: syntax aggreement: ([a,b],k) defines an instance of loop_t where:
         a: loop_t::start
         b: loop_t::stop
@@ -90,73 +90,62 @@ public:
                        ([20-22],4)     ([30,3000],23)
     */
     core::tree<loop_t> loopTree;
-//--------------------------------------------------------------------
-
 
     // holds metadata for this song e.g. title, interpret, album
     SongInfo Metadata;
-
-
-
-    /**
-     * called to check whether the current song is playable or not
-     * @return bool
-     */
-    bool isPlayable ();
 
     /**
      * opens the current file using the corresponding lib
      *
      * specificly: defines samplerate, defines channelcount, provides a value for this->getFrames()
+     * 
+     * @exceptions throws runtime_error if file cannot be opened or smth. else goes wrong
      */
     virtual void open () = 0;
-
 
     /**
      * frees all ressources acquired by this->open()
      */
-    virtual void close () = 0;
+    virtual void close () noexcept = 0 ;
 
-
-    /**
-     * synchronous part: allocates the pcm buffer and fills it up to have enough for about 0.5 seconds of playback
+    /** @brief fills the pcm buffer this->data
+     * 
+     * synchronous part: allocates the pcm buffer and fills it up to have enough for Config::PreRenderTime time of playback
      * asynchronous part: fills rest of pcm buffer
      */
     virtual void fillBuffer () = 0;
 
-
     /**
-     * frees all ressources acquires by this->fillBuffer()
+     * frees all ressources acquired by this->fillBuffer()
      */
-    virtual void releaseBuffer () = 0;
+    virtual void releaseBuffer () noexcept = 0;
 
     /**
-     * frees all ressources acquires by this->fillBuffer()
+     * gathers the song metadata and populates this->Metadata
      */
-    virtual void buildMetadata () = 0;
-
+    virtual void buildMetadata () noexcept = 0;
 
     /**
-     * @return vector
+     * returns an unsorted array of loops that could be found in this->Filename
      */
-    virtual vector<loop_t> getLoopArray () const;
+    virtual vector<loop_t> getLoopArray () const noexcept;
 
 
     /**
-     * @return vector
-     */
-    void buildLoopTree ();
-
-
-    /**
-     * specifies the number of frames this song lasts, they dont necessarily have to be in the pcm buffer at one time
+     * returns the number of frames this song lasts, they dont necessarily have to be in the pcm buffer all at one time
      * 
-     * this method mustn't return zero at any time!
+     * this method mustn't return zero!
      * 
      * @return an unsigned integer (even if frame_t is signed) greater 1
      */
     virtual frame_t getFrames () const = 0;
 
+
+
+    void buildLoopTree();
+
+    bool isPlayable() noexcept;
+    
 private:
     static bool myLoopSort(loop_t i,loop_t j);
     static bool loopsMatch(const loop_t& parent, const loop_t& child);

@@ -34,7 +34,6 @@
 #include <iomanip>
 #include <cstring>
 #include <iostream>
-#include <libgen.h>
 #include <linux/limits.h>
 
 #ifdef USE_CUE
@@ -66,7 +65,6 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
     cue_assert ("error parsing CUE", cd != NULL);
 
     int ntrk = cd_get_ntrack (cd);
-    char temp[PATH_MAX];
     for(int i=0; i< ntrk; i++)
     {
         Track* track = cd_get_track (cd, i+1);
@@ -124,10 +122,7 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
             len.Value /= 75;
         }
 
-
-        strcpy(temp, filePath.c_str());
-
-        PlaylistFactory::addSong(playlist, string(dirname(temp)).append("/").append(realAudioFile), strangeFramesStart*1000/75, len, overridingMetadata);
+        PlaylistFactory::addSong(playlist, mydirname(filePath).append("/").append(realAudioFile), strangeFramesStart*1000/75, len, overridingMetadata);
     }
     cd_delete (cd);
 #undef cue_assert
