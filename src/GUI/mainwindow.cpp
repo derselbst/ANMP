@@ -276,11 +276,13 @@ void MainWindow::on_actionPlay_triggered()
 
 void MainWindow::on_actionStop_triggered()
 {
+    this->player->fadeout(Config::fadeTimeStop);
     this->stop();
 }
 
 void MainWindow::on_actionPause_triggered()
 {
+    this->player->fadeout(Config::fadeTimePause);
     this->pause();
 }
 
@@ -344,6 +346,7 @@ void MainWindow::on_playButton_toggled(bool)
 
 void MainWindow::on_stopButton_clicked()
 {
+    this->player->fadeout(Config::fadeTimeStop);
     this->stop();
 }
 
@@ -351,6 +354,7 @@ void MainWindow::tooglePlayPause()
 {
     if(this->player->getIsPlaying())
     {
+        this->player->fadeout(Config::fadeTimePause);
         this->pause();
     }
     else
@@ -372,7 +376,6 @@ void MainWindow::play()
 
 void MainWindow::pause()
 {
-    this->player->fadeout(Config::fadeTimePause);
     this->player->pause();
 
     QPushButton* playbtn = this->ui->playButton;
@@ -383,7 +386,6 @@ void MainWindow::pause()
 
 void MainWindow::stop()
 {
-    this->player->fadeout(Config::fadeTimeStop);
     this->player->stop();
 
     QPushButton* playbtn = this->ui->playButton;
