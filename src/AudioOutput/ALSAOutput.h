@@ -59,6 +59,7 @@ private:
     // one thread will always read from this var (which happens in this->write(T*, frame_t)) and another thread occasionally comes along and alters
     // this var (inside this->setVolume())
     // the worst things that can happen here are dirty reads, as far as I see; and who cares?
+    // however, Im not absolutely sure if volatile if really required here
     volatile float volume = 1.0f;
 
     template<typename T> int write(T* buffer, frame_t frames);
