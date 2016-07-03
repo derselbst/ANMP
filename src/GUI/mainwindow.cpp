@@ -240,11 +240,6 @@ void MainWindow::resizeEvent(QResizeEvent* event)
   QMainWindow::resizeEvent(event);
 }
 
-void MainWindow::closeEvent(QCloseEvent* e)
-{
-    qApp->quit();
-}
-
 void MainWindow::on_actionAdd_Songs_triggered()
 {
     const QString dir;
@@ -482,7 +477,7 @@ void MainWindow::fastSeekBackward()
 void MainWindow::on_actionBlocky_triggered()
 {
     delete this->analyzerWindow;
-    this->analyzerWindow = new AnalyzerApplet(this->player, nullptr);
+    this->analyzerWindow = new AnalyzerApplet(this->player, this);
     this->analyzerWindow->setAnalyzer(AnalyzerApplet::AnalyzerType::Block);
     this->analyzerWindow->startGraphics();
     this->analyzerWindow->show();
@@ -491,7 +486,7 @@ void MainWindow::on_actionBlocky_triggered()
 void MainWindow::on_actionASCII_triggered()
 {
     delete this->analyzerWindow;
-    this->analyzerWindow = new AnalyzerApplet(this->player, nullptr);
+    this->analyzerWindow = new AnalyzerApplet(this->player, this);
     this->analyzerWindow->setAnalyzer(AnalyzerApplet::AnalyzerType::Ascii);
     this->analyzerWindow->startGraphics();
     this->analyzerWindow->show();

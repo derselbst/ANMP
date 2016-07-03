@@ -33,7 +33,7 @@ public:
 
 protected:
     void resizeEvent(QResizeEvent* event) override;
-    void closeEvent(QCloseEvent* e) override;
+//     void closeEvent(QCloseEvent* e) override;
 
 private:
     // percentage to seek normally
