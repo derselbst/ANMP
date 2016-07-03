@@ -143,6 +143,55 @@ void Player::setCurrentSong (Song* song)
 
 void Player::_setCurrentSong (Song* song)
 {
+  // make sure audio driver is initialized
+  if(this->audioDriver==nullptr)
+  {
+      // if successfull this->audioDriver will be != nullptr and opened
+      // if not: exception will be thrown
+      this->_initAudio();
+  }
+  
+  if(song == nullptr)
+  {
+    this->_pause();
+    this->currentSong = song;
+  }
+  else
+  {
+    // capture format of former current song
+    SongFormat oldformat;
+    if(this->currentSong != nullptr)
+    {
+        this->currentSong->releaseBuffer();
+        this->currentSong->close();
+        oldformat = this->currentSong->Format;
+    }
+    
+    this->currentSong = song;
+    // open the audio file
+    this->currentSong->open();
+    // go ahead and start filling the pcm buffer
+    this->currentSong->fillBuffer();
+
+    SongFormat& format = this->currentSong->Format;
+
+    // in case samplerate or channel count differ, reinit audioDriver
+    if(oldformat != format)
+    {
+	    this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
+    }
+  }
+  
+  this->resetPlayhead();
+  
+    // now we are ready to do the callback
+  this->onCurrentSongChanged.Fire();
+}
+
+
+/*
+void Player::_setCurrentSong (Song* song)
+{
     this->resetPlayhead();
     if(this->currentSong == song)
     {
@@ -202,9 +251,8 @@ void Player::_setCurrentSong (Song* song)
         return;
     }
 
-    // now we are ready to do the callback
     this->onCurrentSongChanged.Fire();
-}
+}*/
 
 
 /** @brief stops the playback
