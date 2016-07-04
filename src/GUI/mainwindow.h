@@ -86,6 +86,8 @@ private slots:
     void pause();
     void tooglePlayPause();
     void stop();
+    void tooglePlayPauseFade();
+    void stopFade();
     void previous();
     void next();
 
