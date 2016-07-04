@@ -99,13 +99,10 @@ void Player::play ()
     if(this->currentSong==nullptr)
     {
         Song* s=this->playlist->current();
-        if(s!=nullptr)
+        this->setCurrentSong(s);
+        if(s==nullptr)
         {
-            this->setCurrentSong(s);
-        }
-        else
-        {
-            return;
+        	return;
         }
     }
     
