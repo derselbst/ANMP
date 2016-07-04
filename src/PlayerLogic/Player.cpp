@@ -156,15 +156,15 @@ void Player::_setCurrentSong (Song* song)
     this->_pause();
     this->currentSong = song;
   }
-  else
+  else if(song != this->currentSong)
   {
     // capture format of former current song
     SongFormat oldformat;
     if(this->currentSong != nullptr)
     {
+        oldformat = this->currentSong->Format;
         this->currentSong->releaseBuffer();
         this->currentSong->close();
-        oldformat = this->currentSong->Format;
     }
     
     this->currentSong = song;
