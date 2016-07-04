@@ -439,7 +439,7 @@ border-radius: 4px;
      <x>0</x>
      <y>0</y>
      <width>652</width>
-     <height>19</height>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHello">
@@ -480,6 +480,7 @@ border-radius: 4px;
      <addaction name="actionBlocky"/>
     </widget>
     <addaction name="actionControl_Panel"/>
+    <addaction name="actionFileBrowser"/>
     <addaction name="menuVisualization"/>
    </widget>
    <addaction name="menuHello"/>
@@ -550,7 +551,18 @@ border-radius: 4px;
   </action>
   <action name="actionAdd_Playback_Stop">
    <property name="text">
-    <string>Add Playback-Stop</string>
+    <string>Add &amp;Playback-Stop</string>
+   </property>
+  </action>
+  <action name="actionFileBrowser">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>FileBrowser</string>
    </property>
   </action>
  </widget>
@@ -569,12 +581,12 @@ border-radius: 4px;
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="controlButtonsHideSecond"/>
-  <buttongroup name="controlButtonsHideFirst"/>
   <buttongroup name="controlButtonsAlwaysVisible">
    <property name="exclusive">
     <bool>false</bool>
    </property>
   </buttongroup>
+  <buttongroup name="controlButtonsHideSecond"/>
+  <buttongroup name="controlButtonsHideFirst"/>
  </buttongroups>
 </ui>

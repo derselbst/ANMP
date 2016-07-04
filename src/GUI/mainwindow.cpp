@@ -580,3 +580,17 @@ void MainWindow::on_actionAdd_Playback_Stop_triggered()
 {
     this->playlistModel->add(nullptr);
 }
+
+void MainWindow::on_actionFileBrowser_triggered(bool checked)
+{
+    if(checked)
+    {
+    this->ui->treeView->show();
+    this->ui->listView->show();
+    }
+    else
+    {
+        this->ui->treeView->hide();
+        this->ui->listView->hide();
+    }
+}

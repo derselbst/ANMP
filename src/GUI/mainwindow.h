@@ -100,6 +100,7 @@ private slots:
     void on_fbackwardButton_clicked();
     void on_backwardButton_clicked();
     void on_actionAdd_Playback_Stop_triggered();
+    void on_actionFileBrowser_triggered(bool checked);
 };
 
 #endif // MAINWINDOW_H
