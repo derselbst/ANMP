@@ -482,6 +482,8 @@ border-radius: 4px;
     <addaction name="actionControl_Panel"/>
     <addaction name="actionFileBrowser"/>
     <addaction name="menuVisualization"/>
+    <addaction name="separator"/>
+    <addaction name="actionSettings"/>
    </widget>
    <addaction name="menuHello"/>
    <addaction name="menuPlayer"/>
@@ -562,7 +564,15 @@ border-radius: 4px;
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>FileBrowser</string>
+    <string>&amp;FileBrowser</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Settings</string>
    </property>
   </action>
  </widget>
@@ -581,12 +591,12 @@ border-radius: 4px;
  </resources>
  <connections/>
  <buttongroups>
+  <buttongroup name="controlButtonsHideSecond"/>
   <buttongroup name="controlButtonsAlwaysVisible">
    <property name="exclusive">
     <bool>false</bool>
    </property>
   </buttongroup>
-  <buttongroup name="controlButtonsHideSecond"/>
   <buttongroup name="controlButtonsHideFirst"/>
  </buttongroups>
 </ui>

@@ -20,6 +20,9 @@ namespace Ui
 class MainWindow;
 }
 
+class ConfigDialog;
+
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -43,6 +46,7 @@ private:
 
     Ui::MainWindow *ui = nullptr;
     AnalyzerApplet * analyzerWindow = nullptr;
+    ConfigDialog * settingsView = nullptr;
 
     PlaylistModel* playlistModel = new PlaylistModel(this);
     Player* player = new Player(this->playlistModel);
@@ -101,6 +105,7 @@ private slots:
     void on_backwardButton_clicked();
     void on_actionAdd_Playback_Stop_triggered();
     void on_actionFileBrowser_triggered(bool checked);
+    void on_actionSettings_triggered();
 };
 
 #endif // MAINWINDOW_H

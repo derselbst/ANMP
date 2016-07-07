@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "applets/analyzer/AnalyzerApplet.h"
+#include "configdialog.h"
 
 #include "Common.h"
 #include "Config.h"
@@ -113,6 +114,7 @@ MainWindow::~MainWindow()
     this->player->onPlayheadChanged -= this;
     this->player->onCurrentSongChanged -= this;
 
+    delete this->settingsView;
     delete this->analyzerWindow;
     delete this->ui;
     delete this->player;
@@ -580,12 +582,21 @@ void MainWindow::on_actionFileBrowser_triggered(bool checked)
 {
     if(checked)
     {
-    this->ui->treeView->show();
-    this->ui->listView->show();
+        this->ui->treeView->show();
+        this->ui->listView->show();
     }
     else
     {
         this->ui->treeView->hide();
         this->ui->listView->hide();
     }
+}
+
+void MainWindow::on_actionSettings_triggered()
+{
+        if(this->settingsView == nullptr)
+        {
+            this->settingsView = new ConfigDialog(this);
+        }
+        this->settingsView->show();
 }
