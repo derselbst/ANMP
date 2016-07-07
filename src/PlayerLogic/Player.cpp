@@ -23,7 +23,7 @@
 
 #include <iostream>
 #include <limits>
-
+#include <cmath>
 
 // TODO: make this nicer
 #define FramesToItems(x) ((x)*this->currentSong->Format.Channels)
@@ -99,15 +99,14 @@ void Player::play ()
     if(this->currentSong==nullptr)
     {
         Song* s=this->playlist->current();
-        if(s!=nullptr)
+        this->setCurrentSong(s);
+        if(s==nullptr)
         {
-            this->setCurrentSong(s);
-        }
-        else
-        {
-            return;
+        	return;
         }
     }
+    
+    this->audioDriver->setVolume(this->PreAmpVolume);
 
     this->isPlaying=true;
 
@@ -139,6 +138,55 @@ void Player::setCurrentSong (Song* song)
     this->_setCurrentSong(song);
 }
 
+void Player::_setCurrentSong (Song* song)
+{
+  // make sure audio driver is initialized
+  if(this->audioDriver==nullptr)
+  {
+      // if successfull this->audioDriver will be != nullptr and opened
+      // if not: exception will be thrown
+      this->_initAudio();
+  }
+  
+  if(song == nullptr)
+  {
+    this->_pause();
+    this->currentSong = song;
+  }
+  else if(song != this->currentSong)
+  {
+    // capture format of former current song
+    SongFormat oldformat;
+    if(this->currentSong != nullptr)
+    {
+        oldformat = this->currentSong->Format;
+        this->currentSong->releaseBuffer();
+        this->currentSong->close();
+    }
+    
+    this->currentSong = song;
+    // open the audio file
+    this->currentSong->open();
+    // go ahead and start filling the pcm buffer
+    this->currentSong->fillBuffer();
+
+    SongFormat& format = this->currentSong->Format;
+
+    // in case samplerate or channel count differ, reinit audioDriver
+    if(oldformat != format)
+    {
+	    this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
+    }
+  }
+  
+  this->resetPlayhead();
+  
+    // now we are ready to do the callback
+  this->onCurrentSongChanged.Fire();
+}
+
+
+/*
 void Player::_setCurrentSong (Song* song)
 {
     this->resetPlayhead();
@@ -200,9 +248,8 @@ void Player::_setCurrentSong (Song* song)
         return;
     }
 
-    // now we are ready to do the callback
     this->onCurrentSongChanged.Fire();
-}
+}*/
 
 
 /** @brief stops the playback
@@ -261,9 +308,38 @@ void Player::previous ()
 
 /**
  */
-void Player::fadeout ()
+void Player::fadeout (unsigned int fadeTime)
 {
     USERS_ARE_STUPID
+    
+    if(fadeTime == 0)
+    {
+      this->audioDriver->setVolume(0);
+    }
+    
+    float vol = 0.0f;
+    for(unsigned int timePast=0; timePast <= fadeTime; timePast++)
+    {
+        switch (3)
+        {
+        case 1:
+            // linear
+            vol =  1.0f - ((float)timePast / (float)fadeTime);
+            break;
+        case 2:
+            // logarithmic
+            vol = 1.0f - pow(0.1, (1 - ((float)timePast / (float)fadeTime)) * 1);
+            break;
+        case 3:
+            // sine
+            vol =  1.0f - sin( ((float)timePast / (float)fadeTime) * M_PI / 2 );
+            break;
+	}
+	
+	float volToPush = vol*this->PreAmpVolume;
+	this->audioDriver->setVolume(volToPush);
+	this_thread::sleep_for (chrono::milliseconds(1));
+    }
 }
 
 

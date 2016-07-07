@@ -128,24 +128,54 @@ void MainWindow::createShortcuts()
     playShortcut = new QShortcut(QKeySequence(Qt::Key_Space), this);
     connect(playShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPause);
 
+    playShortcut = new QShortcut(QKeySequence(Qt::Key_F4), this);
+    connect(playShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPause);
+
+    QShortcut *pauseFadeShortcut = new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_F4), this);
+    connect(pauseFadeShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPauseFade);
+
+    QShortcut *stopFadeShortcut = new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_F5), this);
+    connect(stopFadeShortcut, &QShortcut::activated, this, &MainWindow::stopFade);
+
+    QShortcut *stopShortcut = new QShortcut(QKeySequence(Qt::Key_F5), this);
+    connect(stopShortcut, &QShortcut::activated, this, &MainWindow::stop);
+
     // CHANGE CURRENT SONG SHORTS
     QShortcut *nextShortcut = new QShortcut(QKeySequence(Qt::Key_MediaNext), this);
     connect(nextShortcut, &QShortcut::activated, this, &MainWindow::on_actionNext_Song_triggered);
 
+    nextShortcut = new QShortcut(QKeySequence(Qt::Key_F8), this);
+    connect(nextShortcut, &QShortcut::activated, this, &MainWindow::on_actionNext_Song_triggered);
+
     QShortcut *prevShortcut = new QShortcut(QKeySequence(Qt::Key_MediaPrevious), this);
+    connect(prevShortcut, &QShortcut::activated, this, &MainWindow::on_actionPrevious_Song_triggered);
+
+    prevShortcut = new QShortcut(QKeySequence(Qt::Key_F1), this);
     connect(prevShortcut, &QShortcut::activated, this, &MainWindow::on_actionPrevious_Song_triggered);
 
     // SEEK SHORTCUTS
     QShortcut *seekForward = new QShortcut(QKeySequence(Qt::Key_Right), this);
     connect(seekForward, &QShortcut::activated, this, &MainWindow::seekForward);
 
+    seekForward = new QShortcut(QKeySequence(Qt::Key_F6), this);
+    connect(seekForward, &QShortcut::activated, this, &MainWindow::seekForward);
+
     QShortcut *seekBackward = new QShortcut(QKeySequence(Qt::Key_Left), this);
+    connect(seekBackward, &QShortcut::activated, this, &MainWindow::seekBackward);
+
+    seekBackward = new QShortcut(QKeySequence(Qt::Key_F3), this);
     connect(seekBackward, &QShortcut::activated, this, &MainWindow::seekBackward);
 
     QShortcut *fastSeekForward = new QShortcut(QKeySequence(Qt::ALT + Qt::Key_Right), this);
     connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::fastSeekForward);
 
+    fastSeekForward = new QShortcut(QKeySequence(Qt::Key_F7), this);
+    connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::fastSeekForward);
+
     QShortcut *fastSeekBackward = new QShortcut(QKeySequence(Qt::ALT + Qt::Key_Left), this);
+    connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::fastSeekBackward);
+
+    fastSeekBackward = new QShortcut(QKeySequence(Qt::Key_F2), this);
     connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::fastSeekBackward);
 }
 
@@ -354,6 +384,19 @@ void MainWindow::tooglePlayPause()
     }
 }
 
+void MainWindow::tooglePlayPauseFade()
+{
+    if(this->player->getIsPlaying())
+    {
+        this->player->fadeout(Config::fadeTimePause);
+        this->pause();
+    }
+    else
+    {
+        this->play();
+    }
+}
+
 void MainWindow::play()
 {
     this->player->play();
@@ -373,6 +416,12 @@ void MainWindow::pause()
     bool oldState = playbtn->blockSignals(true);
     playbtn->setChecked(false);
     playbtn->blockSignals(oldState);
+}
+
+void MainWindow::stopFade()
+{
+    this->player->fadeout(Config::fadeTimeStop);
+    this->stop();
 }
 
 void MainWindow::stop()
@@ -525,4 +574,18 @@ void MainWindow::on_backwardButton_clicked()
 void MainWindow::on_actionAdd_Playback_Stop_triggered()
 {
     this->playlistModel->add(nullptr);
+}
+
+void MainWindow::on_actionFileBrowser_triggered(bool checked)
+{
+    if(checked)
+    {
+    this->ui->treeView->show();
+    this->ui->listView->show();
+    }
+    else
+    {
+        this->ui->treeView->hide();
+        this->ui->listView->hide();
+    }
 }

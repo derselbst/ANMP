@@ -63,7 +63,7 @@ public:
      * sets the playback volume
      * @param vol volume [0;100]
      */
-    virtual void setVolume(uint8_t vol) = 0;
+    virtual void setVolume(float vol) = 0;
     
     /**
      * pushes the pcm pointed to by buffer to the underlying audio driver and by that causes it to play

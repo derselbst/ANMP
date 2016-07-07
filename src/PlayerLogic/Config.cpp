@@ -48,7 +48,7 @@ unsigned int Config::defaultFadeTime = 3500;
 unsigned int Config::fadeTimeStop = 3500;
 
 // time in milliseconds to fade out a song when the user hits pause
-unsigned int Config::fadeTimePause = 3500;
+unsigned int Config::fadeTimePause = 300;
 
 //**********************************
 //      USF-SPECIFIC SECTION       *
