@@ -16,6 +16,9 @@ public:
     explicit ConfigDialog(QWidget *parent = 0);
     ~ConfigDialog();
 
+private slots:
+    void on_checkRenderWhole_clicked(bool checked);
+
 private:
     Ui::ConfigDialog *ui;
 };
