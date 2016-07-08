@@ -145,8 +145,6 @@ public:
 
     int write (int32_t* buffer, frame_t frames) override;
 
-    void setVolume(float) override;
-
     void start () override;
     void stop () override;
 
