@@ -153,19 +153,6 @@ int ebur128Output::write (int32_t* buffer, frame_t frames)
     THROW_RUNTIME_ERROR("ebur128: out of memory or something else");
 }
 
-void ebur128Output::setVolume(float)
-{
-    
-}
-
-// Accessor methods
-//
-
-
-// Other methods
-//
-
-
 void ebur128Output::start()
 {
     
