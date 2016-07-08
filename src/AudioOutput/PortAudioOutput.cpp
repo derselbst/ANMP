@@ -124,29 +124,17 @@ int PortAudioOutput::write (int32_t* buffer, frame_t frames)
 
 template<typename T> int PortAudioOutput::write(T* buffer, frame_t frames)
 {   
- 	if(this->handle == nullptr)
+	 if(this->handle == nullptr)
 	{
 		THROW_RUNTIME_ERROR("unable to write pcm since PortAudioOutput::init() has not been called yet or init failed");
 	}
 	
     const int items = frames*this->currentChannelCount;
     T processedBuffer[items];
-    
-    memcpy(processedBuffer, buffer, items*sizeof(T));
-    
-    for(int i = 0; i<items; i++)
-    {
-        processedBuffer[i] = buffer[i] * this->volume;
-    }
-    
+    this->getAmplifiedBuffer(buffer, processedBuffer, items);
     buffer = processedBuffer;
     
     Pa_WriteStream( this->handle, buffer, frames );
-}
-
-void PortAudioOutput::setVolume(float vol)
-{
-    this->volume=vol;
 }
 
 void PortAudioOutput::start()
