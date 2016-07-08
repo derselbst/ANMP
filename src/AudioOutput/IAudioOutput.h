@@ -101,6 +101,8 @@ protected:
     // however, Im not absolutely sure if volatile if really required here
     volatile float volume = 1.0f;
     
+    template<typename T> void getAmplifiedBuffer(const T* inBuffer, T* outBuffer, unsigned long items);
+    
     /**
      * pushes the pcm pointed to by buffer to the underlying audio driver and by that causes it to play
      * 
