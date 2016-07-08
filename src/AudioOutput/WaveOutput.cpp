@@ -105,19 +105,6 @@ int WaveOutput::write (int32_t* buffer, frame_t frames)
         return ret;
 }
 
-void WaveOutput::setVolume(float)
-{
-    
-}
-
-// Accessor methods
-//
-
-
-// Other methods
-//
-
-
 void WaveOutput::start()
 {
     
