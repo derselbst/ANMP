@@ -2,6 +2,7 @@
 
 #include "CommonExceptions.h"
 #include "AtomicWrite.h"
+#include "Config.h"
 
 #include <iostream>
 #include <string>
@@ -26,7 +27,7 @@ PortAudioOutput::~PortAudioOutput ()
 //
 void PortAudioOutput::open()
 {
-	if(this->handle != nullptr)
+	if(this->handle == nullptr)
 	{
 		this->paInitError = Pa_Initialize();
 		if (this->paInitError != PaErrorCode::paNoError)
@@ -79,7 +80,10 @@ void PortAudioOutput::init(unsigned int sampleRate, uint8_t channels, SampleForm
                                 nullptr, /* this is my callback function */
                                 this ); /* This is a pointer that will be passed to my callback */
 	
-	
+      if (err != PaErrorCode::paNoError)
+      {
+	      THROW_RUNTIME_ERROR("unable to stop pcm (" << Pa_GetErrorText(err) << ")");
+      }
 	
 
     // finally update channelcount, srate and sformat
@@ -134,7 +138,10 @@ template<typename T> int PortAudioOutput::write(T* buffer, frame_t frames)
     this->getAmplifiedBuffer(buffer, processedBuffer, items);
     buffer = processedBuffer;
     
-    Pa_WriteStream( this->handle, buffer, frames );
+    Pa_WriteStream(this->handle, buffer, frames );
+    
+    // well, just hope that all of them have actually been written
+    return frames;
 }
 
 void PortAudioOutput::start()
@@ -157,11 +164,8 @@ void PortAudioOutput::stop()
 {
 	if(this->handle != nullptr)
 	{
-		PaError err = Pa_StopStream( this->handle );
-		if (err != PaErrorCode::paNoError)
-		{
-			THROW_RUNTIME_ERROR("unable to stop pcm (" << Pa_GetErrorText(err) << ")");
-		}
+		// dont check for errors here, either the stream will be stopped, or it has already been stopped
+		Pa_StopStream( this->handle );
 	}
 }
 

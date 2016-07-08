@@ -47,7 +47,7 @@ private:
 	
 	// holds the error returned by Pa_Initialize
 	// this class shall only be usable if no error occurred
-	PaError paInitError = ~PaErrorCode::paNoError
+	PaError paInitError = ~PaErrorCode::paNoError;
     
     template<typename T> int write(T* buffer, frame_t frames);
     void drain ();
