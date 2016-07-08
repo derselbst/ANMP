@@ -51,10 +51,15 @@ typedef struct loop
 
 typedef enum AudioDriver
 {
-    AutoDetect,
+#ifdef USE_ALSA
     ALSA,
+#endif
+#ifdef USE_EBUR128
     ebur128,
-    JACK,
+#endif
+#ifdef USE_PORTAUDIO
+    PORTAUDIO,
+#endif
     WAVE,
 } AudioDriver_t;
 

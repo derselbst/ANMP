@@ -47,6 +47,7 @@ set(LD_FLAGS ${LD_FLAGS} ${CMAKE_THREAD_LIBS_INIT})
 ### HANDLE AUDIO OUTPUT SUPPORT ###
 ###################################
 option(ENABLE_ALSA "Compile with support to use ALSA for playback" ON)
+option(ENABLE_PORTAUDIO "Compile with support to use PortAudio for playback" ON)
 option(ENABLE_EBUR128 "Enable support for noise normalization through libebur128" ON)
 
 if(ENABLE_ALSA)
@@ -54,6 +55,22 @@ if(ENABLE_ALSA)
   
   summary_add("ALSA support" ALSA_FOUND)
 endif(ENABLE_ALSA)
+
+
+if(ENABLE_PORTAUDIO)
+  PKG_CHECK_MODULES(PORTAUDIO portaudio-2.0)
+  
+  if(PORTAUDIO_FOUND)
+        add_definitions(-DUSE_PORTAUDIO)
+        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${PORTAUDIO_INCLUDE_DIRS})
+        set(LD_FLAGS ${LD_FLAGS} ${PORTAUDIO_LIBRARIES})
+        
+        MY_PRINT(PORTAUDIO)
+        
+        summary_add("PortAudio support" PORTAUDIO_FOUND)
+  endif(PORTAUDIO_FOUND)
+endif(ENABLE_PORTAUDIO)
+
 
 if(ENABLE_EBUR128)
   MY_FIND_LIB(EBUR128 ebur128)

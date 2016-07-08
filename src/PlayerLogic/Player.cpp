@@ -21,6 +21,10 @@
     #include "WaveOutput.h"
 #endif
 
+#ifdef USE_PORTAUDIO
+    #include "PortAudioOutput.h"
+#endif
+
 #include <iostream>
 #include <limits>
 #include <cmath>
@@ -66,9 +70,12 @@ void Player::_initAudio()
         this->audioDriver = new ebur128Output(this);
         break;
 #endif
-#ifdef USE_LIBSND
     case WAVE:
         this->audioDriver = new WaveOutput(this);
+        break;
+#ifdef USE_PORTAUDIO
+    case PORTAUDIO:
+        this->audioDriver = new PortAudioOutput();
         break;
 #endif
     default:
