@@ -9,6 +9,19 @@ IAudioOutput::IAudioOutput()
 IAudioOutput::~IAudioOutput()
 {}
 
+template<typename T> void IAudioOutput::getAmplifiedBuffer(const T* inBuffer, T* outBuffer, unsigned long items)
+{
+    for(int i = 0; i<items; i++)
+    {
+        outBuffer[i] = inBuffer[i] * this->volume;
+    }
+}
+
+void IAudioOutput::setVolume(float vol)
+{
+    this->volume=vol;
+}
+
 // takes care of pointer arithmetic
 int IAudioOutput::write (pcm_t* frameBuffer, frame_t frames, int offset)
 {
