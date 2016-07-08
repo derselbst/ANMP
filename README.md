@@ -27,6 +27,8 @@ Cue sheets will just add the same song file multiple times to a playlist, but wi
 
 Implementing new formats shall be done by implementing the abstract base class **Song**. By that a wrapper for any library that actually supports this format is written.
 
+The core of ANMP (i.e. everything not in [src/GUI](src/GUI)) is strictly keept free of any QT5 dependencies. Makes reuseage a lot easier.
+
 ## Get ANMP
 see [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%3Aanmp&package=anmp) for precompiled packages
 
@@ -35,7 +37,7 @@ see [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%
 
 * cmake >= 2.8
 * gcc >= 4.8.1
-* QT5 (for GUI support only), and no, there is no dependency on KDE
+* Qt5Widgets (highly recommended for GUI support, since there currently is no CLI)
 
 #### At least one of the following codec libraries
 (depending on which audio formats ANMP shall be able to play)
@@ -54,6 +56,7 @@ see [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%
 ### Optional
 * [libcue](https://github.com/lipnitsk/libcue) (for cuesheet support)
 * [libebur128](https://github.com/jiixyj/libebur128) (for generating loudness normalization files (*.ebur128) using anmp-normalize)
+* Qt5OpenGL (for nice blinky audio analyzers / visualizers)
 
 ## Building from Source
 ```shell
