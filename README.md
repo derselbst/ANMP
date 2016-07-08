@@ -7,9 +7,10 @@
 
 ANMP aims to be a versatile but lightweight audio player, just as the other hundred thousands out there.
 
-What ANMP does NOT support / do:
-* crawling through your music library, building a huge useless database for all artists, albums, genres, titles, etc., just because the user wants to have a nice overview over what is on his HDD (SSD); the filesystem is our database!
-* messing around with any audio files, i.e. no changing of ID3 tags, no writing of ReplayGain or whatever; additional info will always be written to separate files
+What ANMP does NOT:
+* crawl through your music library, building a huge useless database for all artists, albums, genres, titles, etc., just because the user wants to have a nice overview over what is on his HDD (SSD); the filesystem is our database!
+* mess around with any audio files, i.e. no changing of ID3 tags, no writing of ReplayGain or whatever; additional info will always be written to separate files and ONLY then, when the user explicitly says so (e.g. by executing anmp-normalize)
+* provide a multilingual GUI; everything is done in English!
 
 #### Main Features
 
@@ -34,14 +35,9 @@ see [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%
 
 * cmake >= 2.8
 * gcc >= 4.8.1
-* ALSA
 * QT5 (for GUI support only), and no, there is no dependency on KDE
 
-### Optional
-* [libcue](https://github.com/lipnitsk/libcue) (for cuesheet support)
-* [libebur128](https://github.com/jiixyj/libebur128) (for generating loudness normalization files (*.ebur128) using anmp-normalize)
-
-#### At least one of the following libraries
+#### At least one of the following codec libraries
 (depending on which audio formats ANMP shall be able to play)
 * [libsndfile](http://www.mega-nerd.com/libsndfile/) (strongly recommended to play most common audio formats)
 * [mad](https://sourceforge.net/projects/mad/files/libmad/) >= 0.15.1b (to play mp3 files)
@@ -49,6 +45,15 @@ see [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%
 * [lazyusf2](https://gitlab.kode54.net/kode54/lazyusf2) (to play Ultra64 Sound Format (usf))
 * [libgme](https://bitbucket.org/mpyne/game-music-emu) (Famicom (nsf), SuperFamicon (spc), GameBoy (gbs), etc.)
 * [vgmstream](https://gitlab.kode54.net/kode54/vgmstream) (various audio formats from sixth generation video game consoles and following)
+
+#### At least one of the following audio I/O libraries
+(depending on which native audio APIs ANMP shall be able to use for playback )
+* ALSA (audio playback on Linux only)
+* [PortAudio](http://www.portaudio.com/) (for crossplatform audio playback support)
+
+### Optional
+* [libcue](https://github.com/lipnitsk/libcue) (for cuesheet support)
+* [libebur128](https://github.com/jiixyj/libebur128) (for generating loudness normalization files (*.ebur128) using anmp-normalize)
 
 ## Building from Source
 ```shell
