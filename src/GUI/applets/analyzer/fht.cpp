@@ -176,11 +176,11 @@ void FHT::power2( float *p )
     float *q;
     _transform( p, m_num, 0 );
 
-    *p = ( *p * *p ), *p += *p, p++;
+    *p = ( *p **p ), *p += *p, p++;
 
     for( i = 1, q = p + m_num - 2; i < ( m_num / 2 ); i++, --q )
     {
-        *p = ( *p * *p ) + ( *q * *q ), p++;
+        *p = ( *p **p ) + ( *q **q ), p++;
     }
 }
 
@@ -255,8 +255,8 @@ void FHT::_transform( float *p, int n, int k )
     ptab = m_tab;
     pp = p + k;
 
-    a = *ptab++ * *t3++;
-    a += *ptab * *pp;
+    a = *ptab++ **t3++;
+    a += *ptab **pp;
     ptab += j;
 
     *t1++ = *pp + a;
@@ -264,8 +264,8 @@ void FHT::_transform( float *p, int n, int k )
 
     for( i = 1, t4 = p + k + n; i < ndiv2; i++, ptab += j )
     {
-        a = *ptab++ * *t3++;
-        a += *ptab * *--t4;
+        a = *ptab++ **t3++;
+        a += *ptab **--t4;
 
         *t1++ = *pp + a;
         *t2++ = *pp++ - a;

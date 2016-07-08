@@ -232,13 +232,13 @@ int ALSAOutput::write (int32_t* buffer, frame_t frames)
 }
 
 template<typename T> int ALSAOutput::write(T* buffer, frame_t frames)
-{    
+{
     const int items = frames*this->currentChannelCount;
     T processedBuffer[items];
     this->getAmplifiedBuffer<T>(buffer, processedBuffer, items);
     buffer = processedBuffer;
-    
-    
+
+
     if (this->epipe_count > 0)
     {
         this->epipe_count--;

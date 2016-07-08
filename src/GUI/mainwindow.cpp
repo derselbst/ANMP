@@ -46,18 +46,18 @@ void MainWindow::slotSeek(long long pos)
 
     string temp;
     {
-	temp = framesToTimeStr(pos,s->Format.SampleRate);
-	QString strTimePast = QString::fromStdString(temp);
-	if((void*)temp.c_str() == (void*)strTimePast.constData())
-	puts("asdf");
-	
-    this->ui->labelTimePast->setText(strTimePast);
+        temp = framesToTimeStr(pos,s->Format.SampleRate);
+        QString strTimePast = QString::fromStdString(temp);
+        if((void*)temp.c_str() == (void*)strTimePast.constData())
+            puts("asdf");
+
+        this->ui->labelTimePast->setText(strTimePast);
     }
-    
+
     {
-	temp = framesToTimeStr(s->getFrames()-pos, s->Format.SampleRate);
-	QString strTimeLeft = QString("-") + QString::fromStdString(temp);
-    this->ui->labelTimeLeft->setText(strTimeLeft);
+        temp = framesToTimeStr(s->getFrames()-pos, s->Format.SampleRate);
+        QString strTimeLeft = QString("-") + QString::fromStdString(temp);
+        this->ui->labelTimeLeft->setText(strTimeLeft);
     }
 }
 
@@ -207,69 +207,69 @@ void MainWindow::buildPlaylistView()
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event)
-{  
-  int minWidthVis = 0;
-  foreach(QAbstractButton *button, this->ui->controlButtonsAlwaysVisible->buttons())
-  {
-      minWidthVis += button->minimumWidth();
-  }
-  
-  int minWidthHideSecond = minWidthVis;
-  foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
-  {
-      minWidthHideSecond += button->minimumWidth();
-  }
+{
+    int minWidthVis = 0;
+    foreach(QAbstractButton *button, this->ui->controlButtonsAlwaysVisible->buttons())
+    {
+        minWidthVis += button->minimumWidth();
+    }
 
-  int minWidthHideFirst = minWidthHideSecond;
-  foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
-  {
-      minWidthHideFirst += button->minimumWidth();
-  }
-  
-  int wndWidth = event->size().width() - 140; 
+    int minWidthHideSecond = minWidthVis;
+    foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
+    {
+        minWidthHideSecond += button->minimumWidth();
+    }
 
-  if(wndWidth <= minWidthHideSecond)
-  {
-      foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
-      {
-	  button->hide();
-      }
-      foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
-      {
-	  button->hide();
-      }
-  }
-  else if(wndWidth <= minWidthHideFirst)
-  {
-      foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
-      {
-	  button->hide();
-      }
-      foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
-      {
-	  button->show();
-      }
-      
-    this->ui->listView->hide();
-    this->ui->treeView->hide();
-  }
-  else
-  {
-      foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
-      {
-	  button->show();
-      }
-      foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
-      {
-	  button->show();
-      }
-      
-    this->ui->listView->show();
-    this->ui->treeView->show();
-  }
-  
-  
-  QMainWindow::resizeEvent(event);
+    int minWidthHideFirst = minWidthHideSecond;
+    foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
+    {
+        minWidthHideFirst += button->minimumWidth();
+    }
+
+    int wndWidth = event->size().width() - 140;
+
+    if(wndWidth <= minWidthHideSecond)
+    {
+        foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
+        {
+            button->hide();
+        }
+        foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
+        {
+            button->hide();
+        }
+    }
+    else if(wndWidth <= minWidthHideFirst)
+    {
+        foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
+        {
+            button->hide();
+        }
+        foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
+        {
+            button->show();
+        }
+
+        this->ui->listView->hide();
+        this->ui->treeView->hide();
+    }
+    else
+    {
+        foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
+        {
+            button->show();
+        }
+        foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
+        {
+            button->show();
+        }
+
+        this->ui->listView->show();
+        this->ui->treeView->show();
+    }
+
+
+    QMainWindow::resizeEvent(event);
 }
 
 void MainWindow::on_actionAdd_Songs_triggered()
@@ -594,9 +594,9 @@ void MainWindow::on_actionFileBrowser_triggered(bool checked)
 
 void MainWindow::on_actionSettings_triggered()
 {
-        if(this->settingsView == nullptr)
-        {
-            this->settingsView = new ConfigDialog(this);
-        }
-        this->settingsView->show();
+    if(this->settingsView == nullptr)
+    {
+        this->settingsView = new ConfigDialog(this);
+    }
+    this->settingsView->show();
 }
