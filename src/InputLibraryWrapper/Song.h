@@ -98,7 +98,7 @@ public:
      * opens the current file using the corresponding lib
      *
      * specificly: defines samplerate, defines channelcount, provides a value for this->getFrames()
-     * 
+     *
      * @exceptions throws runtime_error if file cannot be opened or smth. else goes wrong
      */
     virtual void open () = 0;
@@ -109,7 +109,7 @@ public:
     virtual void close () noexcept = 0 ;
 
     /** @brief fills the pcm buffer this->data
-     * 
+     *
      * synchronous part: allocates the pcm buffer and fills it up to have enough for Config::PreRenderTime time of playback
      * asynchronous part: fills rest of pcm buffer
      */
@@ -133,9 +133,9 @@ public:
 
     /**
      * returns the number of frames this song lasts, they dont necessarily have to be in the pcm buffer all at one time
-     * 
+     *
      * this method mustn't return zero!
-     * 
+     *
      * @return an unsigned integer (even if frame_t is signed) greater 1
      */
     virtual frame_t getFrames () const = 0;
@@ -145,7 +145,7 @@ public:
     void buildLoopTree();
 
     bool isPlayable() noexcept;
-    
+
 private:
     static bool myLoopSort(loop_t i,loop_t j);
     static bool loopsMatch(const loop_t& parent, const loop_t& child);

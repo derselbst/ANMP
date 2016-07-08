@@ -22,7 +22,7 @@ public:
     // forbid copying
     LibMadWrapper(LibMadWrapper const&) = delete;
     LibMadWrapper& operator=(LibMadWrapper const&) = delete;
-    
+
     virtual ~LibMadWrapper ();
 
     // interface methods declaration

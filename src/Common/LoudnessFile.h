@@ -31,7 +31,7 @@ public:
     static void write(ebur128_state* state, string filePath) noexcept;
 #endif
     static float read(string filePath) noexcept;
-    
+
 private:
     static string toebur128Filename(string file);
 };

@@ -10,19 +10,19 @@
 template<typename SAMPLEFORMAT>
 StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename) : Song(filename)
 {
-  this->init();
+    this->init();
 }
 
 template<typename SAMPLEFORMAT>
 StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len) : Song(filename, offset, len)
 {
-  this->init();
+    this->init();
 }
 
 template<typename SAMPLEFORMAT>
 void StandardWrapper<SAMPLEFORMAT>::init() noexcept
 {
-  this->gainCorrection = LoudnessFile::read(this->Filename);
+    this->gainCorrection = LoudnessFile::read(this->Filename);
 }
 
 template<typename SAMPLEFORMAT>
@@ -60,7 +60,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
             // try to alloc a buffer to hold the whole song's pcm in memory
             this->data = new (std::nothrow) SAMPLEFORMAT[this->count];
         }
-        
+
         if(this->data != nullptr)
         {
             // buffer successfully allocated, fill it asynchronously
@@ -127,6 +127,6 @@ void StandardWrapper<SAMPLEFORMAT>::releaseBuffer() noexcept
 template<typename SAMPLEFORMAT>
 frame_t StandardWrapper<SAMPLEFORMAT>::getFramesRendered()
 {
- return this->framesAlreadyRendered;
+    return this->framesAlreadyRendered;
 }
 #endif

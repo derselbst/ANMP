@@ -62,10 +62,10 @@ private:
 
 
 private slots:
-  friend class PlaylistModel;
+    friend class PlaylistModel;
 
-  void slotSeek(long long);
-  void slotCurrentSongChanged();
+    void slotSeek(long long);
+    void slotCurrentSongChanged();
 
     void on_actionAdd_Songs_triggered();
     void on_actionPlay_triggered();

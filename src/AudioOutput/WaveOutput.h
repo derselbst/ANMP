@@ -11,12 +11,12 @@ class Player;
 
 struct SampleLoop
 {
-  uint32_t Identifier; // some unique number
-  uint32_t LoopType;
-  uint32_t Start; // frame offset
-  uint32_t End; // frame offset, will also be played
-  static const uint32_t Fraction = 0; // no fine loop adjustment
-  uint32_t PlayCount;
+    uint32_t Identifier; // some unique number
+    uint32_t LoopType;
+    uint32_t Start; // frame offset
+    uint32_t End; // frame offset, will also be played
+    static const uint32_t Fraction = 0; // no fine loop adjustment
+    uint32_t PlayCount;
 };
 
 #define FMT_PCM 0x0001
@@ -28,8 +28,8 @@ struct WaveHeader
     const char RiffID[4] = {'R','I','F','F'};
     chunk_size_t RiffSize;
     const char WaveID[4] = {'W','A','V','E'};
-    
-    
+
+
     /*******************************************
      *  Sampler CHUNK (for loop info)
      ******************************************/
@@ -45,8 +45,8 @@ struct WaveHeader
     const uint32_t SampleLoops = N;
     const uint32_t SamplerData = 0; // no additional info following this chunk
     struct SampleLoop loops[N];
-    
-    
+
+
     /*******************************************
      *  FORMAT CHUNK (must precede data chunk)
      ******************************************/
@@ -58,18 +58,18 @@ struct WaveHeader
     uint32_t BytesPerSecond; // == SampleRate*BlockAlign
     uint16_t BlockAlign; // == (BitsPerSample * Channels) / 8
     uint16_t BitsPerSample;
-    
+
     /*******************************************
      *  DATA CHUNK
      ******************************************/
     const char DataID[4] = {'d','a','t','a'};
     chunk_size_t DataSize; // == Frames*Channels*(BitsPerSample/8)
-    
+
     WaveHeader(const Song* s)
     {
         this->Channels = s->Format.Channels;
         this->SampleRate = s->Format.SampleRate;
-        
+
         switch (s->Format.SampleFormat)
         {
         case float32:
@@ -84,7 +84,7 @@ struct WaveHeader
             this->FormatType = FMT_PCM;
             this->BitsPerSample = 32;
             break;
-            
+
         case unknown:
             throw invalid_argument("pcmFormat mustnt be unknown");
             break;
@@ -93,16 +93,16 @@ struct WaveHeader
             throw NotImplementedException();
             break;
         }
-        
+
         /// calculations following
-        
+
         this->DataSize = s->getFrames() * s->Format.Channels * (this->BitsPerSample/8);
         this->BlockAlign = this->BitsPerSample * this->Channels / 8;
         this->BytesPerSecond = this->SampleRate * this->BlockAlign;
         this->SamplePeriod = (1.0/this->SampleRate)/(1e-9);
-        
+
         /// end calcs
-        
+
         this->RiffSize = sizeof(*this);
         // the 8 bytes of RIFF chunk dont count
         this->RiffSize -= (sizeof(RiffID) + sizeof(RiffSize));
@@ -125,12 +125,12 @@ public:
     // forbid copying
     WaveOutput(WaveOutput const&) = delete;
     WaveOutput& operator=(WaveOutput const&) = delete;
-    
+
     virtual ~WaveOutput ();
 
     static void SongChanged(void* ctx);
-    
-    
+
+
     // interface methods declaration
 
     void open () override;
@@ -151,7 +151,7 @@ public:
 private:
     Player* player = nullptr;
     FILE* handle = nullptr;
-    
+
     const Song* currentSong = nullptr;
     frame_t framesWritten = 0;
 

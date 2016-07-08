@@ -35,15 +35,15 @@ typedef struct loop
 
     friend bool operator < (struct loop const& lhs, struct loop const& rhs)
     {
-	return lhs.start < rhs.start && lhs.stop <= rhs.start;
+        return lhs.start < rhs.start && lhs.stop <= rhs.start;
     }
-    
+
     friend bool operator == (struct loop const& lhs, struct loop const& rhs)
     {
-	return lhs.start == rhs.start &&
-	      lhs.stop  == rhs.stop  &&
-	      lhs.count == rhs.count &&
-	      lhs.type  == rhs.type;
+        return lhs.start == rhs.start &&
+               lhs.stop  == rhs.stop  &&
+               lhs.count == rhs.count &&
+               lhs.type  == rhs.type;
     }
 
 } loop_t;

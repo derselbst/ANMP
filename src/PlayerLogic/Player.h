@@ -30,7 +30,7 @@ public:
     // forbid copying
     Player(Player const&) = delete;
     Player& operator=(Player const&) = delete;
-    
+
     virtual ~Player ();
 
     /**
