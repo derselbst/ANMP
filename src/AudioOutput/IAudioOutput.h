@@ -120,3 +120,6 @@ protected:
 };
 
 #endif // IAUDIOOUTPUT_H
+
+#include "IAudioOutput_impl.h"
+

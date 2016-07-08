@@ -9,13 +9,6 @@ IAudioOutput::IAudioOutput()
 IAudioOutput::~IAudioOutput()
 {}
 
-template<typename T> void IAudioOutput::getAmplifiedBuffer(const T* inBuffer, T* outBuffer, unsigned long items)
-{
-    for(int i = 0; i<items; i++)
-    {
-        outBuffer[i] = inBuffer[i] * this->volume;
-    }
-}
 
 void IAudioOutput::setVolume(float vol)
 {
