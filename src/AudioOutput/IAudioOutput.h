@@ -63,7 +63,7 @@ public:
      * sets the playback volume
      * @param vol volume [0;100]
      */
-    virtual void setVolume(float vol) = 0;
+    virtual void setVolume(float vol);
     
     /**
      * pushes the pcm pointed to by buffer to the underlying audio driver and by that causes it to play
@@ -88,7 +88,19 @@ protected:
     uint8_t currentChannelCount = 0;
     unsigned int currentSampleRate = 0;
     SampleFormat_t currentSampleFormat = SampleFormat_t::unknown;
-        
+    
+    
+    // the current volume [0,1.0] to use
+    // mark this as volatile so the compiler doesnt come up with:
+    // "oh, this member isnt modified in the current scope. lets put it to a register, while using this var inside a loop again and again."
+    // volatile here hopefully forces that each read actually happens through memory (I dont worry too much about hardware caching here)
+    // NOTE: I dont need thread safety for this variable and I know that volatile doesnt do anything for that either. its just because
+    // one thread will always read from this var (which happens in this->write(T*, frame_t)) and another thread occasionally comes along and alters
+    // this var (inside this->setVolume())
+    // the worst things that can happen here are dirty reads, as far as I see; and who cares?
+    // however, Im not absolutely sure if volatile if really required here
+    volatile float volume = 1.0f;
+    
     /**
      * pushes the pcm pointed to by buffer to the underlying audio driver and by that causes it to play
      * 
