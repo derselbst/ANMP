@@ -235,15 +235,9 @@ template<typename T> int ALSAOutput::write(T* buffer, frame_t frames)
 {    
     const int items = frames*this->currentChannelCount;
     T processedBuffer[items];
-    
-    memcpy(processedBuffer, buffer, items*sizeof(T));
-    
-    for(int i = 0; i<items; i++)
-    {
-        processedBuffer[i] = buffer[i] * this->volume;
-    }
-    
+    this->getAmplifiedBuffer<T>(buffer, processedBuffer, items);
     buffer = processedBuffer;
+    
     
     if (this->epipe_count > 0)
     {
@@ -309,19 +303,6 @@ template<typename T> int ALSAOutput::write(T* buffer, frame_t frames)
 
     return total;
 }
-
-void ALSAOutput::setVolume(float vol)
-{
-    this->volume=vol;
-}
-
-// Accessor methods
-//
-
-
-// Other methods
-//
-
 
 void ALSAOutput::start()
 {
