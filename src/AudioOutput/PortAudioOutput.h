@@ -46,6 +46,9 @@ public:
 private:
 
 	PaStream *handle = nullptr;
+	
+	// holds the error returned by Pa_Initialize
+	// this class shall only be usable if no error occurred
 	PaError paInitError = ~PaErrorCode::paNoError
     
     // the current volume [0,1.0] to use
