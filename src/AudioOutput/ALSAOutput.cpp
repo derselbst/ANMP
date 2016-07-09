@@ -234,7 +234,7 @@ int ALSAOutput::write (int32_t* buffer, frame_t frames)
 template<typename T> int ALSAOutput::write(T* buffer, frame_t frames)
 {
     const int items = frames*this->currentChannelCount;
-    T processedBuffer[items];
+    T* processedBuffer = new T[items];
     this->getAmplifiedBuffer<T>(buffer, processedBuffer, items);
     buffer = processedBuffer;
 
@@ -301,12 +301,14 @@ template<typename T> int ALSAOutput::write(T* buffer, frame_t frames)
         } /* switch */
     } /* while */
 
+    delete [] processedBuffer;
+    
     return total;
 }
 
 void ALSAOutput::start()
 {
-    snd_pcm_reset (this->alsa_dev);
+//     snd_pcm_reset (this->alsa_dev);
     snd_pcm_prepare(this->alsa_dev);
     int err = snd_pcm_start(this->alsa_dev);
     if (err < 0)

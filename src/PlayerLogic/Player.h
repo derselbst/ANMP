@@ -9,7 +9,7 @@
 namespace core
 {
 template <typename T> class tree;
-};
+}
 class IAudioOutput;
 class IPlaylist;
 class Song;
