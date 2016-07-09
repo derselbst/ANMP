@@ -134,12 +134,14 @@ template<typename T> int PortAudioOutput::write(T* buffer, frame_t frames)
     }
 
     const int items = frames*this->currentChannelCount;
-    T processedBuffer[items];
+    T* processedBuffer = new T[items];
     this->getAmplifiedBuffer(buffer, processedBuffer, items);
     buffer = processedBuffer;
 
     Pa_WriteStream(this->handle, buffer, frames );
 
+    delete [] processedBuffer;
+    
     // well, just hope that all of them have actually been written
     return frames;
 }
@@ -149,7 +151,7 @@ void PortAudioOutput::start()
     if(this->handle != nullptr)
     {
         PaError err = Pa_StartStream( this->handle );
-        if (err != PaErrorCode::paNoError)
+        if (err != PaErrorCode::paNoError && err != paStreamIsNotStopped)
         {
             THROW_RUNTIME_ERROR("unable to start pcm (" << Pa_GetErrorText(err) << ")");
         }
@@ -164,8 +166,13 @@ void PortAudioOutput::stop()
 {
     if(this->handle != nullptr)
     {
-        // dont check for errors here, either the stream will be stopped, or it has already been stopped
-        Pa_StopStream( this->handle );
+       // dont call Pa_StopStream() here since it causes draining the pcm, which takes time and may cause deadlocks
+       // use Pa_AbortStream() instead which drops any PCM currently played
+       PaError err = Pa_AbortStream( this->handle );
+       if(err != PaErrorCode::paNoError && err != PaErrorCode::paStreamIsStopped)
+       {
+            THROW_RUNTIME_ERROR("unable to stop pcm (" << Pa_GetErrorText(err) << ")");
+       }
     }
 }
 
