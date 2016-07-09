@@ -533,9 +533,9 @@ void Player::playInternal ()
 {
     try
     {
-        this->audioDriver->start();
         while(this->isPlaying)
         {
+        this->audioDriver->start();
             core::tree<loop_t>& loops = this->currentSong->loopTree;
 
             this->playLoop(loops);
