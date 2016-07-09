@@ -36,7 +36,7 @@ see [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%
 ## Build Dependencies
 
 * cmake >= 2.8
-* gcc >= 4.8.1
+* gcc >= 4.8.1, or any other C++11 compliant compiler
 * Qt5Widgets (highly recommended for GUI support, since there currently is no CLI)
 
 #### At least one of the following codec libraries
@@ -48,15 +48,15 @@ see [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%
 * [libgme](https://bitbucket.org/mpyne/game-music-emu) (Famicom (nsf), SuperFamicon (spc), GameBoy (gbs), etc.)
 * [vgmstream](https://gitlab.kode54.net/kode54/vgmstream) (various audio formats from sixth generation video game consoles and following)
 
-#### At least one of the following audio I/O libraries
-(depending on which native audio APIs ANMP shall be able to use for playback )
+#### For audio playback: at least one of the following audio I/O libraries
+(if none of them, only WAVE files can be written)
 * ALSA (audio playback on Linux only)
 * [PortAudio](http://www.portaudio.com/) (for crossplatform audio playback support)
 
 ### Optional
 * [libcue](https://github.com/lipnitsk/libcue) (for cuesheet support)
 * [libebur128](https://github.com/jiixyj/libebur128) (for generating loudness normalization files (*.ebur128) using anmp-normalize)
-* Qt5OpenGL (for nice blinky audio analyzers / visualizers)
+* Qt5OpenGL (for nice blinky audio visualizers)
 
 ## Building from Source
 ```shell
