@@ -32,7 +32,7 @@ public:
     /**
      * opens a sound device, e.g. set buffer size, periods,... i.e. things that dont change while running program
      *
-     * shall only be called once
+     * can and shall be called initially (i.e. after object creation). can only be called again after a call to close()
      */
     virtual void open () = 0;
 
@@ -40,22 +40,30 @@ public:
      * initializes a sound device, e.g. set samplerate, channels, i.e. settings that
      * can change while running program
      *
-     * can be called multiple time if necessary
+     * can be called multiple times if necessary
+     * 
+     * when finishing the call to this->init() the PCM stream shall be in state "stopped"
      */
     virtual void init (unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime=false) = 0;
 
     /**
      * Starts the PCM stream.
+     * 
+     * If the stream is already started, no error shall be risen.
      */
     virtual void start () = 0;
 
     /**
-     * Stops the PCM stream.
+     * Stops the PCM stream immediately, i.e. when returning from this->stop() all pcm must have been processed, favourably by dropping them at once.
+     * 
+     * If the stream is already stopped, no error shall be risen.
      */
     virtual void stop () = 0;
 
     /**
      * closes the device, frees all ressources allocated by this->open()
+     * 
+     * Multiple calls to this->close() without corresponding calls to this->open() shall raise no error.
      */
     virtual void close () = 0;
 
