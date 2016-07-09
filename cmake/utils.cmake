@@ -58,7 +58,7 @@ macro(MY_FIND_LIB prefix libname)
         set(${prefix}_FOUND TRUE)
     
         add_definitions(-DUSE_${prefix})
-        set (${prefix}_INCLUDE_DIR "/usr/include/${libname}")
+        set (${prefix}_INCLUDE_DIR ${${prefix}_INCLUDE_DIR} "/usr/include/${libname}")
         set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${${prefix}_INCLUDE_DIR} ${${prefix}_INCLUDE_DIRS})
                 
         set(LD_FLAGS ${LD_FLAGS} ${${prefix}_LIBRARIES})
