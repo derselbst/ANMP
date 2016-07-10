@@ -28,11 +28,10 @@ void JackOutput::open()
   
   jack_status_t status;
   jack_options_t options = JackNullOption;
-  const char *server_name = NULL;
   
-        this->handle = jack_client_open (JackOutput::ClientName, options, &status, server_name);
+        this->handle = jack_client_open (JackOutput::ClientName, options, &status, nullptr);
   
-        if (this->handle == NULL)
+        if (this->handle == nullptr)
         {
           if (status & JackServerFailed)
           {
@@ -75,7 +74,7 @@ void JackOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
     // we provide an output port (from the view of jack), i.e. a capture port, i.e. a readable port
     jack_port_t* out_port = jack_port_register (this->handle, portName, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
     
-    if (out_port == NULL)
+    if (out_port == nullptr)
     {
       // TODO: throw or just break??
        THROW_RUNTIME_ERROR("no more JACK ports available");
@@ -145,10 +144,38 @@ void JackOutput::start()
 
 void JackOutput::stop()
 {
-  // ??? necessary???
-    if (jack_deactivate(this->handle))
-    {
-            THROW_RUNTIME_ERROR("cannot activate client")
-    }
+    // nothing ;)
+}
+
+int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
+{
+    JackOutput* pthis = static_cast<JackOutput*>(arg);
+    
+    // TODO: if (!pthis->bufferReady) return;
+    
+    
+    	jack_transport_state_t ts = jack_transport_query(pthis->handle, nullptr);
+
+	if (ts == JackTransportRolling)
+        {    
+            for(int i=0; i<pthis->playbackPorts.size(); i++)
+            {
+                jack_default_audio_sample_t* out = jack_port_get_buffer (pthis->playbackPorts[i], nframes);
+                
+                for(unsigned int myIdx=i, jackIdx=0; jackIdx<nframes && myIdx<pthis->interleavedProcessedBuffer.size(); myIdx+=pthis->currentChannelCount, jackIdx++)
+                {
+                    out[jackIdx] = pthis->interleavedProcessedBuffer[myIdx];
+                }
+                
+            }
+        }
+        else if (ts == JackTransportStopped)
+        {
+            // return 0 in this->write()
+        }
+        
+        // TODO switch buffers, set flag
+        
+        return 0;
 }
 
