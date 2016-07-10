@@ -48,9 +48,6 @@ void MainWindow::slotSeek(long long pos)
     {
         temp = framesToTimeStr(pos,s->Format.SampleRate);
         QString strTimePast = QString::fromStdString(temp);
-        if((void*)temp.c_str() == (void*)strTimePast.constData())
-            puts("asdf");
-
         this->ui->labelTimePast->setText(strTimePast);
     }
 
@@ -435,27 +432,8 @@ void MainWindow::stop()
     playbtn->setChecked(false);
     playbtn->blockSignals(oldState);
 
-    QSlider* playheadSlider = this->ui->seekBar;
-    oldState = playheadSlider->blockSignals(true);
-    playheadSlider->setSliderPosition(0);
-    playheadSlider->blockSignals(oldState);
-
-
-    QString nothing = QString::fromStdString(framesToTimeStr(0,1));
-
-    QLabel* l = this->ui->labelTimePast;
-    l->setText(nothing);
-
-    l = this->ui->labelTimeLeft;
-    const Song* s = this->player->getCurrentSong();
-    if(s==nullptr)
-    {
-        l->setText(nothing);
-    }
-    else
-    {
-        l->setText(QString::fromStdString(framesToTimeStr(s->getFrames(), s->Format.SampleRate)));
-    }
+    // dont call the slot directly, a call might still be pending, making a direct call here useless
+    QMetaObject::invokeMethod( this, "slotSeek", Qt::QueuedConnection, Q_ARG(long long, 0 ) );
 }
 
 void MainWindow::next()
