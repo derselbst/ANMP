@@ -47,12 +47,12 @@ public:
     Song* setCurrentSong(unsigned int id) override;
 
     void move(signed int source, unsigned int count, int steps);
-    
+
 
 protected:
     SongQueue_t queue;
     SongQueue_t::size_type currentSong = 0;
-    
+
     mutable recursive_mutex mtx;
 };
 

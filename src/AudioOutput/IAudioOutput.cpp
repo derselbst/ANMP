@@ -9,6 +9,12 @@ IAudioOutput::IAudioOutput()
 IAudioOutput::~IAudioOutput()
 {}
 
+
+void IAudioOutput::setVolume(float vol)
+{
+    this->volume=vol;
+}
+
 // takes care of pointer arithmetic
 int IAudioOutput::write (pcm_t* frameBuffer, frame_t frames, int offset)
 {

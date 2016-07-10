@@ -23,7 +23,7 @@ PlaylistModel::PlaylistModel(QObject *parent)
 int PlaylistModel::rowCount(const QModelIndex & /* parent */) const
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     return this->queue.size();
 }
 int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
@@ -35,7 +35,7 @@ int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
 QVariant PlaylistModel::data(const QModelIndex &index, int role) const
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
 //       cout << "    DATA " << index.row() << " " << index.column() << role << endl;
     if (!index.isValid() || this->queue.size() <= index.row())
     {
@@ -46,10 +46,10 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
     {
         Song* songToUse = this->queue[index.row()];
 
-	if(songToUse == nullptr)
-	{
-	  return QString("---");
-	}
+        if(songToUse == nullptr)
+        {
+            return QString("---");
+        }
 
         switch(index.column())
         {
@@ -145,7 +145,7 @@ QVariant PlaylistModel::headerData(int section, Qt::Orientation orientation, int
 bool PlaylistModel::insertRows(int row, int count, const QModelIndex & parent)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     if(row>this->rowCount(QModelIndex()))
     {
         return false;
@@ -164,7 +164,7 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
     // call QObjects parent() explicitly
     // in QT5.1 parent is overridden or hidden or something by QAbstractTableModel, which may break build
     QObject* p = this->QObject::parent();
-    
+
     // stop playback if the currently playing song is about to be removed
     if(p != nullptr && row <= this->currentSong && this->currentSong <= row+count-1)
     {
@@ -175,9 +175,9 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
             wnd->player->setCurrentSong(nullptr);
         }
     }
-  
+
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     if(row+count>this->rowCount(QModelIndex()))
     {
         return false;
@@ -200,7 +200,7 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
 bool PlaylistModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationRow)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     // if source and destination parents are the same, move elements locally
     if(true)
     {
@@ -310,43 +310,43 @@ bool PlaylistModel::dropMimeData(const QMimeData *data, Qt::DropAction action, i
 
     int beginRow;
 
-        if (row != -1)
-        {
-            beginRow = row;
-        }
-        else if (parent.isValid())
-        {
-                beginRow = parent.row();
-        }
-        else
-        {
-                beginRow = this->rowCount(QModelIndex());
-        }
+    if (row != -1)
+    {
+        beginRow = row;
+    }
+    else if (parent.isValid())
+    {
+        beginRow = parent.row();
+    }
+    else
+    {
+        beginRow = this->rowCount(QModelIndex());
+    }
 
-        
-   QList<QUrl> urls = data->urls();
-        
-        MainWindow* wnd = dynamic_cast<MainWindow*>(this->QObject::parent());
-	
-	    QProgressDialog progress("Adding files...", "Abort", 0, urls.count(), wnd);
-	    progress.setWindowModality(Qt::WindowModal);
-	    progress.show();
-	    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
-    
+
+    QList<QUrl> urls = data->urls();
+
+    MainWindow* wnd = dynamic_cast<MainWindow*>(this->QObject::parent());
+
+    QProgressDialog progress("Adding files...", "Abort", 0, urls.count(), wnd);
+    progress.setWindowModality(Qt::WindowModal);
+    progress.show();
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+
     for(int i=0; !progress.wasCanceled() && i<urls.count(); i++)
     {
-	// ten redrawings
+        // ten redrawings
         if(i%(static_cast<int>(urls.count()*0.1)+1)==0)
         {
             progress.setValue(i);
             QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
         }
 
-       PlaylistFactory::addSong(*this, urls.at(i).toLocalFile().toStdString());
-       beginRow++;
+        PlaylistFactory::addSong(*this, urls.at(i).toLocalFile().toStdString());
+        beginRow++;
     }
-    
-   return true;
+
+    return true;
 }
 
 void PlaylistModel::add(Song* s)
@@ -364,7 +364,7 @@ void PlaylistModel::remove(int i)
 void PlaylistModel::clear()
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     const int Elements = this->rowCount(QModelIndex());
 
     for(int i=0; i<Elements; i++)
@@ -377,7 +377,7 @@ void PlaylistModel::clear()
 Song* PlaylistModel::setCurrentSong (unsigned int id)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     this->beginResetModel();
 
     Song* newSong = Playlist::setCurrentSong(id);
@@ -390,7 +390,7 @@ Song* PlaylistModel::setCurrentSong (unsigned int id)
 // Song* PlaylistModel::setCurrentSong ()
 // {
 //     lock_guard<recursive_mutex> lck(this->mtx);
-//     
+//
 //   int oldSong = this->currentSong;
 //   Song* newSong = Playlist::setCurrentSong();
 //
@@ -406,7 +406,7 @@ Song* PlaylistModel::setCurrentSong (unsigned int id)
 QColor PlaylistModel::calculateRowColor(int row) const
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     if(this->currentSong == row)
     {
         return QColor(255, 0, 0, 127);

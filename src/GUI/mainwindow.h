@@ -20,6 +20,9 @@ namespace Ui
 class MainWindow;
 }
 
+class ConfigDialog;
+
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -43,6 +46,7 @@ private:
 
     Ui::MainWindow *ui = nullptr;
     AnalyzerApplet * analyzerWindow = nullptr;
+    ConfigDialog * settingsView = nullptr;
 
     PlaylistModel* playlistModel = new PlaylistModel(this);
     Player* player = new Player(this->playlistModel);
@@ -58,10 +62,10 @@ private:
 
 
 private slots:
-  friend class PlaylistModel;
+    friend class PlaylistModel;
 
-  void slotSeek(long long);
-  void slotCurrentSongChanged();
+    void slotSeek(long long);
+    void slotCurrentSongChanged();
 
     void on_actionAdd_Songs_triggered();
     void on_actionPlay_triggered();
@@ -86,6 +90,8 @@ private slots:
     void pause();
     void tooglePlayPause();
     void stop();
+    void tooglePlayPauseFade();
+    void stopFade();
     void previous();
     void next();
 
@@ -98,6 +104,8 @@ private slots:
     void on_fbackwardButton_clicked();
     void on_backwardButton_clicked();
     void on_actionAdd_Playback_Stop_triggered();
+    void on_actionFileBrowser_triggered(bool checked);
+    void on_actionSettings_triggered();
 };
 
 #endif // MAINWINDOW_H

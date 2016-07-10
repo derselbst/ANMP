@@ -232,11 +232,11 @@ l_LIBMAD:
         // log it away
         return pcm;
     }
-    
+
     if(pcm->getFrames() <= 0)
     {
-      // valid file, but nothing to play
-      return pcm;
+        // valid file, but nothing to play
+        return pcm;
     }
 
     pcm->buildLoopTree();

@@ -9,7 +9,7 @@
 namespace core
 {
 template <typename T> class tree;
-};
+}
 class IAudioOutput;
 class IPlaylist;
 class Song;
@@ -30,7 +30,7 @@ public:
     // forbid copying
     Player(Player const&) = delete;
     Player& operator=(Player const&) = delete;
-    
+
     virtual ~Player ();
 
     /**
@@ -74,7 +74,7 @@ public:
 
     /**
      */
-    void fadeout ();
+    void fadeout (unsigned int fadeTime);
 
 
     /**
@@ -88,7 +88,7 @@ public:
 
 private:
 
-    float PreAmpVolume;
+    float PreAmpVolume = 1.0f;
 
     // pointer to the song we are currently playing
     // instance is owned by this.playlist

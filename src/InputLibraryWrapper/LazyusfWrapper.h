@@ -20,7 +20,7 @@ public:
     // forbid copying
     LazyusfWrapper(LazyusfWrapper const&) = delete;
     LazyusfWrapper& operator=(LazyusfWrapper const&) = delete;
-    
+
     virtual ~LazyusfWrapper();
 
     /**

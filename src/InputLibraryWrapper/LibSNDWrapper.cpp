@@ -93,28 +93,40 @@ void LibSNDWrapper::fillBuffer()
 
 void LibSNDWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
+  // unfortuately libsndfile does not provide fixed integer width API
+  // we can only ask to read ints from it which we then have to force to int32
+  // so here we have to handle the case for architectures where int is 64 bit wide
+  
+  constexpr bool haveInt32 = sizeof(int)==4;
+  constexpr bool haveInt64 = sizeof(int)==8;
+  
+  static_assert(haveInt32 || haveInt64, "sizeof(int) is neither 4 nor 8 bits on your platform");
+  
+  if(haveInt32)
+  {
+    // no extra work necessary here, as usual write directly to pcm buffer
+    STANDARDWRAPPER_RENDER(int32_t, sf_read_int(this->sndfile, pcm, framesToDoNow*this->Format.Channels))
+  }
+  else if(haveInt64)
+  {
+    // allocate an extra tempbuffer to store the int64s in
+    // then convert them to int32
+    
+    int* int64_temp_buf = new int[Config::FramesToRender*this->Format.Channels];
+    
     STANDARDWRAPPER_RENDER(int32_t,
-                           // var length array ahead, it a gnu extension
-                           int tempBuf[Config::FramesToRender*this->Format.Channels];
-                           sf_read_int(this->sndfile, tempBuf, framesToDoNow*this->Format.Channels);
-
-                           constexpr bool haveInt32 = sizeof(int)==4;
-                           constexpr bool haveInt64 = sizeof(int)==8;
-                           static_assert(haveInt32 || haveInt64, "sizeof(int) is neither 4 nor 8 bits on your platform");
-                           if(haveInt32)
-{
-    memcpy(pcm, tempBuf, framesToDoNow*this->Format.Channels*sizeof(int));
-    }
-    else if(haveInt64)
-{
-    for(unsigned int i=0; i<framesToDoNow*this->Format.Channels; i++)
-        {
-            // see http://www.mega-nerd.com/libsndfile/api.html#note1:
-            // Whenever integer data is moved from one sized container to another sized container, the
-            // most significant bit in the source container will become the most significant bit in the destination container.
-            pcm[i] = static_cast<int32_t>(tempBuf[i] >> 32);
-        }
-    })
+                        
+                            sf_read_int(this->sndfile, int64_temp_buf, framesToDoNow*this->Format.Channels);
+                            for(unsigned int i=0; i<framesToDoNow*this->Format.Channels; i++)
+                            {
+                                // see http://www.mega-nerd.com/libsndfile/api.html#note1:
+                                // Whenever integer data is moved from one sized container to another sized container, the
+                                // most significant bit in the source container will become the most significant bit in the destination container.
+                                pcm[i] = static_cast<int32_t>(int64_temp_buf[i] >> 32);
+                            }
+                          )
+    delete [] int64_temp_buf;
+  }
 }
 
 vector<loop_t> LibSNDWrapper::getLoopArray () const noexcept

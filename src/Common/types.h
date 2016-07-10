@@ -35,15 +35,15 @@ typedef struct loop
 
     friend bool operator < (struct loop const& lhs, struct loop const& rhs)
     {
-	return lhs.start < rhs.start && lhs.stop <= rhs.start;
+        return lhs.start < rhs.start && lhs.stop <= rhs.start;
     }
-    
+
     friend bool operator == (struct loop const& lhs, struct loop const& rhs)
     {
-	return lhs.start == rhs.start &&
-	      lhs.stop  == rhs.stop  &&
-	      lhs.count == rhs.count &&
-	      lhs.type  == rhs.type;
+        return lhs.start == rhs.start &&
+               lhs.stop  == rhs.stop  &&
+               lhs.count == rhs.count &&
+               lhs.type  == rhs.type;
     }
 
 } loop_t;
@@ -51,10 +51,15 @@ typedef struct loop
 
 typedef enum AudioDriver
 {
-    AutoDetect,
+#ifdef USE_ALSA
     ALSA,
+#endif
+#ifdef USE_EBUR128
     ebur128,
-    JACK,
+#endif
+#ifdef USE_PORTAUDIO
+    PORTAUDIO,
+#endif
     WAVE,
 } AudioDriver_t;
 

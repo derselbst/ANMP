@@ -20,12 +20,12 @@ public:
     // forbid copying
     ebur128Output(ebur128Output const&) = delete;
     ebur128Output& operator=(ebur128Output const&) = delete;
-    
+
     virtual ~ebur128Output ();
 
     static void SongChanged(void* ctx);
-    
-    
+
+
     // interface methods declaration
 
     void open () override;
@@ -40,15 +40,13 @@ public:
 
     int write (int32_t* buffer, frame_t frames) override;
 
-    void setVolume(uint8_t) override;
-
     void start () override;
     void stop () override;
 
 private:
     Player* player = nullptr;
     ebur128_state* handle = nullptr;
-    
+
     const Song* currentSong = nullptr;
     frame_t framesWritten = 0;
 

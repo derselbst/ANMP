@@ -10,7 +10,7 @@
 #include "Config.h"
 
 
-    
+
 //     #include <experimental/filesystem>
 
 using namespace std;
@@ -23,32 +23,32 @@ int main(int argc, char* argv[])
     Config::RenderWholeSong = false;
     Config::useAudioNormalization = false;
     Config::useHle = true;
-    
-    
+
+
 // for (auto& dirEntry : recursive_directory_iterator(myPath))
 //      cout << dirEntry << endl;
-//     
+//
 //     return  0;
-    
-    
+
+
     vector<string> filenames;
 //     filenames.push_back("something");
     for(int i=1; i<argc; i++)
     {
-      filenames.push_back(argv[i]);
+        filenames.push_back(argv[i]);
     }
-    
+
     IPlaylist* plist = new Playlist();
 
     for(unsigned int i=0; i<filenames.size(); i++)
     {
         PlaylistFactory::addSong(*plist, filenames[i]);
     }
-    
+
     // terminate when reaching end of playlist
     plist->add(nullptr);
 
-    
+
     Player p(plist);
     p.play();
 

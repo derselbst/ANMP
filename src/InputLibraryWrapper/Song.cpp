@@ -25,7 +25,7 @@ Song::~Song ()
 
 /**
   * called to check whether the current song is playable or not
-  * 
+  *
   * @return true if song can be played, else false
   */
 bool Song::isPlayable () noexcept

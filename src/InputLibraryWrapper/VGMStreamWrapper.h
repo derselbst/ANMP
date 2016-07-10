@@ -26,7 +26,7 @@ public:
     // forbid copying
     VGMStreamWrapper(VGMStreamWrapper const&) = delete;
     VGMStreamWrapper& operator=(VGMStreamWrapper const&) = delete;
-    
+
     virtual ~VGMStreamWrapper ();
 
 

@@ -20,7 +20,7 @@ public:
     LibGMEWrapper(string filename);
     LibGMEWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
     void initAttr();
-    
+
     // forbid copying
     LibGMEWrapper(LibGMEWrapper const&) = delete;
     LibGMEWrapper& operator=(LibGMEWrapper const&) = delete;

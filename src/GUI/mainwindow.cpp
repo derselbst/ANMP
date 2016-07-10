@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "applets/analyzer/AnalyzerApplet.h"
+#include "configdialog.h"
 
 #include "Common.h"
 #include "Config.h"
@@ -45,18 +46,15 @@ void MainWindow::slotSeek(long long pos)
 
     string temp;
     {
-	temp = framesToTimeStr(pos,s->Format.SampleRate);
-	QString strTimePast = QString::fromStdString(temp);
-	if((void*)temp.c_str() == (void*)strTimePast.constData())
-	puts("asdf");
-	
-    this->ui->labelTimePast->setText(strTimePast);
+        temp = framesToTimeStr(pos,s->Format.SampleRate);
+        QString strTimePast = QString::fromStdString(temp);
+        this->ui->labelTimePast->setText(strTimePast);
     }
-    
+
     {
-	temp = framesToTimeStr(s->getFrames()-pos, s->Format.SampleRate);
-	QString strTimeLeft = QString("-") + QString::fromStdString(temp);
-    this->ui->labelTimeLeft->setText(strTimeLeft);
+        temp = framesToTimeStr(s->getFrames()-pos, s->Format.SampleRate);
+        QString strTimeLeft = QString("-") + QString::fromStdString(temp);
+        this->ui->labelTimeLeft->setText(strTimeLeft);
     }
 }
 
@@ -113,6 +111,7 @@ MainWindow::~MainWindow()
     this->player->onPlayheadChanged -= this;
     this->player->onCurrentSongChanged -= this;
 
+    delete this->settingsView;
     delete this->analyzerWindow;
     delete this->ui;
     delete this->player;
@@ -128,24 +127,54 @@ void MainWindow::createShortcuts()
     playShortcut = new QShortcut(QKeySequence(Qt::Key_Space), this);
     connect(playShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPause);
 
+    playShortcut = new QShortcut(QKeySequence(Qt::Key_F4), this);
+    connect(playShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPause);
+
+    QShortcut *pauseFadeShortcut = new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_F4), this);
+    connect(pauseFadeShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPauseFade);
+
+    QShortcut *stopFadeShortcut = new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_F5), this);
+    connect(stopFadeShortcut, &QShortcut::activated, this, &MainWindow::stopFade);
+
+    QShortcut *stopShortcut = new QShortcut(QKeySequence(Qt::Key_F5), this);
+    connect(stopShortcut, &QShortcut::activated, this, &MainWindow::stop);
+
     // CHANGE CURRENT SONG SHORTS
     QShortcut *nextShortcut = new QShortcut(QKeySequence(Qt::Key_MediaNext), this);
     connect(nextShortcut, &QShortcut::activated, this, &MainWindow::on_actionNext_Song_triggered);
 
+    nextShortcut = new QShortcut(QKeySequence(Qt::Key_F8), this);
+    connect(nextShortcut, &QShortcut::activated, this, &MainWindow::on_actionNext_Song_triggered);
+
     QShortcut *prevShortcut = new QShortcut(QKeySequence(Qt::Key_MediaPrevious), this);
+    connect(prevShortcut, &QShortcut::activated, this, &MainWindow::on_actionPrevious_Song_triggered);
+
+    prevShortcut = new QShortcut(QKeySequence(Qt::Key_F1), this);
     connect(prevShortcut, &QShortcut::activated, this, &MainWindow::on_actionPrevious_Song_triggered);
 
     // SEEK SHORTCUTS
     QShortcut *seekForward = new QShortcut(QKeySequence(Qt::Key_Right), this);
     connect(seekForward, &QShortcut::activated, this, &MainWindow::seekForward);
 
+    seekForward = new QShortcut(QKeySequence(Qt::Key_F6), this);
+    connect(seekForward, &QShortcut::activated, this, &MainWindow::seekForward);
+
     QShortcut *seekBackward = new QShortcut(QKeySequence(Qt::Key_Left), this);
+    connect(seekBackward, &QShortcut::activated, this, &MainWindow::seekBackward);
+
+    seekBackward = new QShortcut(QKeySequence(Qt::Key_F3), this);
     connect(seekBackward, &QShortcut::activated, this, &MainWindow::seekBackward);
 
     QShortcut *fastSeekForward = new QShortcut(QKeySequence(Qt::ALT + Qt::Key_Right), this);
     connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::fastSeekForward);
 
+    fastSeekForward = new QShortcut(QKeySequence(Qt::Key_F7), this);
+    connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::fastSeekForward);
+
     QShortcut *fastSeekBackward = new QShortcut(QKeySequence(Qt::ALT + Qt::Key_Left), this);
+    connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::fastSeekBackward);
+
+    fastSeekBackward = new QShortcut(QKeySequence(Qt::Key_F2), this);
     connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::fastSeekBackward);
 }
 
@@ -175,69 +204,69 @@ void MainWindow::buildPlaylistView()
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event)
-{  
-  int minWidthVis = 0;
-  foreach(QAbstractButton *button, this->ui->controlButtonsAlwaysVisible->buttons())
-  {
-      minWidthVis += button->minimumWidth();
-  }
-  
-  int minWidthHideSecond = minWidthVis;
-  foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
-  {
-      minWidthHideSecond += button->minimumWidth();
-  }
+{
+    int minWidthVis = 0;
+    foreach(QAbstractButton *button, this->ui->controlButtonsAlwaysVisible->buttons())
+    {
+        minWidthVis += button->minimumWidth();
+    }
 
-  int minWidthHideFirst = minWidthHideSecond;
-  foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
-  {
-      minWidthHideFirst += button->minimumWidth();
-  }
-  
-  int wndWidth = event->size().width() - 140; 
+    int minWidthHideSecond = minWidthVis;
+    foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
+    {
+        minWidthHideSecond += button->minimumWidth();
+    }
 
-  if(wndWidth <= minWidthHideSecond)
-  {
-      foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
-      {
-	  button->hide();
-      }
-      foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
-      {
-	  button->hide();
-      }
-  }
-  else if(wndWidth <= minWidthHideFirst)
-  {
-      foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
-      {
-	  button->hide();
-      }
-      foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
-      {
-	  button->show();
-      }
-      
-    this->ui->listView->hide();
-    this->ui->treeView->hide();
-  }
-  else
-  {
-      foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
-      {
-	  button->show();
-      }
-      foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
-      {
-	  button->show();
-      }
-      
-    this->ui->listView->show();
-    this->ui->treeView->show();
-  }
-  
-  
-  QMainWindow::resizeEvent(event);
+    int minWidthHideFirst = minWidthHideSecond;
+    foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
+    {
+        minWidthHideFirst += button->minimumWidth();
+    }
+
+    int wndWidth = event->size().width() - 140;
+
+    if(wndWidth <= minWidthHideSecond)
+    {
+        foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
+        {
+            button->hide();
+        }
+        foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
+        {
+            button->hide();
+        }
+    }
+    else if(wndWidth <= minWidthHideFirst)
+    {
+        foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
+        {
+            button->hide();
+        }
+        foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
+        {
+            button->show();
+        }
+
+        this->ui->listView->hide();
+        this->ui->treeView->hide();
+    }
+    else
+    {
+        foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
+        {
+            button->show();
+        }
+        foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
+        {
+            button->show();
+        }
+
+        this->ui->listView->show();
+        this->ui->treeView->show();
+    }
+
+
+    QMainWindow::resizeEvent(event);
 }
 
 void MainWindow::on_actionAdd_Songs_triggered()
@@ -354,6 +383,19 @@ void MainWindow::tooglePlayPause()
     }
 }
 
+void MainWindow::tooglePlayPauseFade()
+{
+    if(this->player->getIsPlaying())
+    {
+        this->player->fadeout(Config::fadeTimePause);
+        this->pause();
+    }
+    else
+    {
+        this->play();
+    }
+}
+
 void MainWindow::play()
 {
     this->player->play();
@@ -375,6 +417,12 @@ void MainWindow::pause()
     playbtn->blockSignals(oldState);
 }
 
+void MainWindow::stopFade()
+{
+    this->player->fadeout(Config::fadeTimeStop);
+    this->stop();
+}
+
 void MainWindow::stop()
 {
     this->player->stop();
@@ -384,27 +432,8 @@ void MainWindow::stop()
     playbtn->setChecked(false);
     playbtn->blockSignals(oldState);
 
-    QSlider* playheadSlider = this->ui->seekBar;
-    oldState = playheadSlider->blockSignals(true);
-    playheadSlider->setSliderPosition(0);
-    playheadSlider->blockSignals(oldState);
-
-
-    QString nothing = QString::fromStdString(framesToTimeStr(0,1));
-
-    QLabel* l = this->ui->labelTimePast;
-    l->setText(nothing);
-
-    l = this->ui->labelTimeLeft;
-    const Song* s = this->player->getCurrentSong();
-    if(s==nullptr)
-    {
-        l->setText(nothing);
-    }
-    else
-    {
-        l->setText(QString::fromStdString(framesToTimeStr(s->getFrames(), s->Format.SampleRate)));
-    }
+    // dont call the slot directly, a call might still be pending, making a direct call here useless
+    QMetaObject::invokeMethod( this, "slotSeek", Qt::QueuedConnection, Q_ARG(long long, 0 ) );
 }
 
 void MainWindow::next()
@@ -525,4 +554,27 @@ void MainWindow::on_backwardButton_clicked()
 void MainWindow::on_actionAdd_Playback_Stop_triggered()
 {
     this->playlistModel->add(nullptr);
+}
+
+void MainWindow::on_actionFileBrowser_triggered(bool checked)
+{
+    if(checked)
+    {
+        this->ui->treeView->show();
+        this->ui->listView->show();
+    }
+    else
+    {
+        this->ui->treeView->hide();
+        this->ui->listView->hide();
+    }
+}
+
+void MainWindow::on_actionSettings_triggered()
+{
+    if(this->settingsView == nullptr)
+    {
+        this->settingsView = new ConfigDialog(this);
+    }
+    this->settingsView->show();
 }

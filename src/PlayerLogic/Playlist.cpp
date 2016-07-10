@@ -12,7 +12,7 @@ Playlist::~Playlist()
 void Playlist::add (Song* song)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     this->queue.push_back(song);
 }
 
@@ -20,7 +20,7 @@ void Playlist::add (Song* song)
 void Playlist::remove (Song* song)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     this->queue.erase(std::remove(this->queue.begin(), this->queue.end(), song), this->queue.end());
     delete song;
 }
@@ -30,7 +30,7 @@ void Playlist::remove (Song* song)
 void Playlist::remove (int i)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     if(this->queue.empty())
     {
         return;
@@ -45,7 +45,7 @@ void Playlist::remove (int i)
 void Playlist::clear()
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     Song* s;
     for(SongQueue_t::iterator it = this->queue.begin(); it!=this->queue.end(); ++it)
     {
@@ -62,7 +62,7 @@ void Playlist::clear()
 Song* Playlist::current ()
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     return this->getSong(this->currentSong);
 }
 
@@ -71,7 +71,7 @@ Song* Playlist::current ()
 Song* Playlist::next ()
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     if(this->queue.empty())
     {
         return nullptr;
@@ -85,7 +85,7 @@ Song* Playlist::next ()
 Song* Playlist::previous ()
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     if(this->queue.empty())
     {
         return nullptr;
@@ -97,7 +97,7 @@ Song* Playlist::previous ()
 Song* Playlist::getSong(unsigned int id)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     if(this->queue.size() > id)
     {
         return this->queue[id];
@@ -109,7 +109,7 @@ Song* Playlist::getSong(unsigned int id)
 Song* Playlist::setCurrentSong(unsigned int id)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     Song* s = this->getSong(id);
     if(s!=nullptr)
     {
@@ -120,9 +120,9 @@ Song* Playlist::setCurrentSong(unsigned int id)
 }
 
 /* @brief move songs within the playlist
- * 
+ *
  * rotates songs selected by [source, source+count] "steps" steps
- * 
+ *
  * @param[in] source: zero-based index indicating the start of the selection
  * @param[in] count: number of elements to follow after source
  * @param[in] steps: if positive: move them "steps" steps further to the end of the queue
@@ -131,9 +131,9 @@ Song* Playlist::setCurrentSong(unsigned int id)
 void Playlist::move(signed int source, unsigned int count, int steps)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
-    
+
     SongQueue_t& que = this->queue;
-  
+
     if(source < 0 || que.size() < source+count)
     {
         return;
@@ -142,46 +142,46 @@ void Playlist::move(signed int source, unsigned int count, int steps)
     if(steps<0) // left shift
     {
         std::rotate(source+steps >= 0 ?
-               std::next(que.begin(),source+steps) :
-               que.begin(),
-               std::next(que.begin(),source),
-               std::next(que.begin(),source+count+1)
-              );
-	
-	// update currentSong
-	if(source <= this->currentSong && this->currentSong <= source+count)
-	{
-	  // currentSong is in the selection [source, source+count]
-	  // it has moved along with the rotate call
-	  this->currentSong += steps; // is subtraction!!
-	  
-	}
-	else if(source+steps <= this->currentSong && this->currentSong <= source)
-	{
-	  // currentSong was not selected, but it intersected the move
-	  this->currentSong += (-steps)+count;
-	}
+                    std::next(que.begin(),source+steps) :
+                    que.begin(),
+                    std::next(que.begin(),source),
+                    std::next(que.begin(),source+count+1)
+                   );
+
+        // update currentSong
+        if(source <= this->currentSong && this->currentSong <= source+count)
+        {
+            // currentSong is in the selection [source, source+count]
+            // it has moved along with the rotate call
+            this->currentSong += steps; // is subtraction!!
+
+        }
+        else if(source+steps <= this->currentSong && this->currentSong <= source)
+        {
+            // currentSong was not selected, but it intersected the move
+            this->currentSong += (-steps)+count;
+        }
     }
     else if(steps>0) // right shift
     {
-       std::rotate(std::next(que.begin(),source),
-               std::next(que.begin(),source+count+1),
-               source+count+steps < que.size() ?
-               std::next(que.begin(),source+count+steps+1) :
-               que.end()
-              );
-	
-	// update currentSong
-	if(source <= this->currentSong && this->currentSong <= source+count)
-	{
-	  // current song is in the selection [source, source+count]
-	  // it has moved along with the rotate call
-	  this->currentSong += steps;
-	}
-	else if(source+count < this->currentSong && this->currentSong <= source+count+steps)
-	{
-	  // currentSong was not selected, but it intersected the move
-	  this->currentSong -= steps+count;
-	}
+        std::rotate(std::next(que.begin(),source),
+                    std::next(que.begin(),source+count+1),
+                    source+count+steps < que.size() ?
+                    std::next(que.begin(),source+count+steps+1) :
+                    que.end()
+                   );
+
+        // update currentSong
+        if(source <= this->currentSong && this->currentSong <= source+count)
+        {
+            // current song is in the selection [source, source+count]
+            // it has moved along with the rotate call
+            this->currentSong += steps;
+        }
+        else if(source+count < this->currentSong && this->currentSong <= source+count+steps)
+        {
+            // currentSong was not selected, but it intersected the move
+            this->currentSong -= steps+count;
+        }
     }
 }

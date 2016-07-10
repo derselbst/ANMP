@@ -22,7 +22,7 @@ public:
     // forbid copying
     LibSNDWrapper(LibSNDWrapper const&) = delete;
     LibSNDWrapper& operator=(LibSNDWrapper const&) = delete;
-    
+
     virtual ~LibSNDWrapper ();
 
     // interface methods declaration

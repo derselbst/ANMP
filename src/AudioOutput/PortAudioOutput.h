@@ -1,30 +1,27 @@
-#ifndef ALSAOUTPUT_H
-#define ALSAOUTPUT_H
+#ifndef PortAudioOutput_H
+#define PortAudioOutput_H
 
 #include "IAudioOutput.h"
 
-// just forward declare this type by ourself; it's actually
-// declared in alsa/asoundlib.h; but it's a complete overkill
-// to include ALSA in this header
-typedef struct _snd_pcm snd_pcm_t;
+#include <portaudio.h>
 
 
 /**
-  * class ALSAOutput
+  * class PortAudioOutput
   *
-  * A wrapper library for ALSA, enabling ANMP to use ALSA for playback
+  * A wrapper library for portaudio, enabling ANMP for crossplatform playback
   */
-class ALSAOutput : public IAudioOutput
+class PortAudioOutput : public IAudioOutput
 {
 public:
 
-    ALSAOutput ();
+    PortAudioOutput ();
 
     // forbid copying
-    ALSAOutput(ALSAOutput const&) = delete;
-    ALSAOutput& operator=(ALSAOutput const&) = delete;
+    PortAudioOutput(PortAudioOutput const&) = delete;
+    PortAudioOutput& operator=(PortAudioOutput const&) = delete;
 
-    virtual ~ALSAOutput ();
+    virtual ~PortAudioOutput ();
 
 
     // interface methods declaration
@@ -46,8 +43,11 @@ public:
 
 private:
 
-    int epipe_count = 0;
-    snd_pcm_t* alsa_dev = nullptr;
+    PaStream *handle = nullptr;
+
+    // holds the error returned by Pa_Initialize
+    // this class shall only be usable if no error occurred
+    PaError paInitError = ~PaErrorCode::paNoError;
 
     template<typename T> int write(T* buffer, frame_t frames);
     void drain ();
@@ -55,4 +55,4 @@ private:
 
 };
 
-#endif // ALSAOUTPUT_H
+#endif // PortAudioOutput_H
