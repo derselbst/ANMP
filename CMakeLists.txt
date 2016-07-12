@@ -66,9 +66,9 @@ if(ENABLE_PORTAUDIO)
         set(LD_FLAGS ${LD_FLAGS} ${PORTAUDIO_LIBRARIES})
         
         MY_PRINT(PORTAUDIO)
-        
-        summary_add("PortAudio support" PORTAUDIO_FOUND)
   endif(PORTAUDIO_FOUND)
+        
+    summary_add("PortAudio support" PORTAUDIO_FOUND)
 endif(ENABLE_PORTAUDIO)
 
 
@@ -160,9 +160,9 @@ if(ENABLE_CUE)
         set(LD_FLAGS ${LD_FLAGS} ${LIBCUE_LIBRARIES})
         
         MY_PRINT(LIBCUE)
-        
-        summary_add("libcue support" LIBCUE_FOUND)
   endif(LIBCUE_FOUND)
+        
+    summary_add("libcue support" LIBCUE_FOUND)
 endif(ENABLE_CUE)
 
 
