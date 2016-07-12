@@ -1,4 +1,5 @@
 #include "Common.h"
+#include "CommonExceptions.h"
 
 
 #include <iostream>
@@ -11,13 +12,12 @@
 #include <iomanip>
 
 #ifdef _POSIX_VERSION
-#include <strings.h>
-#endif
-
+#include <strings.h> // strncasecmp
 extern "C"
 {
-#include <libgen.h>
+#include <libgen.h> // basename, dirname
 }
+#endif
 
 using namespace std;
 
@@ -166,10 +166,42 @@ frame_t msToFrames(const size_t& ms, const unsigned int& sampleRate)
 }
 
 
+#ifndef _WIN32
+#include <stdlib.h>
+
+char driveBuf[_MAX_DRIVE];
+char dirBuf[_MAX_DIR];
+char fnameBuf[_MAX_FNAME];
+char extBuf[_MAX_EXT];
+#endif
+
 string mybasename(const string& path)
 {
     string s = string(path.c_str());
+    
+#ifdef _POSIX_VERSION
     return string(basename( const_cast<char*>(s.c_str()) ));
+#elif _WINDOWS
+    _splitpath(s.c_str(),
+   nullptr, // drive
+   dirBuf, // dir
+   fnameBuf, // filename
+   extBuf);
+   
+   if(fnameBuf[0] = '\0')
+   {
+       throw NotImplementedException();
+   }
+   else
+   {
+       string result = string(fnameBuf);
+       result.append(extBuf);
+       return result;
+   }
+   
+#else
+    #error "Unsupported Platform"
+#endif
 }
 
 string mydirname(const string& path)
