@@ -16,6 +16,9 @@ JackOutput::JackOutput ()
 JackOutput::~JackOutput ()
 {
     this->close();
+    
+    
+    delete[] this->interleavedProcessedBuffer.buf;
 }
 
 //
@@ -56,6 +59,14 @@ void JackOutput::open()
         jack_set_process_callback(this->handle, JackOutput::processCallback, this);
         jack_set_sample_rate_callback(this->handle, JackOutput::onJackSampleRateChanged, this);
         jack_on_shutdown(this->handle, JackOutput::onJackShutdown, this);
+        jack_set_buffer_size_callback(this->handle, JackOutput::onJackBufSizeChanged, this);
+        
+        // initially assign the buffer size
+        JackOutput::onJackBufSizeChanged(jack_get_buffer_size(this->handle), this);
+        
+        // initially assign the sample rate
+        JackOutput::onJackSampleRateChanged(jack_get_sample_rate(this->handle), this);
+
   }
 }
 
@@ -102,17 +113,26 @@ void JackOutput::close()
 
 int JackOutput::write (float* buffer, frame_t frames)
 {
-    return this->write<float>(buffer, frames);
+    if (pthis->transportState == JackTransportRolling)
+    {
+        
+    }
 }
 
 int JackOutput::write (int16_t* buffer, frame_t frames)
 {
-    return this->write<int16_t>(buffer, frames);
+    if (pthis->transportState == JackTransportRolling)
+    {
+        
+    }
 }
 
 int JackOutput::write (int32_t* buffer, frame_t frames)
 {
-    return this->write<int32_t>(buffer, frames);
+    if (pthis->transportState == JackTransportRolling)
+    {
+        
+    }
 }
 
 
@@ -149,33 +169,62 @@ void JackOutput::stop()
 
 int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
 {
-    JackOutput* pthis = static_cast<JackOutput*>(arg);
+    JackOutput *const pthis = static_cast<JackOutput*>(arg);
     
     // TODO: if (!pthis->bufferReady) return;
     
     
-    	jack_transport_state_t ts = jack_transport_query(pthis->handle, nullptr);
+    	pthis->transportState = jack_transport_query(pthis->handle, nullptr);
 
-	if (ts == JackTransportRolling)
+	if (pthis->transportState == JackTransportRolling)
         {    
             for(int i=0; i<pthis->playbackPorts.size(); i++)
             {
-                jack_default_audio_sample_t* out = jack_port_get_buffer (pthis->playbackPorts[i], nframes);
+                jack_default_audio_sample_t* out = jack_port_get_buffer(pthis->playbackPorts[i], nframes);
                 
-                for(unsigned int myIdx=i, jackIdx=0; jackIdx<nframes && myIdx<pthis->interleavedProcessedBuffer.size(); myIdx+=pthis->currentChannelCount, jackIdx++)
+                for(unsigned int myIdx=i, jackIdx=0; jackIdx<nframes /*&& myIdx<pthis->interleavedProcessedBuffer.size()*/; myIdx+=pthis->currentChannelCount, jackIdx++)
                 {
                     out[jackIdx] = pthis->interleavedProcessedBuffer[myIdx];
                 }
-                
             }
         }
-        else if (ts == JackTransportStopped)
+        else if (pthis->transportState == JackTransportStopped)
         {
             // return 0 in this->write()
         }
         
-        // TODO switch buffers, set flag
+        
         
         return 0;
 }
 
+// we can do non-realtime safe stuff here :D
+int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
+{
+    this = static_cast<JackOutput*>(arg);
+    
+    this->jackBufSize = nframes;
+    
+    // TODO check if buffer consumed, if not, print a warning and discard samples, who cares...
+    if(!this->interleavedProcessedBuffer.consumed)
+    {
+        CLOG(LogLevel::WARNING, "JackBufSize changed, but buffer has not been consumed yet, discarding pending samples");
+    }
+    
+    delete[] this->interleavedProcessedBuffer.buf;
+    this->interleavedProcessedBuffer.buf = new (nothrow) jack_default_audio_sample_t[nframes];
+    
+    // TODO check if alloc successfull
+    
+    return 0;
+}
+
+
+int onJackSampleRateChanged(jack_nframes_t nframes, void* arg)
+{
+    this = static_cast<JackOutput*>(arg);
+    
+    this->jackSampleRate = nframes;
+    
+    return 0;
+}

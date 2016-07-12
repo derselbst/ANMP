@@ -48,12 +48,31 @@ private:
 
   vector<jack_port_t*> playbackPorts;
   
-  /*not static!*/ const char* ClientName = "ANMP";
-  jack_client_t* handles = nullptr;
+  /*not static, pointer can be reassigned by jack if name is not unique*/
+  const char* ClientName = "ANMP";
+  
+  jack_client_t* handle = nullptr;
+  
+  typedef struct
+  {
+      jack_default_audio_sample_t* buf = nullptr; // length of this buffer determined by jackBufSize
+//       size_t items = 0;
+      bool ready = false;
+      volatile bool consumed = true;
+  } jack_buffer_t;
+  
+  jack_buffer_t interleavedProcessedBuffer;
+  
+  volatile jack_nframes_t jackBufSize = 0;
+  volatile jack_nframes_t jackSampleRate = 0;
+  jack_transport_state_t transportState = JackTransportStopped;
   
   static int processCallback(jack_nframes_t nframes, void* arg);
   static int onJackSampleRateChanged(jack_nframes_t nframes, void* arg);
   static void onJackShutdown(void* arg);
+  static int onJackBufSizeChanged(jack_nframes_t nframes, void *arg);
+  
+  void connectPorts();
 };
 
 #endif // JACKOUTPUT_H
