@@ -47,6 +47,7 @@ set(LD_FLAGS ${LD_FLAGS} ${CMAKE_THREAD_LIBS_INIT})
 ### HANDLE AUDIO OUTPUT SUPPORT ###
 ###################################
 option(ENABLE_ALSA "Compile with support to use ALSA for playback" ON)
+option(ENABLE_JACK "Compile with support to use Jack for playback" ON)
 option(ENABLE_PORTAUDIO "Compile with support to use PortAudio for playback" ON)
 option(ENABLE_EBUR128 "Enable support for noise normalization through libebur128" ON)
 
@@ -55,6 +56,28 @@ if(ENABLE_ALSA)
   
   summary_add("ALSA support" ALSA_FOUND)
 endif(ENABLE_ALSA)
+
+
+if(ENABLE_JACK)
+  PKG_CHECK_MODULES(JACK jack)
+  PKG_CHECK_MODULES(SRC samplerate)
+  
+  if(JACK_FOUND AND SRC_FOUND)
+        add_definitions(-DUSE_JACK)
+        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${JACK_INCLUDE_DIRS})
+        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${SRC_INCLUDE_DIRS})
+        set(LD_FLAGS ${LD_FLAGS} ${JACK_LIBRARIES})
+        set(LD_FLAGS ${LD_FLAGS} ${SRC_LIBRARIES})
+        
+        MY_PRINT(JACK)
+        MY_PRINT(SRC)
+        
+        summary_add("Jack support" TRUE)
+  else(JACK_FOUND AND SRC_FOUND)
+        summary_add("Jack support" FALSE)
+  endif(JACK_FOUND AND SRC_FOUND)
+        
+endif(ENABLE_JACK)
 
 
 if(ENABLE_PORTAUDIO)
