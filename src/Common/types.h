@@ -57,6 +57,9 @@ typedef enum AudioDriver
 #ifdef USE_EBUR128
     ebur128,
 #endif
+#ifdef USE_JACK
+    JACK,
+#endif
 #ifdef USE_PORTAUDIO
     PORTAUDIO,
 #endif

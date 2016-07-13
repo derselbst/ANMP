@@ -17,6 +17,10 @@
 #include "ebur128Output.h"
 #endif
 
+#ifdef USE_JACK
+#include "JackOutput.h"
+#endif
+
 #ifdef USE_LIBSND
 #include "WaveOutput.h"
 #endif
@@ -68,6 +72,11 @@ void Player::_initAudio()
 #ifdef USE_EBUR128
     case ebur128:
         this->audioDriver = new ebur128Output(this);
+        break;
+#endif
+#ifdef USE_JACK
+    case JACK:
+        this->audioDriver = new JackOutput();
         break;
 #endif
     case WAVE:
