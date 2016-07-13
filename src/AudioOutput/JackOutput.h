@@ -3,6 +3,8 @@
 
 #include "IAudioOutput.h"
 
+#include <mutex>
+
 // just forward declare this type by ourself; it's actually
 // declared in alsa/asoundlib.h; but it's a complete overkill
 // to include ALSA in this header
@@ -52,20 +54,22 @@ private:
   const char* ClientName = "ANMP";
   
   jack_client_t* handle = nullptr;
+  SRC_STATE *srcState = nullptr;
   
   typedef struct
   {
       jack_default_audio_sample_t* buf = nullptr; // length of this buffer determined by jackBufSize
-//       size_t items = 0;
       bool ready = false;
       volatile bool consumed = true;
   } jack_buffer_t;
   
+  mutable std::mutex mtx;
+  //*** Begin: mutex-protected vars ***//
   jack_buffer_t interleavedProcessedBuffer;
-  
   volatile jack_nframes_t jackBufSize = 0;
   volatile jack_nframes_t jackSampleRate = 0;
   jack_transport_state_t transportState = JackTransportStopped;
+  //*** End: mutex-protected vars ***//
   
   static int processCallback(jack_nframes_t nframes, void* arg);
   static int onJackSampleRateChanged(jack_nframes_t nframes, void* arg);
