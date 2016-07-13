@@ -7,6 +7,7 @@
 #include <string>
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>         // std::chrono::seconds
+#include <cstring>
 
 #include <jack/jack.h>
 
@@ -127,7 +128,7 @@ void JackOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
     	this->srcState = src_delete(this->srcState);
     }
     int error;
-    this->srcState = src_new(SRC_SINC_MEDIUM_QUALITY, channels, &error);
+    this->srcState = src_new(SRC_LINEAR, channels, &error);
     if(this->srcState == nullptr)
     {
     	THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) <<")");
@@ -313,6 +314,12 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
 
     if (!pthis->interleavedProcessedBuffer.ready)
     {
+        for(unsigned int i=0; i<pthis->playbackPorts.size(); i++)
+            {
+                jack_default_audio_sample_t* out = static_cast<jack_default_audio_sample_t*>(jack_port_get_buffer(pthis->playbackPorts[i], nframes));
+                
+                memset(out, 0, nframes*sizeof(jack_default_audio_sample_t));
+            }
     	return 0;
     }
     
