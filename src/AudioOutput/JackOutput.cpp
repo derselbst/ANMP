@@ -5,6 +5,8 @@
 
 #include <iostream>
 #include <string>
+#include <thread>         // std::this_thread::sleep_for
+#include <chrono>         // std::chrono::seconds
 
 #include <jack/jack.h>
 
@@ -17,9 +19,9 @@ JackOutput::~JackOutput ()
 {
     this->close();
     
-    if(this->scrState != nullptr)
+    if(this->srcState != nullptr)
     {
-    	this->scrState = src_delete(this->scrState);
+    	this->srcState = src_delete(this->srcState);
     }
     
     delete[] this->interleavedProcessedBuffer.buf;
@@ -86,7 +88,7 @@ void JackOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
   char portName[3+1];
   	  for(unsigned int i=this->currentChannelCount; i<channels && i <= 99; i++)
 	  {
-	    sprintf(portName, 3+1, "%.2d", i);
+	    snprintf(portName, 3+1, "%.2d", i);
 	
 	    // we provide an output port (from the view of jack), i.e. a capture port, i.e. a readable port
 	    jack_port_t* out_port = jack_port_register (this->handle, portName, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
@@ -120,13 +122,13 @@ void JackOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
   }
   
   
-    if(this->scrState != nullptr)
+    if(this->srcState != nullptr)
     {
-    	this->scrState = src_delete(this->scrState);
+    	this->srcState = src_delete(this->srcState);
     }
     int error;
-    this->scrState = src_new(SRC_SINC_MEDIUM_QUALITY, channels, &error);
-    if(this->scrState == nullptr)
+    this->srcState = src_new(SRC_SINC_MEDIUM_QUALITY, channels, &error);
+    if(this->srcState == nullptr)
     {
     	THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) <<")");
     }
@@ -148,17 +150,17 @@ void JackOutput::close()
 
 int JackOutput::write (float* buffer, frame_t frames)
 {
-    if (pthis->transportState == JackTransportRolling)
+    if (this->transportState == JackTransportRolling)
     {
     	lock_guard<mutex> lock(this->mtx);
     	
-    	const unsigned int Frames = min(frames, this->jackBufSize);
+    	const unsigned int Frames = min<int64_t>(frames, this->jackBufSize);
     	const unsigned int Items = Frames * this->currentChannelCount;
         for(unsigned int i = 0; i<Items; i++)
         {
             float& item = this->interleavedProcessedBuffer.buf[i];
             // amplify
-            item =* this->volume;
+            item *= this->volume;
             
             // clip
             if(item > 1.0f)
@@ -187,7 +189,7 @@ while( this->interleavedProcessedBuffer.ready && // buffer is ready
 	this_thread::sleep_for(chrono::milliseconds(1));
 }
 	
-    if (pthis->transportState == JackTransportRolling)
+    if (this->transportState == JackTransportRolling)
     {
     	// converted_to_float_but_not_resampled buffer
     	float* tempBuf = new float[frames];
@@ -197,7 +199,7 @@ while( this->interleavedProcessedBuffer.ready && // buffer is ready
             // convert that item in buffer[i] to float
             item = buffer[i] / (float)(numeric_limits<int16_t>::max()+1);
             // amplify
-            item =* this->volume;
+            item *= this->volume;
             
             // clip
             if(item > 1.0f)
@@ -223,13 +225,13 @@ while( this->interleavedProcessedBuffer.ready && // buffer is ready
 	    	srcData.output_frames = this->jackBufSize;
 	    	
 	    	// output_sample_rate / input_sample_rate
-	    	srcData.src_ratio = this->jackSampeRate / this->currentSampleRate;
+	    	srcData.src_ratio = this->jackSampleRate / this->currentSampleRate;
 	    	
-	    	err = src_process (this->srcState, srcData);
+	    	err = src_process (this->srcState, &srcData);
         }
     	if(err != 0 )
     	{
-    		CLOG(LogLevel::ERROR, "libsamplerate failed processing (" << src_strerror(error) <<")");
+    		CLOG(LogLevel::ERROR, "libsamplerate failed processing (" << src_strerror(err) <<")");
     	}
     	else
     	{
@@ -253,9 +255,13 @@ while( this->interleavedProcessedBuffer.ready && // buffer is ready
 
 int JackOutput::write (int32_t* buffer, frame_t frames)
 {
-    if (pthis->transportState == JackTransportRolling)
+    if (this->transportState == JackTransportRolling)
     {
         
+    }
+    else
+    {
+      return 0;
     }
 }
 
@@ -264,14 +270,14 @@ void JackOutput::connectPorts()
 {
     const char** physicalPlaybackPorts = jack_get_ports(this->handle, NULL, NULL, JackPortIsPhysical|JackPortIsInput);
 
-    for(int i=0; physicalPlaybackPorts[i]!=nullptr && i<this->playbackPorts.size(); i++)
+    for(unsigned int i=0; physicalPlaybackPorts[i]!=nullptr && i<this->playbackPorts.size(); i++)
     {
       if (jack_connect(this->handle, jack_port_name(this->playbackPorts[i]), physicalPlaybackPorts[i]))
       {
-              CLOG(LogLevel::INFO, "cannot connect to port \"" << ports[0] << "\"");
+              CLOG(LogLevel::INFO, "cannot connect to port \"" << physicalPlaybackPorts[i] << "\"");
       }
       
-      jack_free(physicalPlaybackPorts[i]);
+      jack_free(const_cast<char*>(physicalPlaybackPorts[i]));
     }
 }
 
@@ -292,24 +298,24 @@ void JackOutput::stop()
 
 int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
 {
-    JackOutput *const pthis = static_cast<JackOutput*>(arg);
+    JackOutput *const pthis = static_cast<JackOutput*const>(arg);
     
     if (!pthis->interleavedProcessedBuffer.ready)
     {
-    	return;
+    	return 0;
     }
     
     	pthis->transportState = jack_transport_query(pthis->handle, nullptr);
 
 	if (pthis->transportState == JackTransportRolling)
         {    
-            for(int i=0; i<pthis->playbackPorts.size(); i++)
+            for(unsigned int i=0; i<pthis->playbackPorts.size(); i++)
             {
-                jack_default_audio_sample_t* out = jack_port_get_buffer(pthis->playbackPorts[i], nframes);
+                jack_default_audio_sample_t* out = static_cast<jack_default_audio_sample_t*>(jack_port_get_buffer(pthis->playbackPorts[i], nframes));
                 
                 for(unsigned int myIdx=i, jackIdx=0; jackIdx<nframes /*&& myIdx<pthis->interleavedProcessedBuffer.size()*/; myIdx+=pthis->currentChannelCount, jackIdx++)
                 {
-                    out[jackIdx] = pthis->interleavedProcessedBuffer[myIdx];
+                    out[jackIdx] = pthis->interleavedProcessedBuffer.buf[myIdx];
                 }
             }
         }
@@ -327,19 +333,19 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
 // we can do non-realtime safe stuff here :D
 int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
 {
-    this = static_cast<JackOutput*>(arg);
-    lock_guard<mutex> lock(this->mtx);
+    JackOutput *const pthis = static_cast<JackOutput*const>(arg);
+    lock_guard<mutex> lock(pthis->mtx);
     
-    this->jackBufSize = nframes;
+    pthis->jackBufSize = nframes;
     
     // if buffer not consumed, print a warning and discard samples, who cares...
-    if(!this->interleavedProcessedBuffer.consumed)
+    if(!pthis->interleavedProcessedBuffer.consumed)
     {
         CLOG(LogLevel::WARNING, "JackBufSize changed, but buffer has not been consumed yet, discarding pending samples");
     }
     
-    delete[] this->interleavedProcessedBuffer.buf;
-    this->interleavedProcessedBuffer.buf = new (nothrow) jack_default_audio_sample_t[this->jackBufSize * this->currentChannelCount];
+    delete[] pthis->interleavedProcessedBuffer.buf;
+    pthis->interleavedProcessedBuffer.buf = new (nothrow) jack_default_audio_sample_t[pthis->jackBufSize * pthis->currentChannelCount];
     
     // TODO check if alloc successfull
     
@@ -347,11 +353,15 @@ int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
 }
 
 
-int onJackSampleRateChanged(jack_nframes_t nframes, void* arg)
+int JackOutput::onJackSampleRateChanged(jack_nframes_t nframes, void* arg)
 {
-    this = static_cast<JackOutput*>(arg);
+    JackOutput *const pthis = static_cast<JackOutput*const>(arg);
     
-    this->jackSampleRate = nframes;
+    pthis->jackSampleRate = nframes;
     
     return 0;
+}
+
+void JackOutput::onJackShutdown(void* arg)
+{
 }

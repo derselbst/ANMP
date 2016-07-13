@@ -4,17 +4,15 @@
 #include "IAudioOutput.h"
 
 #include <mutex>
-
-// just forward declare this type by ourself; it's actually
-// declared in alsa/asoundlib.h; but it's a complete overkill
-// to include ALSA in this header
-typedef struct _snd_pcm snd_pcm_t;
+#include <vector>
+#include <jack/jack.h>
+#include <samplerate.h>
 
 
 /**
   * class JackOutput
   *
-  * A wrapper library for ALSA, enabling ANMP to use ALSA for playback
+  * A wrapper library for Jack, enabling ANMP to use Jack for playback
   */
 class JackOutput : public IAudioOutput
 {
