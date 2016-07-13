@@ -191,9 +191,11 @@ while( this->interleavedProcessedBuffer.ready && // buffer is ready
 	
     if (this->transportState == JackTransportRolling)
     {
+        const size_t Items = frames*this->currentChannelCount;
+        
     	// converted_to_float_but_not_resampled buffer
-    	float* tempBuf = new float[frames];
-    	for(unsigned int i = 0; i<frames*this->currentChannelCount; i++)
+    	float* tempBuf = new float[Items];
+    	for(unsigned int i = 0; i<Items; i++)
         {
             float& item = tempBuf[i];
             // convert that item in buffer[i] to float
@@ -225,7 +227,7 @@ while( this->interleavedProcessedBuffer.ready && // buffer is ready
 	    	srcData.output_frames = this->jackBufSize;
 	    	
 	    	// output_sample_rate / input_sample_rate
-	    	srcData.src_ratio = this->jackSampleRate / this->currentSampleRate;
+	    	srcData.src_ratio = (double)this->jackSampleRate / this->currentSampleRate;
 	    	
 	    	err = src_process (this->srcState, &srcData);
         }
@@ -235,6 +237,7 @@ while( this->interleavedProcessedBuffer.ready && // buffer is ready
     	}
     	else
     	{
+                this->interleavedProcessedBuffer.consumed = false;
         	this->interleavedProcessedBuffer.ready = true;
     	}
         delete[] tempBuf;
@@ -270,15 +273,21 @@ void JackOutput::connectPorts()
 {
     const char** physicalPlaybackPorts = jack_get_ports(this->handle, NULL, NULL, JackPortIsPhysical|JackPortIsInput);
 
+    if(physicalPlaybackPorts==nullptr)
+    {
+        CLOG(LogLevel::ERROR, "no physical playback ports available");
+        return;
+    }
+    
     for(unsigned int i=0; physicalPlaybackPorts[i]!=nullptr && i<this->playbackPorts.size(); i++)
     {
       if (jack_connect(this->handle, jack_port_name(this->playbackPorts[i]), physicalPlaybackPorts[i]))
       {
               CLOG(LogLevel::INFO, "cannot connect to port \"" << physicalPlaybackPorts[i] << "\"");
       }
-      
-      jack_free(const_cast<char*>(physicalPlaybackPorts[i]));
     }
+    
+    jack_free(const_cast<char**>(physicalPlaybackPorts));
 }
 
 void JackOutput::start()
@@ -299,14 +308,14 @@ void JackOutput::stop()
 int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
 {
     JackOutput *const pthis = static_cast<JackOutput*const>(arg);
-    
+
+    pthis->transportState = jack_transport_query(pthis->handle, nullptr);
+
     if (!pthis->interleavedProcessedBuffer.ready)
     {
     	return 0;
     }
     
-    	pthis->transportState = jack_transport_query(pthis->handle, nullptr);
-
 	if (pthis->transportState == JackTransportRolling)
         {    
             for(unsigned int i=0; i<pthis->playbackPorts.size(); i++)
