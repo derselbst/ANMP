@@ -200,7 +200,7 @@ template<typename T> void JackOutput::getAmplifiedFloatBuffer(const T* inBuf, fl
 	}
 }
 
-int JackOutput::doResampling(const float* inBuf, const size_t Frames)
+int JackOutput::doResampling(float* inBuf, const size_t Frames)
 {
 	SRC_DATA srcData;
 	srcData.data_in = inBuf;
@@ -237,7 +237,7 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
 	return srcData.input_frames_used;
 }
 
-template<typename T> int JackOutput::write (const T* buffer, frame_t frames)
+template<typename T> int JackOutput::write (T* buffer, frame_t frames)
 {
 	if(this->interleavedProcessedBuffer.ready)
 	{
