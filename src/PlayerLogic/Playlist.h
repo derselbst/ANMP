@@ -7,6 +7,8 @@
 #include <queue>
 #include <mutex>
 
+using namespace std;
+
 class Playlist : public IPlaylist
 {
 public:

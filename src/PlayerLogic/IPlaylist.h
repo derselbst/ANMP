@@ -3,8 +3,6 @@
 
 class Song;
 
-using namespace std;
-
 /**
   * class IPlaylist
   * Holds the songs to be played
