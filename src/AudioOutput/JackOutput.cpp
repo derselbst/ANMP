@@ -184,11 +184,11 @@ int JackOutput::write (float* buffer, frame_t frames)
 
 int JackOutput::write (int16_t* buffer, frame_t frames)
 {
-while( this->interleavedProcessedBuffer.ready && // buffer is ready
-      !this->interleavedProcessedBuffer.consumed) // and has not been consumed yet
-{
-	this_thread::sleep_for(chrono::milliseconds(1));
-}
+	if(this->interleavedProcessedBuffer.ready)
+	{
+		// buffer has not been consumed yet
+		return 0;
+	}
 	
     if (this->transportState == JackTransportRolling)
     {
@@ -221,7 +221,6 @@ while( this->interleavedProcessedBuffer.ready && // buffer is ready
         // this is not the last buffer passed to src
         srcData.end_of_input = 0;
         
-        int err;
         {
 	    	lock_guard<mutex> lock(this->mtx);
 	    	srcData.data_out = this->interleavedProcessedBuffer.buf;
@@ -230,24 +229,25 @@ while( this->interleavedProcessedBuffer.ready && // buffer is ready
 	    	// output_sample_rate / input_sample_rate
 	    	srcData.src_ratio = (double)this->jackSampleRate / this->currentSampleRate;
 	    	
-	    	err = src_process (this->srcState, &srcData);
+        	int err = src_process (this->srcState, &srcData);
+	    	if(err != 0 )
+	    	{
+	    		CLOG(LogLevel::ERROR, "libsamplerate failed processing (" << src_strerror(err) <<")");
+	    	}
+	    	else
+	    	{
+	    		if(srcData.output_frames_gen < srcData.output_frames)
+		        {
+		            CLOG(LogLevel::WARNING, "jacks callback buffer has not been filled completely\noutput_frames_gen: " << srcData.output_frames_gen << " \noutput_frames: " << srcData.output_frames)
+		            
+		            const size_t diffItems = srcData.output_frames - srcData.output_frames_gen;
+		            memset(this->interleavedProcessedBuffer.buf, 0, diffItems * sizeof(jack_default_audio_sample_t));
+		        }
+	        	this->interleavedProcessedBuffer.ready = true;
+	    	}
         }
-    	if(err != 0 )
-    	{
-    		CLOG(LogLevel::ERROR, "libsamplerate failed processing (" << src_strerror(err) <<")");
-    	}
-    	else
-    	{
-                this->interleavedProcessedBuffer.consumed = false;
-        	this->interleavedProcessedBuffer.ready = true;
-    	}
+        
         delete[] tempBuf;
-        
-        if(srcData.output_frames_gen < srcData.output_frames)
-        {
-            CLOG(LogLevel::WARNING, "jacks callback buffer has not been filled completely; output_frames_gen: " << srcData.output_frames_gen << "  output_frames: " << srcData.output_frames)
-        }
-        
         return srcData.input_frames_used;
     }
     else
@@ -312,38 +312,42 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
 
     pthis->transportState = jack_transport_query(pthis->handle, nullptr);
 
+    if (pthis->transportState != JackTransportRolling)
+    {
+	goto fail;
+    }
     if (!pthis->interleavedProcessedBuffer.ready)
     {
-        for(unsigned int i=0; i<pthis->playbackPorts.size(); i++)
-            {
-                jack_default_audio_sample_t* out = static_cast<jack_default_audio_sample_t*>(jack_port_get_buffer(pthis->playbackPorts[i], nframes));
-                
-                memset(out, 0, nframes*sizeof(jack_default_audio_sample_t));
-            }
-    	return 0;
+	goto fail;
+    }
+    if(!pthis->mtx.try_lock())
+    {
+    	// this is strange, the buffer has been marked as ready, however, there seem to be a pending lock
+    	goto fail;
     }
     
-	if (pthis->transportState == JackTransportRolling)
-        {    
-            for(unsigned int i=0; i<pthis->playbackPorts.size(); i++)
-            {
-                jack_default_audio_sample_t* out = static_cast<jack_default_audio_sample_t*>(jack_port_get_buffer(pthis->playbackPorts[i], nframes));
-                
-                for(unsigned int myIdx=i, jackIdx=0; jackIdx<nframes /*&& myIdx<pthis->interleavedProcessedBuffer.size()*/; myIdx+=pthis->currentChannelCount, jackIdx++)
-                {
-                    out[jackIdx] = pthis->interleavedProcessedBuffer.buf[myIdx];
-                }
-            }
-        }
-        else if (pthis->transportState == JackTransportStopped)
+    for(unsigned int i=0; i<pthis->playbackPorts.size(); i++)
+    {
+        jack_default_audio_sample_t* out = static_cast<jack_default_audio_sample_t*>(jack_port_get_buffer(pthis->playbackPorts[i], nframes));
+        
+        for(unsigned int myIdx=i, jackIdx=0; jackIdx<nframes; myIdx+=pthis->currentChannelCount, jackIdx++)
         {
-            // return 0 in this->write()
+            out[jackIdx] = pthis->interleavedProcessedBuffer.buf[myIdx];
         }
+    }
+    pthis->interleavedProcessedBuffer.ready = false;
+
+    pthis->mtx.unlock();
+    return 0;
         
-        pthis->interleavedProcessedBuffer.consumed = true;
-        pthis->interleavedProcessedBuffer.ready = false;
+fail:
+        for(unsigned int i=0; i<pthis->playbackPorts.size(); i++)
+        {
+            jack_default_audio_sample_t* out = static_cast<jack_default_audio_sample_t*>(jack_port_get_buffer(pthis->playbackPorts[i], nframes));
         
-        return 0;
+            memset(out, 0, nframes*sizeof(jack_default_audio_sample_t));
+        }
+    	return 0;
 }
 
 // we can do non-realtime safe stuff here :D
@@ -355,7 +359,7 @@ int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
     pthis->jackBufSize = nframes;
     
     // if buffer not consumed, print a warning and discard samples, who cares...
-    if(!pthis->interleavedProcessedBuffer.consumed)
+    if(pthis->interleavedProcessedBuffer.ready)
     {
         CLOG(LogLevel::WARNING, "JackBufSize changed, but buffer has not been consumed yet, discarding pending samples");
     }
