@@ -38,7 +38,9 @@ if(QT5_FOUND)
     )
 
     add_executable(anmp-qt ${UI_HEADERS} ${GUI_SRCS} icons.qrc)
-    qt5_use_modules(anmp-qt Core Gui Widgets OpenGL)
+    
+    # should add all necessary compile and link flags
+    qt5_use_modules(anmp-qt Core OpenGL)
 
     target_link_libraries(anmp-qt
         ${LIBANAL}

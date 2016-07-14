@@ -191,7 +191,7 @@ endif(ENABLE_CUE)
 
 if(ENABLE_GUI)
     # Qt library
-    MY_FIND_PKG(Qt5Widgets Qt5Widgets)
+    MY_FIND_PKG(Qt5Core Qt5Core)
     
     MY_FIND_PKG(Qt5OpenGL Qt5OpenGL)
 
@@ -200,10 +200,10 @@ if(ENABLE_GUI)
     
     # Executables fail to build with Qt 5 in the default configuration
     # without -fPIE. We add that here.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
+#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
     
     # We need add -DQT_WIDGETS_LIB when using QtWidgets in Qt 5.
-    add_definitions(${Qt5Widgets_DEFINITIONS})
+#     add_definitions(${Qt5Widgets_DEFINITIONS})
 
     # TODO: this is very ugly, any easier way??
     if(${Qt5Widgets_FOUND})
