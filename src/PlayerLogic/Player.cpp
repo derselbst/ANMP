@@ -506,12 +506,28 @@ void Player::playFrames (frame_t framesToPlay)
             memorizedPlayhead==this->playhead // make sure noone seeked while playing
          )
     {
-        // seek within the buffer to that item where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
+        // seek within the pcm buffer to that item where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
         int itemOffset = FramesToItems(memorizedPlayhead) % bufSize;
         // number of frames we will write to audioDriver in this run
         int framesToPush = min(Config::FramesToRender, framesToPlay);
-        // PLAY!
-        int framesWritten = this->audioDriver->write(this->currentSong->data, framesToPush, itemOffset);
+        
+        int framesWritten = 0;
+
+		// before we go on rendering the next pcm chunk, we need to make sure the current chunk is fully played
+		// however, this only becomes necessary if we dont hold the whole song in memory
+        while(this->isPlaying && framesWritten!=framesToPush)
+        {
+			framesToPush -= framesWritten;
+			itemOffset += FramesToItems(framesWritten);
+			
+			// PLAY!
+			framesWritten = this->audioDriver->write(this->currentSong->data, framesToPush, itemOffset);
+            if(framesWritten == 0)
+            {
+                // something went terribly wrong, wait some time, so the cpu doesnt get too busy
+                this_thread::sleep_for(chrono::milliseconds(1));
+            }
+        }
 
         // ensure PCM buffer(s) are well filled
         this->currentSong->fillBuffer();
