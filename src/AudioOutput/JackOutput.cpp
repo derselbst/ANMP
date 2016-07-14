@@ -151,38 +151,93 @@ void JackOutput::close()
 
 int JackOutput::write (float* buffer, frame_t frames)
 {
+	if(this->interleavedProcessedBuffer.ready)
+	{
+		// buffer has not been consumed yet
+		return 0;
+	}
+	
     if (this->transportState == JackTransportRolling)
     {
-    	lock_guard<mutex> lock(this->mtx);
-    	
-    	const unsigned int Frames = min<int64_t>(frames, this->jackBufSize);
-    	const unsigned int Items = Frames * this->currentChannelCount;
-        for(unsigned int i = 0; i<Items; i++)
-        {
-            float& item = this->interleavedProcessedBuffer.buf[i];
-            // amplify
-            item *= this->volume;
-            
-            // clip
-            if(item > 1.0f)
-            {
-            	item = 1.0f;
-            }
-            else if(item < -1.0f)
-            {
-            	item = -1.0f;
-            }
-        }
+        const size_t Items = frames*this->currentChannelCount;
         
-        return Frames;
+    	// converted_to_float_but_not_resampled buffer
+    	float* tempBuf = new float[Items];
+    	this->getAmplifiedBuffer<float>(buffer, tempBuf, Items);
+		
+		int framesUsed = this->doResampling(tempBuf, frames);
+        
+        delete[] tempBuf;
+		
+        return framesUsed;
     }
     else
     {
+    	// transport not rolling, nothing could be written
     	return 0;
     }
 }
 
-int JackOutput::write (int16_t* buffer, frame_t frames)
+template<typename T> void JackOutput::getAmplifiedFloatBuffer(const T* inBuf, float* outBuf, const size_t Items)
+{
+	for(unsigned int i = 0; i<Items; i++)
+	{
+		float& item = outBuf[i];
+		// convert that item in inBuf[i] to float
+		item = inBuf[i] / (float)(numeric_limits<T>::max()+1);
+		// amplify
+		item *= this->volume;
+		
+		// clip
+		if(item > 1.0f)
+		{
+			item = 1.0f;
+		}
+		else if(item < -1.0f)
+		{
+			item = -1.0f;
+		}
+	}
+}
+
+int JackOutput::doResampling(const float* inBuf, const size_t Frames)
+{
+	SRC_DATA srcData;
+	srcData.data_in = inBuf;
+	srcData.input_frames = Frames;
+	
+	// this is not the last buffer passed to src
+	srcData.end_of_input = 0;
+	
+	{
+		lock_guard<mutex> lock(this->mtx);
+		srcData.data_out = this->interleavedProcessedBuffer.buf;
+		srcData.output_frames = this->jackBufSize;
+		
+		// output_sample_rate / input_sample_rate
+		srcData.src_ratio = (double)this->jackSampleRate / this->currentSampleRate;
+		
+		int err = src_process (this->srcState, &srcData);
+		if(err != 0 )
+		{
+			CLOG(LogLevel::ERROR, "libsamplerate failed processing (" << src_strerror(err) <<")");
+		}
+		else
+		{
+			if(srcData.output_frames_gen < srcData.output_frames)
+			{
+				CLOG(LogLevel::WARNING, "jacks callback buffer has not been filled completely\noutput_frames_gen: " << srcData.output_frames_gen << " \noutput_frames: " << srcData.output_frames)
+				
+				const size_t diffItems = srcData.output_frames - srcData.output_frames_gen;
+				memset(this->interleavedProcessedBuffer.buf, 0, diffItems * sizeof(jack_default_audio_sample_t));
+			}
+			this->interleavedProcessedBuffer.ready = true;
+		}
+	}
+	return srcData.input_frames_used;
+}
+
+template<typename T> int JackOutput::write (const T* buffer, frame_t frames)
 {
 	if(this->interleavedProcessedBuffer.ready)
 	{
@@ -196,59 +251,12 @@ int JackOutput::write (int16_t* buffer, frame_t frames)
         
     	// converted_to_float_but_not_resampled buffer
     	float* tempBuf = new float[Items];
-    	for(unsigned int i = 0; i<Items; i++)
-        {
-            float& item = tempBuf[i];
-            // convert that item in buffer[i] to float
-            item = buffer[i] / (float)(numeric_limits<int16_t>::max()+1);
-            // amplify
-            item *= this->volume;
-            
-            // clip
-            if(item > 1.0f)
-            {
-            	item = 1.0f;
-            }
-            else if(item < -1.0f)
-            {
-            	item = -1.0f;
-            }
-        }
-        SRC_DATA srcData;
-        srcData.data_in = tempBuf;
-        srcData.input_frames = frames;
-        
-        // this is not the last buffer passed to src
-        srcData.end_of_input = 0;
-        
-        {
-	    	lock_guard<mutex> lock(this->mtx);
-	    	srcData.data_out = this->interleavedProcessedBuffer.buf;
-	    	srcData.output_frames = this->jackBufSize;
-	    	
-	    	// output_sample_rate / input_sample_rate
-	    	srcData.src_ratio = (double)this->jackSampleRate / this->currentSampleRate;
-	    	
-        	int err = src_process (this->srcState, &srcData);
-	    	if(err != 0 )
-	    	{
-	    		CLOG(LogLevel::ERROR, "libsamplerate failed processing (" << src_strerror(err) <<")");
-	    	}
-	    	else
-	    	{
-	    		if(srcData.output_frames_gen < srcData.output_frames)
-		        {
-		            CLOG(LogLevel::WARNING, "jacks callback buffer has not been filled completely\noutput_frames_gen: " << srcData.output_frames_gen << " \noutput_frames: " << srcData.output_frames)
-		            
-		            const size_t diffItems = srcData.output_frames - srcData.output_frames_gen;
-		            memset(this->interleavedProcessedBuffer.buf, 0, diffItems * sizeof(jack_default_audio_sample_t));
-		        }
-	        	this->interleavedProcessedBuffer.ready = true;
-	    	}
-        }
+    	this->getAmplifiedFloatBuffer<T>(buffer, tempBuf, Items);
+		
+		int framesUsed = this->doResampling(tempBuf, frames);
         
         delete[] tempBuf;
-        return srcData.input_frames_used;
+        return framesUsed;
     }
     else
     {
@@ -257,16 +265,14 @@ int JackOutput::write (int16_t* buffer, frame_t frames)
     }
 }
 
+int JackOutput::write (int16_t* buffer, frame_t frames)
+{
+	return this->write<int16_t>(buffer, frames);
+}
+
 int JackOutput::write (int32_t* buffer, frame_t frames)
 {
-    if (this->transportState == JackTransportRolling)
-    {
-        
-    }
-    else
-    {
-      return 0;
-    }
+	return this->write<int32_t>(buffer, frames);
 }
 
 
