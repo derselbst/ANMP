@@ -57,8 +57,7 @@ private:
   typedef struct
   {
       jack_default_audio_sample_t* buf = nullptr; // length of this buffer determined by jackBufSize
-      bool ready = false;
-      volatile bool consumed = true;
+      volatile bool ready = false;
   } jack_buffer_t;
   
   mutable std::mutex mtx;
