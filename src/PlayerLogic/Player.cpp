@@ -22,9 +22,7 @@
 #include "JackOutput.h"
 #endif
 
-#ifdef USE_LIBSND
 #include "WaveOutput.h"
-#endif
 
 #ifdef USE_PORTAUDIO
 #include "PortAudioOutput.h"
