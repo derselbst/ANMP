@@ -60,12 +60,12 @@ private:
       volatile bool ready = false;
   } jack_buffer_t;
   
+  SRC_DATA srcData;
   mutable std::mutex mtx;
   //*** Begin: mutex-protected vars ***//
   jack_buffer_t interleavedProcessedBuffer;
   volatile jack_nframes_t jackBufSize = 0;
   volatile jack_nframes_t jackSampleRate = 0;
-  jack_transport_state_t transportState = JackTransportStopped;
   //*** End: mutex-protected vars ***//
   
   static int processCallback(jack_nframes_t nframes, void* arg);
