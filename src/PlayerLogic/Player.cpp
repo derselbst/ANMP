@@ -46,12 +46,9 @@ Player::Player (IPlaylist* playlist)
 
 Player::~Player ()
 {
+    CLOG(LogLevel::DEBUG, "destroy player " << hex << this);
     this->pause();
 
-    if(this->audioDriver!=nullptr)
-    {
-        this->audioDriver->close();
-    }
     delete this->audioDriver;
 }
 
