@@ -34,7 +34,7 @@
 #define NULL 0
 #endif
 
-#if WIN32
+#ifdef WIN32
 #pragma warning( push )
 // Disable warning for multiple operator= defines
 #pragma warning( disable : 4522 )
@@ -1433,7 +1433,7 @@ tree_iterator<T> tree_iterator<T>::end_of_iterator;
 
 }
 
-#if WIN32
+#ifdef WIN32
 #pragma warning( pop )
 #endif // WIN32
 
