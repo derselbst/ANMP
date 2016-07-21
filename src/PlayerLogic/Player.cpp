@@ -4,6 +4,7 @@
 #include "Config.h"
 #include "Common.h"
 #include "CommonExceptions.h"
+#include "AtomicWrite.h"
 
 #include "Playlist.h"
 #include "Song.h"
@@ -17,9 +18,11 @@
 #include "ebur128Output.h"
 #endif
 
-#ifdef USE_LIBSND
-#include "WaveOutput.h"
+#ifdef USE_JACK
+#include "JackOutput.h"
 #endif
+
+#include "WaveOutput.h"
 
 #ifdef USE_PORTAUDIO
 #include "PortAudioOutput.h"
@@ -43,12 +46,9 @@ Player::Player (IPlaylist* playlist)
 
 Player::~Player ()
 {
+    CLOG(LogLevel::DEBUG, "destroy player " << hex << this);
     this->pause();
 
-    if(this->audioDriver!=nullptr)
-    {
-        this->audioDriver->close();
-    }
     delete this->audioDriver;
 }
 
@@ -68,6 +68,11 @@ void Player::_initAudio()
 #ifdef USE_EBUR128
     case ebur128:
         this->audioDriver = new ebur128Output(this);
+        break;
+#endif
+#ifdef USE_JACK
+    case JACK:
+        this->audioDriver = new JackOutput();
         break;
 #endif
     case WAVE:
@@ -513,24 +518,32 @@ void Player::playFrames (frame_t framesToPlay)
         
         int framesWritten = 0;
 
-		// before we go on rendering the next pcm chunk, we need to make sure the current chunk is fully played
-		// however, this only becomes necessary if we dont hold the whole song in memory
-        while(this->isPlaying && framesWritten!=framesToPush)
+        // PLAY!
+        again:
+        framesWritten = this->audioDriver->write(this->currentSong->data, framesToPush, itemOffset);
+        // before we go on rendering the next pcm chunk, make sure we really played the current one.
+        //
+        // audioDriver.write() may return a value !=framesToPush.
+        // In this case we should call audioDriver.write() again in order to fix playback whenever we dont hold the whole song in memory.
+        // However this breaks playback using jack, since there (usually) resampling is necessary and calling JackOutput::write() with only e.g. 100 frames will not produce enough resampled frames that can be put into jack's playback buffer, padding its buffer with zeros, resulting in interrupted playback.
+        //
+        // thus the case when audioDriver.write() was only able to partly play the provided pcm chunk, cannot be recovered
+        // but we can try it again whenever audioDriver failed at all (i.e. returned 0)
+        if(this->isPlaying && framesWritten==0)
         {
-			framesToPush -= framesWritten;
-			itemOffset += FramesToItems(framesWritten);
-			
-			// PLAY!
-			framesWritten = this->audioDriver->write(this->currentSong->data, framesToPush, itemOffset);
-            if(framesWritten == 0)
-            {
-                // something went terribly wrong, wait some time, so the cpu doesnt get too busy
-                this_thread::sleep_for(chrono::milliseconds(1));
-            }
+            // something went terribly wrong, wait some time, so the cpu doesnt get too busy
+            this_thread::sleep_for(chrono::milliseconds(1));
+            // and try again
+            goto again;
         }
 
         // ensure PCM buffer(s) are well filled
         this->currentSong->fillBuffer();
+        
+        if(framesWritten != framesToPush)
+        {
+            CLOG(LogLevel::INFO, "failed playing the rendered pcm chunk\nframes written: " << framesWritten << "\nframes pushed: " << framesToPush);
+        }
 
         // update the playhead
         this->playhead+=framesWritten;

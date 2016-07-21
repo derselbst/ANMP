@@ -11,7 +11,7 @@
 #include <sstream>
 #include <iomanip>
 
-#ifdef _POSIX_VERSION
+#ifdef _POSIX_SOURCE
 #include <strings.h> // strncasecmp
 extern "C"
 {
@@ -21,7 +21,7 @@ extern "C"
 
 using namespace std;
 
-#ifndef _POSIX_VERSION
+#ifndef _POSIX_SOURCE
 // helper function for case insensitive string compare
 // will workon all platforms, but probably slow
 bool iEqualsUgly(string strFirst, string strSecond)
@@ -42,7 +42,7 @@ bool iEqualsUgly(string strFirst, string strSecond)
 // helper function for case insensitive string compare
 bool iEquals(const string& str1, const string& str2)
 {
-#ifdef _POSIX_VERSION
+#ifdef _POSIX_SOURCE
     return strncasecmp(str1.c_str(), str2.c_str(), min(str1.size(),str2.size())) == 0;
 #else
     return iEqualsUgly(str1, str2);
@@ -166,7 +166,7 @@ frame_t msToFrames(const size_t& ms, const unsigned int& sampleRate)
 }
 
 
-#ifndef _WIN32
+#ifdef _WIN32
 #include <stdlib.h>
 
 char driveBuf[_MAX_DRIVE];
@@ -179,7 +179,7 @@ string mybasename(const string& path)
 {
     string s = string(path.c_str());
     
-#ifdef _POSIX_VERSION
+#ifdef _POSIX_SOURCE
     return string(basename( const_cast<char*>(s.c_str()) ));
 #elif _WINDOWS
     _splitpath(s.c_str(),

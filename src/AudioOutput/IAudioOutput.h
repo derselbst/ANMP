@@ -76,7 +76,7 @@ public:
     /**
      * pushes the pcm pointed to by buffer to the underlying audio driver and by that causes it to play
      *
-     * also takes care of pointer arithmetic
+     * this generic version also takes care of pointer arithmetic
      *
      * @param  frameBuffer buffer that holds the pcm
      * @param  frames no. of frames to be played from the buffer
@@ -88,6 +88,8 @@ public:
      * i.e. sizeof(frameBuffer)==(frames*this->currentChannelCount*sizeof(DataTypePointedToByBuffer))
      *
      * @return number of frames successfully pushed to underlying audio driver
+     * 
+     * @warning you can return a number smaller "frames" (but greater 0), however this case cannot always be recovered. you should better return 0 and play nothing, if you face such a problem.
      */
     virtual int write (pcm_t* frameBuffer, frame_t frames, int offset);
 
@@ -120,6 +122,8 @@ protected:
      * @note buffer has to contain (frames*this->currentChannelCount) items, i.e. sizeof(buffer)==(frames*this->currentChannelCount*sizeof(DataTypePointedToByBuffer))
      *
      * @return number of frames successfully pushed to underlying audio driver
+     * 
+     * @warning you can return a number smaller "frames" (but greater 0), however this case cannot always be recovered. you should better return 0 and play nothing, if you face such a problem.
      */
     virtual int write (float* buffer, frame_t frames) = 0;
     virtual int write (int16_t* buffer, frame_t frames) = 0;

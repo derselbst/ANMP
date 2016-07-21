@@ -14,7 +14,7 @@ add_subdirectory(PlayerLogic)
 
 
 # set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-export-all-symbols")
-add_library(${LIB_ANMP_CORE} SHARED $<TARGET_OBJECTS:anmp-audio-output>
+add_library(${LIB_ANMP_CORE} $<TARGET_OBJECTS:anmp-audio-output>
                                     $<TARGET_OBJECTS:anmp-common>
                                     $<TARGET_OBJECTS:anmp-input>
                                     $<TARGET_OBJECTS:anmp-player>)

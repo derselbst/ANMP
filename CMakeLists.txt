@@ -22,8 +22,8 @@ endif()
 set( CMAKE_POSITION_INDEPENDENT_CODE ON )
 
 ### set compile flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pedantic-errors -fstack-protector-all -Wall -Warray-bounds")
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -Wextra -D_GLIBCXX_DEBUG") # -Weffc++
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pedantic-errors -Wall -Warray-bounds -Wstack-protector")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -Wextra -fstack-check -fstack-protector-all -D_GLIBCXX_DEBUG") # -Weffc++
 
 
 ### setup project include dirs
@@ -47,6 +47,7 @@ set(LD_FLAGS ${LD_FLAGS} ${CMAKE_THREAD_LIBS_INIT})
 ### HANDLE AUDIO OUTPUT SUPPORT ###
 ###################################
 option(ENABLE_ALSA "Compile with support to use ALSA for playback" ON)
+option(ENABLE_JACK "Compile with support to use Jack for playback" ON)
 option(ENABLE_PORTAUDIO "Compile with support to use PortAudio for playback" ON)
 option(ENABLE_EBUR128 "Enable support for noise normalization through libebur128" ON)
 
@@ -55,6 +56,28 @@ if(ENABLE_ALSA)
   
   summary_add("ALSA support" ALSA_FOUND)
 endif(ENABLE_ALSA)
+
+
+if(ENABLE_JACK)
+  PKG_CHECK_MODULES(JACK jack)
+  PKG_CHECK_MODULES(SRC samplerate)
+  
+  if(JACK_FOUND AND SRC_FOUND)
+        add_definitions(-DUSE_JACK)
+        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${JACK_INCLUDE_DIRS})
+        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${SRC_INCLUDE_DIRS})
+        set(LD_FLAGS ${LD_FLAGS} ${JACK_LIBRARIES})
+        set(LD_FLAGS ${LD_FLAGS} ${SRC_LIBRARIES})
+        
+        MY_PRINT(JACK)
+        MY_PRINT(SRC)
+        
+        summary_add("Jack support" TRUE)
+  else(JACK_FOUND AND SRC_FOUND)
+        summary_add("Jack support" FALSE)
+  endif(JACK_FOUND AND SRC_FOUND)
+        
+endif(ENABLE_JACK)
 
 
 if(ENABLE_PORTAUDIO)
@@ -66,9 +89,9 @@ if(ENABLE_PORTAUDIO)
         set(LD_FLAGS ${LD_FLAGS} ${PORTAUDIO_LIBRARIES})
         
         MY_PRINT(PORTAUDIO)
-        
-        summary_add("PortAudio support" PORTAUDIO_FOUND)
   endif(PORTAUDIO_FOUND)
+        
+    summary_add("PortAudio support" PORTAUDIO_FOUND)
 endif(ENABLE_PORTAUDIO)
 
 
@@ -160,15 +183,15 @@ if(ENABLE_CUE)
         set(LD_FLAGS ${LD_FLAGS} ${LIBCUE_LIBRARIES})
         
         MY_PRINT(LIBCUE)
-        
-        summary_add("libcue support" LIBCUE_FOUND)
   endif(LIBCUE_FOUND)
+        
+    summary_add("libcue support" LIBCUE_FOUND)
 endif(ENABLE_CUE)
 
 
 if(ENABLE_GUI)
     # Qt library
-    MY_FIND_PKG(Qt5Widgets Qt5Widgets)
+    MY_FIND_PKG(Qt5Core Qt5Core)
     
     MY_FIND_PKG(Qt5OpenGL Qt5OpenGL)
 
@@ -177,10 +200,10 @@ if(ENABLE_GUI)
     
     # Executables fail to build with Qt 5 in the default configuration
     # without -fPIE. We add that here.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
+#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
     
     # We need add -DQT_WIDGETS_LIB when using QtWidgets in Qt 5.
-    add_definitions(${Qt5Widgets_DEFINITIONS})
+#     add_definitions(${Qt5Widgets_DEFINITIONS})
 
     # TODO: this is very ugly, any easier way??
     if(${Qt5Widgets_FOUND})

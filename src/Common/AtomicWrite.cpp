@@ -48,5 +48,5 @@ void AtomicWrite::write(enum LogLevel l, std::string s, std::ostream& o)
     }
 
     std::lock_guard<std::mutex> lock(this->mtx);
-    (*out) << logLev << ": " << s;
+    (*out) << logLev << ": " << s << std::endl;
 }
