@@ -58,10 +58,25 @@ see [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%
 * [libebur128](https://github.com/jiixyj/libebur128) (for generating loudness normalization files (*.ebur128) using anmp-normalize)
 * Qt5OpenGL (for nice blinky audio visualizers)
 
-## Building from Source
+## Building from Source (Linux)
 ```shell
 mkdir build && cd build
 cmake ..
 make
 ```
 
+## Building from Source (Windows)
+You probably want to use Visual Studio to get a native (preferably static) build of ANMP. Decide for one build architecture and one runtime library. Then:
+
+1. Make sure you have built the depending libraries you would like ANMP to use (see above)
+2. Instruct cmake where to find each and every of those library as well as its include dir (see below)
+3. Get a bunch of library conflict errors
+4. Mess around
+5. Start again at 1. with different architecture / runtime library
+
+I had several attempts to get ANMP built on Windows, couldnt get it working after spending a bunches of hours though. Static standalone Win32 builds welcome!
+
+```shell
+mkdir build && cd build
+cmake .. -G "Visual Studio 14 2015" -DENABLE_ALSA=0 -DENABLE_JACK=0 -DLIBSND_LIBRARIES=/path/to/sndfile
+```
