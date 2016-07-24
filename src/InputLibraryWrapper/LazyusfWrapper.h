@@ -58,11 +58,6 @@ private:
     // length in ms to fade
     unsigned long fade_ms = 0;
 
-    // esp. useful for DK64 usf set: some tracks are very silent, thanks to Wedge009 (tagger of DK64's usf set)
-    // we are provided with some volume information, we use them as a simple amplifier by multiplying this
-    // number with every sample usf_render() generates for us
-    int8_t volume = 1;
-
     unsigned char* usfHandle = nullptr;
 
 public:

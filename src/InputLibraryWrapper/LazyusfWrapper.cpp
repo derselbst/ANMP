@@ -213,13 +213,11 @@ int LazyusfWrapper::usf_info(void * context, const char * name, const char * val
         infoContext->enable_fifo_full = 1;
     }
 
-    else if (iEquals(name, "volume"))
-    {
-        infoContext->volume = atoi(value);
-    }
-
-
-    // TODO some usf files have "volume" information, figure out how to use them (e.g. DonkeyKong64 - s30 Baboon Balloon.miniusf)
+//     Therefore we have ebur128 loundness normalization:
+//     else if (iEquals(name, "volume"))
+//     {
+//         infoContext->volume = atoi(value);
+//     }
 
     return 0;
 }
