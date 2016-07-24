@@ -254,11 +254,11 @@ template<typename T> int ALSAOutput::write(T* buffer, frame_t frames)
             total += retval;
             if (total == frames)
             {
-                return total;
+                goto LEAVE_LOOP;
             }
 
             continue;
-        };
+        }
 
         switch (retval)
         {
@@ -273,7 +273,9 @@ template<typename T> int ALSAOutput::write(T* buffer, frame_t frames)
                 cout << "alsa_write: EPIPE " << this->epipe_count << endl;
                 if (this->epipe_count > 140)
                 {
-                    return retval;
+                    // well actually we wrote even less than nothing, but better return non negative here
+                    total = 0;
+                    goto LEAVE_LOOP;
                 }
             };
             this->epipe_count += 100;
@@ -282,25 +284,26 @@ template<typename T> int ALSAOutput::write(T* buffer, frame_t frames)
 
         case -EBADFD:
             cerr << "alsa_write: Bad PCM state" << endl;
-            return 0;
-            break;
+            total = 0;
+            goto LEAVE_LOOP;
 
         case -ESTRPIPE:
             cerr << "alsa_write: Suspend event" << endl;
-            return 0;
-            break;
+            total = 0;
+            goto LEAVE_LOOP;
 
         case -EIO:
             cout << "alsa_write: EIO" << endl;
-            return 0;
+            total = 0;
+            goto LEAVE_LOOP;
 
         default:
             cerr << "alsa_write: retval = " << retval << endl;
-            return 0;
-            break;
+            total = 0;
+            goto LEAVE_LOOP;
         } /* switch */
     } /* while */
-
+LEAVE_LOOP:
     delete [] processedBuffer;
     
     return total;
