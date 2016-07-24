@@ -107,7 +107,7 @@ endif(ENABLE_EBUR128)
 option(ENABLE_LIBGME "Use blargg's game-music-emu to support several video game emulated music formats" ON)
 option(ENABLE_LIBMAD "Use MAD to support MPEG audio formats" ON)
 option(ENABLE_LIBSND "Use sndfile to support common audio formats (FLAC, WAVE, OGG, etc.)" ON)
-option(ENABLE_LAZYUSF "Use lazyusf2 to support USF (Ultra64 Sound Format)" ON)
+option(ENABLE_LAZYUSF "Use lazyusf to support USF (Ultra64 Sound Format)" ON)
 option(ENABLE_VGMSTREAM "Use vgmstream to support innumerable streamed audio formats from video games." ON)
 option(ENABLE_FFMPEG "Use ffmpeg to support innumerable streamed audio formats, also from video streams." ON)
 
@@ -133,7 +133,7 @@ endif(ENABLE_LIBSND)
 
 
 if(ENABLE_LAZYUSF)
-    MY_FIND_LIB(LAZYUSF lazyusf2)
+    MY_FIND_LIB(LAZYUSF lazyusf)
     MY_FIND_LIB(PSFLIB psflib)
     MY_FIND_PKG(ZLIB ZLIB)
     
@@ -146,7 +146,7 @@ if(ENABLE_LAZYUSF)
         endif(${PSFLIB_FOUND})
     endif(${LAZYUSF_FOUND})
     
-    summary_add("lazyusf2 support" LAZYUSF_FOUND)
+    summary_add("lazyusf support" LAZYUSF_FOUND)
 endif(ENABLE_LAZYUSF)
 
 
