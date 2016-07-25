@@ -19,11 +19,16 @@ endif()
 
 
 # Global setting: build everything position independent
-set( CMAKE_POSITION_INDEPENDENT_CODE ON )
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+# by default, force c++11
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+
 
 ### set compile flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pedantic-errors -Wall -Warray-bounds -Wstack-protector")
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -Wextra -fstack-check -fstack-protector-all -D_GLIBCXX_DEBUG") # -Weffc++
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic-errors -Wall -Warray-bounds -Wstack-protector")
+set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -Wextra -fstack-check -fstack-protector-all -D_GLIBCXX_DEBUG")
 
 
 ### setup project include dirs
