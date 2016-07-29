@@ -99,12 +99,20 @@ public:
      *
      * specificly: defines samplerate, defines channelcount, provides a value for this->getFrames()
      *
-     * @exceptions throws runtime_error if file cannot be opened or smth. else goes wrong
+     * @exceptions throws runtime_error if file cannot be opened, is a file of unsupported format or smth. else that is crucial for decoding goes wrong
+     * 
+     * @note everytime this function returns (i.e. by NOT throwing an exception), it is assumed that the file tried to open can be decoded with that specific wrapper class
      */
     virtual void open () = 0;
 
     /**
      * frees all ressources acquired by this->open()
+     * 
+     * shall always be called after a call to this->open(), even if this->open() threw an exception
+     * 
+     * multiple calls to this method (i.e. without corresponding calls to this->open()) shall be possible, leading to no error
+     * 
+     * thus this method should at least be called by the destructor
      */
     virtual void close () noexcept = 0 ;
 
@@ -117,6 +125,8 @@ public:
 
     /**
      * frees all ressources acquired by this->fillBuffer()
+     * 
+     * multiple calls to this method (i.e. without corresponding calls to this->fillBuffer()) shall be possible, leading to no error
      */
     virtual void releaseBuffer () noexcept = 0;
 
@@ -141,9 +151,12 @@ public:
     virtual frame_t getFrames () const = 0;
 
 
-
+    /**
+     * public helper method for building up the this->loopTree
+     */
     void buildLoopTree();
 
+    // TODO: REMOVE ME? or better really implement and use me?
     bool isPlayable() noexcept;
 
 private:
