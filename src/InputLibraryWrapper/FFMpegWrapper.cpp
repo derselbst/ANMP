@@ -43,14 +43,14 @@ void FFMpegWrapper::open ()
     av_register_all();
 
     // The last three parameters specify the file format, buffer size and
-    // format parameters. By simply specifying NULL or 0 we ask libavformat
+    // format parameters. By simply specifying nullptr or 0 we ask libavformat
     // to auto-detect the format and use a default buffer size.
-    if(avformat_open_input(&this->handle, this->Filename.c_str(), NULL, NULL) != 0)
+    if(avformat_open_input(&this->handle, this->Filename.c_str(), nullptr, nullptr) != 0)
     {
         THROW_RUNTIME_ERROR("Failed to open file " << this->Filename);
     }
 
-    if (avformat_find_stream_info(this->handle, NULL) < 0)
+    if (avformat_find_stream_info(this->handle, nullptr) < 0)
     {
         THROW_RUNTIME_ERROR("Faild to gather stream info(s) from file " << this->Filename);
     }
@@ -61,17 +61,14 @@ void FFMpegWrapper::open ()
     // Find the first audio stream:
     this->audioStreamID = -1;
 
-    for(unsigned int i=0; i<this->handle->nb_streams; i++)
+    int ret = av_find_best_stream(this->handle, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
+    if (ret < 0)
     {
-        if(this->handle->streams[i]->codec->codec_type==AVMEDIA_TYPE_AUDIO)
-        {
-            this->audioStreamID=i;
-            break;
-        }
+        THROW_RUNTIME_ERROR("Could not find " << av_get_media_type_string(AVMEDIA_TYPE_AUDIO) << " stream in \"" << this->Filename << "\"");
     }
-    if(this->audioStreamID==-1)
+    else
     {
-        THROW_RUNTIME_ERROR("Didnt find an audio stream in file " << this->Filename);
+        this->audioStreamID = ret;
     }
 
     // Get a pointer to the codec context for the audio stream
@@ -79,13 +76,13 @@ void FFMpegWrapper::open ()
 
     // Find the decoder for the audio stream
     AVCodec *decoder = avcodec_find_decoder(pCodecCtx->codec_id);
-    if(decoder==NULL)
+    if(decoder==nullptr)
     {
         THROW_RUNTIME_ERROR("Codec type " <<  pCodecCtx->codec_id << " not found.")
     }
 
     // Open the codec found suitable for this stream in the last step
-    if(avcodec_open2(pCodecCtx, decoder, NULL)<0)
+    if(avcodec_open2(pCodecCtx, decoder, nullptr)<0)
     {
         THROW_RUNTIME_ERROR("Could not open decoder.");
     }
@@ -147,6 +144,60 @@ void FFMpegWrapper::fillBuffer()
     StandardWrapper::fillBuffer(this);
 }
 
+int FFMpegWrapper::decode_packet(int16_t* (&pcm), int& framesToDo, int& got_frame, AVPacket& pkt, AVFrame* (&frame))
+{
+    int decoded = pkt.size;
+
+    got_frame = 0;
+
+    if (pkt.stream_index == this->audioStreamID)
+    {
+        /* decode audio frame */
+        int ret = avcodec_decode_audio4(this->handle->streams[this->audioStreamID]->codec, frame, &got_frame, &pkt);
+        if (ret < 0)
+        {
+                CLOG(LogLevel::ERROR, "Failed decoding audio frame");
+        }
+        
+        /* Some audio decoders decode only part of the packet, and have to be
+         * called again with the remainder of the packet data.
+         * Sample: fate-suite/lossless-audio/luckynight-partial.shn
+         * Also, some decoders might over-read the packet. */
+        decoded = min(ret, pkt.size);
+
+        if(got_frame != 0)
+        {
+            // make sure we dont run over buffer
+            int framesToConvert = min(frame->nb_samples, framesToDo);
+
+            swr_convert(this->swr, reinterpret_cast<uint8_t**>(&pcm), framesToConvert, const_cast<const uint8_t**>(frame->extended_data), framesToConvert);
+
+            size_t unpadded_linesize = framesToConvert * frame->channels;// * sizeof(int16_t); //* av_get_bytes_per_sample((AVSampleFormat)frame->format);
+            pcm += unpadded_linesize;
+
+            framesToDo -= framesToConvert;
+
+            if(framesToDo < 0)
+            {
+                CLOG(LogLevel::ERROR, "THIS SHOULD NEVER HAPPEN! bufferoverrun ffmpegwrapper")
+            }
+
+            this->framesAlreadyRendered += framesToConvert;
+        }
+    }
+    else
+    {
+      // dont care
+    }
+
+    /* If we use frame reference counting, we own the data and need
+     * to de-reference it when we don't use it anymore */
+//     if (*got_frame && refcount)
+//         av_frame_unref(frame);
+
+    return decoded;
+}
+
 // TODO: this crap is not guaranteed to generate exactly framesToRender frames, there might by more thrown out, which is bad in case of a limited buffer
 void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
@@ -163,72 +214,71 @@ void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
     //data packet read from the stream
     AVPacket packet;
+    
+    /* initialize packet, set data to nullptr, let the demuxer fill it */
     av_init_packet(&packet);
+    packet.data = nullptr;
+    packet.size = 0;
 
-//     const int buffer_size=192000 + FF_INPUT_BUFFER_PADDING_SIZE; // AVCODEC_MAX_AUDIO_FRAME_SIZE
-//     uint8_t buffer[buffer_size];
-//     packet.data=buffer;
-//     packet.size =buffer_size;
 
     //frame, where the decoded data will be written
     AVFrame *frame=av_frame_alloc();
-    if(frame==NULL)
+    if(frame==nullptr)
     {
         THROW_RUNTIME_ERROR("Cannot allocate AVFrame.")
     }
 
     int frameFinished=0;
 
-    // cast it to stupid byte pointer
+    // int16 because we told swr to convert everything to int16
     int16_t* pcm = static_cast<int16_t*>(bufferToFill);
     pcm += this->framesAlreadyRendered * this->Format.Channels;
 
+    
     while(!this->stopFillBuffer &&
             framesToDo > 0 &&
-            pcm < static_cast<int16_t*>(bufferToFill) + this->count &&
-            av_read_frame(this->handle,&packet)==0
+            pcm < static_cast<int16_t*>(bufferToFill) + this->count
          )
     {
-        if(packet.stream_index==this->audioStreamID)
+      
+      /* read frames from the file */
+      int ret = av_read_frame(this->handle,&packet);
+      if (ret < 0)
+      {
+            if (ret == AVERROR_EOF || avio_feof(this->handle->pb))
+            {
+                CLOG(LogLevel::DEBUG, "AVERROR_EOF");
+                break;
+            }
+            if (this->handle->pb!=nullptr && this->handle->pb->error)
+            {
+                CLOG(LogLevel::DEBUG, "pb error: " << this->handle->pb->error);
+                break;
+            }
+        }
+        
+        AVPacket orig_pkt = packet;
+        do
         {
-            int ret = avcodec_decode_audio4(this->handle->streams[this->audioStreamID]->codec, frame, &frameFinished, &packet);
-
+            ret = decode_packet(pcm, framesToDo, frameFinished, packet, frame);
             if (ret < 0)
-            {
-                THROW_RUNTIME_ERROR("Error decoding audio frame"/* (" << av_err2str(ret) << ")"*/);
-            }
-
-            if(frameFinished != 0)
-            {
-                // make sure we dont run over buffer
-                int framesToConvert = min(frame->nb_samples, framesToDo);
-
-                swr_convert(this->swr, reinterpret_cast<uint8_t**>(&pcm), framesToConvert, const_cast<const uint8_t**>(frame->extended_data), framesToConvert);
-
-                size_t unpadded_linesize = framesToConvert * frame->channels;// * sizeof(int16_t); //* av_get_bytes_per_sample((AVSampleFormat)frame->format);
-                pcm += unpadded_linesize;
-
-                framesToDo -= framesToConvert;
-
-                if(framesToDo < 0)
-                {
-                    CLOG(LogLevel::ERROR, "THIS SHOULD NEVER HAPPEN! bufferoverrun ffmpegwrapper")
-                }
-
-                this->framesAlreadyRendered += framesToConvert;
-            }
-            else
-            {
-                // no clue what to do here...
-            }
-        }
-        else
-        {
-            //someother stream,probably a video stream
-        }
-
-        av_packet_unref(&packet);
+                break;
+            packet.data += ret;
+            packet.size -= ret;
+        } while (packet.size > 0);
+        
+        av_packet_unref(&orig_pkt);
     }
+
+    /* flush any cached frames */
+    packet.data = nullptr;
+    packet.size = 0;
+    do
+    {
+        decode_packet(pcm, framesToDo, frameFinished, packet, frame);
+    } while (frameFinished);
+
+    
     av_frame_free(&frame);
 }
 

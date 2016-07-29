@@ -68,6 +68,8 @@ private:
     SwrContext *swr = nullptr;
 
     int audioStreamID = -1;
+    
+    int decode_packet(int16_t* (&pcm), int& framesToDo, int& got_frame, AVPacket& pkt, AVFrame * (&frame));
 };
 
 #endif // FFMPEGWRAPPER_H
