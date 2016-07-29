@@ -1,5 +1,6 @@
 #include "Common.h"
 #include "CommonExceptions.h"
+#include "AtomicWrite.h"
 
 
 #include <iostream>
@@ -13,6 +14,7 @@
 
 #ifdef _POSIX_SOURCE
 #include <strings.h> // strncasecmp
+#include <sys/stat.h>
 extern "C"
 {
 #include <libgen.h> // basename, dirname
@@ -208,4 +210,22 @@ string mydirname(const string& path)
 {
     string s = string(path.c_str());
     return string(dirname( const_cast<char*>(s.c_str()) ));
+}
+
+
+size_t getFileSize(FILE* f)
+{
+    int fd = fileno(f);
+    return getFileSize(fd);
+}
+
+size_t getFileSize(int fd)
+{
+    struct stat stat;
+    if (fstat(fd, &stat) == -1)
+    {
+        THROW_RUNTIME_ERROR("fstat failed (" << strerror(errno) << ")");
+    }
+    
+    return stat.st_size;
 }

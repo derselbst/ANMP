@@ -11,10 +11,9 @@
 #include <mad.h>
 
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <sys/mman.h>
-#include <string.h> // strerror
+#include <cstring> // strerror
 
 
 LibMadWrapper::LibMadWrapper(string filename) : StandardWrapper(filename)
@@ -54,15 +53,8 @@ void LibMadWrapper::open ()
     }
 
     int fd = fileno(this->infile);
-    struct stat stat;
-    if (fstat(fd, &stat) == -1 || stat.st_size == 0)
-    {
-        THROW_RUNTIME_ERROR("fstat failed for File \"" << this->Filename << ")\"");
-    }
-
-    this->mpeglen = stat.st_size;
-
-    this->mpegbuf = static_cast<unsigned char*>(mmap(0, this->mpeglen, PROT_READ, MAP_SHARED, fd, 0));
+    this->mpeglen = getFileSize(fd);
+    this->mpegbuf = static_cast<unsigned char*>(mmap(nullptr, this->mpeglen, PROT_READ, MAP_SHARED, fd, 0));
     if (this->mpegbuf == MAP_FAILED)
     {
         THROW_RUNTIME_ERROR("mmap failed for File \"" << this->Filename << ")\"");
@@ -84,6 +76,9 @@ void LibMadWrapper::open ()
 
         if(ret!=0)
         {
+            // only free the locally used header here, this->stream and this->mpegbuf are freed in LibMadWrapper::close()
+            mad_header_finish(&header);
+            
             THROW_RUNTIME_ERROR("unable to find a valid frame-header for File \"" + this->Filename + ")\"");
         }
 
@@ -111,12 +106,12 @@ void LibMadWrapper::open ()
             // sanity checks
             if(this->Format.Channels != MAD_NCHANNELS(&header))
             {
-                THROW_RUNTIME_ERROR("channelcount varies within File \"" << this->Filename << ")\"");
+                CLOG(LogLevel::WARNING, "channelcount varies within File \"" << this->Filename << ")\"");
             }
 
             if(this->Format.SampleRate != header.samplerate)
             {
-                THROW_RUNTIME_ERROR("samplerate varies within File \"" << this->Filename << ")\"");
+                CLOG(LogLevel::WARNING, "samplerate varies within File \"" << this->Filename << ")\"");
             }
 
             this->numFrames += 32 * MAD_NSBSAMPLES(&header);
