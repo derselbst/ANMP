@@ -33,7 +33,7 @@ public:
      * @param  filePath
      * @param  offset
      */
-    static Song* addSong (IPlaylist& playlist, const string filePath, Nullable<size_t> offset = Nullable<size_t>(), Nullable<size_t> len = Nullable<size_t>(), Nullable<SongInfo> overridingMetadata = Nullable<SongInfo>());
+    static bool addSong (IPlaylist& playlist, const string filePath, Nullable<size_t> offset = Nullable<size_t>(), Nullable<size_t> len = Nullable<size_t>(), Nullable<SongInfo> overridingMetadata = Nullable<SongInfo>());
 
 #ifdef USE_CUE
     static void parseCue (IPlaylist& playlist, const string&filePath);

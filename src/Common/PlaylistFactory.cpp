@@ -146,7 +146,7 @@ if(pcm==nullptr)\
     }\
 }
 
-Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nullable<size_t> offset, Nullable<size_t> len, Nullable<SongInfo> overridingMetadata)
+bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nullable<size_t> offset, Nullable<size_t> len, Nullable<SongInfo> overridingMetadata)
 {
     string ext = getFileExtension(filePath);
     Song* pcm=nullptr;
@@ -157,20 +157,26 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Null
         PlaylistFactory::parseCue(playlist, filePath);
 #endif
     }
+    
 #ifdef USE_LAZYUSF
     else if (iEquals(ext, "usf") || iEquals(ext, "miniusf"))
     {
         TRY_WITH(LazyusfWrapper)
     }
 #endif
+
 #ifdef USE_LIBGME
-    else if((iEquals(ext, "gbs") || iEquals(ext, "nsf")) && !offset.hasValue && !len.hasValue)
+    else if((iEquals(ext, "gbs") || iEquals(ext, "nsf")) // for files that can contain multiple sub-songs
+             && !offset.hasValue && !len.hasValue) // and this is the first call for this file, i.e. no sub-songs and song lengths have been specified
     {
+      // ... try to parse that file
+      
         Music_Emu * emu=nullptr;
         gme_err_t msg = gme_open_file(filePath.c_str(), &emu, gme_info_only);
         if(msg || emu == nullptr)
         {
-            return pcm;
+            // an error msg has been set or the emulator is null
+            return false;
         }
 
         int trackCount = gme_track_count(emu);
@@ -179,16 +185,25 @@ Song* PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Null
 
         for(int i=0; i<trackCount; i++)
         {
+            // add each sub-song again, with default playing time of 3 mins
             PlaylistFactory::addSong(playlist, filePath, i, 3*60*1000);
         }
     }
 #endif
+
 #ifdef USE_LIBMAD
     else if(iEquals(ext, "mp3"))
     {
         goto l_LIBMAD;
     }
 #endif
+
+    else if(iEquals(ext, "ebur128") || iEquals(ext, "mood"))
+    {
+      // moodbar and loudness files, dont care
+      return false;
+    }
+    
     else
     {
         // so many formats to test here, try and error
@@ -229,14 +244,13 @@ l_LIBMAD:
 
     if(pcm==nullptr)
     {
-        // log it away
-        return pcm;
+        return false;
     }
 
     if(pcm->getFrames() <= 0)
     {
         // valid file, but nothing to play
-        return pcm;
+        return false;
     }
 
     pcm->buildLoopTree();
@@ -283,7 +297,7 @@ l_LIBMAD:
 
     playlist.add(pcm);
 
-    return pcm;
+    return true;
 }
 
 
