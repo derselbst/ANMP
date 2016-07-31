@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR) # because of CMAKE_CXX_STANDARD
 project (ANMP)
 
 ### setup binary output directories
@@ -23,12 +23,14 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # by default, force c++11
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 ### set compile flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic-errors -Wall -Warray-bounds -Wstack-protector")
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -Wextra -fstack-check -fstack-protector-all -D_GLIBCXX_DEBUG")
+if (CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic-errors -Wall -Warray-bounds -Wstack-protector")
+    set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -Wextra -fstack-check -fstack-protector-all -D_GLIBCXX_DEBUG")
+endif(CMAKE_COMPILER_IS_GNUCXX)
 
 
 ### setup project include dirs

@@ -1,20 +1,35 @@
 #include <iostream>
 #include <string>
 
-#include "unistd.h"
+// #include "unistd.h"
 
 #include "types.h"
 #include "Playlist.h"
 #include "PlaylistFactory.h"
 #include "Player.h"
+#include "Song.h"
 #include "Config.h"
 
 
 
-//     #include <experimental/filesystem>
+#include <experimental/filesystem>
+#include <thread>
+#include <chrono>
 
 using namespace std;
-// using std::experimental::filesystem::recursive_directory_iterator;
+using namespace std::experimental::filesystem;
+
+IPlaylist* plist;
+
+void onSongChanged(void* pthis)
+{
+  (void) pthis;
+  
+  Song* s = plist->current();
+  
+  cout << "Now handling: " << s->Filename << endl;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -25,24 +40,14 @@ int main(int argc, char* argv[])
     Config::useHle = true;
 
 
-// for (auto& dirEntry : recursive_directory_iterator(myPath))
-//      cout << dirEntry << endl;
-//
-//     return  0;
-
-
-    vector<string> filenames;
-//     filenames.push_back("something");
+    plist = new Playlist();
+    
     for(int i=1; i<argc; i++)
     {
-        filenames.push_back(argv[i]);
-    }
-
-    IPlaylist* plist = new Playlist();
-
-    for(unsigned int i=0; i<filenames.size(); i++)
-    {
-        PlaylistFactory::addSong(*plist, filenames[i]);
+      for (directory_entry dirEntry : recursive_directory_iterator(argv[i]))
+      {
+        PlaylistFactory::addSong(*plist, dirEntry.path());
+      }
     }
 
     // terminate when reaching end of playlist
@@ -50,11 +55,12 @@ int main(int argc, char* argv[])
 
 
     Player p(plist);
+    p.onCurrentSongChanged += make_pair(nullptr, &onSongChanged);
     p.play();
 
     while(p.getIsPlaying())
     {
-        sleep(1);
+      this_thread::sleep_for(chrono::seconds(1));
     }
 
     delete plist;

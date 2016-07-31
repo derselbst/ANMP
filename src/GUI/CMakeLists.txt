@@ -1,5 +1,4 @@
-# due to CMAKE_AUTOUIC and CMAKE_AUTORCC
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.0 FATAL_ERROR) # due to CMAKE_AUTOUIC and CMAKE_AUTORCC
 
 project(anmp-gui)
 

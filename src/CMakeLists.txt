@@ -31,7 +31,12 @@ if(EBUR128_FOUND)
 
     add_executable(${ANMP_NORM} anmp-normalize.cpp)
     set(LINK_FLAGS ${LINK_FLAGS} "-Wl,-whole-archive")
+    
     target_link_libraries(${ANMP_NORM} ${LIB_ANMP_CORE})
+    if (CMAKE_COMPILER_IS_GNUCXX)
+      target_link_libraries(${ANMP_NORM} stdc++fs)
+    endif (CMAKE_COMPILER_IS_GNUCXX)
+    
     install(TARGETS ${ANMP_NORM} DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
     
     set_property(TARGET ${ANMP_NORM} PROPERTY CXX_STANDARD 14)
