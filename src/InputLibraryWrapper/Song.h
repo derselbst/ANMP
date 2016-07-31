@@ -41,10 +41,14 @@ public:
     // fullpath to underlying audio file
     string Filename = "";
 
-    // how many milliseconds to skip when reading pcm from file
+    // an in-file-offset. its usage can be determined by child classes
+    //
+    // usual usage: how many milliseconds to skip when reading pcm from file
+    //    
+    // or it can be used as sub-song-offset (if one file contains multiple files) 
     Nullable<size_t> fileOffset;
 
-    // how many milliseconds following offset shall be used for playing
+    // how many milliseconds following "fileOffset" shall be used for playing
     Nullable<size_t> fileLen;
 //--------------------------------------------------------------------
 
