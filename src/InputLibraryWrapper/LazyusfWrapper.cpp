@@ -106,6 +106,7 @@ frame_t LazyusfWrapper::getFrames () const
     }
     else
     {
+        // 3 minutes by default
         return msToFrames(3*60*1000, this->Format.SampleRate);
     }
 }
@@ -160,7 +161,10 @@ int LazyusfWrapper::usf_info(void * context, const char * name, const char * val
 
     if (iEquals(name, "length"))
     {
+      if(!infoContext->fileLen.hasValue)
+      {
         infoContext->fileLen = parse_time_crap(value);
+      }
     }
 
     else if (iEquals(name, "fade"))
