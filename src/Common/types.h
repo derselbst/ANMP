@@ -1,14 +1,27 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include <cstdint>
-#include "int24_t.hpp"
+// declares commonly used types
 
+
+#include <cstdint>
+
+// includes all headers with no corresponding cpp file
+
+#include "CommonExceptions.h"
+#include "Event.h"
+#include "Nullable.h"
+#include "tree.h"
+
+// type used for all pcm buffers
+// only IAudioOutput needs to know the specific type, determined by SampleFormat_t
 typedef void pcm_t;
 
 // usually stays unsigned, but for calculation purposes we better use signed
 typedef int64_t frame_t;
 
+// TODO: as of 2015-08-01 only Forward is used
+// thus either implement the rest or remove me
 typedef enum LoopType
 {
     Forward,
@@ -30,7 +43,7 @@ typedef struct loop
     // zero indicates playing forever
     uint32_t count = 0;
 
-    // never evaluated
+    // as of 2015-08-01 never evaluated
     LoopType_t type = LoopType::Forward;
 
     friend bool operator < (struct loop const& lhs, struct loop const& rhs)
@@ -54,15 +67,19 @@ typedef enum AudioDriver
 #ifdef USE_ALSA
     ALSA,
 #endif
+    
 #ifdef USE_EBUR128
     ebur128,
 #endif
+    
 #ifdef USE_JACK
     JACK,
 #endif
+    
 #ifdef USE_PORTAUDIO
     PORTAUDIO,
 #endif
+    
     WAVE,
 } AudioDriver_t;
 
