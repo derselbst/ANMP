@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR) # because of CMAKE_CXX_STANDARD
-project (ANMP)
+project (anmp)
 
 ### setup binary output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build)
@@ -229,4 +229,15 @@ message("")
 ### Show a summary of what we got
 summary_show()
 
+
+include_directories(${PROJECT_INCLUDE_DIR})
+
+# anmp-core
 add_subdirectory(src)
+
+# anmp-qt
+add_subdirectory(gui)
+
+# anmp-normalize
+add_subdirectory(utils)
+

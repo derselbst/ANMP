@@ -27,7 +27,7 @@ Cue sheets will just add the same song file multiple times to a playlist, but wi
 
 Implementing new formats shall be done by implementing the abstract base class **Song**. By that a wrapper for any library that actually supports this format is written.
 
-The core of ANMP (i.e. everything not in [src/GUI](src/GUI)) is strictly keept free of any QT5 dependencies. Makes reuseage a lot easier.
+The core of ANMP (i.e. everything not in [src/](src/)) is strictly keept free of any QT5 dependencies. Makes reuseage a lot easier.
 
 ## Get ANMP
 see [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%3Aanmp&package=anmp) for precompiled packages

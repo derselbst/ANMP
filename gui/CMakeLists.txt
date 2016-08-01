@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR) # due to CMAKE_AUTOUIC and CMAKE_AUTORCC
 
-project(anmp-gui)
+project(anmp-qt)
 
-include_directories(${PROJECT_INCLUDE_DIR})
 
 
 # Tell CMake to run moc when necessary:
@@ -36,15 +35,15 @@ if(QT5_FOUND)
         overlaycontrol.ui
     )
 
-    add_executable(anmp-qt ${UI_HEADERS} ${GUI_SRCS} icons.qrc)
+    add_executable(${PROJECT_NAME} ${UI_HEADERS} ${GUI_SRCS} icons.qrc)
     
     # should add all necessary compile and link flags
-    qt5_use_modules(anmp-qt Core OpenGL)
+    qt5_use_modules(${PROJECT_NAME} Core OpenGL)
 
-    target_link_libraries(anmp-qt
+    target_link_libraries(${PROJECT_NAME}
         ${LIBANAL}
-        ${LIB_ANMP_CORE}
+        anmp-core
         ${LD_FLAGS}
     )
-    install(TARGETS anmp-qt DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif(QT5_FOUND)
