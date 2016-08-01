@@ -42,7 +42,7 @@ if(QT5_FOUND)
 
     target_link_libraries(${PROJECT_NAME}
         ${LIBANAL}
-        anmpcore
+        anmp
         ${LD_FLAGS}
     )
     install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})

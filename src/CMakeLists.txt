@@ -1,4 +1,4 @@
-project(anmpcore)
+project(anmp)
 
 
 
