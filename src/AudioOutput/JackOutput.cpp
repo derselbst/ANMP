@@ -88,10 +88,10 @@ void JackOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
   // register "channels" number of input ports
   
   
-  if(this->currentChannelCount < channels)
+  if(this->playbackPorts.size() < channels)
   {
   char portName[3+1];
-  	  for(unsigned int i=this->currentChannelCount; i<channels && i <= 99; i++)
+  	  for(unsigned int i=this->playbackPorts.size(); i<channels && i <= 99; i++)
 	  {
 	    snprintf(portName, 3+1, "%.2d", i);
 	
@@ -107,9 +107,10 @@ void JackOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
 	    this->playbackPorts.push_back(out_port);
 	  }
   }
-  else if(this->currentChannelCount > channels)
+  else if(this->playbackPorts.size() > channels)
   {
-          // assumption that (this->currentChannelCount == this->playbackPorts.size()) may not always be correct
+    // 2016-08-06: dont deregister port!
+/*          // assumption that (this->currentChannelCount == this->playbackPorts.size()) may not always be correct
   	  for(int i=this->playbackPorts.size()-1; i>=channels; i--)
 	  {
 	    int err = jack_port_unregister (this->handle, this->playbackPorts[i]);
@@ -119,11 +120,11 @@ void JackOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
 	    }
 	    
 	    this->playbackPorts.pop_back();
-	  }
+	  }*/
   }
   else
   {
-  	// this->currentChannelCount == channels, nothing to do here
+  	// this->playbackPorts.size() == channels, nothing to do here
   }
   
   
