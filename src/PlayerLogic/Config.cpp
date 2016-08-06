@@ -70,6 +70,6 @@ bool Config::gmeAccurateEmulation = true;
 
 /* Adjust stereo echo depth, where 0.0 = off and 1.0 = maximum. Has no effect for
 GYM, SPC, and Sega Genesis VGM music */
-float Config::gmeEchoDepth = 0.2;
+float Config::gmeEchoDepth = 0.2f;
 
 bool Config::gmePlayForever = false;
