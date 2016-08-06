@@ -31,6 +31,16 @@ private slots:
 
     void on_spinFadePause_valueChanged(int arg1);
 
+    void on_usfUseHle_clicked(bool checked);
+
+    void on_spinGmeSfx_valueChanged(double arg1);
+
+    void on_spinGmeSampleRate_valueChanged(int arg1);
+
+    void on_checkGmeAccurate_clicked(bool checked);
+
+    void on_checkGmeForever_clicked(bool checked);
+
 private:
     Ui::ConfigDialog *ui;
 };

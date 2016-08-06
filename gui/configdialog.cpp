@@ -17,6 +17,13 @@ ConfigDialog::ConfigDialog(QWidget *parent) :
     this->ui->spinFadePause->setValue(Config::fadeTimePause);
     this->ui->spinFadeStop->setValue(Config::fadeTimeStop);
     this->ui->spinLoopCount->setValue(Config::overridingGlobalLoopCount);
+
+    this->ui->usfUseHle->setChecked(Config::useHle);
+
+    this->ui->spinGmeSampleRate->setValue(Config::gmeSampleRate);
+    this->ui->spinGmeSfx->setValue(Config::gmeEchoDepth);
+    this->ui->checkGmeAccurate->setChecked(Config::gmeAccurateEmulation);
+    this->ui->checkGmeForever->setChecked(Config::gmePlayForever);
 }
 
 ConfigDialog::~ConfigDialog()
@@ -57,4 +64,29 @@ void ConfigDialog::on_spinFadeStop_valueChanged(int arg1)
 void ConfigDialog::on_spinFadePause_valueChanged(int arg1)
 {
     Config::fadeTimePause = arg1;
+}
+
+void ConfigDialog::on_usfUseHle_clicked(bool checked)
+{
+    Config::useHle = checked;
+}
+
+void ConfigDialog::on_spinGmeSfx_valueChanged(double arg1)
+{
+    Config::gmeEchoDepth = static_cast<float>(arg1);
+}
+
+void ConfigDialog::on_spinGmeSampleRate_valueChanged(int arg1)
+{
+    Config::gmeSampleRate = arg1;
+}
+
+void ConfigDialog::on_checkGmeAccurate_clicked(bool checked)
+{
+    Config::gmeAccurateEmulation = checked;
+}
+
+void ConfigDialog::on_checkGmeForever_clicked(bool checked)
+{
+    Config::gmePlayForever = checked;
 }
