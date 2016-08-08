@@ -373,6 +373,15 @@ void Player::seekTo (frame_t frame)
  */
 void Player::_seekTo (frame_t frame)
 {
+    if(frame < 0)
+    {
+        frame = 0;
+    }
+    else if(frame > this->currentSong->getFrames()-Config::FramesToRender)
+    {
+        return;
+    }
+    
     this->playhead=frame;
 }
 
