@@ -360,8 +360,7 @@ void Player::fadeout (unsigned int fadeTime)
  */
 void Player::seekTo (frame_t frame)
 {
-    if(this->currentSong!=nullptr &&
-            SEEK_POSSIBLE)
+    if(SEEK_POSSIBLE)
     {
         this->_seekTo(frame);
     }
@@ -375,9 +374,10 @@ void Player::_seekTo (frame_t frame)
 {
     if(frame < 0)
     {
+        // negative frame not allowed for playhead, silently set it to 0
         frame = 0;
     }
-    else if(frame > this->currentSong->getFrames()-Config::FramesToRender)
+    else if(this->currentSong == nullptr || frame > this->currentSong->getFrames()-Config::FramesToRender)
     {
         return;
     }
