@@ -60,8 +60,6 @@ void LibMadWrapper::open ()
         THROW_RUNTIME_ERROR("mmap failed for File \"" << this->Filename << ")\"");
     }
 
-    struct mad_header header;
-    mad_header_init(&header);
 
     this->stream = new struct mad_stream;
     mad_stream_init(this->stream);
@@ -70,6 +68,9 @@ void LibMadWrapper::open ()
 
     if(this->numFrames==0)
     {
+        struct mad_header header;
+        mad_header_init(&header);
+    
         int ret;
         // try to find a valid header
         while((ret=mad_header_decode(&header, this->stream))!=0 && MAD_RECOVERABLE(this->stream->error));
@@ -82,48 +83,67 @@ void LibMadWrapper::open ()
             THROW_RUNTIME_ERROR("unable to find a valid frame-header for File \"" + this->Filename + ")\"");
         }
 
+        // a first valid header is good, but it may contain garbage
         this->Format.Channels = MAD_NCHANNELS(&header);
         this->Format.SampleRate = header.samplerate;
+        CLOG(LogLevel::DEBUG, "found valid header within File \"" << this->Filename << ")\"\n\tchannels: " << MAD_NCHANNELS(&header) << "\nsrate: " << header.samplerate);
 
         // no clue what this 32 does
         // stolen from mad_synth_frame() in synth.c
         this->numFrames = 32 * MAD_NSBSAMPLES(&header);
 
-        while(1)
+        // try to find a second valid header
+        while((ret=mad_header_decode(&header, this->stream))!=0 && MAD_RECOVERABLE(this->stream->error));
+        if(ret==0)
         {
-            if(mad_header_decode(&header, this->stream)!=0)
-            {
-                if(MAD_RECOVERABLE(this->stream->error))
-                {
-                    continue;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            // sanity checks
-            if(this->Format.Channels != MAD_NCHANNELS(&header))
-            {
-                CLOG(LogLevel::WARNING, "channelcount varies within File \"" << this->Filename << ")\"");
-            }
-
-            if(this->Format.SampleRate != header.samplerate)
-            {
-                CLOG(LogLevel::WARNING, "samplerate varies within File \"" << this->Filename << ")\"");
-            }
-
+            // better use format infos from this header
+            this->Format.Channels = MAD_NCHANNELS(&header);
+            this->Format.SampleRate = header.samplerate;
+            
             this->numFrames += 32 * MAD_NSBSAMPLES(&header);
-        }
+            
+            // now lets go on and decode rest of file
+            while(1)
+            {
+                if(mad_header_decode(&header, this->stream)!=0)
+                {
+                    if(MAD_RECOVERABLE(this->stream->error))
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
 
+                // sanity checks
+                if(this->Format.Channels != MAD_NCHANNELS(&header))
+                {
+                    CLOG(LogLevel::WARNING, "channelcount varies (now: " << MAD_NCHANNELS(&header) << ") within File \"" << this->Filename << ")\"");
+                }
+
+                if(this->Format.SampleRate != header.samplerate)
+                {
+                    CLOG(LogLevel::WARNING, "samplerate varies (now: " << header.samplerate << ") within File \"" << this->Filename << ")\"");
+                }
+
+                this->numFrames += 32 * MAD_NSBSAMPLES(&header);
+            }
+        }
+        else
+        {
+            CLOG(LogLevel::WARNING, "only one valid header found, probably no valid mp3 File \"" << this->Filename << ")\"");
+        }
+        
         // somehow reset libmad stream
         mad_stream_finish(this->stream);
         mad_stream_init(this->stream);
         /* load buffer with MPEG audio data */
         mad_stream_buffer(this->stream, this->mpegbuf, this->mpeglen);
+        
+        mad_header_finish(&header);
     }
-    mad_header_finish(&header);
 }
 
 void LibMadWrapper::close() noexcept
