@@ -1,3 +1,9 @@
+// anmp-normalize: a tool for generating loudness normalization files for each song file.
+// These are called .ebur128 files, due to normalization standard being used: https://tech.ebu.ch/docs/r/r128.pdf
+// NOTE: you should only use this program for songs where really necessary (e.g. far too slient ones). this is because
+// some artists intend to have silent songs. raising the volume of those songs would make the transition to the next song
+// sound ugly.
+
 #include <iostream>
 #include <string>
 
