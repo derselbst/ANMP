@@ -176,19 +176,23 @@ void LibMadWrapper::fillBuffer()
 
 void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
-    // TODO per frame rendering not yet supported
-    if(framesToRender!=0)
+    if(framesToRender==0)
     {
-        return;
+        /* render rest of file */
+        framesToRender = this->getFrames()-this->framesAlreadyRendered;
     }
-
+    else
+    {
+        framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);
+    }
+    
     struct mad_frame frame;
     struct mad_synth synth;
 
     mad_frame_init(&frame);
     mad_synth_init(&synth);
 
-    unsigned int item=0;
+    unsigned int item=this->framesAlreadyRendered * this->Format.Channels;
     while (!this->stopFillBuffer)
     {
         int ret = mad_frame_decode(&frame, this->stream);
@@ -219,22 +223,24 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
         while (!this->stopFillBuffer && nsamples--)
         {
-            signed int sample;
+            int32_t sample;
 
-            /* output sample(s) in 16-bit signed little-endian PCM */
+            /* output sample(s) in 24-bit signed little-endian PCM */
 
-            sample = LibMadWrapper::toInt16Sample(*left_ch++);
+            sample = LibMadWrapper::toInt24Sample(*left_ch++);
             static_cast<int32_t*>(bufferToFill)[item]=sample;
 
             item++;
 
             if (this->Format.Channels == 2)
             {
-                sample = LibMadWrapper::toInt16Sample(*right_ch++);
+                sample = LibMadWrapper::toInt24Sample(*right_ch++);
                 static_cast<int32_t*>(bufferToFill)[item]=sample;
 
                 item++;
             }
+            
+            this->framesAlreadyRendered++;
         }
 
         if(item>this->count)
@@ -242,7 +248,6 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             CLOG(LogLevel::ERROR, "THIS SHOULD NEVER HAPPEN: read " << item << " items but only expected " << this->count << "\n");
             break;
         }
-
     }
 
     mad_synth_finish(&synth);
@@ -269,7 +274,7 @@ void LibMadWrapper::buildMetadata() noexcept
  * use this routine if high-quality output is desired.
  */
 #define SAMPLE_SIZE 24
-int32_t LibMadWrapper::toInt16Sample(mad_fixed_t sample)
+int32_t LibMadWrapper::toInt24Sample(mad_fixed_t sample)
 {
     /* round */
     sample += (1L << (MAD_F_FRACBITS - SAMPLE_SIZE));
@@ -288,7 +293,7 @@ int32_t LibMadWrapper::toInt16Sample(mad_fixed_t sample)
     sample >>= (MAD_F_FRACBITS + 1 - SAMPLE_SIZE);
 
     /* make sure the 24th bit becomes the msb */
-    sample <<= sizeof(mad_fixed_t)*8/*==32*/ - SAMPLE_SIZE;
+    sample <<= sizeof(mad_fixed_t)*8/*==32bits*/ - SAMPLE_SIZE;
 
     return sample;
 }

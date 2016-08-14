@@ -59,7 +59,7 @@ private:
     struct mad_stream* stream = nullptr;
 
     frame_t numFrames=0;
-    static signed int toInt16Sample(mad_fixed_t sample);
+    static signed int toInt24Sample(mad_fixed_t sample);
 
 };
 
