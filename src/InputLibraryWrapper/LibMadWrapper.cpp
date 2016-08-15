@@ -186,14 +186,26 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
         framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);
     }
     
+    // write back tempbuffer
+    {
+        size_t itemsToCpy = min(this->tempBuf.size(), framesToRender*this->Format.Channels);
+        
+        memcpy(this->bufferToFill.data(), this->tempBuf, itemsToCpy*sizeof(int32_t));
+        
+        this->tempBuf.erase(this->tempBuf.begin(), this->tempBuf.begin()+itemsToCpy);
+        
+        itemsToCpy /= this->Format.Channels;
+        framesToRender -= itemsToCpy;
+    }
+    
     struct mad_frame frame;
     struct mad_synth synth;
 
     mad_frame_init(&frame);
     mad_synth_init(&synth);
 
-    unsigned int item=this->framesAlreadyRendered * this->Format.Channels;
-    while (!this->stopFillBuffer)
+    unsigned int item=0;
+    while (!this->stopFillBuffer && framesToRender > 0)
     {
         int ret = mad_frame_decode(&frame, this->stream);
 
@@ -213,31 +225,46 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
         /* save PCM samples from synth.pcm */
         struct mad_pcm* pcm = &synth.pcm;
-        mad_fixed_t const *left_ch, *right_ch;
 
         /* pcm->samplerate contains the sampling frequency */
 
-        unsigned short& nsamples  = pcm->length;
-        left_ch   = pcm->samples[0];
-        right_ch  = pcm->samples[1];
+        unsigned short& nsamples    = pcm->length;
+        mad_fixed_t const *left_ch  = pcm->samples[0];
+        mad_fixed_t const *right_ch = pcm->samples[1];
 
-        while (!this->stopFillBuffer && nsamples--)
+        // fill up "bufferToFill"
+        while (!this->stopFillBuffer && framesToRender-- && nsamples--)
         {
             int32_t sample;
 
             /* output sample(s) in 24-bit signed little-endian PCM */
 
             sample = LibMadWrapper::toInt24Sample(*left_ch++);
-            static_cast<int32_t*>(bufferToFill)[item]=sample;
-
-            item++;
+            static_cast<int32_t*>(bufferToFill)[item++]=sample;
 
             if (this->Format.Channels == 2)
             {
                 sample = LibMadWrapper::toInt24Sample(*right_ch++);
-                static_cast<int32_t*>(bufferToFill)[item]=sample;
+                static_cast<int32_t*>(bufferToFill)[item++]=sample;
+            }
+            
+            this->framesAlreadyRendered++;
+        }
+        
+        // "bufferToFill" seems to be full, drain the rest pcm samples from libmad and temporarily save them
+        while (!this->stopFillBuffer && nsamples--)
+        {
+            int32_t sample;
+            
+            /* output sample(s) in 24-bit signed little-endian PCM */
 
-                item++;
+            sample = LibMadWrapper::toInt24Sample(*left_ch++);
+            this->tempBuf.push_back(sample);
+
+            if (this->Format.Channels == 2)
+            {
+                sample = LibMadWrapper::toInt24Sample(*right_ch++);
+                this->tempBuf.push_back(sample);
             }
             
             this->framesAlreadyRendered++;
