@@ -57,6 +57,8 @@ private:
     unsigned char * mpegbuf = nullptr;
     int mpeglen = 0;
     struct mad_stream* stream = nullptr;
+    
+    vector<int32_t> tempBuf;
 
     frame_t numFrames=0;
     static signed int toInt24Sample(mad_fixed_t sample);

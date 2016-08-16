@@ -188,9 +188,9 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     
     // write back tempbuffer
     {
-        size_t itemsToCpy = min(this->tempBuf.size(), framesToRender*this->Format.Channels);
+        size_t itemsToCpy = min<size_t>(this->tempBuf.size(), framesToRender*this->Format.Channels);
         
-        memcpy(this->bufferToFill.data(), this->tempBuf, itemsToCpy*sizeof(int32_t));
+        memcpy(bufferToFill, this->tempBuf.data(), itemsToCpy*sizeof(int32_t));
         
         this->tempBuf.erase(this->tempBuf.begin(), this->tempBuf.begin()+itemsToCpy);
         
