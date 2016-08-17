@@ -185,12 +185,15 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     {
         framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);
     }
+    fesetround(FE_TONEAREST);
+
+    int32_t* pcm = static_cast<int32_t*>(bufferToFill);
     
-    
-    int32_t* pcm = static_cast<int32_t*>(bufferToFill);\
-//     pcm += (this->framesAlreadyRendered * this->Format.Channels) % this->count;\
-    
-    // write back tempbuffer
+    // if buffer for whole song: adjusts the position where to start filling "bufferToFill", with respect to already rendered frames
+    // if only small buffer: since "this->framesAlreadyRendered" should be multiple of this->count: should do pcm+=0
+    pcm += (this->framesAlreadyRendered * this->Format.Channels) % this->count;
+
+    // write back tempbuffer, i.e. frames weve buffered from previous calls to libmad (necessary due to inelegant API of libmad, i.e. cant tell how many frames to render during one call)
     {
         size_t itemsToCpy = min<size_t>(this->tempBuf.size(), framesToRender*this->Format.Channels);
         
@@ -198,9 +201,13 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
         
         this->tempBuf.erase(this->tempBuf.begin(), this->tempBuf.begin()+itemsToCpy);
         
-        itemsToCpy /= this->Format.Channels;
-        framesToRender -= itemsToCpy;
+        size_t framesCpyd = itemsToCpy / this->Format.Channels;
+        framesToRender -= framesCpyd;
+        this->framesAlreadyRendered += framesCpyd;
     }
+    
+    // again: adjust position
+    pcm += (this->framesAlreadyRendered * this->Format.Channels) % this->count;
     
     struct mad_frame frame;
     struct mad_synth synth;
@@ -208,11 +215,10 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     mad_frame_init(&frame);
     mad_synth_init(&synth);
 
-    unsigned int item=0;
-    while (!this->stopFillBuffer && framesToRender > 0)
+    // the outer loop, used for decoding and synthesizing MPEG frames
+    while(framesToRender>0 && !this->stopFillBuffer)
     {
         int ret = mad_frame_decode(&frame, this->stream);
-
         if(ret!=0)
         {
             if(MAD_RECOVERABLE(this->stream->error))
@@ -224,36 +230,48 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
                 break;
             }
         }
+        
+        int framesToDoNow = (framesToRender/Config::FramesToRender)>0 ? Config::FramesToRender : framesToRender%Config::FramesToRender;
 
         mad_synth_frame(&synth, &frame);
-
+        
         /* save PCM samples from synth.pcm */
         /* &synth.pcm->samplerate contains the sampling frequency */
 
         unsigned short nsamples     = synth.pcm.length;
         mad_fixed_t const *left_ch  = synth.pcm.samples[0];
         mad_fixed_t const *right_ch = synth.pcm.samples[1];
-
-        // fill up "bufferToFill"
-        for( ;(!this->stopFillBuffer && framesToRender>0 && nsamples>0); framesToRender--, nsamples--)
+        
+        unsigned int item;
+        /* audio normalization */
+        /*const*/ float absoluteGain = (numeric_limits<SAMPLEFORMAT>::max()) / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);
+        /* reduce risk of clipping, remove that when using true sample peak */
+        absoluteGain -= 0.01;
+        for(item=0;
+            !this->stopFillBuffer &&
+            framesToDoNow>0 && // frames left during this loop
+            framesToRender>0 && // frames left during this call
+            nsamples>0; // frames left from libmad
+            framesToRender--, nsamples--, framesToDoNow--)
         {
             int32_t sample;
 
             /* output sample(s) in 24-bit signed little-endian PCM */
 
             sample = LibMadWrapper::toInt24Sample(*left_ch++);
-            pcm[item++]=sample;
+            pcm[item++] = Config::useAudioNormalization ? lrint(sample * absoluteGain) : sample;
 
             if (this->Format.Channels == 2)
             {
                 sample = LibMadWrapper::toInt24Sample(*right_ch++);
-                pcm[item++]=sample;
+                pcm[item++] = Config::useAudioNormalization ? lrint(sample * absoluteGain) : sample;
             }
             
             this->framesAlreadyRendered++;
         }
+        pcm += item % this->count;
         
-        // "bufferToFill" seems to be full, drain the rest pcm samples from libmad and temporarily save them
+        // "bufferToFill" (i.e. "pcm") seems to be full, drain the rest pcm samples from libmad and temporarily save them
         while (!this->stopFillBuffer && nsamples>0)
         {
             int32_t sample;
@@ -261,25 +279,24 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             /* output sample(s) in 24-bit signed little-endian PCM */
 
             sample = LibMadWrapper::toInt24Sample(*left_ch++);
-            this->tempBuf.push_back(sample);
+            this->tempBuf.push_back(Config::useAudioNormalization ? lrint(sample * absoluteGain) : sample);
 
             if (this->Format.Channels == 2)
             {
                 sample = LibMadWrapper::toInt24Sample(*right_ch++);
-                this->tempBuf.push_back(sample);
+                this->tempBuf.push_back(Config::useAudioNormalization ? lrint(sample * absoluteGain) : sample);
             }
             
-            this->framesAlreadyRendered++;
+            /* DONT do this: this->framesAlreadyRendered++; since we use framesAlreadyRendered as offset for "bufferToFill"*/
             nsamples--;
         }
-
+        
         if(item>this->count)
         {
             CLOG(LogLevel::ERROR, "THIS SHOULD NEVER HAPPEN: read " << item << " items but only expected " << this->count << "\n");
             break;
         }
     }
-
     mad_synth_finish(&synth);
     mad_frame_finish(&frame);
 }
