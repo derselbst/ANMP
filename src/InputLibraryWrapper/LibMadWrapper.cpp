@@ -244,7 +244,7 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
         
         unsigned int item;
         /* audio normalization */
-        /*const*/ float absoluteGain = (numeric_limits<SAMPLEFORMAT>::max()) / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);
+        /*const*/ float absoluteGain = (numeric_limits<int32_t>::max()) / (numeric_limits<int32_t>::max() * this->gainCorrection);
         /* reduce risk of clipping, remove that when using true sample peak */
         absoluteGain -= 0.01;
         for(item=0;
