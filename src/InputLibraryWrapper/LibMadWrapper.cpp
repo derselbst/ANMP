@@ -177,7 +177,7 @@ void LibMadWrapper::fillBuffer()
 void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
     CLOG(LogLevel::DEBUG, "Calling LibMadWrapper::render\n\tframesAlreadyRendered: " << this->framesAlreadyRendered
-    << "\tcount: " << this->count);
+    << "\tcount: " << this->count
     << "\tframesToRender: " << framesToRender);
     
     if(framesToRender==0)
@@ -203,14 +203,14 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     // write back tempbuffer, i.e. frames weve buffered from previous calls to libmad (necessary due to inelegant API of libmad, i.e. cant tell how many frames to render during one call)
     {
         CLOG(LogLevel::DEBUG, "\titems buffered: " << this->tempBuf.size());
-        size_t itemsToCpy = min<size_t>(this->tempBuf.size(), framesToRender*this->Format.Channels);
+        const size_t itemsToCpy = min<size_t>(this->tempBuf.size(), framesToRender*this->Format.Channels);
         CLOG(LogLevel::DEBUG, "\titemsToCpy: " << itemsToCpy);
         
         memcpy(pcm, this->tempBuf.data(), itemsToCpy*sizeof(int32_t));
         
         this->tempBuf.erase(this->tempBuf.begin(), this->tempBuf.begin()+itemsToCpy);
         
-        size_t framesCpyd = itemsToCpy / this->Format.Channels;
+        const size_t framesCpyd = itemsToCpy / this->Format.Channels;
         framesToRender -= framesCpyd;
         this->framesAlreadyRendered += framesCpyd;
         CLOG(LogLevel::DEBUG, "\tframesToRender: " << framesToRender);
@@ -254,12 +254,12 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
         mad_fixed_t const *right_ch = synth.pcm.samples[1];
         CLOG(LogLevel::DEBUG, "\tnsamples: " << nsamples);
         
-        unsigned int item;
+        unsigned int item=0;
         /* audio normalization */
         /*const*/ float absoluteGain = (numeric_limits<int32_t>::max()) / (numeric_limits<int32_t>::max() * this->gainCorrection);
         /* reduce risk of clipping, remove that when using true sample peak */
         absoluteGain -= 0.01;
-        for(item=0;
+        for( ;
             !this->stopFillBuffer &&
             framesToDoNow>0 && // frames left during this loop
             framesToRender>0 && // frames left during this call
@@ -303,11 +303,11 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             nsamples--;
         }
         CLOG(LogLevel::DEBUG, "---------------");
-        CLOG(LogLevel::DEBUG, "\tnitem: " << item);
+        CLOG(LogLevel::DEBUG, "\titem: " << item);
         CLOG(LogLevel::DEBUG, "\tnsamples: " << nsamples);
         CLOG(LogLevel::DEBUG, "\tframesToDoNow: " << framesToDoNow);
-        CLOG(LogLevel::DEBUG, "\tframesToRender: " << nsamples);
-        CLOG(LogLevel::DEBUG, "-----while-----");
+        CLOG(LogLevel::DEBUG, "\tframesToRender: " << framesToRender);
+        CLOG(LogLevel::DEBUG, "-----while-----\n");
         
         if(item>this->count)
         {
