@@ -55,7 +55,7 @@ public:
 //--------------------------------------------------------------------
 // RAW PCM Buffer specific area
 //--------------------------------------------------------------------
-    // pointer to pcm data
+    // after each call to this->fillBuffer(), this pointer will point to a buffer holding "Config::FramesToRender" freshly rendered PCM frames
     pcm_t* data = nullptr;
 
     // how many items (i.e. floats, int16s, etc.) are there in data?
@@ -120,7 +120,7 @@ public:
      */
     virtual void close () noexcept = 0 ;
 
-    /** @brief fills the pcm buffer this->data
+    /** @brief fills the pcm buffer this->data, preparing atleast "Config::FramesToRender" PCM frames
      *
      * synchronous part: allocates the pcm buffer and fills it up to have enough for Config::PreRenderTime time of playback
      * asynchronous part: fills rest of pcm buffer
