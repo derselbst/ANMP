@@ -144,10 +144,18 @@ void LibMadWrapper::open ()
         
         mad_header_finish(&header);
     }
+    
+    
+    mad_frame_init(&this->frame);
+    mad_synth_init(&this->synth);
 }
 
 void LibMadWrapper::close() noexcept
 {
+  
+    mad_synth_finish(&this->synth);
+    mad_frame_finish(&this->frame);
+    
     if(this->stream != nullptr)
     {
         mad_stream_finish(this->stream);
@@ -200,12 +208,6 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     CLOG(LogLevel::DEBUG, "\t(this->framesAlreadyRendered * this->Format.Channels): " << (this->framesAlreadyRendered * this->Format.Channels));
     CLOG(LogLevel::DEBUG, "\t+= : " << (this->framesAlreadyRendered * this->Format.Channels) % this->count);
 
-    struct mad_frame frame;
-    struct mad_synth synth;
-
-    mad_frame_init(&frame);
-    mad_synth_init(&synth);
-
     // the outer loop, used for decoding and synthesizing MPEG frames
     while(framesToRender>0 && !this->stopFillBuffer)
     {
@@ -239,7 +241,7 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             CLOG(LogLevel::ERROR, "framesToDoNow negative!!!: " << framesToDoNow);
         }
         
-        int ret = mad_frame_decode(&frame, this->stream);
+        int ret = mad_frame_decode(&this->frame, this->stream);
         if(ret!=0)
         {
             if(MAD_RECOVERABLE(this->stream->error))
@@ -252,7 +254,7 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             }
         }
         
-        mad_synth_frame(&synth, &frame);
+        mad_synth_frame(&synth, &this->frame);
         
         /* save PCM samples from synth.pcm */
         /* &synth.pcm->samplerate contains the sampling frequency */
@@ -288,6 +290,11 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             }
             
             this->framesAlreadyRendered++;
+            
+            if(pcm[item]==0 || pcm[item-1]==0)
+            {
+              CLOG(LogLevel::DEBUG, "hithithit");
+            }
         }
         pcm += item/* % this->count*/;
         
@@ -309,6 +316,11 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             
             /* DONT do this: this->framesAlreadyRendered++; since we use framesAlreadyRendered as offset for "bufferToFill"*/
             nsamples--;
+            
+                        if(pcm[item]==0 || pcm[item-1]==0)
+            {
+               CLOG(LogLevel::DEBUG, "hithithit");
+            }
         }
         CLOG(LogLevel::DEBUG, "---------------");
         CLOG(LogLevel::DEBUG, "\titem: " << item);
@@ -323,8 +335,6 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             break;
         }
     }
-    mad_synth_finish(&synth);
-    mad_frame_finish(&frame);
 }
 
 frame_t LibMadWrapper::getFrames () const

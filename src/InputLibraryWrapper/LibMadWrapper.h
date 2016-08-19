@@ -58,6 +58,15 @@ private:
     int mpeglen = 0;
     struct mad_stream* stream = nullptr;
     
+    // these two are only really needed inside this->render()
+    // however, we need to preserve these two across subsequent calls to this->render(), since they are somewhat interdependent
+    // not saving them would cause ugly interruptions in produced audio
+    //
+    // the header of frame might be reused?
+    struct mad_frame frame;
+    // and the member phase of synth is definitly reused
+    struct mad_synth synth;
+    
     vector<int32_t> tempBuf;
 
     frame_t numFrames=0;
