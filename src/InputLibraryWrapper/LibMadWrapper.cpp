@@ -184,10 +184,6 @@ void LibMadWrapper::fillBuffer()
 
 void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
-    CLOG(LogLevel::DEBUG, "Calling LibMadWrapper::render\n\tframesAlreadyRendered: " << this->framesAlreadyRendered
-    << "\tcount: " << this->count
-    << "\tframesToRender: " << framesToRender);
-    
     if(framesToRender==0)
     {
         /* render rest of file */
@@ -198,24 +194,19 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
         framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);
     }
     fesetround(FE_TONEAREST);
-    CLOG(LogLevel::DEBUG, "\ti.e. framesToRender: " << framesToRender);
 
     int32_t* pcm = static_cast<int32_t*>(bufferToFill);
     
     // if buffer for whole song: adjusts the position where to start filling "bufferToFill", with respect to already rendered frames
     // if only small buffer: since "this->framesAlreadyRendered" should be multiple of this->count: should do pcm+=0
     pcm += (this->framesAlreadyRendered * this->Format.Channels) % this->count;
-    CLOG(LogLevel::DEBUG, "\t(this->framesAlreadyRendered * this->Format.Channels): " << (this->framesAlreadyRendered * this->Format.Channels));
-    CLOG(LogLevel::DEBUG, "\t+= : " << (this->framesAlreadyRendered * this->Format.Channels) % this->count);
 
     // the outer loop, used for decoding and synthesizing MPEG frames
     while(framesToRender>0 && !this->stopFillBuffer)
     {
         // write back tempbuffer, i.e. frames weve buffered from previous calls to libmad (necessary due to inelegant API of libmad, i.e. cant tell how many frames to render during one call)
         {
-            CLOG(LogLevel::DEBUG, "\titems buffered: " << this->tempBuf.size());
             const size_t itemsToCpy = min<size_t>(this->tempBuf.size(), framesToRender*this->Format.Channels);
-            CLOG(LogLevel::DEBUG, "\titemsToCpy: " << itemsToCpy);
             
             memcpy(pcm, this->tempBuf.data(), itemsToCpy*sizeof(int32_t));
             
@@ -224,14 +215,12 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             const size_t framesCpyd = itemsToCpy / this->Format.Channels;
             framesToRender -= framesCpyd;
             this->framesAlreadyRendered += framesCpyd;
-            CLOG(LogLevel::DEBUG, "\tframesToRender: " << framesToRender);
         
             // again: adjust position
             pcm += itemsToCpy;
         }
         
         int framesToDoNow = (framesToRender/Config::FramesToRender)>0 ? Config::FramesToRender : framesToRender%Config::FramesToRender;
-        CLOG(LogLevel::DEBUG, "\tframesToDoNow: " << framesToDoNow);
         if(framesToDoNow==0)
         {
             continue;
@@ -262,7 +251,6 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
         unsigned short nsamples     = synth.pcm.length;
         mad_fixed_t const *left_ch  = synth.pcm.samples[0];
         mad_fixed_t const *right_ch = synth.pcm.samples[1];
-        CLOG(LogLevel::DEBUG, "\tnsamples: " << nsamples);
         
         unsigned int item=0;
         /* audio normalization */
@@ -290,11 +278,6 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             }
             
             this->framesAlreadyRendered++;
-            
-            if(pcm[item]==0 || pcm[item-1]==0)
-            {
-              CLOG(LogLevel::DEBUG, "hithithit");
-            }
         }
         pcm += item/* % this->count*/;
         
@@ -316,18 +299,7 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             
             /* DONT do this: this->framesAlreadyRendered++; since we use framesAlreadyRendered as offset for "bufferToFill"*/
             nsamples--;
-            
-                        if(pcm[item]==0 || pcm[item-1]==0)
-            {
-               CLOG(LogLevel::DEBUG, "hithithit");
-            }
         }
-        CLOG(LogLevel::DEBUG, "---------------");
-        CLOG(LogLevel::DEBUG, "\titem: " << item);
-        CLOG(LogLevel::DEBUG, "\tnsamples: " << nsamples);
-        CLOG(LogLevel::DEBUG, "\tframesToDoNow: " << framesToDoNow);
-        CLOG(LogLevel::DEBUG, "\tframesToRender: " << framesToRender);
-        CLOG(LogLevel::DEBUG, "-----while-----\n");
         
         if(item>this->count)
         {
