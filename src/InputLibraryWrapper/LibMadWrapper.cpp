@@ -200,25 +200,6 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     CLOG(LogLevel::DEBUG, "\t(this->framesAlreadyRendered * this->Format.Channels): " << (this->framesAlreadyRendered * this->Format.Channels));
     CLOG(LogLevel::DEBUG, "\t+= : " << (this->framesAlreadyRendered * this->Format.Channels) % this->count);
 
-    // write back tempbuffer, i.e. frames weve buffered from previous calls to libmad (necessary due to inelegant API of libmad, i.e. cant tell how many frames to render during one call)
-    {
-        CLOG(LogLevel::DEBUG, "\titems buffered: " << this->tempBuf.size());
-        const size_t itemsToCpy = min<size_t>(this->tempBuf.size(), framesToRender*this->Format.Channels);
-        CLOG(LogLevel::DEBUG, "\titemsToCpy: " << itemsToCpy);
-        
-        memcpy(pcm, this->tempBuf.data(), itemsToCpy*sizeof(int32_t));
-        
-        this->tempBuf.erase(this->tempBuf.begin(), this->tempBuf.begin()+itemsToCpy);
-        
-        const size_t framesCpyd = itemsToCpy / this->Format.Channels;
-        framesToRender -= framesCpyd;
-        this->framesAlreadyRendered += framesCpyd;
-        CLOG(LogLevel::DEBUG, "\tframesToRender: " << framesToRender);
-    
-        // again: adjust position
-        pcm += itemsToCpy;
-    }
-    
     struct mad_frame frame;
     struct mad_synth synth;
 
@@ -228,6 +209,36 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     // the outer loop, used for decoding and synthesizing MPEG frames
     while(framesToRender>0 && !this->stopFillBuffer)
     {
+        // write back tempbuffer, i.e. frames weve buffered from previous calls to libmad (necessary due to inelegant API of libmad, i.e. cant tell how many frames to render during one call)
+        {
+            CLOG(LogLevel::DEBUG, "\titems buffered: " << this->tempBuf.size());
+            const size_t itemsToCpy = min<size_t>(this->tempBuf.size(), framesToRender*this->Format.Channels);
+            CLOG(LogLevel::DEBUG, "\titemsToCpy: " << itemsToCpy);
+            
+            memcpy(pcm, this->tempBuf.data(), itemsToCpy*sizeof(int32_t));
+            
+            this->tempBuf.erase(this->tempBuf.begin(), this->tempBuf.begin()+itemsToCpy);
+            
+            const size_t framesCpyd = itemsToCpy / this->Format.Channels;
+            framesToRender -= framesCpyd;
+            this->framesAlreadyRendered += framesCpyd;
+            CLOG(LogLevel::DEBUG, "\tframesToRender: " << framesToRender);
+        
+            // again: adjust position
+            pcm += itemsToCpy;
+        }
+        
+        int framesToDoNow = (framesToRender/Config::FramesToRender)>0 ? Config::FramesToRender : framesToRender%Config::FramesToRender;
+        CLOG(LogLevel::DEBUG, "\tframesToDoNow: " << framesToDoNow);
+        if(framesToDoNow==0)
+        {
+            continue;
+        }
+        else if(framesToDoNow < 0)
+        {
+            CLOG(LogLevel::ERROR, "framesToDoNow negative!!!: " << framesToDoNow);
+        }
+        
         int ret = mad_frame_decode(&frame, this->stream);
         if(ret!=0)
         {
@@ -240,9 +251,6 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
                 break;
             }
         }
-        
-        int framesToDoNow = (framesToRender/Config::FramesToRender)>0 ? Config::FramesToRender : framesToRender%Config::FramesToRender;
-        CLOG(LogLevel::DEBUG, "\tframesToDoNow: " << framesToDoNow);
         
         mad_synth_frame(&synth, &frame);
         
