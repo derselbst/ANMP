@@ -98,7 +98,7 @@ private:
     // we dont own this playlist, we dont care about destruction
     IPlaylist* playlist = nullptr;
 
-    // frame offset; (song.pcm + playhead*song.channels) points to the frame(s) that will be played on subsequent call to playSample
+    // frame offset; (currentSong.data + playhead*currentSong.Format.Channels) points to the frame(s) that will be played on subsequent call to playFrames(frame_t)
     frame_t playhead = 0;
 
     // pointer to the audioDriver, we currently use

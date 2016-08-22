@@ -394,6 +394,11 @@ void Player::resetPlayhead ()
     this->_seekTo(0);
 }
 
+/**
+ * within a given loop "l": get that loop that starts just right after playhead
+ * 
+ * @return a subloop of "l"
+ */
 core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)
 {
     loop_t compareLoop;
@@ -414,7 +419,11 @@ core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)
 }
 
 
-
+/**
+ * THAT method which recursively walks through a loop tree, playing all the loops, subloops and subsubsubloops given by "loop" recursively
+ * 
+ * @note this method might be called recursively :P
+ */
 void Player::playLoop (core::tree<loop_t>& loop)
 {
     USERS_ARE_STUPID
@@ -435,7 +444,7 @@ void Player::playLoop (core::tree<loop_t>& loop)
             continue;
         }
 
-        this->playFrames(playhead, (*(*subloop)).start);
+        this->playFrames((*loop).start, (*(*subloop)).start);
         // at this point: playhead==subloop.start
 
         uint32_t mycount = Config::overridingGlobalLoopCount!=-1 ? Config::overridingGlobalLoopCount : (*(*subloop)).count;
@@ -454,26 +463,23 @@ void Player::playLoop (core::tree<loop_t>& loop)
     }
 
     // play rest of file
-    this->playFrames(playhead, (*loop).stop);
+    this->playFrames((*loop).start, (*loop).stop);
 }
 
 
 /**
- * make sure you called seekTo(startFrame) before calling this!
- * @param  startFrame intended: the frame with which we want to start the playback
- * actually: does nothing, just for debug purposes, the actual start is determined
- * by playhead
- * @param  stopFrame play until we've reached stopFrame, although this frame will
- * not be played
+ * plays a loop with the bounds specified by startFrame and stopFrame.
+ * starts playing at whereever playhead stands.
+ * returns as soon as playhead leaves the bounds, i.e. exceeding stopFrame or underceeding startFrame.
+ * 
+ * @param  startFrame zero-based array index == the lower bound this->playhead shall be in
+ * @param  stopFrame zero-based array index == the upper bound this->playhead shall be in, i.e. play until we've reached stopFrame, although the frame at "stopFrame" will not be played.
+ * 
+ * @todo really ensure and test that this last frame is not being played
  */
 void Player::playFrames (frame_t startFrame, frame_t stopFrame)
 {
     USERS_ARE_STUPID
-
-    if(startFrame!=this->playhead)
-    {
-        cout << "Oops: Expected Playhead to be equal " << startFrame << ", but playhead is " << this->playhead << endl;
-    }
 
     // the user may request to seek while we are playing, thus check whether playhead is
     // still in range
@@ -498,7 +504,13 @@ void Player::playFrames (frame_t startFrame, frame_t stopFrame)
     }
 }
 
-
+/**
+ * play "framesToPlay" frames from the current position (indicated by this->playhead)
+ * 
+ * it ought to start playing that frame, which is currently pointed to by this->playhead
+ * 
+ * @param framesToPlay no. of frames to play from the current position
+ */
 void Player::playFrames (frame_t framesToPlay)
 {
     USERS_ARE_STUPID
