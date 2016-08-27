@@ -46,6 +46,8 @@ public:
     void clear() override;
 
     Song* setCurrentSong (unsigned int id) override;
+    
+    void shuffle(unsigned int, unsigned int) override;
 
     /*
         Song* getSong(unsigned int id) override;

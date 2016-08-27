@@ -454,7 +454,7 @@ border-radius: 4px;
     </property>
     <addaction name="actionAdd_Songs"/>
     <addaction name="actionAdd_Playback_Stop"/>
-    <addaction name="separator"/>
+    <addaction name="actionShuffle_Playst"/>
     <addaction name="actionClear_Playlist"/>
    </widget>
    <widget class="QMenu" name="menuPlayer">
@@ -491,11 +491,6 @@ border-radius: 4px;
    <addaction name="menuShow"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionLoad_Files">
-   <property name="text">
-    <string>&amp;Load Files</string>
-   </property>
-  </action>
   <action name="actionClose">
    <property name="text">
     <string>&amp;Close</string>
@@ -575,6 +570,11 @@ border-radius: 4px;
     <string>Settings</string>
    </property>
   </action>
+  <action name="actionShuffle_Playst">
+   <property name="text">
+    <string>Shuffle Playst</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -591,12 +591,12 @@ border-radius: 4px;
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="controlButtonsHideSecond"/>
   <buttongroup name="controlButtonsAlwaysVisible">
    <property name="exclusive">
     <bool>false</bool>
    </property>
   </buttongroup>
   <buttongroup name="controlButtonsHideFirst"/>
+  <buttongroup name="controlButtonsHideSecond"/>
  </buttongroups>
 </ui>

@@ -119,6 +119,16 @@ Song* Playlist::setCurrentSong(unsigned int id)
     return s;
 }
 
+void Playlist::shuffle(unsigned int start, unsigned int end)
+{
+    if(start > end)
+    {
+      throw invalid_argument("start>end");
+    }
+  
+    std::random_shuffle(this->queue.begin()+start, this->queue.begin()+end);
+}
+
 /* @brief move songs within the playlist
  *
  * rotates songs selected by [source, source+count] "steps" steps

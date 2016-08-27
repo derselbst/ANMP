@@ -106,6 +106,7 @@ private slots:
     void on_actionAdd_Playback_Stop_triggered();
     void on_actionFileBrowser_triggered(bool checked);
     void on_actionSettings_triggered();
+    void on_actionShuffle_Playst_triggered();
 };
 
 #endif // MAINWINDOW_H

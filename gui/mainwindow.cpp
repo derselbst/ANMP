@@ -198,7 +198,7 @@ void MainWindow::buildFileBrowser()
 
 void MainWindow::buildPlaylistView()
 {
-    this->ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    this->ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     this->ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     this->ui->tableView->setModel(playlistModel);
 }
@@ -577,4 +577,32 @@ void MainWindow::on_actionSettings_triggered()
         this->settingsView = new ConfigDialog(this);
     }
     this->settingsView->show();
+}
+
+void MainWindow::on_actionShuffle_Playst_triggered()
+{
+     QItemSelection indexList = this->ui->tableView->selectionModel()->selection();
+
+     if(indexList.empty())
+     {
+         this->playlistModel->shuffle(0, this->playlistModel->rowCount(this->playlistModel->index(0,0)));
+     }
+     else
+     {
+        for(QItemSelection::const_iterator i=indexList.cbegin(); i!=indexList.cend(); ++i)
+        {
+            int top = i->top();
+            int btm = i->bottom();
+            
+            QModelIndex b = this->playlistModel->index(btm,0);
+            QModelIndex t = this->playlistModel->index(top,0);
+            
+            if(b.isValid() && t.isValid())
+            {
+            this->playlistModel->shuffle(min(top, btm), max(top, btm));
+            }
+        }
+     }
+
+  
 }

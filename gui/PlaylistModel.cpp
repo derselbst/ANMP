@@ -417,3 +417,10 @@ QColor PlaylistModel::calculateRowColor(int row) const
     }
     return QColor(Qt::white);
 }
+
+void PlaylistModel::shuffle(unsigned int start, unsigned int end)
+{
+    this->beginResetModel();
+    Playlist::shuffle(start, end);
+    this->endResetModel();
+}
