@@ -3,6 +3,7 @@
 
 
 #include <map>
+#include <mutex>
 
 
 /** @brief a helper class for realizing C# like events
@@ -50,11 +51,16 @@ public:
     Event<Args...>& operator-=(void*obj);
 
     void Fire(Args... args);
+    
+private:
+    mutable std::mutex mtx;
 };
 
 template<typename... Args>
 Event<Args...>& Event<Args...>::operator+=(std::pair<void*, void(*)(void*, Args...)> t)
 {
+    std::lock_guard<std::mutex> lock(this->mtx);
+  
     this->callbacks[t.first] = t.second;
 
     return *this;
@@ -63,10 +69,11 @@ Event<Args...>& Event<Args...>::operator+=(std::pair<void*, void(*)(void*, Args.
 template<typename... Args>
 Event<Args...>& Event<Args...>::operator-=(std::pair<void*, void(*)(void*, Args...)> t)
 {
+    std::lock_guard<std::mutex> lock(this->mtx);
+    
     void* obj = t.first;
 
     typename std::map<void*, void(*)(void*, Args...)>::iterator it = this->callbacks.find(obj);
-
     if(it != this->callbacks.end() && it->second == t.second)
     {
         this->callbacks.erase(it);
@@ -78,6 +85,8 @@ Event<Args...>& Event<Args...>::operator-=(std::pair<void*, void(*)(void*, Args.
 template<typename... Args>
 Event<Args...>& Event<Args...>::operator-=(void* obj)
 {
+    std::lock_guard<std::mutex> lock(this->mtx);
+    
     this->callbacks.erase(obj);
 
     return *this;
@@ -86,6 +95,8 @@ Event<Args...>& Event<Args...>::operator-=(void* obj)
 template<typename... Args>
 void Event<Args...>::Fire(Args... args)
 {
+    std::lock_guard<std::mutex> lock(this->mtx);
+    
     typename std::map<void*, void(*)(void*, Args...)>::iterator it;
 
     for(it = this->callbacks.begin(); it!=this->callbacks.end(); it++)
