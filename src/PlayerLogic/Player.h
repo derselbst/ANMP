@@ -82,6 +82,7 @@ public:
      */
     void seekTo (frame_t frame);
 
+    Event<bool, Nullable<string>> onIsPlayingChanged;
     Event<frame_t> onPlayheadChanged;
     Event<> onCurrentSongChanged;
 
