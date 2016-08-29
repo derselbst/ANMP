@@ -40,7 +40,28 @@ void MainWindow::callbackCurrentSongChanged(void * context)
 
 void MainWindow::slotIsPlayingChanged(bool isPlaying, Nullable<string> msg)
 {
+
+    QPushButton* playbtn = this->ui->playButton;
+    bool oldState = playbtn->blockSignals(true);
+    if(isPlaying)
+    {
+        playbtn->setChecked(true);
+    }
+    else
+    {
+        playbtn->setChecked(false);
+    }
     
+    playbtn->blockSignals(oldState);
+    
+    if(msg.hasValue)
+    {
+        QMessageBox msgBox;
+        msgBox.setText("The Playback unexpectedly stopped.");
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.setDetailedText(QString::fromStdString(msg))
+        msgBox.exec();
+    }
 }
 
 void MainWindow::slotSeek(long long pos)
@@ -413,22 +434,11 @@ void MainWindow::tooglePlayPauseFade()
 void MainWindow::play()
 {
     this->player->play();
-
-    QPushButton* playbtn = this->ui->playButton;
-    bool oldState = playbtn->blockSignals(true);
-    playbtn->setChecked(true);
-    playbtn->blockSignals(oldState);
-
 }
 
 void MainWindow::pause()
 {
     this->player->pause();
-
-    QPushButton* playbtn = this->ui->playButton;
-    bool oldState = playbtn->blockSignals(true);
-    playbtn->setChecked(false);
-    playbtn->blockSignals(oldState);
 }
 
 void MainWindow::stopFade()
@@ -440,11 +450,6 @@ void MainWindow::stopFade()
 void MainWindow::stop()
 {
     this->player->stop();
-
-    QPushButton* playbtn = this->ui->playButton;
-    bool oldState = playbtn->blockSignals(true);
-    playbtn->setChecked(false);
-    playbtn->blockSignals(oldState);
 
     // dont call the slot directly, a call might still be pending, making a direct call here useless
     QMetaObject::invokeMethod( this, "slotSeek", Qt::QueuedConnection, Q_ARG(long long, 0 ) );
