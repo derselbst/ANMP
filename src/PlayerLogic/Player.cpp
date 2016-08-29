@@ -581,6 +581,9 @@ void Player::playFrames (frame_t framesToPlay)
 
 void Player::playInternal ()
 {
+    Nullable<string> exceptionMsg = Nullable<string>();
+    this->onIsPlayingChanged(this->isPlaying, exceptionMsg);
+    
     try
     {
         while(this->isPlaying)
@@ -603,8 +606,9 @@ void Player::playInternal ()
     {
         cerr << "An Exception was thrown in Player::playInternal(): " << e.what() << endl;
         this->_pause();
-        // will be saved in futurePlayInternal, not sure if anybody will ever notice though
-        throw;
+        exceptionMsg = e.what();
     }
+    
+    this->onIsPlayingChanged(this->isPlaying, exceptionMsg);
 }
 
