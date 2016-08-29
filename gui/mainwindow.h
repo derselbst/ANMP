@@ -33,6 +33,7 @@ public:
 
     static void callbackSeek(void*, frame_t pos);
     static void callbackCurrentSongChanged(void*);
+    static void callbackIsPlayingChanged(void* context, bool isPlaying, Nullable<string> msg);
 
 protected:
     void resizeEvent(QResizeEvent* event) override;
@@ -64,6 +65,7 @@ private:
 private slots:
     friend class PlaylistModel;
 
+    void slotIsPlayingChanged(bool isPlaying, bool, QString);
     void slotSeek(long long);
     void slotCurrentSongChanged();
 

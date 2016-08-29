@@ -582,7 +582,7 @@ void Player::playFrames (frame_t framesToPlay)
 void Player::playInternal ()
 {
     Nullable<string> exceptionMsg = Nullable<string>();
-    this->onIsPlayingChanged(this->isPlaying, exceptionMsg);
+    this->onIsPlayingChanged.Fire(this->isPlaying, exceptionMsg);
     
     try
     {
@@ -609,6 +609,6 @@ void Player::playInternal ()
         exceptionMsg = e.what();
     }
     
-    this->onIsPlayingChanged(this->isPlaying, exceptionMsg);
+    this->onIsPlayingChanged.Fire(this->isPlaying, exceptionMsg);
 }
 

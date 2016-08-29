@@ -22,8 +22,7 @@
 void MainWindow::callbackIsPlayingChanged(void* context, bool isPlaying, Nullable<string> msg)
 {
     MainWindow* ctx = static_cast<MainWindow*>(context);
-    
-    QMetaObject::invokeMethod( ctx, "slotIsPlayingChanged", Qt::QueuedConnection, Q_ARG(bool, isPlaying), Q_ARG(Nullable<string>, msg));
+    QMetaObject::invokeMethod( ctx, "slotIsPlayingChanged", Qt::QueuedConnection, Q_ARG(bool, isPlaying), Q_ARG(bool, msg.hasValue), Q_ARG(QString, QString::fromStdString(msg.Value)));
 }
 
 void MainWindow::callbackSeek(void* context, frame_t pos)
@@ -38,7 +37,7 @@ void MainWindow::callbackCurrentSongChanged(void * context)
     QMetaObject::invokeMethod( ctx, "slotCurrentSongChanged", Qt::QueuedConnection);
 }
 
-void MainWindow::slotIsPlayingChanged(bool isPlaying, Nullable<string> msg)
+void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, QString msg)
 {
 
     QPushButton* playbtn = this->ui->playButton;
@@ -54,12 +53,12 @@ void MainWindow::slotIsPlayingChanged(bool isPlaying, Nullable<string> msg)
     
     playbtn->blockSignals(oldState);
     
-    if(msg.hasValue)
+    if(hasMsg)
     {
         QMessageBox msgBox;
         msgBox.setText("The Playback unexpectedly stopped.");
         msgBox.setIcon(QMessageBox::Critical);
-        msgBox.setDetailedText(QString::fromStdString(msg))
+        msgBox.setDetailedText(msg);
         msgBox.exec();
     }
 }
