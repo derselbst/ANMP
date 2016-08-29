@@ -19,6 +19,13 @@
 #include <utility>      // std::pair
 #include <cmath>
 
+void MainWindow::callbackIsPlayingChanged(void* context, bool isPlaying, Nullable<string> msg)
+{
+    MainWindow* ctx = static_cast<MainWindow*>(context);
+    
+    QMetaObject::invokeMethod( ctx, "slotIsPlayingChanged", Qt::QueuedConnection, Q_ARG(bool, isPlaying), Q_ARG(Nullable<string>, msg));
+}
+
 void MainWindow::callbackSeek(void* context, frame_t pos)
 {
     MainWindow* ctx = static_cast<MainWindow*>(context);
@@ -29,6 +36,11 @@ void MainWindow::callbackCurrentSongChanged(void * context)
 {
     MainWindow* ctx = static_cast<MainWindow*>(context);
     QMetaObject::invokeMethod( ctx, "slotCurrentSongChanged", Qt::QueuedConnection);
+}
+
+void MainWindow::slotIsPlayingChanged(bool isPlaying, Nullable<string> msg)
+{
+    
 }
 
 void MainWindow::slotSeek(long long pos)
@@ -100,6 +112,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // set callbacks
     this->player->onPlayheadChanged += make_pair(this, &MainWindow::callbackSeek);
     this->player->onCurrentSongChanged += make_pair(this, &MainWindow::callbackCurrentSongChanged);
+    this->player->onIsPlayingChanged += make_pair(this, &MainWindow::callbackIsPlayingChanged);
 
     this->buildFileBrowser();
     this->buildPlaylistView();
@@ -110,6 +123,7 @@ MainWindow::~MainWindow()
 {
     this->player->onPlayheadChanged -= this;
     this->player->onCurrentSongChanged -= this;
+    this->player->onIsPlayingChanged -= this;
 
     delete this->settingsView;
     delete this->analyzerWindow;
