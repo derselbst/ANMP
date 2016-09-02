@@ -63,9 +63,9 @@ private:
     // not saving them would cause ugly interruptions in produced audio
     //
     // the header of frame might be reused?
-    struct mad_frame frame;
+    Nullable<struct mad_frame> frame;
     // and the member phase of synth is definitly reused
-    struct mad_synth synth;
+    Nullable<struct mad_synth> synth;
     
     vector<int32_t> tempBuf;
 

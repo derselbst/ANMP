@@ -145,16 +145,27 @@ void LibMadWrapper::open ()
         mad_header_finish(&header);
     }
     
+    this->frame.hasValue=true;
+    mad_frame_init(&this->frame.Value);
     
-    mad_frame_init(&this->frame);
-    mad_synth_init(&this->synth);
+    this->synth.hasValue=true;
+    mad_synth_init(&this->synth.Value);
 }
 
 void LibMadWrapper::close() noexcept
 {
   
-    mad_synth_finish(&this->synth);
-    mad_frame_finish(&this->frame);
+    if(this->synth.hasValue)
+    {
+        mad_synth_finish(&this->synth.Value);
+        this->synth.hasValue=false;
+    }
+    
+    if(this->frame.hasValue)
+    {
+        mad_frame_finish(&this->frame.Value);
+        this->frame.hasValue=false;
+    }
     
     if(this->stream != nullptr)
     {
@@ -230,7 +241,7 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             CLOG(LogLevel::ERROR, "framesToDoNow negative!!!: " << framesToDoNow);
         }
         
-        int ret = mad_frame_decode(&this->frame, this->stream);
+        int ret = mad_frame_decode(&this->frame.Value, this->stream);
         if(ret!=0)
         {
             if(MAD_RECOVERABLE(this->stream->error))
@@ -243,14 +254,14 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             }
         }
         
-        mad_synth_frame(&synth, &this->frame);
+        mad_synth_frame(&this->synth.Value, &this->frame.Value);
         
         /* save PCM samples from synth.pcm */
         /* &synth.pcm->samplerate contains the sampling frequency */
 
-        unsigned short nsamples     = synth.pcm.length;
-        mad_fixed_t const *left_ch  = synth.pcm.samples[0];
-        mad_fixed_t const *right_ch = synth.pcm.samples[1];
+        unsigned short nsamples     = this->synth.Value.pcm.length;
+        mad_fixed_t const *left_ch  = this->synth.Value.pcm.samples[0];
+        mad_fixed_t const *right_ch = this->synth.Value.pcm.samples[1];
         
         unsigned int item=0;
         /* audio normalization */
