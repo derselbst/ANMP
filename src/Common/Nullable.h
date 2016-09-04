@@ -32,6 +32,8 @@ public:
     const Nullable<T> & operator=(const Nullable<T> &value);
     const Nullable<T> & operator=(const T &value);
     const Nullable<T> & operator=(nullptr_t nullpointer);
+    
+    T* operator->();
 
 public:
     bool hasValue;
@@ -130,4 +132,10 @@ const Nullable<T> & Nullable<T>::operator=(nullptr_t nullpointer)
     hasValue = false;
     Value = T();
     return *this;
+}
+
+template <typename T>
+T* Nullable<T>::operator->()
+{
+    return (*this).hasValue ? &(*this).Value : nullptr;
 }
