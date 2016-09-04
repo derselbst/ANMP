@@ -19,6 +19,12 @@
 #include <utility>      // std::pair
 #include <cmath>
 
+void MainWindow::callbackIsPlayingChanged(void* context, bool isPlaying, Nullable<string> msg)
+{
+    MainWindow* ctx = static_cast<MainWindow*>(context);
+    QMetaObject::invokeMethod( ctx, "slotIsPlayingChanged", Qt::QueuedConnection, Q_ARG(bool, isPlaying), Q_ARG(bool, msg.hasValue), Q_ARG(QString, QString::fromStdString(msg.Value)));
+}
+
 void MainWindow::callbackSeek(void* context, frame_t pos)
 {
     MainWindow* ctx = static_cast<MainWindow*>(context);
@@ -29,6 +35,32 @@ void MainWindow::callbackCurrentSongChanged(void * context)
 {
     MainWindow* ctx = static_cast<MainWindow*>(context);
     QMetaObject::invokeMethod( ctx, "slotCurrentSongChanged", Qt::QueuedConnection);
+}
+
+void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, QString msg)
+{
+
+    QPushButton* playbtn = this->ui->playButton;
+    bool oldState = playbtn->blockSignals(true);
+    if(isPlaying)
+    {
+        playbtn->setChecked(true);
+    }
+    else
+    {
+        playbtn->setChecked(false);
+    }
+    
+    playbtn->blockSignals(oldState);
+    
+    if(hasMsg)
+    {
+        QMessageBox msgBox;
+        msgBox.setText("The Playback unexpectedly stopped.");
+        msgBox.setIcon(QMessageBox::Critical);
+        msgBox.setDetailedText(msg);
+        msgBox.exec();
+    }
 }
 
 void MainWindow::slotSeek(long long pos)
@@ -100,6 +132,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // set callbacks
     this->player->onPlayheadChanged += make_pair(this, &MainWindow::callbackSeek);
     this->player->onCurrentSongChanged += make_pair(this, &MainWindow::callbackCurrentSongChanged);
+    this->player->onIsPlayingChanged += make_pair(this, &MainWindow::callbackIsPlayingChanged);
 
     this->buildFileBrowser();
     this->buildPlaylistView();
@@ -110,6 +143,7 @@ MainWindow::~MainWindow()
 {
     this->player->onPlayheadChanged -= this;
     this->player->onCurrentSongChanged -= this;
+    this->player->onIsPlayingChanged -= this;
 
     delete this->settingsView;
     delete this->analyzerWindow;
@@ -399,22 +433,11 @@ void MainWindow::tooglePlayPauseFade()
 void MainWindow::play()
 {
     this->player->play();
-
-    QPushButton* playbtn = this->ui->playButton;
-    bool oldState = playbtn->blockSignals(true);
-    playbtn->setChecked(true);
-    playbtn->blockSignals(oldState);
-
 }
 
 void MainWindow::pause()
 {
     this->player->pause();
-
-    QPushButton* playbtn = this->ui->playButton;
-    bool oldState = playbtn->blockSignals(true);
-    playbtn->setChecked(false);
-    playbtn->blockSignals(oldState);
 }
 
 void MainWindow::stopFade()
@@ -426,11 +449,6 @@ void MainWindow::stopFade()
 void MainWindow::stop()
 {
     this->player->stop();
-
-    QPushButton* playbtn = this->ui->playButton;
-    bool oldState = playbtn->blockSignals(true);
-    playbtn->setChecked(false);
-    playbtn->blockSignals(oldState);
 
     // dont call the slot directly, a call might still be pending, making a direct call here useless
     QMetaObject::invokeMethod( this, "slotSeek", Qt::QueuedConnection, Q_ARG(long long, 0 ) );
