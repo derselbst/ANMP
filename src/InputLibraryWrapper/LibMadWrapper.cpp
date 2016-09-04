@@ -9,6 +9,7 @@
 #include <chrono>
 
 #include <mad.h>
+#include <id3tag.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -37,6 +38,25 @@ LibMadWrapper::~LibMadWrapper ()
     this->close();
 }
 
+int LibMadWrapper::findValidHeader(struct mad_header& header)
+{
+  int ret;
+  
+        while((ret=mad_header_decode(&header, this->stream))!=0 && MAD_RECOVERABLE(this->stream->error))
+        {
+            if(this->stream->error == MAD_ERROR_LOSTSYNC)
+            {
+                long tagsize = id3_tag_query(this->stream->this_frame,this->stream->bufend - this->stream->this_frame);
+                if(tagsize > 0)
+                {
+                        mad_stream_skip(this->stream, tagsize);
+                        continue;
+                }
+            }
+        }
+        
+        return ret;
+}
 
 void LibMadWrapper::open ()
 {
@@ -66,15 +86,16 @@ void LibMadWrapper::open ()
     /* load buffer with MPEG audio data */
     mad_stream_buffer(this->stream, this->mpegbuf, this->mpeglen);
 
+    // we want to know how many pcm frames there are decoded in this file
+    // therefore decode header of every mpeg frame
+    // pretty expensive, so only to this once
     if(this->numFrames==0)
     {
         struct mad_header header;
         mad_header_init(&header);
     
-        int ret;
         // try to find a valid header
-        while((ret=mad_header_decode(&header, this->stream))!=0 && MAD_RECOVERABLE(this->stream->error));
-
+        int ret = this->findValidHeader(header);
         if(ret!=0)
         {
             // only free the locally used header here, this->stream and this->mpegbuf are freed in LibMadWrapper::close()
@@ -86,19 +107,20 @@ void LibMadWrapper::open ()
         // a first valid header is good, but it may contain garbage
         this->Format.Channels = MAD_NCHANNELS(&header);
         this->Format.SampleRate = header.samplerate;
-        CLOG(LogLevel::DEBUG, "found valid header within File \"" << this->Filename << ")\"\n\tchannels: " << MAD_NCHANNELS(&header) << "\nsrate: " << header.samplerate);
+        CLOG(LogLevel::DEBUG, "found a first valid header within File \"" << this->Filename << ")\"\n\tchannels: " << MAD_NCHANNELS(&header) << "\nsrate: " << header.samplerate);
 
         // no clue what this 32 does
         // stolen from mad_synth_frame() in synth.c
-        this->numFrames = 32 * MAD_NSBSAMPLES(&header);
+        this->numFrames += 32 * MAD_NSBSAMPLES(&header);
 
         // try to find a second valid header
-        while((ret=mad_header_decode(&header, this->stream))!=0 && MAD_RECOVERABLE(this->stream->error));
+        ret = this->findValidHeader(header);
         if(ret==0)
         {
             // better use format infos from this header
-            this->Format.Channels = MAD_NCHANNELS(&header);
+            this->Format.Channels = max<int>(MAD_NCHANNELS(&header), this->Format.Channels);
             this->Format.SampleRate = header.samplerate;
+            CLOG(LogLevel::DEBUG, "found a second valid header within File \"" << this->Filename << ")\"\n\tchannels: " << MAD_NCHANNELS(&header) << "\nsrate: " << header.samplerate);
             
             this->numFrames += 32 * MAD_NSBSAMPLES(&header);
             
@@ -244,12 +266,28 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
         int ret = mad_frame_decode(&this->frame.Value, this->stream);
         if(ret!=0)
         {
+            if(this->stream->error == MAD_ERROR_LOSTSYNC)
+            {
+                  long tagsize = id3_tag_query(this->stream->this_frame,this->stream->bufend - this->stream->this_frame);
+                  if(tagsize > 0)
+                  {
+                          mad_stream_skip(this->stream, tagsize);
+                          continue;
+                  }
+            }
+          
+           string errstr=mad_stream_errorstr(this->stream);
+          
             if(MAD_RECOVERABLE(this->stream->error))
             {
+                errstr += " (recoverable)";
+                CLOG(LogLevel::INFO, errstr);
                 continue;
             }
             else
             {
+                errstr += " (not recoverable)";
+                CLOG(LogLevel::WARNING, errstr);
                 break;
             }
         }
@@ -259,9 +297,9 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
         /* save PCM samples from synth.pcm */
         /* &synth.pcm->samplerate contains the sampling frequency */
 
-        unsigned short nsamples     = this->synth.Value.pcm.length;
-        mad_fixed_t const *left_ch  = this->synth.Value.pcm.samples[0];
-        mad_fixed_t const *right_ch = this->synth.Value.pcm.samples[1];
+        unsigned short nsamples     = this->synth->pcm.length;
+        mad_fixed_t const *left_ch  = this->synth->pcm.samples[0];
+        mad_fixed_t const *right_ch = this->synth->pcm.samples[1];
         
         unsigned int item=0;
         /* audio normalization */
@@ -280,12 +318,24 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             /* output sample(s) in 24-bit signed little-endian PCM */
 
             sample = LibMadWrapper::toInt24Sample(*left_ch++);
-            pcm[item++] = Config::useAudioNormalization ? lrint(sample * absoluteGain) : sample;
+            sample = Config::useAudioNormalization ? lrint(sample * absoluteGain) : sample;
+            pcm[item++] = sample;
 
-            if (this->Format.Channels == 2)
+            if (this->Format.Channels == 2) // our buffer is for 2 channels
             {
+              if(this->synth.Value.pcm.channels==2) // ...but did mad also decoded for 2 channels?
+              {
                 sample = LibMadWrapper::toInt24Sample(*right_ch++);
-                pcm[item++] = Config::useAudioNormalization ? lrint(sample * absoluteGain) : sample;
+                sample = Config::useAudioNormalization ? lrint(sample * absoluteGain) : sample;
+                pcm[item++] = sample;
+              }
+              else
+              {
+                // what? only one channel in a stereo file? well then: pseudo stereo
+                pcm[item++] = sample;
+                
+                CLOG(LogLevel::WARNING, "decoded only one channel, though this is a stereo file!");
+              }
             }
             
             this->framesAlreadyRendered++;
@@ -329,6 +379,118 @@ void LibMadWrapper::buildMetadata() noexcept
 {
     // TODO we have to find ID3 tag in the mpeg file, but this should be done while trying decoding mpeg-frame-headers
     // whenever libmad returns lost_sync error, there might be a id3 tag
+  
+        
+        
+        
+  struct id3_file *s = id3_file_open(this->Filename.c_str(), ID3_FILE_MODE_READONLY);
+  
+        if(s == nullptr)
+        {
+          return;
+        }
+
+        struct id3_tag *t = id3_file_tag(s);
+        if(t == nullptr)
+        {
+                id3_file_close(s);
+                return;
+        }
+        
+
+                this->Metadata.Title = id3_get_tag(t, ID3_FRAME_TITLE);
+                
+                this->Metadata.Artist = id3_get_tag(t, ID3_FRAME_ARTIST);
+                
+                this->Metadata.Album = id3_get_tag(t, ID3_FRAME_ALBUM);
+                
+                this->Metadata.Year = id3_get_tag(t, ID3_FRAME_YEAR);
+                
+                this->Metadata.Genre = id3_get_tag(t, ID3_FRAME_GENRE);
+                
+                this->Metadata.Track = id3_get_tag(t, ID3_FRAME_TRACK);
+                
+                this->Metadata.Comment = id3_get_tag(t, ID3_FRAME_COMMENT);
+                
+            id3_file_close(s);
+}
+
+
+/* stolen from mpg321
+ * 
+ * Convenience for retrieving already formatted id3 data
+ * what parameter is one of
+ *  ID3_FRAME_TITLE
+ *  ID3_FRAME_ARTIST
+ *  ID3_FRAME_ALBUM
+ *  ID3_FRAME_YEAR
+ *  ID3_FRAME_COMMENT
+ *  ID3_FRAME_GENRE
+ */
+string LibMadWrapper::id3_get_tag (struct id3_tag const *tag, char const *what)
+{
+    struct id3_frame const *frame = NULL;
+    union id3_field const *field = NULL;
+    int nstrings;
+    int avail;
+    int j;
+    int tocopy;
+    int len;
+    char printable [1024];
+    id3_ucs4_t const *ucs4 = NULL;
+    id3_latin1_t *latin1 = NULL;
+
+    memset (printable, '\0', 1024);
+    avail = 1024;
+    if (strcmp (what, ID3_FRAME_COMMENT) == 0)
+    {
+        /*There may be sth wrong. I did not fully understand how to use
+            libid3tag for retrieving comments  */
+        j=0;
+        frame = id3_tag_findframe(tag, ID3_FRAME_COMMENT, j++);
+        if (!frame) return "";
+        ucs4 = id3_field_getfullstring (&frame->fields[3]);
+        if (!ucs4) return "";
+        latin1 = id3_ucs4_latin1duplicate (ucs4);
+        if (!latin1 || strlen(reinterpret_cast<char*>(latin1)) == 0) return "";
+        len = strlen(reinterpret_cast<char*>(latin1));
+        if (avail > len)
+            tocopy = len;
+        else
+            tocopy = 0;
+        if (!tocopy) return "";
+        avail-=tocopy;
+        strncat (printable, reinterpret_cast<char*>(latin1), tocopy);
+        free (latin1);
+    }
+    
+    else
+    {
+        frame = id3_tag_findframe (tag, what, 0);
+        if (!frame) return "";
+        field = &frame->fields[1];
+        nstrings = id3_field_getnstrings(field);
+        for (j=0; j<nstrings; ++j)
+        {
+            ucs4 = id3_field_getstrings(field, j);
+            if (!ucs4) return "";
+            if (strcmp (what, ID3_FRAME_GENRE) == 0)
+                ucs4 = id3_genre_name(ucs4);
+            latin1 = id3_ucs4_latin1duplicate(ucs4);
+            if (!latin1) break;
+            len = strlen(reinterpret_cast<char*>(latin1));
+            if (avail > len)
+                tocopy = len;
+            else
+                tocopy = 0;
+            if (!tocopy) break;
+            avail-=tocopy;
+            strncat (printable, reinterpret_cast<char*>(latin1), tocopy);
+            free (latin1);
+        }
+    }
+
+    return string(printable);
 }
 
 /* FROM minimad.c

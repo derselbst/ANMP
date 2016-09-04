@@ -126,9 +126,19 @@ endif(ENABLE_LIBGME)
 
 
 if(ENABLE_LIBMAD)
-  MY_FIND_LIB(LIBMAD mad)
+    PKG_CHECK_MODULES(ID3TAG id3tag)
   
-    summary_add("libmad support" LIBMAD_FOUND)
+  if(ID3TAG_FOUND)
+        
+        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${ID3TAG_INCLUDE_DIRS})
+        set(LD_FLAGS ${LD_FLAGS} ${ID3TAG_LIBRARIES})
+        MY_PRINT(ID3TAG)
+        
+        MY_FIND_LIB(LIBMAD mad)
+        
+  
+        summary_add("libmad support" LIBMAD_FOUND)
+  endif(ID3TAG_FOUND)
 endif(ENABLE_LIBMAD)
 
 

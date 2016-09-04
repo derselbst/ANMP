@@ -71,6 +71,9 @@ private:
 
     frame_t numFrames=0;
     static signed int toInt24Sample(mad_fixed_t sample);
+    static string id3_get_tag (struct id3_tag const *tag, char const *what);
+    
+    int findValidHeader(struct mad_header& header);
 
 };
 
