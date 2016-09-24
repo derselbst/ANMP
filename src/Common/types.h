@@ -64,24 +64,50 @@ typedef struct loop
 
 typedef enum AudioDriver
 {
+    BEGIN,    
+    WAVE = BEGIN,  
+    
 #ifdef USE_ALSA
     ALSA,
 #endif
-    
-#ifdef USE_EBUR128
-    ebur128,
-#endif
-    
+
 #ifdef USE_JACK
     JACK,
 #endif
-    
+
 #ifdef USE_PORTAUDIO
     PORTAUDIO,
 #endif
-    
-    WAVE,
+
+#ifdef USE_EBUR128
+    ebur128,
+#endif
+   
+    END,
 } AudioDriver_t;
+
+static const char* AudioDriverName[] = 
+{
+#ifdef USE_ALSA
+  [AudioDriver_t::ALSA] = "ALSA",
+#endif
+  
+#ifdef USE_EBUR128
+  [AudioDriver_t::ebur128] = "ebur128 audio normalization",
+#endif
+  
+#ifdef USE_JACK
+  [AudioDriver_t::JACK] = "JACK",
+#endif
+  
+#ifdef USE_PORTAUDIO
+  [AudioDriver_t::PORTAUDIO] = "PortAudio",
+#endif
+  
+  [AudioDriver_t::WAVE] = "write WAVE files",
+  
+  [AudioDriver_t::END] = "Srsly?",
+};
 
 
 typedef enum SampleFormat
