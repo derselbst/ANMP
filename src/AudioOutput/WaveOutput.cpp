@@ -50,6 +50,7 @@ void WaveOutput::open()
 {
     if(Config::RenderWholeSong)
     {
+        // writing the file might be done with one call to this->write(), but this doesnt mean that the song already has been fully rendered yet
         THROW_RUNTIME_ERROR("You MUST NOT hold the whole audio file in memory, when using WaveOutput.")
     }
 }
