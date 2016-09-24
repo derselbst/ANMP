@@ -39,6 +39,9 @@ public:
 
     bool getIsPlaying();
 
+    
+    void initAudio();
+    
     /**
      * @return Song
      */

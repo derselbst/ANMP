@@ -439,7 +439,7 @@ border-radius: 4px;
      <x>0</x>
      <y>0</y>
      <width>652</width>
-     <height>30</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHello">
@@ -467,6 +467,8 @@ border-radius: 4px;
     <addaction name="separator"/>
     <addaction name="actionNext_Song"/>
     <addaction name="actionPrevious_Song"/>
+    <addaction name="separator"/>
+    <addaction name="actionReinit_AudioDriver"/>
    </widget>
    <widget class="QMenu" name="menuShow">
     <property name="title">
@@ -575,6 +577,11 @@ border-radius: 4px;
     <string>Shuffle Playst</string>
    </property>
   </action>
+  <action name="actionReinit_AudioDriver">
+   <property name="text">
+    <string>Reinit AudioDriver</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -591,12 +598,12 @@ border-radius: 4px;
  </resources>
  <connections/>
  <buttongroups>
+  <buttongroup name="controlButtonsHideSecond"/>
+  <buttongroup name="controlButtonsHideFirst"/>
   <buttongroup name="controlButtonsAlwaysVisible">
    <property name="exclusive">
     <bool>false</bool>
    </property>
   </buttongroup>
-  <buttongroup name="controlButtonsHideFirst"/>
-  <buttongroup name="controlButtonsHideSecond"/>
  </buttongroups>
 </ui>

@@ -52,6 +52,18 @@ Player::~Player ()
     delete this->audioDriver;
 }
 
+void Player::initAudio()
+{
+  bool oldState = this->getIsPlaying();
+  this->pause();
+  this->_initAudio();
+  
+  if(oldState)
+  {
+    this->play();
+  }
+}
+
 void Player::_initAudio()
 {
     this->_pause();
@@ -90,6 +102,12 @@ void Player::_initAudio()
     }
 
     this->audioDriver->open();
+    
+    if(this->currentSong!=nullptr)
+    {
+      SongFormat& format = this->currentSong->Format;
+      this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
+    }
 }
 
 bool Player::getIsPlaying()

@@ -9,6 +9,14 @@ ConfigDialog::ConfigDialog(QWidget *parent) :
 {
     this->ui->setupUi(this);
 
+    bool oldState = this->ui->comboBoxAudioDriver->blockSignals(true);
+    for(int i=AudioDriver_t::BEGIN; i<AudioDriver_t::END; i++)
+    {
+        this->ui->comboBoxAudioDriver->insertItem(i, AudioDriverName[i]);
+    }
+    this->ui->comboBoxAudioDriver->setCurrentIndex(static_cast<int>(Config::audioDriver));
+    this->ui->comboBoxAudioDriver->blockSignals(oldState);
+
     this->ui->spinPreRenderTime->setValue(Config::PreRenderTime);
     this->ui->checkAudioNorm->setChecked(Config::useAudioNormalization);
     this->ui->checkRenderWhole->setChecked(Config::RenderWholeSong);
@@ -89,4 +97,50 @@ void ConfigDialog::on_checkGmeAccurate_clicked(bool checked)
 void ConfigDialog::on_checkGmeForever_clicked(bool checked)
 {
     Config::gmePlayForever = checked;
+}
+
+void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
+{
+    Config::audioDriver = static_cast<AudioDriver_t>(index);
+/** in case we ever use bitmasks for audioDriver
+
+    if(Config::audioDriver & (AudioDriver_t::WAVE | AudioDriver_t::ebur128))
+    {
+        Config::RenderWholeSong = false;
+        this->ui->checkRenderWhole->setEnabled(false);
+        this->ui->checkRenderWhole->setChecked(false);
+
+        if(Config::audioDriver & AudioDriver_t::ebur128)
+        {
+            Config::useAudioNormalization = false;
+            this->ui->checkAudioNorm->setEnabled(false);
+            this->ui->checkAudioNorm->setChecked(false);
+        }
+    }
+    else
+    {
+        this->ui->checkRenderWhole->setEnabled(true);
+        this->ui->checkAudioNorm->setEnabled(true);
+    }*/
+
+    switch(Config::audioDriver)
+    {
+    case AudioDriver_t::ebur128:
+        Config::useAudioNormalization = false;
+        this->ui->checkAudioNorm->setEnabled(false);
+        this->ui->checkAudioNorm->setChecked(false);
+
+        // fall through
+
+    case AudioDriver_t::WAVE:
+        Config::RenderWholeSong = false;
+        this->ui->checkRenderWhole->setEnabled(false);
+        this->ui->checkRenderWhole->setChecked(false);
+        break;
+
+    default:
+        this->ui->checkRenderWhole->setEnabled(true);
+        this->ui->checkAudioNorm->setEnabled(true);
+        break;
+    }
 }

@@ -594,7 +594,15 @@ void MainWindow::on_actionSettings_triggered()
     {
         this->settingsView = new ConfigDialog(this);
     }
-    this->settingsView->show();
+
+    AudioDriver_t oldDriver = Config::audioDriver;
+
+    int ret = this->settingsView->exec();
+
+    if(ret == QDialog::Accepted && oldDriver != Config::audioDriver)
+    {
+        this->player->initAudio();
+    }
 }
 
 void MainWindow::on_actionShuffle_Playst_triggered()
@@ -621,6 +629,9 @@ void MainWindow::on_actionShuffle_Playst_triggered()
             }
         }
      }
+}
 
-  
+void MainWindow::on_actionReinit_AudioDriver_triggered()
+{
+    this->player->initAudio();
 }

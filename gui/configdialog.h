@@ -41,6 +41,8 @@ private slots:
 
     void on_checkGmeForever_clicked(bool checked);
 
+    void on_comboBoxAudioDriver_currentIndexChanged(int index);
+
 private:
     Ui::ConfigDialog *ui;
 };
