@@ -27,10 +27,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 ### set compile flags
-if (CMAKE_COMPILER_IS_GNUCXX)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic-errors -Wall -Warray-bounds -Wstack-protector")
     set(CMAKE_CXX_FLAGS_DEBUG "-g3 -Wextra -fstack-check -fstack-protector-all -D_GLIBCXX_DEBUG")
-endif(CMAKE_COMPILER_IS_GNUCXX)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall")
+    set(CMAKE_CXX_FLAGS_DEBUG "-g3 -Wextra -Wdocumentation -fstack-protector-all")
+endif()
 
 
 ### setup project include dirs
