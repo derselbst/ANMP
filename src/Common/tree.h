@@ -84,9 +84,8 @@ private:
         // unlink this from the master node
         if (this->out_ != NULL)
         {
-
             // this->out_ is going to be called alot in succession "register" it
-            register tree *out = this->out_;
+            /*register*/ tree *out = this->out_;
 
             // Decrement the size of the outter level
             --(out->size_);
@@ -555,7 +554,7 @@ public:
 
         if (this->size() > 0)
         {
-            register tree *cur = this->in_, *prev = this->in_->prev_;
+            /*register*/ tree *cur = this->in_, *prev = this->in_->prev_;
 
             // Delete the head node
             prev->out_ = NULL;
@@ -645,7 +644,7 @@ public:
         // that way disconnect_ fails immediately, much faster
         if (this->size() > 0)
         {
-            register tree *cur = this->in_, *prev = this->in_->prev_;
+            /*register*/ tree *cur = this->in_, *prev = this->in_->prev_;
 
             // Delete the head node
             prev->out_ = NULL;
