@@ -14,10 +14,16 @@
 using namespace std;
 
 /**
-  * class Song
+  * @brief abstract class Song
   *
+  * base class for all the different wrapper classes, holding all information that we need to support decoding various audio formats and properly playing them back
+  *
+  * workflow:
+  *    need to support a new audio format?
+  *    -> find a library that supports decoding this format!
+  *    -> to make this library usable for ANMP: write a wrapper class by deriving this class, implementing all abstract methods
+  *    -> listen audio and enjoy
   */
-
 class Song
 {
 protected:
@@ -58,11 +64,11 @@ public:
     // after each call to this->fillBuffer(), this pointer will point to a buffer holding "Config::FramesToRender" freshly rendered PCM frames
     pcm_t* data = nullptr;
 
+    // indicates the data type of the raw decoded pcm
+    SongFormat Format;
+ 
     // how many items (i.e. floats, int16s, etc.) are there in data?
     size_t count = 0;
-
-    // pcm specific information
-    SongFormat Format;
 
     // a tree, that holds the loops to be played
     /*  example: syntax aggreement: ([a,b],k) defines an instance of loop_t where:
