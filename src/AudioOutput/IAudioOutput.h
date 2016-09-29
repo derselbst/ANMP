@@ -11,6 +11,8 @@ using namespace std;
 
 /**
   * Abstract base class for all classes that handle audio playback in ANMP
+  *
+  * need to support a new Audio Playback API? --> derive this class and implement all abstract methods
   */
 class IAudioOutput
 {
@@ -30,7 +32,7 @@ public:
 
 
     /**
-     * opens a sound device, e.g. set buffer size, periods,... i.e. things that dont change while running program
+     * opens a sound device, e.g. set buffer size, periods,... i.e. things that dont change while running ANMP
      *
      * can and shall be called initially (i.e. after object creation). can only be called again after a call to close()
      */
@@ -38,7 +40,7 @@ public:
 
     /**
      * initializes a sound device, e.g. set samplerate, channels, i.e. settings that
-     * can change while running program
+     * can change while running ANMP
      *
      * can be called multiple times if necessary
      * 
@@ -74,7 +76,7 @@ public:
     virtual void setVolume(float vol);
 
     /**
-     * pushes the pcm pointed to by buffer to the underlying audio driver and by that causes it to play
+     * pushes the pcm pointed to by frameBuffer to the underlying audio driver and by that causes it to play
      *
      * this generic version also takes care of pointer arithmetic
      *
@@ -121,9 +123,9 @@ protected:
      *
      * @note buffer has to contain (frames*this->currentChannelCount) items, i.e. sizeof(buffer)==(frames*this->currentChannelCount*sizeof(DataTypePointedToByBuffer))
      *
-     * @return number of frames successfully pushed to underlying audio driver
+     * @return number of frames successfully pushed to underlying audio driver. if this is zero, nothing was played and the caller may try again, after waiting 1ms or so.
      * 
-     * @warning you can return a number smaller "frames" (but greater 0), however this case cannot always be recovered. you should better return 0 and play nothing, if you face such a problem.
+     * @warning you can return a number smaller "frames" (but greater 0), however this case can only berecovered, if the whole song is hold in memory. you should better return 0 and play nothing, if you face such a problem.
      */
     virtual int write (float* buffer, frame_t frames) = 0;
     virtual int write (int16_t* buffer, frame_t frames) = 0;
