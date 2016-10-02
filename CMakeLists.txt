@@ -188,6 +188,21 @@ if(ENABLE_FFMPEG)
 endif(ENABLE_FFMPEG)
 
 
+if(ENABLE_FLUIDSYNTH)
+  PKG_CHECK_MODULES(FLUIDSYNTH fluidsynth)
+  
+  if(FLUIDSYNTH_FOUND)
+        add_definitions(-DUSE_FLUIDSYNTH)
+        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${FLUIDSYNTH_INCLUDE_DIRS})
+        set(LD_FLAGS ${LD_FLAGS} ${FLUIDSYNTH_LIBRARIES})
+        
+        MY_PRINT(FLUIDSYNTH)
+  endif(FLUIDSYNTH_FOUND)
+        
+    summary_add("FLUIDSYNTH support" FLUIDSYNTH_FOUND)
+endif(ENABLE_FLUIDSYNTH)
+
+
 ##################################
 ### miscellaneous dependencies ###
 ##################################
