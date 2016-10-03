@@ -59,6 +59,7 @@ public:
 private:
         fluid_settings_t* settings = nullptr;
         fluid_synth_t* synth = nullptr;
+    fluid_player_t* player = nullptr;
 //         fluid_audio_driver_t* adriver = nullptr;
         
         // path to the soundfont to use

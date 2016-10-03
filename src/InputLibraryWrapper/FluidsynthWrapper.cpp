@@ -49,6 +49,9 @@ void FluidsynthWrapper::open ()
     fluid_settings_setstr(settings, "synth.reverb.active", "yes");
     fluid_settings_setstr(settings, "synth.chorus.active", "no");
     fluid_settings_setnum(settings, "synth.sample-rate", 48000 );
+    
+    fluid_settings_setstr(settings, "player.timing-source", "sample");  
+    fluid_settings_setint(settings, "synth.parallel-render", 0);
 
       /* Create the synthesizer */
       this->synth = new_fluid_synth(settings);
@@ -72,18 +75,20 @@ void FluidsynthWrapper::open ()
       {
             fluid_player_add(player, argv[i]);
       }
-//       /* Create the audio driver. As soon as the audio driver is
-//         * created, the synthesizer can be played. */
-//       adriver = new_fluid_audio_driver(settings, synth);
-//       if (adriver == NULL) {
-//               fprintf(stderr, "Failed to create the audio driver\n");
-//               err = 5;
-//               goto cleanup;
-//       }
-//     
+
+
+    this->player = new_fluid_player(synth);    
     
     
-    
+    /* play the midi files, if any */
+    fluid_player_play(player);
+    while (fluid_player_get_status(player) == FLUID_PLAYER_PLAYING)
+    {
+    if (fluid_synth_process (this->synth, int len, 0, nullptr, this->Format.Channels, float ** out) != FLUID_OK)
+    {
+      break;
+    }
+    }
     
     this->Format.Channels = sfinfo.channels;
     this->Format.SampleRate = sfinfo.samplerate;
