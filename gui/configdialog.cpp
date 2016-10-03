@@ -125,13 +125,14 @@ void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
 
     switch(Config::audioDriver)
     {
+#ifdef USE_EBUR128
     case AudioDriver_t::ebur128:
         Config::useAudioNormalization = false;
         this->ui->checkAudioNorm->setEnabled(false);
         this->ui->checkAudioNorm->setChecked(false);
 
         // fall through
-
+#endif
     case AudioDriver_t::WAVE:
         Config::RenderWholeSong = false;
         this->ui->checkRenderWhole->setEnabled(false);
