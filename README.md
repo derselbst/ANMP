@@ -25,7 +25,7 @@ However, ANMP also supports rendering pcm to a small buffer. The method will be 
 
 Cue sheets will just add the same song file multiple times to a playlist, but with different file-offsets.
 
-Implementing new formats shall be done by implementing the abstract base class **Song**. By that a wrapper for any library that actually supports this format is written.
+Implementing new formats shall be done by deriving the abstract base class **Song**. By that a wrapper for any library that actually supports this format is written.
 
 The core of ANMP (i.e. everything in [src/](src/)) is strictly keept free of any QT5 dependencies. Makes reuseage a lot easier.
 
