@@ -70,7 +70,7 @@ make
 You probably want to use Visual Studio to get a native (preferably static) build of ANMP. Decide for one build architecture and one runtime library. Then:
 
 1. Make sure you have built the depending libraries you would like ANMP to use (see above)
-2. Instruct cmake where to find each and every of those library as well as its include dir (see below)
+2. Instruct cmake where to find each and every of those libraries as well as its include dirs (see below)
 3. Get a bunch of library conflict errors
 4. Mess around
 5. Start again at 1. with different architecture / runtime library
