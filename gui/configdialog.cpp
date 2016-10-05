@@ -130,8 +130,7 @@ void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
         Config::useAudioNormalization = false;
         this->ui->checkAudioNorm->setEnabled(false);
         this->ui->checkAudioNorm->setChecked(false);
-
-        // fall through
+        [[fallthrough]];
 #endif
     case AudioDriver_t::WAVE:
         Config::RenderWholeSong = false;
