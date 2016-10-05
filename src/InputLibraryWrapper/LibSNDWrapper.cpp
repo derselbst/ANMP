@@ -60,7 +60,7 @@ void LibSNDWrapper::open ()
     switch(this->sfinfo.format & SF_FORMAT_SUBMASK)
     {
     case SF_FORMAT_FLOAT:
-        [[fallthrough]];
+        [[fallthrough]];
     case SF_FORMAT_DOUBLE:
         sf_command(this->sndfile, SFC_SET_SCALE_FLOAT_INT_READ, nullptr, SF_TRUE);
         break;
