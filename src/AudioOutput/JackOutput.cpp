@@ -181,7 +181,7 @@ template<typename T> void JackOutput::getAmplifiedFloatBuffer(const T* inBuf, fl
 	{
 		float& item = outBuf[i];
 		// convert that item in inBuf[i] to float
-		item = inBuf[i] / (float)(numeric_limits<T>::max()+1);
+		item = inBuf[i] / (static_cast<float>(numeric_limits<T>::max())+1);
 		// amplify
 		item *= this->volume;
 		

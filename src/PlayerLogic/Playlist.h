@@ -16,32 +16,19 @@ public:
 
     virtual ~Playlist();
 
-    /**
-     * @param  song
-     */
+
     void add (Song* song) override;
 
-
-    /**
-     */
     void remove (Song* song) override;
 
-    /**
-     */
     void remove (int i) override;
 
     void clear() override;
 
-    /**
-     */
     Song* current () override;
 
-    /**
-     */
     Song* next () override;
 
-    /**
-     */
     Song* previous () override;
 
     Song* getSong(unsigned int id) override;

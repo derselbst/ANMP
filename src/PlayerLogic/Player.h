@@ -145,11 +145,6 @@ private:
      */
     void playFrames (frame_t startFrame, frame_t stopFrame);
 
-
-    /**
-     * @param  itemsToPlay how many items (e.g. floats, not frames!!) from buffer shall
-     * be played
-     */
     void playFrames (frame_t framesToPlay);
 
     void playInternal ();
