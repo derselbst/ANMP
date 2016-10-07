@@ -110,7 +110,13 @@ void LibGMEWrapper::open()
         gme_set_fade(this->handle, this->fileLen.Value);
     }
 
-    this->Format.SampleRate = Config::gmeSampleRate;
+    if(this->Format.SampleRate != Config::gmeSampleRate)
+    {
+        // the sample rate may have changed, if requested by user
+        this->Format.SampleRate = Config::gmeSampleRate;
+        // so we have to build up the loop tree again
+        this->buildLoopTree();
+    }
 }
 
 void LibGMEWrapper::close() noexcept
