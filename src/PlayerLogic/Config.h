@@ -41,6 +41,11 @@ struct Config
     static float gmeEchoDepth;
     static bool gmePlayForever;
 
+    static bool FluidsynthEnableReverb;
+    static bool FluidsynthEnableChorus;
+    static bool FluidsynthMultiChannel;
+    static unsigned int FluidsynthSampleRate;
+    static string FluidsynthDefaultSoundfont;
 };
 
 

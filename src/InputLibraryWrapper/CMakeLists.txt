@@ -37,6 +37,11 @@ if(FFMPEG_FOUND)
     set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} FFMpegWrapper.cpp)
 endif(FFMPEG_FOUND)
 
+if(FLUIDSYNTH_FOUND)
+    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} FluidsynthWrapper.cpp)
+endif(FLUIDSYNTH_FOUND)
+
+
 
 #---------------------------------------------------------------------------------------------
 

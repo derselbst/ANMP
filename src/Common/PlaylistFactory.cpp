@@ -28,6 +28,10 @@
 #include "FFMpegWrapper.h"
 #endif
 
+#ifdef USE_FLUIDSYNTH
+#include "FluidsynthWrapper.h"
+#endif
+
 #include "Common.h"
 
 #include <sstream>
@@ -129,21 +133,24 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
 }
 #endif
 
-#define TRY_WITH(LIBWRAPPER)\
+#define TRY_OPEN \
+try\
+{\
+    pcm->open();\
+}\
+catch(exception& e)\
+{\
+    cerr << e.what() << endl;\
+    pcm->close();\
+    delete pcm;\
+    pcm=nullptr;\
+}\
+
+#define TRY_WITH(LIBWRAPPER) \
 if(pcm==nullptr)\
 {\
     pcm = new LIBWRAPPER(filePath, offset, len);\
-    try\
-    {\
-	pcm->open();\
-    }\
-    catch(exception& e)\
-    {\
-	cerr << e.what() << endl;\
-	pcm->close();\
-	delete pcm;\
-	pcm=nullptr;\
-    }\
+    TRY_OPEN\
 }
 
 bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nullable<size_t> offset, Nullable<size_t> len, Nullable<SongInfo> overridingMetadata)
@@ -157,6 +164,17 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
         PlaylistFactory::parseCue(playlist, filePath);
 #endif
     }
+    
+#ifdef USE_FLUIDSYNTH
+    else if (iEquals(ext, "mid") || iEquals(ext, "midi"))
+    {
+      if(pcm==nullptr)
+      {
+        pcm = new FluidsynthWrapper(filePath, Config::FluidsynthDefaultSoundfont);
+        TRY_OPEN
+      }
+    }
+#endif
     
 #ifdef USE_LAZYUSF
     else if (iEquals(ext, "usf") || iEquals(ext, "miniusf"))

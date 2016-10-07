@@ -73,3 +73,13 @@ GYM, SPC, and Sega Genesis VGM music */
 float Config::gmeEchoDepth = 0.2f;
 
 bool Config::gmePlayForever = false;
+
+//**********************************
+//   FLUIDSYNTH-SPECIFIC SECTION   *
+//**********************************
+
+bool Config::FluidsynthEnableReverb = true;
+bool Config::FluidsynthEnableChorus = true;
+bool Config::FluidsynthMultiChannel = false;
+unsigned int Config::FluidsynthSampleRate = 48000;
+string Config::FluidsynthDefaultSoundfont = "/home/tom/Musik/Donkey Kong 64/DK64.sf2";

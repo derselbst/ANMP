@@ -11,18 +11,19 @@
 #include <chrono>
 
 
-FluidsynthWrapper::FluidsynthWrapper(string filename) : StandardWrapper(filename)
+FluidsynthWrapper::FluidsynthWrapper(string filename, string soundfont) : StandardWrapper(filename)
 {
-    this->initAttr();
+    this->initAttr(soundfont);
 }
 
-FluidsynthWrapper::FluidsynthWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len) : StandardWrapper(filename, offset, len)
-{
-    this->initAttr();
-}
+// FluidsynthWrapper::FluidsynthWrapper(string filename, string soundfont, Nullable<size_t> offset, Nullable<size_t> len) : StandardWrapper(filename, offset, len)
+// {
+//     this->initAttr(soundfont);
+// }
 
-void FluidsynthWrapper::initAttr()
+void FluidsynthWrapper::initAttr(string soundfont)
 {
+    this->soundfontFile = soundfont;
     this->Format.SampleFormat = SampleFormat_t::float32;
 }
 
@@ -44,116 +45,193 @@ void FluidsynthWrapper::open ()
       this->settings = new_fluid_settings();
       if (this->settings == nullptr)
       {
-              fprintf(stderr, "Failed to create the settings\n");
+              THROW_RUNTIME_ERROR("Failed to create the settings");
       }
-    fluid_settings_setstr(settings, "synth.reverb.active", "yes");
-    fluid_settings_setstr(settings, "synth.chorus.active", "no");
-    fluid_settings_setnum(settings, "synth.sample-rate", 48000 );
+    fluid_settings_setstr(this->settings, "synth.reverb.active", Config::FluidsynthEnableReverb ? "yes" : "no");
+    fluid_settings_setstr(this->settings, "synth.chorus.active", Config::FluidsynthEnableChorus ? "yes" : "no");
+    fluid_settings_setnum(this->settings, "synth.sample-rate", Config::FluidsynthSampleRate );
 
+    // these maybe needed for fast renderer (even fluidsynth itself isnt sure about)
+    fluid_settings_setstr(this->settings, "player.timing-source", "sample");  
+    fluid_settings_setint(this->settings, "synth.parallel-render", 0);
+    
       /* Create the synthesizer */
-      this->synth = new_fluid_synth(settings);
+      this->synth = new_fluid_synth(this->settings);
       if (this->synth == nullptr)
       {
-              fprintf(stderr, "Failed to create the synthesizer\n");
+              THROW_RUNTIME_ERROR("Failed to create the synth");
       }
 
       /* Load the soundfont */
       if (!fluid_is_soundfont(this->soundfontFile.c_str()))
       {
-        error;
+              THROW_RUNTIME_ERROR("This is no SF2 (weak)");
       }
       
       if (fluid_synth_sfload(this->synth, this->soundfontFile.c_str(), true) == -1)
       {
-              fprintf(stderr, "Failed to load the SoundFont\n");
+              THROW_RUNTIME_ERROR("This is no SF2 (strong)");
       }
 
-      if (fluid_is_midifile(argv[i]))
+      this->player = new_fluid_player(this->synth);
+      if (fluid_is_midifile(this->Filename.c_str()))
       {
-            fluid_player_add(player, argv[i]);
+            fluid_player_add(this->player, this->Filename.c_str());
       }
-//       /* Create the audio driver. As soon as the audio driver is
-//         * created, the synthesizer can be played. */
-//       adriver = new_fluid_audio_driver(settings, synth);
-//       if (adriver == NULL) {
-//               fprintf(stderr, "Failed to create the audio driver\n");
-//               err = 5;
-//               goto cleanup;
-//       }
-//     
-    
-    
-    
-    
-    this->Format.Channels = sfinfo.channels;
-    this->Format.SampleRate = sfinfo.samplerate;
+      else
+      {
+        THROW_RUNTIME_ERROR("This is no midi file");
+      }
 
+    if(!this->fileLen.hasValue)
+    {
+        this->dryRun();
+    }
+    
+    fluid_player_play(player);
+    
+    this->Format.Channels = Config::FluidsynthMultiChannel ? 16 : 2;
+    this->Format.SampleRate = Config::FluidsynthSampleRate;
+
+}
+
+#include "fluid_player_private.h"
+
+void FluidsynthWrapper::dryRun()
+{
+    fluid_player_t* localPlayer = new_fluid_player(this->synth);
+
+    fluid_player_add(localPlayer, this->Filename.c_str());
+
+    // setup a custom midi handler, that just returns, so no midievents are being sent to fluid's synth
+    // we just need playtime of that midi, no synthesizing, no voices, NOTHING ELSE!
+    fluid_player_set_playback_callback(localPlayer,
+                                       [](void* data, fluid_midi_event_t* event) -> int { return FLUID_OK; },
+                                       this->synth);
+    
+    /* play the midi files, if any */
+    fluid_player_play(localPlayer);
+    
+    constexpr short chan = 2;
+    float left[Config::FramesToRender];
+    float right[Config::FramesToRender];
+    float* buf[chan]={left, right};
+    
+    while (fluid_player_get_status(localPlayer) == FLUID_PLAYER_PLAYING)
+    {
+      if (fluid_synth_process(this->synth, Config::FramesToRender, 0, nullptr, chan, buf) != FLUID_OK)
+      {
+        break;
+      }
+    }
+    
+    this->fileLen = localPlayer->cur_msec - localPlayer->begin_msec;
+    
+    
+    /* wait for playback termination */
+    fluid_player_join(localPlayer);
+    /* cleanup */
+    delete_fluid_player(localPlayer);
 }
 
 void FluidsynthWrapper::close() noexcept
 {
-    if(this->sndfile!=nullptr)
-    {
-        sf_close (this->sndfile);
-        this->sndfile=nullptr;
-    }
+  if(this->player != nullptr)
+  {
+    fluid_player_stop(this->player);
+    fluid_player_join(this->player);
+  }
+    delete_fluid_player(this->player);
+    this->player = nullptr;
+    
+    delete_fluid_synth(this->synth);
+    this->synth = nullptr;
+    
+    delete_fluid_settings(this->settings);
+    this->settings = nullptr;
 }
 
 void FluidsynthWrapper::fillBuffer()
 {
-    if(this->data==nullptr)
-    {
-        if(this->fileOffset.hasValue)
-        {
-            sf_seek(this->sndfile, msToFrames(this->fileOffset.Value, this->Format.SampleRate), SEEK_SET);
-        }
-    }
-
     StandardWrapper::fillBuffer(this);
 }
 
 void FluidsynthWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
-  // unfortuately libsndfile does not provide fixed integer width API
-  // we can only ask to read ints from it which we then have to force to int32
-  // so here we have to handle the case for architectures where int is 64 bit wide
-  
-  constexpr bool haveInt32 = sizeof(int)==4;
-  constexpr bool haveInt64 = sizeof(int)==8;
-  
-  static_assert(haveInt32 || haveInt64, "sizeof(int) is neither 4 nor 8 bits on your platform");
-  
-  if(haveInt32)
-  {
-    // no extra work necessary here, as usual write directly to pcm buffer
-    STANDARDWRAPPER_RENDER(int32_t, sf_read_int(this->sndfile, pcm, framesToDoNow*this->Format.Channels))
-  }
-  else if(haveInt64)
-  {
-    // allocate an extra tempbuffer to store the int64s in
-    // then convert them to int32
+    float** temp_buf = new float*[this->Format.Channels];
     
-    int* int64_temp_buf = new int[Config::FramesToRender*this->Format.Channels];
+    for(unsigned int i = 0; i< this->Format.Channels; i++)
+    {
+      temp_buf[i] = new float[Config::FramesToRender];
+    }
     
-    STANDARDWRAPPER_RENDER(int32_t,
-                        
-                            sf_read_int(this->sndfile, int64_temp_buf, framesToDoNow*this->Format.Channels);
-                            for(unsigned int i=0; i<framesToDoNow*this->Format.Channels; i++)
-                            {
-                                // see http://www.mega-nerd.com/libsndfile/api.html#note1:
-                                // Whenever integer data is moved from one sized container to another sized container, the
-                                // most significant bit in the source container will become the most significant bit in the destination container.
-                                pcm[i] = static_cast<int32_t>(int64_temp_buf[i] >> 32);
-                            }
-                          )
-    delete [] int64_temp_buf;
-  }
+    if(framesToRender==0)
+    {
+        /* render rest of file */ 
+        framesToRender = this->getFrames()-this->framesAlreadyRendered;
+    }
+    else
+    {
+        framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);
+    }
+    fesetround(FE_TONEAREST);
+
+    float* pcm = static_cast<float*>(bufferToFill);
+    pcm += (this->framesAlreadyRendered * this->Format.Channels) % this->count;
+
+    while(framesToRender>0 && !this->stopFillBuffer)
+    {
+        int framesToDoNow = (framesToRender/Config::FramesToRender)>0 ? Config::FramesToRender : framesToRender%Config::FramesToRender;
+
+        /* render to raw pcm*/
+        fluid_synth_process(this->synth, framesToDoNow, 0, nullptr, this->Format.Channels, temp_buf);                
+        for(int frame=0; frame<framesToDoNow; frame++)
+          for(unsigned int c=0; c<this->Format.Channels; c++)
+          {
+              pcm[c * this->Format.Channels + frame] = temp_buf[c][frame];
+          };
+
+        /* audio normalization */
+        /*const*/ float absoluteGain = (numeric_limits<float>::max()) / (numeric_limits<float>::max() * this->gainCorrection);
+        /* reduce risk of clipping, remove that when using true sample peak */
+        absoluteGain -= 0.01;
+        for(unsigned int i=0; Config::useAudioNormalization && i<framesToDoNow*this->Format.Channels; i++)
+        {
+            /* simply casting the result of the multiplication could be expensive, since the pipeline of the FPU */
+            /* might be flushed. it not very precise either. thus better round here. */
+            /* see: http://www.mega-nerd.com/FPcast/ */
+            pcm[i] = static_cast<float>(lrint(pcm[i] * absoluteGain));
+        }
+
+        pcm += (framesToDoNow * this->Format.Channels) % this->count;
+        this->framesAlreadyRendered += framesToDoNow;
+
+        framesToRender -= framesToDoNow;
+    }
+    
+//     STANDARDWRAPPER_RENDER(float,
+//                         
+//                             fluid_synth_process(this->synth, framesToDoNow, 0, nullptr, this->Format.Channels, temp_buf);
+//                             
+//                             for(int frame=0; frame<framesToDoNow; frame++)
+//                               for(unsigned int c=0; c<this->Format.Channels; c++)
+//                             {
+//                                 pcm[c * this->Format.Channels + frame] = temp_buf[c][frame];
+//                             }
+//                           )
+
+    for(unsigned int i=0; i < this->Format.Channels; i++)
+    {
+            delete[] temp_buf[i];
+    }
+
+    delete[] temp_buf;
 }
 
 vector<loop_t> FluidsynthWrapper::getLoopArray () const noexcept
 {
     vector<loop_t> res;
-
+/*
     if(res.empty())
     {
         SF_INSTRUMENT inst;
@@ -179,43 +257,24 @@ vector<loop_t> FluidsynthWrapper::getLoopArray () const noexcept
                 res.push_back(l);
             }
         }
-    }
+    }*/
     return res;
 }
 
 frame_t FluidsynthWrapper::getFrames () const
 {
-    int framesAvail = this->sfinfo.frames;
-
-    if(this->fileOffset.hasValue)
-    {
-        framesAvail -= msToFrames(this->fileOffset.Value, this->Format.SampleRate);
-    }
-
-    if(framesAvail < 0)
-    {
-        framesAvail=0;
-    }
-
-    frame_t totalFrames = this->fileLen.hasValue ? msToFrames(this->fileLen.Value, this->Format.SampleRate) : framesAvail;
-
-    if(totalFrames > framesAvail)
-    {
-        totalFrames = framesAvail;
-    }
-
-    return totalFrames;
+    return msToFrames(this->fileLen.Value, this->Format.SampleRate);
 }
 
 void FluidsynthWrapper::buildMetadata() noexcept
 {
-#define READ_METADATA(name, id) if(sf_get_string(this->sndfile, id) != nullptr) name = string(sf_get_string(this->sndfile, id))
-
-    READ_METADATA (this->Metadata.Title, SF_STR_TITLE);
-    READ_METADATA (this->Metadata.Artist, SF_STR_ARTIST);
-    READ_METADATA (this->Metadata.Year, SF_STR_DATE);
-    READ_METADATA (this->Metadata.Album, SF_STR_ALBUM);
-    READ_METADATA (this->Metadata.Genre, SF_STR_GENRE);
-    READ_METADATA (this->Metadata.Track, SF_STR_TRACKNUMBER);
-    READ_METADATA (this->Metadata.Comment, SF_STR_COMMENT);
+// #define READ_METADATA(name, id) if(sf_get_string(this->sndfile, id) != nullptr) name = string(sf_get_string(this->sndfile, id))
+// 
+//     READ_METADATA (this->Metadata.Title, SF_STR_TITLE);
+//     READ_METADATA (this->Metadata.Artist, SF_STR_ARTIST);
+//     READ_METADATA (this->Metadata.Year, SF_STR_DATE);
+//     READ_METADATA (this->Metadata.Album, SF_STR_ALBUM);
+//     READ_METADATA (this->Metadata.Genre, SF_STR_GENRE);
+//     READ_METADATA (this->Metadata.Track, SF_STR_TRACKNUMBER);
+//     READ_METADATA (this->Metadata.Comment, SF_STR_COMMENT);
 }
