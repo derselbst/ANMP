@@ -208,7 +208,3 @@ void FluidsynthWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     delete[] temp_buf;
 }
 #undef FramesToRender
-
-void FluidsynthWrapper::buildMetadata() noexcept
-{
-}

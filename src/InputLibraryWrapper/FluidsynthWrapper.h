@@ -48,8 +48,6 @@ public:
     frame_t getFrames () const override;
 
     void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
-
-    void buildMetadata() noexcept override;
     
 private:        
         fluid_settings_t* settings = nullptr;

@@ -65,6 +65,14 @@ vector<loop_t> Song::getLoopArray () const noexcept
     return res;
 }
 
+/**
+ * provide a default implementation so all formats, that dont have or support metadata dont need to override this
+ */
+void Song::buildMetadata() noexcept
+{
+  
+}
+
 // should sort descendingly
 bool Song::myLoopSort(loop_t i,loop_t j)
 {

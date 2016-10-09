@@ -143,7 +143,7 @@ public:
     /**
      * gathers the song metadata and populates this->Metadata
      */
-    virtual void buildMetadata () noexcept = 0;
+    virtual void buildMetadata () noexcept;
 
     /**
      * returns an unsorted array of loops that could be found in this->Filename

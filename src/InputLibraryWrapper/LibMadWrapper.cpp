@@ -379,10 +379,7 @@ void LibMadWrapper::buildMetadata() noexcept
 {
     // TODO we have to find ID3 tag in the mpeg file, but this should be done while trying decoding mpeg-frame-headers
     // whenever libmad returns lost_sync error, there might be a id3 tag
-  
-        
-        
-        
+
   struct id3_file *s = id3_file_open(this->Filename.c_str(), ID3_FILE_MODE_READONLY);
   
         if(s == nullptr)
@@ -397,19 +394,12 @@ void LibMadWrapper::buildMetadata() noexcept
                 return;
         }
         
-
                 this->Metadata.Title = id3_get_tag(t, ID3_FRAME_TITLE);
-                
                 this->Metadata.Artist = id3_get_tag(t, ID3_FRAME_ARTIST);
-                
                 this->Metadata.Album = id3_get_tag(t, ID3_FRAME_ALBUM);
-                
                 this->Metadata.Year = id3_get_tag(t, ID3_FRAME_YEAR);
-                
                 this->Metadata.Genre = id3_get_tag(t, ID3_FRAME_GENRE);
-                
                 this->Metadata.Track = id3_get_tag(t, ID3_FRAME_TRACK);
-                
                 this->Metadata.Comment = id3_get_tag(t, ID3_FRAME_COMMENT);
                 
             id3_file_close(s);

@@ -288,8 +288,3 @@ frame_t FFMpegWrapper::getFrames () const
 
     return totalFrames;
 }
-
-void FFMpegWrapper::buildMetadata() noexcept
-{
-
-}
