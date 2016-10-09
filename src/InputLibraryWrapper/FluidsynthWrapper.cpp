@@ -15,11 +15,6 @@ FluidsynthWrapper::FluidsynthWrapper(string filename, string soundfont) : Standa
     this->initAttr(soundfont);
 }
 
-// FluidsynthWrapper::FluidsynthWrapper(string filename, string soundfont, Nullable<size_t> offset, Nullable<size_t> len) : StandardWrapper(filename, offset, len)
-// {
-//     this->initAttr(soundfont);
-// }
-
 void FluidsynthWrapper::initAttr(string soundfont)
 {
     this->soundfontFile = soundfont;
@@ -176,6 +171,10 @@ void FluidsynthWrapper::fillBuffer()
     StandardWrapper::fillBuffer(this);
 }
 
+frame_t FluidsynthWrapper::getFrames () const
+{
+    return msToFrames(this->fileLen.Value, this->Format.SampleRate);
+}
 
 // HACK there seems to be some strange bug in fluidsynth:
 // whenever we ask the synth to render something else than exactly 64 frames, we get strange timed audio
@@ -208,58 +207,8 @@ void FluidsynthWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
     delete[] temp_buf;
 }
-#undef Config
 #undef FramesToRender
-
-
-
-vector<loop_t> FluidsynthWrapper::getLoopArray () const noexcept
-{
-    vector<loop_t> res;
-/*
-    if(res.empty())
-    {
-        SF_INSTRUMENT inst;
-        int ret = sf_command (this->sndfile, SFC_GET_INSTRUMENT, &inst, sizeof (inst)) ;
-        if(ret == SF_TRUE && inst.loop_count > 0)
-        {
-
-            for (int i=0; i<inst.loop_count; i++)
-            {
-                loop_t l;
-                l.start = inst.loops[i].start;
-                l.stop  = inst.loops[i].end;
-
-                // WARNING: AGAINST RIFF SPEC ahead!!!
-                // quoting RIFFNEW.pdf: "dwEnd: Specifies the endpoint of the loop
-                // in samples (this sample will also be played)."
-                // however (nearly) every piece of software out there ignores that and
-                // specifies the sample excluded from the loop
-                // THUS: submit to peer pressure
-                l.stop -= 1;
-
-                l.count = inst.loops[i].count;
-                res.push_back(l);
-            }
-        }
-    }*/
-    return res;
-}
-
-frame_t FluidsynthWrapper::getFrames () const
-{
-    return msToFrames(this->fileLen.Value, this->Format.SampleRate);
-}
 
 void FluidsynthWrapper::buildMetadata() noexcept
 {
-// #define READ_METADATA(name, id) if(sf_get_string(this->sndfile, id) != nullptr) name = string(sf_get_string(this->sndfile, id))
-// 
-//     READ_METADATA (this->Metadata.Title, SF_STR_TITLE);
-//     READ_METADATA (this->Metadata.Artist, SF_STR_ARTIST);
-//     READ_METADATA (this->Metadata.Year, SF_STR_DATE);
-//     READ_METADATA (this->Metadata.Album, SF_STR_ALBUM);
-//     READ_METADATA (this->Metadata.Genre, SF_STR_GENRE);
-//     READ_METADATA (this->Metadata.Track, SF_STR_TRACKNUMBER);
-//     READ_METADATA (this->Metadata.Comment, SF_STR_COMMENT);
 }

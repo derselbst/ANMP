@@ -42,12 +42,6 @@ public:
     void fillBuffer () override;
 
     /**
-     * @return vector
-     */
-    vector<loop_t> getLoopArray () const noexcept override;
-
-
-    /**
      * returns number of frames this song lasts, they dont necessarily have to be in the pcm buffer at one time
      * @return unsigned int
      */
@@ -56,6 +50,7 @@ public:
     void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
 
     void buildMetadata() noexcept override;
+    
 private:        
         fluid_settings_t* settings = nullptr;
         fluid_synth_t* synth = nullptr;
