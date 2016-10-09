@@ -49,7 +49,7 @@
 	    /* simply casting the result of the multiplication could be expensive, since the pipeline of the FPU */\
 	    /* might be flushed. it not very precise either. thus better round here. */\
 	    /* see: http://www.mega-nerd.com/FPcast/ */\
-	    pcm[i] = static_cast<SAMPLEFORMAT>(lrint(pcm[i] * absoluteGain));\
+	    pcm[i] = static_cast<SAMPLEFORMAT>(pcm[i] * absoluteGain);\
         }\
 \
         pcm += (framesToDoNow * this->Format.Channels) % this->count;\
