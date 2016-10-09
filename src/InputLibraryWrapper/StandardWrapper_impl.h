@@ -39,15 +39,18 @@ StandardWrapper<SAMPLEFORMAT>::~StandardWrapper ()
  *
  * if even that allocation fails, an exception will be thrown
  *
- * @param context: holds the this pointer of that class that uses StandardWrapper; required, since we cant pass a polymorphic call to std::async
+ * @param context holds the this pointer of that class that uses StandardWrapper; required, since we cant pass a polymorphic call to std::async
  */
 template<typename SAMPLEFORMAT>
 template<typename WRAPPERCLASS>
 void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
 {
-    if(this->count == 0)
+    if(this->count == 0) // no buffer allocated?
     {
-        // no buffer allocated
+        if(!this->Format.IsValid())
+        {
+          THROW_RUNTIME_ERROR("Failed to allocate buffer: SongFormat not valid!");
+        }
 
         // usually this shouldnt block at all, since we only end up here after releaseBuffer() was called
         // and releaseBuffer already waits for the render thread to finish... however it doesnt hurt

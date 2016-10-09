@@ -15,4 +15,8 @@ void SongFormat::getBitrate ()
 // samplerate * sample depth * channels
 }
 
+bool SongFormat::IsValid()
+{
+  return this->SampleRate != 0 && this->Channels != 0 && this->SampleFormat != SampleFormat_t::unknown;
+}
 

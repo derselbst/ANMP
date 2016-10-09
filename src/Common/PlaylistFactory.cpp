@@ -244,12 +244,13 @@ l_LIBMAD:
 
     if(pcm==nullptr)
     {
+        CLOG(LogLevel::ERROR, "No library seems to support that file: \"" << pcm->Filename << "\"");
         return false;
     }
 
     if(pcm->getFrames() <= 0)
     {
-        // valid file, but nothing to play
+        CLOG(LogLevel::ERROR, "Valid, but nothing to play for file: \"" << pcm->Filename << "\"");
         return false;
     }
 
