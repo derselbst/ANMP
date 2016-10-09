@@ -12,10 +12,7 @@ AudioDriver_t Config::audioDriver = AudioDriver_t::ALSA;
 
 // number of frames that are pushed to audioDriver during each run AND minimum no. of frames
 // that have to be prepared (i.e. rendered) by a single call to Song::fillBuffer()
-//
-// as of 2016-10-09 this is not const anymore, due to my lazyness to implement additional logic for FluidsynthWrapper (which has an ugly API)
-// nevertheless this var is still meant to be const! DONT CHANGE IT!
-/*const*/ frame_t Config::FramesToRender = 2048;
+const frame_t Config::FramesToRender = 2048;
 
 // in synchronous part of Song::fillBuffer(): prepare as many samples as needed to have enough for
 // PreRenderTime of playing back duration, before asynchronously filling up the rest of PCM buffer
@@ -81,6 +78,8 @@ bool Config::gmePlayForever = false;
 //   FLUIDSYNTH-SPECIFIC SECTION   *
 //**********************************
 
+// overrides Config::FramesToRender for FluidsynthWrapper
+int Config::FluidsynthPeriodSize = 64;
 bool Config::FluidsynthEnableReverb = true;
 bool Config::FluidsynthEnableChorus = true;
 bool Config::FluidsynthMultiChannel = false;

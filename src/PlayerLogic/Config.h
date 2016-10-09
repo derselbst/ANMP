@@ -5,7 +5,8 @@
 
 /**
   * class Config
-  *
+  * 
+  * for doc see Config.cpp
   */
 
 struct Config
@@ -24,7 +25,7 @@ struct Config
     static AudioDriver_t audioDriver;
     static bool useLoopInfo;
     static int overridingGlobalLoopCount;
-    static /*const*/ frame_t FramesToRender;
+    static const frame_t FramesToRender;
     static unsigned int PreRenderTime;
     static bool RenderWholeSong;
     static bool useAudioNormalization;
@@ -40,7 +41,8 @@ struct Config
     static unsigned int gmeSampleRate;
     static float gmeEchoDepth;
     static bool gmePlayForever;
-
+    
+    static int FluidsynthPeriodSize;
     static bool FluidsynthEnableReverb;
     static bool FluidsynthEnableChorus;
     static bool FluidsynthMultiChannel;

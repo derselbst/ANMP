@@ -56,9 +56,7 @@ public:
     void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
 
     void buildMetadata() noexcept override;
-private:
-        static frame_t backupFramesToRender;
-        
+private:        
         fluid_settings_t* settings = nullptr;
         fluid_synth_t* synth = nullptr;
         fluid_player_t* player = nullptr;

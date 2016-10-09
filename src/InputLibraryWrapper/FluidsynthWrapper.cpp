@@ -10,8 +10,6 @@
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
 
-frame_t FluidsynthWrapper::backupFramesToRender = 0;
-
 FluidsynthWrapper::FluidsynthWrapper(string filename, string soundfont) : StandardWrapper(filename)
 {
     this->initAttr(soundfont);
@@ -78,12 +76,8 @@ void FluidsynthWrapper::open ()
       }
       fluid_synth_set_reverb(this->synth, Config::FluidsynthRoomSize, Config::FluidsynthDamping, Config::FluidsynthWidth, Config::FluidsynthLevel);
       
-      int periodSize;
       // retrieve this after the synth has been inited (just for sure)
-      fluid_settings_getint(this->settings, "audio.period-size", &periodSize);
-      FluidsynthWrapper::backupFramesToRender = Config::FramesToRender;
-      // we have to do this, otherwise we will get unprecisely timed audio
-      Config::FramesToRender = periodSize;
+      fluid_settings_getint(this->settings, "audio.period-size", &Config::FluidsynthPeriodSize);
       
       if(!this->fileLen.hasValue)
       {
@@ -119,6 +113,7 @@ void FluidsynthWrapper::open ()
    
     fluid_player_play(this->player);
 }
+
 
 #include "fluid_player_private.h"
 
@@ -161,8 +156,6 @@ void FluidsynthWrapper::dryRun()
 
 void FluidsynthWrapper::close() noexcept
 {
-  Config::FramesToRender = FluidsynthWrapper::backupFramesToRender;
-  
   if(this->player != nullptr)
   {
     fluid_player_stop(this->player);
@@ -183,64 +176,42 @@ void FluidsynthWrapper::fillBuffer()
     StandardWrapper::fillBuffer(this);
 }
 
+
+// HACK there seems to be some strange bug in fluidsynth:
+// whenever we ask the synth to render something else than exactly 64 frames, we get strange timed audio
+// thus obtain the period size (?always? == 64) within this->open() and use this value instead of our Config::FramesToRender
+// by replacing Config::FramesToRender with Config::FluidsynthPeriodSize
+#define FramesToRender FluidsynthPeriodSize
 void FluidsynthWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
-//     float** temp_buf = new float*[this->Format.Channels];
-//     
-//     for(unsigned int i = 0; i< this->Format.Channels; i++)
-//     {
-//       temp_buf[i] = new float[Config::FramesToRender];
-//     }
+    float** temp_buf = new float*[this->Format.Channels];
     
-    if(framesToRender==0)
+    for(unsigned int i = 0; i< this->Format.Channels; i++)
     {
-        framesToRender = this->getFrames()-this->framesAlreadyRendered;
+      temp_buf[i] = new float[Config::FramesToRender];
     }
-    else
+
+    STANDARDWRAPPER_RENDER(float,
+
+                            fluid_synth_process(this->synth, framesToDoNow, 0, nullptr, this->Format.Channels, temp_buf);                
+                            for(int frame=0; frame<framesToDoNow; frame++)
+                              for(unsigned int c=0; c<this->Format.Channels; c++)
+                              {
+                                  pcm[frame * this->Format.Channels + c] = temp_buf[c][frame];
+                              };
+                           )
+
+    for(unsigned int i=0; i < this->Format.Channels; i++)
     {
-        framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);
+            delete[] temp_buf[i];
     }
-    fesetround(FE_TONEAREST);
 
-    float* pcm = static_cast<float*>(bufferToFill);
-    pcm += (this->framesAlreadyRendered * this->Format.Channels) % this->count;
-
-    while(framesToRender>0 && !this->stopFillBuffer && fluid_player_get_status(this->player) == FLUID_PLAYER_PLAYING)
-    {
-        int framesToDoNow = (framesToRender/Config::FramesToRender)>0 ? Config::FramesToRender : framesToRender%Config::FramesToRender;
-        
-        fluid_synth_write_float( this->synth, framesToDoNow, pcm, 0, 2, pcm, 1, 2 );
-//         fluid_synth_process(this->synth, framesToDoNow, 0, nullptr, this->Format.Channels, temp_buf);                
-//         for(int frame=0; frame<framesToDoNow; frame++)
-//           for(unsigned int c=0; c<this->Format.Channels; c++)
-//           {
-//               pcm[frame + c] = temp_buf[c][frame];
-//           };
-//         
-        pcm += (framesToDoNow * this->Format.Channels) % this->count;
-        this->framesAlreadyRendered += framesToDoNow;
-
-        framesToRender -= framesToDoNow;
-    }
-    
-//     STANDARDWRAPPER_RENDER(float,
-                        
-//                             fluid_synth_process(this->synth, framesToDoNow, 0, nullptr, this->Format.Channels, temp_buf);
-//                             fluid_synth_write_float( this->synth, framesToDoNow, pcm, 0, 2, pcm, 1, 2 );
-//                             for(int frame=0; frame<framesToDoNow; frame++)
-//                               for(unsigned int c=0; c<this->Format.Channels; c++)
-//                             {
-//                                 pcm[frame + c] = temp_buf[c][frame];
-//                             }
-//                           )
-
-//     for(unsigned int i=0; i < this->Format.Channels; i++)
-//     {
-//             delete[] temp_buf[i];
-//     }
-// 
-//     delete[] temp_buf;
+    delete[] temp_buf;
 }
+#undef Config
+#undef FramesToRender
+
+
 
 vector<loop_t> FluidsynthWrapper::getLoopArray () const noexcept
 {
