@@ -5,7 +5,8 @@
 
 /**
   * class Config
-  *
+  * 
+  * for doc see Config.cpp
   */
 
 struct Config
@@ -40,7 +41,17 @@ struct Config
     static unsigned int gmeSampleRate;
     static float gmeEchoDepth;
     static bool gmePlayForever;
-
+    
+    static int FluidsynthPeriodSize;
+    static bool FluidsynthEnableReverb;
+    static bool FluidsynthEnableChorus;
+    static bool FluidsynthMultiChannel;
+    static unsigned int FluidsynthSampleRate;
+    static string FluidsynthDefaultSoundfont;
+    static double FluidsynthRoomSize;
+    static double FluidsynthDamping;
+    static int FluidsynthWidth;
+    static double FluidsynthLevel;
 };
 
 

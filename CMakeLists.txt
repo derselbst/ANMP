@@ -120,6 +120,7 @@ option(ENABLE_LIBSND "Use sndfile to support common audio formats (FLAC, WAVE, O
 option(ENABLE_LAZYUSF "Use lazyusf to support USF (Ultra64 Sound Format)" ON)
 option(ENABLE_VGMSTREAM "Use vgmstream to support innumerable streamed audio formats from video games." ON)
 option(ENABLE_FFMPEG "Use ffmpeg to support innumerable streamed audio formats, also from video streams." ON)
+option(ENABLE_FLUIDSYNTH "Use fluidsynth to synthesize MIDI files." ON)
 
 if(ENABLE_LIBGME)
     MY_FIND_LIB(LIBGME gme)
@@ -186,6 +187,21 @@ if(ENABLE_FFMPEG)
   
   summary_add("FFmpeg support" FFMPEG_FOUND)
 endif(ENABLE_FFMPEG)
+
+
+if(ENABLE_FLUIDSYNTH)
+  PKG_CHECK_MODULES(FLUIDSYNTH fluidsynth)
+  
+  if(FLUIDSYNTH_FOUND)
+        add_definitions(-DUSE_FLUIDSYNTH)
+        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${FLUIDSYNTH_INCLUDE_DIRS})
+        set(LD_FLAGS ${LD_FLAGS} ${FLUIDSYNTH_LIBRARIES})
+        
+        MY_PRINT(FLUIDSYNTH)
+  endif(FLUIDSYNTH_FOUND)
+        
+    summary_add("fluidsynth support" FLUIDSYNTH_FOUND)
+endif(ENABLE_FLUIDSYNTH)
 
 
 ##################################

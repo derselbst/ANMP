@@ -126,7 +126,7 @@ public:
      */
     virtual void close () noexcept = 0 ;
 
-    /** @brief fills the pcm buffer this->data, preparing atleast "Config::FramesToRender" PCM frames
+    /** fills the pcm buffer this->data, preparing atleast "Config::FramesToRender" PCM frames
      *
      * synchronous part: allocates the pcm buffer and fills it up to have enough for Config::PreRenderTime time of playback
      * asynchronous part: fills rest of pcm buffer
