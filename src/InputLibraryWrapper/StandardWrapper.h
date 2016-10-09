@@ -46,9 +46,6 @@
         absoluteGain -= 0.01;\
         for(unsigned int i=0; Config::useAudioNormalization && i<framesToDoNow*this->Format.Channels; i++)\
         {\
-	    /* simply casting the result of the multiplication could be expensive, since the pipeline of the FPU */\
-	    /* might be flushed. it not very precise either. thus better round here. */\
-	    /* see: http://www.mega-nerd.com/FPcast/ */\
 	    pcm[i] = static_cast<SAMPLEFORMAT>(pcm[i] * absoluteGain);\
         }\
 \
