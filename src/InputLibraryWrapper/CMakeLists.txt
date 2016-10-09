@@ -5,8 +5,7 @@ include_directories(${PROJECT_INCLUDE_DIR})
 
 SET(ANMP_INPUT_SRC
        Song.cpp
-       StandardWrapper.cpp
-       SongFormat.cpp       
+       StandardWrapper.cpp   
 )
 
 if(LIBGME_FOUND)
