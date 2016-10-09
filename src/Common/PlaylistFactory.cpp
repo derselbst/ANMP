@@ -262,7 +262,7 @@ l_LIBMAD:
 
     if(pcm==nullptr)
     {
-        CLOG(LogLevel::ERROR, "No library seems to support that file: \"" << pcm->Filename << "\"");
+        CLOG(LogLevel::ERROR, "No library seems to support that file: \"" << filePath << "\"");
         return false;
     }
 
