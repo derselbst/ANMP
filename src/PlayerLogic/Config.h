@@ -46,6 +46,10 @@ struct Config
     static bool FluidsynthMultiChannel;
     static unsigned int FluidsynthSampleRate;
     static string FluidsynthDefaultSoundfont;
+    static double FluidsynthRoomSize;
+    static double FluidsynthDamping;
+    static int FluidsynthWidth;
+    static double FluidsynthLevel;
 };
 
 

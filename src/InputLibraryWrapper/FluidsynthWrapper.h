@@ -57,7 +57,7 @@ public:
 
     void buildMetadata() noexcept override;
 private:
-        static frame_t backupFramesToRender = 0;
+        static frame_t backupFramesToRender;
         
         fluid_settings_t* settings = nullptr;
         fluid_synth_t* synth = nullptr;

@@ -10,6 +10,7 @@
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
 
+frame_t FluidsynthWrapper::backupFramesToRender = 0;
 
 FluidsynthWrapper::FluidsynthWrapper(string filename, string soundfont) : StandardWrapper(filename)
 {
@@ -51,6 +52,8 @@ void FluidsynthWrapper::open ()
     fluid_settings_setstr(this->settings, "synth.reverb.active", Config::FluidsynthEnableReverb ? "yes" : "no");
     fluid_settings_setstr(this->settings, "synth.chorus.active", Config::FluidsynthEnableChorus ? "yes" : "no");
     
+    fluid_settings_setint(this->settings, "synth.min-note-length", 1);
+    
     {
       fluid_settings_setnum(this->settings, "synth.sample-rate", Config::FluidsynthSampleRate);
       double srate;
@@ -73,11 +76,13 @@ void FluidsynthWrapper::open ()
       {
               THROW_RUNTIME_ERROR("Failed to create the synth");
       }
+      fluid_synth_set_reverb(this->synth, Config::FluidsynthRoomSize, Config::FluidsynthDamping, Config::FluidsynthWidth, Config::FluidsynthLevel);
       
       int periodSize;
       // retrieve this after the synth has been inited (just for sure)
-      fluid_settings_getint (this->settings, "audio.period-size", &periodSize);
+      fluid_settings_getint(this->settings, "audio.period-size", &periodSize);
       FluidsynthWrapper::backupFramesToRender = Config::FramesToRender;
+      // we have to do this, otherwise we will get unprecisely timed audio
       Config::FramesToRender = periodSize;
       
       if(!this->fileLen.hasValue)
