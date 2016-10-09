@@ -57,12 +57,15 @@ public:
 
     void buildMetadata() noexcept override;
 private:
+        static frame_t backupFramesToRender = 0;
+        
         fluid_settings_t* settings = nullptr;
         fluid_synth_t* synth = nullptr;
         fluid_player_t* player = nullptr;
         
         // path to the soundfont to use
         string soundfontFile = "";
+        
         
         void initAttr(string soundfont);
         void dryRun();

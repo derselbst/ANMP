@@ -47,10 +47,22 @@ void FluidsynthWrapper::open ()
       {
               THROW_RUNTIME_ERROR("Failed to create the settings");
       }
+      
     fluid_settings_setstr(this->settings, "synth.reverb.active", Config::FluidsynthEnableReverb ? "yes" : "no");
     fluid_settings_setstr(this->settings, "synth.chorus.active", Config::FluidsynthEnableChorus ? "yes" : "no");
-    fluid_settings_setnum(this->settings, "synth.sample-rate", Config::FluidsynthSampleRate );
-
+    
+    {
+      fluid_settings_setnum(this->settings, "synth.sample-rate", Config::FluidsynthSampleRate);
+      double srate;
+      fluid_settings_getnum(this->settings, "synth.sample-rate", &srate);
+      this->Format.SampleRate = static_cast<unsigned int>(srate);
+      
+      int stereoChannels = Config::FluidsynthMultiChannel ? 16 : 1;
+      fluid_settings_setint(this->settings, "synth.audio-channels",  stereoChannels);
+      fluid_settings_getint(this->settings, "synth.audio-channels", &stereoChannels);
+      this->Format.Channels = stereoChannels * 2;
+    }
+    
     // these maybe needed for fast renderer (even fluidsynth itself isnt sure about)
     fluid_settings_setstr(this->settings, "player.timing-source", "sample");  
     fluid_settings_setint(this->settings, "synth.parallel-render", 0);
@@ -60,6 +72,18 @@ void FluidsynthWrapper::open ()
       if (this->synth == nullptr)
       {
               THROW_RUNTIME_ERROR("Failed to create the synth");
+      }
+      
+      int periodSize;
+      // retrieve this after the synth has been inited (just for sure)
+      fluid_settings_getint (this->settings, "audio.period-size", &periodSize);
+      FluidsynthWrapper::backupFramesToRender = Config::FramesToRender;
+      Config::FramesToRender = periodSize;
+      
+      if(!this->fileLen.hasValue)
+      {
+          this->dryRun();
+          fluid_synth_system_reset(this->synth);
       }
 
       /* Load the soundfont */
@@ -74,6 +98,11 @@ void FluidsynthWrapper::open ()
       }
 
       this->player = new_fluid_player(this->synth);
+      if (this->player == nullptr)
+      {
+              THROW_RUNTIME_ERROR("Failed to create the player");
+      }
+      
       if (fluid_is_midifile(this->Filename.c_str()))
       {
             fluid_player_add(this->player, this->Filename.c_str());
@@ -82,17 +111,8 @@ void FluidsynthWrapper::open ()
       {
         THROW_RUNTIME_ERROR("This is no midi file");
       }
-
-    if(!this->fileLen.hasValue)
-    {
-        this->dryRun();
-    }
-    
-    fluid_player_play(player);
-    
-    this->Format.Channels = Config::FluidsynthMultiChannel ? 16 : 2;
-    this->Format.SampleRate = Config::FluidsynthSampleRate;
-
+   
+    fluid_player_play(this->player);
 }
 
 #include "fluid_player_private.h"
@@ -136,6 +156,8 @@ void FluidsynthWrapper::dryRun()
 
 void FluidsynthWrapper::close() noexcept
 {
+  Config::FramesToRender = FluidsynthWrapper::backupFramesToRender;
+  
   if(this->player != nullptr)
   {
     fluid_player_stop(this->player);
@@ -158,16 +180,15 @@ void FluidsynthWrapper::fillBuffer()
 
 void FluidsynthWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
-    float** temp_buf = new float*[this->Format.Channels];
-    
-    for(unsigned int i = 0; i< this->Format.Channels; i++)
-    {
-      temp_buf[i] = new float[Config::FramesToRender];
-    }
+//     float** temp_buf = new float*[this->Format.Channels];
+//     
+//     for(unsigned int i = 0; i< this->Format.Channels; i++)
+//     {
+//       temp_buf[i] = new float[Config::FramesToRender];
+//     }
     
     if(framesToRender==0)
     {
-        /* render rest of file */ 
         framesToRender = this->getFrames()-this->framesAlreadyRendered;
     }
     else
@@ -179,30 +200,18 @@ void FluidsynthWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     float* pcm = static_cast<float*>(bufferToFill);
     pcm += (this->framesAlreadyRendered * this->Format.Channels) % this->count;
 
-    while(framesToRender>0 && !this->stopFillBuffer)
+    while(framesToRender>0 && !this->stopFillBuffer && fluid_player_get_status(this->player) == FLUID_PLAYER_PLAYING)
     {
         int framesToDoNow = (framesToRender/Config::FramesToRender)>0 ? Config::FramesToRender : framesToRender%Config::FramesToRender;
-
-        /* render to raw pcm*/
-        fluid_synth_process(this->synth, framesToDoNow, 0, nullptr, this->Format.Channels, temp_buf);                
-        for(int frame=0; frame<framesToDoNow; frame++)
-          for(unsigned int c=0; c<this->Format.Channels; c++)
-          {
-              pcm[c * this->Format.Channels + frame] = temp_buf[c][frame];
-          };
-
-        /* audio normalization */
-        /*const*/ float absoluteGain = (numeric_limits<float>::max()) / (numeric_limits<float>::max() * this->gainCorrection);
-        /* reduce risk of clipping, remove that when using true sample peak */
-        absoluteGain -= 0.01;
-        for(unsigned int i=0; Config::useAudioNormalization && i<framesToDoNow*this->Format.Channels; i++)
-        {
-            /* simply casting the result of the multiplication could be expensive, since the pipeline of the FPU */
-            /* might be flushed. it not very precise either. thus better round here. */
-            /* see: http://www.mega-nerd.com/FPcast/ */
-            pcm[i] = static_cast<float>(lrint(pcm[i] * absoluteGain));
-        }
-
+        
+        fluid_synth_write_float( this->synth, framesToDoNow, pcm, 0, 2, pcm, 1, 2 );
+//         fluid_synth_process(this->synth, framesToDoNow, 0, nullptr, this->Format.Channels, temp_buf);                
+//         for(int frame=0; frame<framesToDoNow; frame++)
+//           for(unsigned int c=0; c<this->Format.Channels; c++)
+//           {
+//               pcm[frame + c] = temp_buf[c][frame];
+//           };
+//         
         pcm += (framesToDoNow * this->Format.Channels) % this->count;
         this->framesAlreadyRendered += framesToDoNow;
 
@@ -210,22 +219,22 @@ void FluidsynthWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     }
     
 //     STANDARDWRAPPER_RENDER(float,
-//                         
+                        
 //                             fluid_synth_process(this->synth, framesToDoNow, 0, nullptr, this->Format.Channels, temp_buf);
-//                             
+//                             fluid_synth_write_float( this->synth, framesToDoNow, pcm, 0, 2, pcm, 1, 2 );
 //                             for(int frame=0; frame<framesToDoNow; frame++)
 //                               for(unsigned int c=0; c<this->Format.Channels; c++)
 //                             {
-//                                 pcm[c * this->Format.Channels + frame] = temp_buf[c][frame];
+//                                 pcm[frame + c] = temp_buf[c][frame];
 //                             }
 //                           )
 
-    for(unsigned int i=0; i < this->Format.Channels; i++)
-    {
-            delete[] temp_buf[i];
-    }
-
-    delete[] temp_buf;
+//     for(unsigned int i=0; i < this->Format.Channels; i++)
+//     {
+//             delete[] temp_buf[i];
+//     }
+// 
+//     delete[] temp_buf;
 }
 
 vector<loop_t> FluidsynthWrapper::getLoopArray () const noexcept

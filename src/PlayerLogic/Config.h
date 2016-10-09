@@ -24,7 +24,7 @@ struct Config
     static AudioDriver_t audioDriver;
     static bool useLoopInfo;
     static int overridingGlobalLoopCount;
-    static const frame_t FramesToRender;
+    static /*const*/ frame_t FramesToRender;
     static unsigned int PreRenderTime;
     static bool RenderWholeSong;
     static bool useAudioNormalization;
