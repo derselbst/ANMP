@@ -5,7 +5,7 @@
 
 ## Features
 
-ANMP aims to be a versatile but lightweight audio player, just as the other hundred thousands out there.
+ANMP aims to be a versatile but lightweight audio player, just as the other hundred thousands out there. As being only a frontend, ANMP itself doesnt know anything about audioformats and how to decode them. That's why it uses 3rd party libraries to decode them.
 
 What ANMP does NOT:
 * crawl through your music library, building a huge useless database for all artists, albums, genres, titles, etc., just because the user wants to have a nice overview over what is on his HDD (SSD); the filesystem is our database!
@@ -16,7 +16,7 @@ What ANMP does NOT:
 
 * gapless playback
 * cue sheets
-* arbitrary (forward) looping of songs
+* arbitrary (forward) looping of songs (i.e. even nested loops)
 * easy attempt to implement new formats
 
 ANMP handles audio differently than others: Instead of retrieving only small buffers that hold the raw pcm data, ANMP fetches the pcm of the whole file and puts that into memory (well this is at least the case for streamed audio files). Todays computers have enough memory to hold raw pcm of even longer audio files. Uncompressing big audio files can take a long time. Thus filling the pcm buffer is usually done asynchronously. When the next song shall be played, the pcm buffer of the former song is released.
@@ -81,3 +81,6 @@ I had several attempts to get ANMP built on Windows, couldnt get it working afte
 mkdir build && cd build
 cmake .. -G "Visual Studio 14 2015" -DENABLE_ALSA=0 -DENABLE_JACK=0 -DLIBSND_LIBRARIES=/path/to/sndfile
 ```
+## TODO
+- support loading playlists (.m3u !)
+- save settings + playlist on close
