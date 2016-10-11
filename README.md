@@ -82,5 +82,5 @@ mkdir build && cd build
 cmake .. -G "Visual Studio 14 2015" -DENABLE_ALSA=0 -DENABLE_JACK=0 -DLIBSND_LIBRARIES=/path/to/sndfile
 ```
 ## TODO
-- support loading playlists (.m3u !)
-- save settings + playlist on close
+* support loading playlists (.m3u !)
+* save settings + playlist on close
