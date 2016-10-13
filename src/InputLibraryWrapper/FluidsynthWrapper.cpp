@@ -54,14 +54,16 @@ void FluidsynthWrapper::open ()
       this->Format.SampleRate = static_cast<unsigned int>(srate);
       
       int stereoChannels = Config::FluidsynthMultiChannel ? 16 : 1;
+      fluid_settings_setint(this->settings, "synth.audio-groups",    stereoChannels);
       fluid_settings_setint(this->settings, "synth.audio-channels",  stereoChannels);
       fluid_settings_getint(this->settings, "synth.audio-channels", &stereoChannels);
       this->Format.Channels = stereoChannels * 2;
     }
     
     // these maybe needed for fast renderer (even fluidsynth itself isnt sure about)
-    fluid_settings_setstr(this->settings, "player.timing-source", "sample");  
+    fluid_settings_setstr(this->settings, "player.timing-source", "sample");
     fluid_settings_setint(this->settings, "synth.parallel-render", 0);
+    fluid_settings_setint(this->settings, "synth.threadsafe-api", 0);
     
       /* Create the synthesizer */
       this->synth = new_fluid_synth(this->settings);
