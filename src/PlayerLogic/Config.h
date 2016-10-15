@@ -20,8 +20,7 @@ struct Config
     // no assign
     Config& operator=(const Config&) = delete;
 
-    // number of frames that are pushed to audioDriver during each run AND minimum no. of frames
-    // that have to be prepared (i.e. rendered) by a single call to Song::fillBuffer()
+    
     static constexpr frame_t FramesToRender = 2048;
     
     // Static Public attributes
