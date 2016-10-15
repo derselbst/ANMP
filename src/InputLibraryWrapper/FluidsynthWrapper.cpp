@@ -87,11 +87,19 @@ void FluidsynthWrapper::open ()
       }
 
       // find a soundfont
-      Nullable<string> soundfont = ::findSoundfont(this->Filename);
+      Nullable<string> soundfont;
+      
+      if(!Config::FluidsynthForceDefaultSoundfont)
+      {
+          soundfont = ::findSoundfont(this->Filename);
+      }
+      
       if(!soundfont.hasValue)
       {
+          // so, either we were forced to use default, or we didnt find any suitable sf2
           soundfont = Config::FluidsynthDefaultSoundfont;
       }
+      
       
       /* Load the soundfont */
       if (!fluid_is_soundfont(soundfont.Value.c_str()))
@@ -134,7 +142,7 @@ void FluidsynthWrapper::dryRun()
     // setup a custom midi handler, that just returns, so no midievents are being sent to fluid's synth
     // we just need playtime of that midi, no synthesizing, no voices, NOTHING ELSE!
     fluid_player_set_playback_callback(localPlayer,
-                                       [](void* data, fluid_midi_event_t* event) -> int { return FLUID_OK; },
+                                       [](void* data, fluid_midi_event_t* event) -> int { (void)data;(void)event;return FLUID_OK; },
                                        this->synth);
     
     /* play the midi files, if any */
