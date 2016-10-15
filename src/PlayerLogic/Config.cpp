@@ -12,10 +12,6 @@
 // indicates the default audio driver to use
 AudioDriver_t Config::audioDriver = AudioDriver_t::ALSA;
 
-// number of frames that are pushed to audioDriver during each run AND minimum no. of frames
-// that have to be prepared (i.e. rendered) by a single call to Song::fillBuffer()
-const frame_t Config::FramesToRender = 2048;
-
 // in synchronous part of Song::fillBuffer(): prepare as many samples as needed to have enough for
 // PreRenderTime of playing back duration, before asynchronously filling up the rest of PCM buffer
 //
