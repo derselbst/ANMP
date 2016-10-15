@@ -168,11 +168,7 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
 #ifdef USE_FLUIDSYNTH
     else if (iEquals(ext, "mid") || iEquals(ext, "midi"))
     {
-      if(pcm==nullptr)
-      {
-        pcm = new FluidsynthWrapper(filePath, Config::FluidsynthDefaultSoundfont);
-        TRY_OPEN
-      }
+      TRY_WITH(FluidsynthWrapper)
     }
 #endif
     

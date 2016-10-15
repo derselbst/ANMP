@@ -47,6 +47,7 @@ struct Config
     static bool FluidsynthEnableChorus;
     static bool FluidsynthMultiChannel;
     static unsigned int FluidsynthSampleRate;
+    static bool FluidsynthForceDefaultSoundfont;
     static string FluidsynthDefaultSoundfont;
     static double FluidsynthRoomSize;
     static double FluidsynthDamping;

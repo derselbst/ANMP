@@ -10,14 +10,18 @@
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
 
-FluidsynthWrapper::FluidsynthWrapper(string filename, string soundfont) : StandardWrapper(filename)
+FluidsynthWrapper::FluidsynthWrapper(string filename) : StandardWrapper(filename)
 {
-    this->initAttr(soundfont);
+    this->initAttr();
 }
 
-void FluidsynthWrapper::initAttr(string soundfont)
+FluidsynthWrapper::FluidsynthWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen) : StandardWrapper(filename, fileOffset, fileLen)
 {
-    this->soundfontFile = soundfont;
+    this->initAttr();
+}
+
+void FluidsynthWrapper::initAttr()
+{
     this->Format.SampleFormat = SampleFormat_t::float32;
 }
 
@@ -82,13 +86,20 @@ void FluidsynthWrapper::open ()
           fluid_synth_system_reset(this->synth);
       }
 
+      // find a soundfont
+      Nullable<string> soundfont = ::findSoundfont(this->Filename);
+      if(!soundfont.hasValue)
+      {
+          soundfont = Config::FluidsynthDefaultSoundfont;
+      }
+      
       /* Load the soundfont */
-      if (!fluid_is_soundfont(this->soundfontFile.c_str()))
+      if (!fluid_is_soundfont(soundfont.Value.c_str()))
       {
               THROW_RUNTIME_ERROR("This is no SF2 (weak)");
       }
       
-      if (fluid_synth_sfload(this->synth, this->soundfontFile.c_str(), true) == -1)
+      if (fluid_synth_sfload(this->synth, soundfont.Value.c_str(), true) == -1)
       {
               THROW_RUNTIME_ERROR("This is no SF2 (strong)");
       }

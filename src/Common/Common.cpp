@@ -12,6 +12,8 @@
 #include <sstream>
 #include <iomanip>
 
+// #include <filesystem>
+
 #ifdef _POSIX_SOURCE
 #include <strings.h> // strncasecmp
 #include <sys/stat.h>
@@ -22,6 +24,7 @@ extern "C"
 #endif
 
 using namespace std;
+// namespace fs = std::filesystem;
 
 #ifndef _POSIX_SOURCE
 // helper function for case insensitive string compare
@@ -228,4 +231,52 @@ size_t getFileSize(int fd)
     }
     
     return stat.st_size;
+}
+
+bool myExists(const std::string& name)
+{
+    if (FILE *file = fopen(name.c_str(), "r"))
+    {
+        fclose(file);
+        return true;
+    }
+    else
+    {
+        return false;
+    }   
+}
+
+Nullable<string> findSoundfont(string midFile)
+{
+    // trim extension
+    midFile = midFile.erase(midFile.find_last_of("."), string::npos);
+//     if(fs::exists(midFile + ".sf2"))
+    if(myExists(midFile + ".sf2"))
+    {
+        // a soundfont named like midi file, but with sf2 extension
+        return Nullable<string>(midFile + ".sf2");
+    }
+    
+    // get path to directory this file is in
+    string dir = mydirname(midFile);
+    // get the bare name of that directory
+    dir = mybasename(dir);
+//     if(fs::exists(dir + ".sf2"))
+    if(myExists(dir + ".sf2"))
+    {
+        return Nullable<string>(dir + ".sf2");
+    }
+    
+//     for(directory_entry& dirEntry : fs::directory_iterator("sandbox"))
+//     {
+//         string ext = getFileExtension(dirEntry.path());
+//         
+//         if(iEquals(ext, "sf2"))
+//         {
+//             // a soundfont in that directory
+//             return Nullable<string>(dirEntry.path());
+//         }
+//     }
+
+    return Nullable<string>(nullptr);
 }

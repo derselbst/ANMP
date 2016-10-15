@@ -32,3 +32,6 @@ string mydirname(const string&);
 
 size_t getFileSize(FILE* f);
 size_t getFileSize(int fd);
+
+
+Nullable<string> findSoundfont(string midFile);

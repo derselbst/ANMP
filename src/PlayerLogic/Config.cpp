@@ -1,5 +1,7 @@
 #include "Config.h"
 
+#include <string>
+
 // Init Static Public attributes
 //
 
@@ -80,11 +82,15 @@ bool Config::gmePlayForever = false;
 
 // overrides Config::FramesToRender for FluidsynthWrapper
 int Config::FluidsynthPeriodSize = 64;
+
 bool Config::FluidsynthEnableReverb = true;
 bool Config::FluidsynthEnableChorus = true;
 bool Config::FluidsynthMultiChannel = false;
 unsigned int Config::FluidsynthSampleRate = 48000;
-string Config::FluidsynthDefaultSoundfont = "/home/tom/Musik/Donkey Kong 64/DK64.sf2";
+
+bool Config::FluidsynthForceDefaultSoundfont = false;
+string Config::FluidsynthDefaultSoundfont = "/home/tom/Musik/Banjo-Kazooie [Banjo to Kazooie no Daibouken] (1998-05-31)(Rare)(Nintendo)/BK.sf2";
+
 double Config::FluidsynthRoomSize = 0.8;
 double Config::FluidsynthDamping = 0.01;
 int Config::FluidsynthWidth = 0;

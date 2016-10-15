@@ -14,8 +14,8 @@
 class FluidsynthWrapper : public StandardWrapper<float>
 {
 public:
-    FluidsynthWrapper(string filename, string soundfont);
-//     FluidsynthWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
+    FluidsynthWrapper(string filename);
+    FluidsynthWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
     
 
     // forbid copying
@@ -52,13 +52,9 @@ public:
 private:        
         fluid_settings_t* settings = nullptr;
         fluid_synth_t* synth = nullptr;
-        fluid_player_t* player = nullptr;
+        fluid_player_t* player = nullptr;        
         
-        // path to the soundfont to use
-        string soundfontFile = "";
-        
-        
-        void initAttr(string soundfont);
+        void initAttr();
         void dryRun();
 
 };
