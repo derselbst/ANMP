@@ -50,6 +50,8 @@ void FluidsynthWrapper::open ()
     fluid_settings_setstr(this->settings, "synth.chorus.active", Config::FluidsynthEnableChorus ? "yes" : "no");
     
     fluid_settings_setint(this->settings, "synth.min-note-length", 1);
+    // only in mma mode, bank high and bank low controllers are handled as specified by MIDI standard
+    fluid_settings_setstr(this->settings, "synth.midi-bank-select", "mma");
     
     {
       fluid_settings_setnum(this->settings, "synth.sample-rate", Config::FluidsynthSampleRate);
