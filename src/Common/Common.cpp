@@ -235,6 +235,12 @@ size_t getFileSize(int fd)
 
 bool myExists(const std::string& name)
 {
+#ifdef _POSIX_SOURCE
+    struct stat buffer;
+    int ret = stat(name.c_str(), &buffer);
+    return ret == 0; 
+#endif
+    
     if (FILE *file = fopen(name.c_str(), "r"))
     {
         fclose(file);
@@ -250,21 +256,27 @@ Nullable<string> findSoundfont(string midFile)
 {
     // trim extension
     midFile = midFile.erase(midFile.find_last_of("."), string::npos);
+    
+    string soundffile = midFile + ".sf2";
+    
 //     if(fs::exists(midFile + ".sf2"))
-    if(myExists(midFile + ".sf2"))
+    if(myExists(soundffile))
     {
         // a soundfont named like midi file, but with sf2 extension
-        return Nullable<string>(midFile + ".sf2");
+        return Nullable<string>(soundffile);
     }
     
     // get path to directory this file is in
     string dir = mydirname(midFile);
-    // get the bare name of that directory
-    dir = mybasename(dir);
+    
+    soundffile = dir + "/"; // the directory this soundfont might be in
+    soundffile += mybasename(dir); // bare name of that soundfont
+    soundffile += ".sf2"; // extension
+    
 //     if(fs::exists(dir + ".sf2"))
-    if(myExists(dir + ".sf2"))
+    if(myExists(soundffile))
     {
-        return Nullable<string>(dir + ".sf2");
+        return Nullable<string>(soundffile);
     }
     
 //     for(directory_entry& dirEntry : fs::directory_iterator("sandbox"))
