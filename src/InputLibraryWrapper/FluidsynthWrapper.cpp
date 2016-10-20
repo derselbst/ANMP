@@ -146,12 +146,72 @@ void FluidsynthWrapper::open ()
     smf_event_t *event;
     while((event = smf_get_next_event(smf)) != nullptr)
     {
-                if (smf_event_is_metadata(event))
+        struct
+        {
+        uint8_t status:4;
+        uint8_t chan:4;
+        uint8_t param1 = 0;
+        uint8_t param2 = 0;
+        } mEvt;
+        
+                if (smf_event_is_metadata(event) || smf_event_is_sysex(event))
                 {
                         continue;
                 }
+
+                if (!smf_event_length_is_valid(event))
+                {
+                 // TODO LOG, ignore that event 
+                    //g_critical("smf_event_decode: incorrect MIDI message length.");
+                 continue;
+                }
  
-                this->feedToFluidSeq(event->midi_buffer, event->midi_buffer_length);
+                this->feedToFluidSeq(event);
+                
+                memcpy(mEvt, event->midi_buffer, min(sizeof(mEvt), event->midi_buffer_length));
+                
+                switch (mEvt.status) {
+                 case 0x8:
+                         off += snprintf(buf + off, BUFFER_SIZE - off, "Note Off, channel %d, note %s, velocity %d",
+                                         channel, note, event->midi_buffer[2]);
+                         break;
+ 
+                 case 0x9:
+                         note_from_int(note, event->midi_buffer[1]);
+                         off += snprintf(buf + off, BUFFER_SIZE - off, "Note On, channel %d, note %s, velocity %d",
+                                         channel, note, event->midi_buffer[2]);
+                         break;
+ 
+                 case 0xA:
+                         note_from_int(note, event->midi_buffer[1]);
+                         off += snprintf(buf + off, BUFFER_SIZE - off, "Aftertouch, channel %d, note %s, pressure %d",
+                                         channel, note, event->midi_buffer[2]);
+                         break;
+ 
+                 case 0xB:
+                         off += snprintf(buf + off, BUFFER_SIZE - off, "Controller, channel %d, controller %d, value %d",
+                                         channel, event->midi_buffer[1], event->midi_buffer[2]);
+                         break;
+ 
+                case 0xC:
+                         off += snprintf(buf + off, BUFFER_SIZE - off, "Program Change, channel %d, controller %d",
+                                         channel, event->midi_buffer[1]);
+                         break;
+ 
+                 case 0xD:
+                         off += snprintf(buf + off, BUFFER_SIZE - off, "Channel Pressure, channel %d, pressure %d",
+                                         channel, event->midi_buffer[1]);
+                         break;
+ 
+                 case 0xE:
+                         off += snprintf(buf + off, BUFFER_SIZE - off, "Pitch Wheel, channel %d, value %d",
+                                         channel, ((int)event->midi_buffer[2] << 7) | (int)event->midi_buffer[2]);
+                         break;
+ 
+                 default:
+                         free(buf);
+                         return (NULL);
+                
         }
 }
 
