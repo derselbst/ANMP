@@ -31,6 +31,56 @@ FluidsynthWrapper::~FluidsynthWrapper ()
     this->close();
 }
 
+void FluidsynthWrapper::setupSeq()
+{
+    this->sequencer = new_fluid_sequencer2(false /*i.e. use sample timer*/);
+
+    // register synth as first destination
+    this->synthSeqId = fluid_sequencer_register_fluidsynth(this->sequencer, this->synth);
+
+    // register myself as second destination
+//     mySeqID = fluid_sequencer_register_client(sequencer, "me", seq_callback, NULL);
+}
+
+void FluidsynthWrapper::setupSynth()
+{
+      /* Create the synthesizer */
+      this->synth = new_fluid_synth(this->settings);
+      if (this->synth == nullptr)
+      {
+              THROW_RUNTIME_ERROR("Failed to create the synth");
+      }
+      fluid_synth_set_reverb(this->synth, Config::FluidsynthRoomSize, Config::FluidsynthDamping, Config::FluidsynthWidth, Config::FluidsynthLevel);
+      
+      // retrieve this after the synth has been inited (just for sure)
+      fluid_settings_getint(this->settings, "audio.period-size", &Config::FluidsynthPeriodSize);
+      
+      
+      // find a soundfont
+      Nullable<string> soundfont;
+      if(!Config::FluidsynthForceDefaultSoundfont)
+      {
+          soundfont = ::findSoundfont(this->Filename);
+      }
+      
+      if(!soundfont.hasValue)
+      {
+          // so, either we were forced to use default, or we didnt find any suitable sf2
+          soundfont = Config::FluidsynthDefaultSoundfont;
+      }
+      
+      
+      /* Load the soundfont */
+      if (!fluid_is_soundfont(soundfont.Value.c_str()))
+      {
+              THROW_RUNTIME_ERROR("This is no SF2 (weak)");
+      }
+      
+      if (fluid_synth_sfload(this->synth, soundfont.Value.c_str(), true) == -1)
+      {
+              THROW_RUNTIME_ERROR("This is no SF2 (strong)");
+      }
+}
 
 void FluidsynthWrapper::setupSettings()
 {
@@ -76,85 +126,37 @@ void FluidsynthWrapper::open ()
     this->setupSettings();
     
     
-        smf = smf_load(this->Filename.c_str());
-        if (smf == NULL)
+        this->smf = smf_load(this->Filename.c_str());
+        if (this->smf == NULL)
         {
               THROW_RUNTIME_ERROR("Something is wrong with that midi, loading failed");
         }
         
-        double playtime = smf_get_length_seconds(smf);
-        this->fileLen = static_cast<size_t>(playtime * 1000);
-        
-/* 
-        smf_event_t *event;
-        while ((event = smf_get_next_event(smf)) != NULL) {
-                if (smf_event_is_metadata(event))
-                        continue;
- 
-                wait until event->time_seconds.
-                feed_to_midi_output(event->midi_buffer, event->midi_buffer_length);
+        double playtime = smf_get_length_seconds(this->smf);
+        if(playtime<0.0)
+        {
+            THROW_RUNTIME_ERROR("How can playtime be negative?!?");
         }
-*/
-
+        
+        this->fileLen = static_cast<size_t>(playtime * 1000);
     
-      /* Create the synthesizer */
-      this->synth = new_fluid_synth(this->settings);
-      if (this->synth == nullptr)
-      {
-              THROW_RUNTIME_ERROR("Failed to create the synth");
-      }
-      fluid_synth_set_reverb(this->synth, Config::FluidsynthRoomSize, Config::FluidsynthDamping, Config::FluidsynthWidth, Config::FluidsynthLevel);
-      
-      // retrieve this after the synth has been inited (just for sure)
-      fluid_settings_getint(this->settings, "audio.period-size", &Config::FluidsynthPeriodSize);
-      
-      
-      // find a soundfont
-      Nullable<string> soundfont;
-      
-      if(!Config::FluidsynthForceDefaultSoundfont)
-      {
-          soundfont = ::findSoundfont(this->Filename);
-      }
-      
-      if(!soundfont.hasValue)
-      {
-          // so, either we were forced to use default, or we didnt find any suitable sf2
-          soundfont = Config::FluidsynthDefaultSoundfont;
-      }
-      
-      
-      /* Load the soundfont */
-      if (!fluid_is_soundfont(soundfont.Value.c_str()))
-      {
-              THROW_RUNTIME_ERROR("This is no SF2 (weak)");
-      }
-      
-      if (fluid_synth_sfload(this->synth, soundfont.Value.c_str(), true) == -1)
-      {
-              THROW_RUNTIME_ERROR("This is no SF2 (strong)");
-      }
-
-      this->player = new_fluid_player(this->synth);
-      if (this->player == nullptr)
-      {
-              THROW_RUNTIME_ERROR("Failed to create the player");
-      }
-      
-      if (fluid_is_midifile(this->Filename.c_str()))
-      {
-            fluid_player_add(this->player, this->Filename.c_str());
-      }
-      else
-      {
-        THROW_RUNTIME_ERROR("This is no midi file");
-      }
-   
-    fluid_player_play(this->player);
+        this->setupSynth();
+        this->setupSeq();
+    
+    smf_event_t *event;
+    while((event = smf_get_next_event(smf)) != nullptr)
+    {
+                if (smf_event_is_metadata(event))
+                {
+                        continue;
+                }
+ 
+                this->feedToFluidSeq(event->midi_buffer, event->midi_buffer_length);
+        }
 }
 
 
-#include "fluid_player_private.h"
+// #include "fluid_player_private.h"
 
 // void FluidsynthWrapper::dryRun()
 // {

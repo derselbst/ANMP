@@ -56,9 +56,13 @@ private:
         smf_t* smf = nullptr;
         fluid_settings_t* settings = nullptr;
         fluid_synth_t* synth = nullptr;
-        fluid_player_t* player = nullptr;        
+        fluid_sequencer_t* sequencer = nullptr;
+        
+        short synthSeqId;
         
         void initAttr();
         void setupSettings();
+        void setupSynth();
+        void setupSeq();
 
 };
