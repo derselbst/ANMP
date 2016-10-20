@@ -5,11 +5,14 @@
 
 #include <fluidsynth.h>
 
+// libsmf - helper lib for reading midi files
+#include <smf.h>
 
 /**
   * class FluidsynthWrapper
   *
   */
+
 
 class FluidsynthWrapper : public StandardWrapper<float>
 {
@@ -49,12 +52,13 @@ public:
 
     void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
     
-private:        
+private:
+        smf_t* smf = nullptr;
         fluid_settings_t* settings = nullptr;
         fluid_synth_t* synth = nullptr;
         fluid_player_t* player = nullptr;        
         
         void initAttr();
-        void dryRun();
+        void setupSettings();
 
 };

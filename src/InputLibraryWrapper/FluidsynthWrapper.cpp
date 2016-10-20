@@ -32,14 +32,8 @@ FluidsynthWrapper::~FluidsynthWrapper ()
 }
 
 
-void FluidsynthWrapper::open ()
+void FluidsynthWrapper::setupSettings()
 {
-    // avoid multiple calls to open()
-    if(this->settings!=nullptr)
-    {
-        return;
-    }
-
       this->settings = new_fluid_settings();
       if (this->settings == nullptr)
       {
@@ -70,6 +64,38 @@ void FluidsynthWrapper::open ()
     fluid_settings_setstr(this->settings, "player.timing-source", "sample");
     fluid_settings_setint(this->settings, "synth.parallel-render", 0);
     fluid_settings_setint(this->settings, "synth.threadsafe-api", 0);
+}
+
+void FluidsynthWrapper::open ()
+{
+    // avoid multiple calls to open()
+    if(this->settings!=nullptr)
+    {
+        return;
+    }
+    this->setupSettings();
+    
+    
+        smf = smf_load(this->Filename.c_str());
+        if (smf == NULL)
+        {
+              THROW_RUNTIME_ERROR("Something is wrong with that midi, loading failed");
+        }
+        
+        double playtime = smf_get_length_seconds(smf);
+        this->fileLen = static_cast<size_t>(playtime * 1000);
+        
+/* 
+        smf_event_t *event;
+        while ((event = smf_get_next_event(smf)) != NULL) {
+                if (smf_event_is_metadata(event))
+                        continue;
+ 
+                wait until event->time_seconds.
+                feed_to_midi_output(event->midi_buffer, event->midi_buffer_length);
+        }
+*/
+
     
       /* Create the synthesizer */
       this->synth = new_fluid_synth(this->settings);
@@ -82,12 +108,7 @@ void FluidsynthWrapper::open ()
       // retrieve this after the synth has been inited (just for sure)
       fluid_settings_getint(this->settings, "audio.period-size", &Config::FluidsynthPeriodSize);
       
-      if(!this->fileLen.hasValue)
-      {
-          this->dryRun();
-          fluid_synth_system_reset(this->synth);
-      }
-
+      
       // find a soundfont
       Nullable<string> soundfont;
       
@@ -135,42 +156,42 @@ void FluidsynthWrapper::open ()
 
 #include "fluid_player_private.h"
 
-void FluidsynthWrapper::dryRun()
-{
-    fluid_player_t* localPlayer = new_fluid_player(this->synth);
-
-    fluid_player_add(localPlayer, this->Filename.c_str());
-
-    // setup a custom midi handler, that just returns, so no midievents are being sent to fluid's synth
-    // we just need playtime of that midi, no synthesizing, no voices, NOTHING ELSE!
-    fluid_player_set_playback_callback(localPlayer,
-                                       [](void* data, fluid_midi_event_t* event) -> int { (void)data;(void)event;return FLUID_OK; },
-                                       this->synth);
-    
-    /* play the midi files, if any */
-    fluid_player_play(localPlayer);
-    
-    constexpr short chan = 2;
-    float left[Config::FramesToRender];
-    float right[Config::FramesToRender];
-    float* buf[chan]={left, right};
-    
-    while (fluid_player_get_status(localPlayer) == FLUID_PLAYER_PLAYING)
-    {
-      if (fluid_synth_process(this->synth, Config::FramesToRender, 0, nullptr, chan, buf) != FLUID_OK)
-      {
-        break;
-      }
-    }
-    
-    this->fileLen = localPlayer->cur_msec - localPlayer->begin_msec;
-    
-    
-    /* wait for playback termination */
-    fluid_player_join(localPlayer);
-    /* cleanup */
-    delete_fluid_player(localPlayer);
-}
+// void FluidsynthWrapper::dryRun()
+// {
+//     fluid_player_t* localPlayer = new_fluid_player(this->synth);
+// 
+//     fluid_player_add(localPlayer, this->Filename.c_str());
+// 
+//     // setup a custom midi handler, that just returns, so no midievents are being sent to fluid's synth
+//     // we just need playtime of that midi, no synthesizing, no voices, NOTHING ELSE!
+//     fluid_player_set_playback_callback(localPlayer,
+//                                        [](void* data, fluid_midi_event_t* event) -> int { (void)data;(void)event;return FLUID_OK; },
+//                                        this->synth);
+//     
+//     /* play the midi files, if any */
+//     fluid_player_play(localPlayer);
+//     
+//     constexpr short chan = 2;
+//     float left[Config::FramesToRender];
+//     float right[Config::FramesToRender];
+//     float* buf[chan]={left, right};
+//     
+//     while (fluid_player_get_status(localPlayer) == FLUID_PLAYER_PLAYING)
+//     {
+//       if (fluid_synth_process(this->synth, Config::FramesToRender, 0, nullptr, chan, buf) != FLUID_OK)
+//       {
+//         break;
+//       }
+//     }
+//     
+//     this->fileLen = localPlayer->cur_msec - localPlayer->begin_msec;
+//     
+//     
+//     /* wait for playback termination */
+//     fluid_player_join(localPlayer);
+//     /* cleanup */
+//     delete_fluid_player(localPlayer);
+// }
 
 void FluidsynthWrapper::close() noexcept
 {

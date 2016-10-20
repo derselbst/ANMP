@@ -191,15 +191,27 @@ endif(ENABLE_FFMPEG)
 
 if(ENABLE_FLUIDSYNTH)
   PKG_CHECK_MODULES(FLUIDSYNTH fluidsynth)
+  PKG_CHECK_MODULES(LIBSMF smf)
   
-  if(FLUIDSYNTH_FOUND)
-        add_definitions(-DUSE_FLUIDSYNTH)
-        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${FLUIDSYNTH_INCLUDE_DIRS})
-        set(LD_FLAGS ${LD_FLAGS} ${FLUIDSYNTH_LIBRARIES})
+  if(LIBSMF_FOUND)
+        if(FLUIDSYNTH_FOUND)
+                add_definitions(-DUSE_FLUIDSYNTH)
+                set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${FLUIDSYNTH_INCLUDE_DIRS})
+                set(LD_FLAGS ${LD_FLAGS} ${FLUIDSYNTH_LIBRARIES})
+                
+                MY_PRINT(FLUIDSYNTH)
+                
+                
+                set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${LIBSMF_INCLUDE_DIRS})
+                set(LD_FLAGS ${LD_FLAGS} ${LIBSMF_LIBRARIES})
+                
+                MY_PRINT(LIBSMF)
+        endif(FLUIDSYNTH_FOUND)
         
-        MY_PRINT(FLUIDSYNTH)
-  endif(FLUIDSYNTH_FOUND)
-        
+  else(LIBSMF_FOUND)
+        set(FLUIDSYNTH_FOUND FALSE)
+  endif(LIBSMF_FOUND)
+  
     summary_add("fluidsynth support" FLUIDSYNTH_FOUND)
 endif(ENABLE_FLUIDSYNTH)
 
