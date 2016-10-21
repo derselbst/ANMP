@@ -143,76 +143,92 @@ void FluidsynthWrapper::open ()
         this->setupSynth();
         this->setupSeq();
     
+        
+    fluid_event_t *fluidEvt = new_fluid_event();
+    fluid_event_set_source(fluidEvt, -1);
+    fluid_event_set_dest(fluidEvt, this->synthSeqId);
+    
     smf_event_t *event;
     while((event = smf_get_next_event(smf)) != nullptr)
     {
-        struct
-        {
-        uint8_t status:4;
-        uint8_t chan:4;
-        uint8_t param1 = 0;
-        uint8_t param2 = 0;
-        } mEvt;
-        
                 if (smf_event_is_metadata(event) || smf_event_is_sysex(event))
                 {
                         continue;
                 }
 
-                if (!smf_event_length_is_valid(event))
+                if (!smf_event_is_valid(event))
                 {
                  // TODO LOG, ignore that event 
                     //g_critical("smf_event_decode: incorrect MIDI message length.");
                  continue;
                 }
  
-                this->feedToFluidSeq(event);
+//                 this->feedToFluidSeq(event);
                 
-                memcpy(mEvt, event->midi_buffer, min(sizeof(mEvt), event->midi_buffer_length));
                 
-                switch (mEvt.status) {
-                 case 0x8:
-                         off += snprintf(buf + off, BUFFER_SIZE - off, "Note Off, channel %d, note %s, velocity %d",
-                                         channel, note, event->midi_buffer[2]);
+                // event type to supply to the sequencer
+//                 fluid_seq_event_type seqEvtType;
+                uint16_t chan = event->midi_buffer[0] & 0x0F;
+                switch (event->midi_buffer[0] & 0xF0)
+                {
+                 case 0x80: // notoff
+                        fluid_event_noteoff(fluidEvt, chan, event->midi_buffer[1]);
                          break;
  
-                 case 0x9:
-                         note_from_int(note, event->midi_buffer[1]);
-                         off += snprintf(buf + off, BUFFER_SIZE - off, "Note On, channel %d, note %s, velocity %d",
-                                         channel, note, event->midi_buffer[2]);
+                 case 0x90:
+                        fluid_event_noteon(fluidEvt, chan, event->midi_buffer[1], event->midi_buffer[2]);
+                         break;
+
+                 case 0xA0:
+                         CLOG(LogLevel::DEBUG, "Aftertouch, channel " << chan << ", note " << static_cast<int>(event->midi_buffer[1]) << ", pressure " << static_cast<int>(event->midi_buffer[2]));
+                         CLOG(LogLevel::ERROR, "Fluidsynth does not support key specific pressure (aftertouch); discarding event");
+                         continue;
                          break;
  
-                 case 0xA:
-                         note_from_int(note, event->midi_buffer[1]);
-                         off += snprintf(buf + off, BUFFER_SIZE - off, "Aftertouch, channel %d, note %s, pressure %d",
-                                         channel, note, event->midi_buffer[2]);
+                 case 0xB0:
+                     fluid_event_control_change(fluidEvt, chan, event->midi_buffer[1], event->midi_buffer[2]);
+                     CLOG(LogLevel::DEBUG, "Controller, channel " << chan << ", controller " << static_cast<int>(event->midi_buffer[1]) << ", value " << static_cast<int>(event->midi_buffer[2]));
                          break;
  
-                 case 0xB:
-                         off += snprintf(buf + off, BUFFER_SIZE - off, "Controller, channel %d, controller %d, value %d",
-                                         channel, event->midi_buffer[1], event->midi_buffer[2]);
+                case 0xC0:
+                        fluid_event_program_change(fluidEvt, chan, event->midi_buffer[1]);
+                        CLOG(LogLevel::DEBUG, "ProgChange, channel " << chan << ", program " << static_cast<int>(event->midi_buffer[1]));
+                         break;
+
+                 case 0xD0:
+                        fluid_event_channel_pressure(fluidEvt, chan, event->midi_buffer[1]);
+                         CLOG(LogLevel::DEBUG, "Channel Pressure, channel " << chan << ", pressure " << static_cast<int>(event->midi_buffer[1]));
                          break;
  
-                case 0xC:
-                         off += snprintf(buf + off, BUFFER_SIZE - off, "Program Change, channel %d, controller %d",
-                                         channel, event->midi_buffer[1]);
-                         break;
- 
-                 case 0xD:
-                         off += snprintf(buf + off, BUFFER_SIZE - off, "Channel Pressure, channel %d, pressure %d",
-                                         channel, event->midi_buffer[1]);
-                         break;
- 
-                 case 0xE:
-                         off += snprintf(buf + off, BUFFER_SIZE - off, "Pitch Wheel, channel %d, value %d",
-                                         channel, ((int)event->midi_buffer[2] << 7) | (int)event->midi_buffer[2]);
-                         break;
- 
+                 case 0xE0:
+                 {
+                     int16_t pitch = event->midi_buffer[2];
+                     pitch <<= 7;
+                     pitch |= event->midi_buffer[1];
+                     
+                     fluid_event_pitch_bend(fluidEvt, chan, pitch);
+                     CLOG(LogLevel::DEBUG, "Pitch Wheel, channel " << chan << ", value " << pitch);
+                 }
+                 break;
+
                  default:
-                         free(buf);
-                         return (NULL);
+                     // TODO LOG
+                     continue;
+                     break;
                 
-        }
+                    }
+                    
+                int ret = fluid_sequencer_send_at(this->sequencer, fluidEvt, static_cast<unsigned int>(event->time_seconds*1000), true);
+                if(ret != FLUID_OK)
+                {
+                    CLOG(LogLevel::ERROR, "fluidsynth was unable to queue midi event");
+                }
+//                 SkipSeqSend:
+    }
+    smf_rewind(smf);
+    
+    
+    delete_fluid_event(fluidEvt);
 }
 
 
@@ -257,13 +273,16 @@ void FluidsynthWrapper::open ()
 
 void FluidsynthWrapper::close() noexcept
 {
-  if(this->player != nullptr)
-  {
-    fluid_player_stop(this->player);
-    fluid_player_join(this->player);
-  }
-    delete_fluid_player(this->player);
-    this->player = nullptr;
+//   if(this->player != nullptr)
+//   {
+//     fluid_player_stop(this->player);
+//     fluid_player_join(this->player);
+//   }
+//     delete_fluid_player(this->player);
+//     this->player = nullptr;
+    
+    delete_fluid_sequencer(this->sequencer);
+    this->sequencer = nullptr;
     
     delete_fluid_synth(this->synth);
     this->synth = nullptr;
