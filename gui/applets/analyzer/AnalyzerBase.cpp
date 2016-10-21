@@ -107,6 +107,7 @@ void AnalyzerBase::processData( const Song* s, frame_t playhead )
         return;
     }
 
+// fill the buffer that will be fourier transformed
 #define PREPARE_SCOPE(PCMBUF) \
   for(unsigned int frame = 0; (frame < Config::FramesToRender) && ((playhead + frame) < s->getFrames()); frame++)\
   {\
@@ -144,6 +145,33 @@ void AnalyzerBase::processData( const Song* s, frame_t playhead )
         int32_t* pcmBuf = static_cast<int32_t*>(s->data) + playhead * s->Format.Channels;
 
         PREPARE_SCOPE(pcmBuf);
+    }
+    else if(s->Format.SampleFormat == float32)
+    {
+        float* pcmBuf = static_cast<float*>(s->data) + playhead * s->Format.Channels;
+        
+          for(unsigned int frame = 0; (frame < Config::FramesToRender) && ((playhead + frame) < s->getFrames()); frame++)
+          {
+              /* init the frame'th element */
+                scope[frame] = *pcmBuf;
+            
+                /* point to next item */
+                pcmBuf++;
+            
+                for(unsigned int item = 1; item < s->Format.Channels; item++)
+                {
+                    scope[frame] += *pcmBuf;
+                    pcmBuf++;
+                }
+            
+                /* Average between the channels */
+                scope[frame] /= s->Format.Channels;
+            
+                /* already normalized*/
+            
+                /* further attenuation */
+                scope[frame] /= 20;
+            }
     }
 
     transform( scope );
