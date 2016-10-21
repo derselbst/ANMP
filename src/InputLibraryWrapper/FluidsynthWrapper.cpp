@@ -10,6 +10,15 @@
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
 
+string FluidsynthWrapper::SmfEventToString(smf_event_t* event)
+{
+    string ret = "event no.   : " + to_string(event->event_number);
+    ret +=     "\nin track no.: " + to_string(event->track_number);
+    ret +=     "\nat tick     : " + to_string(event->time_pulses);
+    
+    return ret;    
+}
+
 FluidsynthWrapper::FluidsynthWrapper(string filename) : StandardWrapper(filename)
 {
     this->initAttr();
@@ -158,16 +167,12 @@ void FluidsynthWrapper::open ()
 
                 if (!smf_event_is_valid(event))
                 {
-                 // TODO LOG, ignore that event 
-                    //g_critical("smf_event_decode: incorrect MIDI message length.");
-                 continue;
+                    CLOG(LogLevel::WARNING, "invalid midi event found, ignoring:" << FluidsynthWrapper::SmfEventToString(event));
+                    continue;
                 }
  
 //                 this->feedToFluidSeq(event);
-                
-                
-                // event type to supply to the sequencer
-//                 fluid_seq_event_type seqEvtType;
+
                 uint16_t chan = event->midi_buffer[0] & 0x0F;
                 switch (event->midi_buffer[0] & 0xF0)
                 {
@@ -210,9 +215,11 @@ void FluidsynthWrapper::open ()
                      CLOG(LogLevel::DEBUG, "Pitch Wheel, channel " << chan << ", value " << pitch);
                  }
                  break;
+                 
 
-                 default:
-                     // TODO LOG
+                 default: // i.e. 0xF0 == System-ex event
+                     // impossible! we catched that above
+                     THROW_RUNTIME_ERROR("libsmf broken!");
                      continue;
                      break;
                 

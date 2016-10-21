@@ -60,6 +60,8 @@ private:
         
         short synthSeqId;
         
+        static string SmfEventToString(smf_event_t* event);
+        
         void initAttr();
         void setupSettings();
         void setupSynth();
