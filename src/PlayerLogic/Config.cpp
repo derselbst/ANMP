@@ -77,6 +77,16 @@ float Config::gmeEchoDepth = 0.2f;
 bool Config::gmePlayForever = false;
 
 //**********************************
+//      MIDI-GENERAL SECTION       *
+//**********************************
+
+// no. of the MIDI CC that indicates the start of a looped section
+uint8_t Config::MidiControllerLoopStart = 102;
+
+// no. of the MIDI CC that indicates the stop of a looped section
+uint8_t Config::MidiControllerLoopStop = 103;
+
+//**********************************
 //   FLUIDSYNTH-SPECIFIC SECTION   *
 //**********************************
 

@@ -44,6 +44,9 @@ struct Config
     static float gmeEchoDepth;
     static bool gmePlayForever;
     
+    static uint8_t MidiControllerLoopStart;
+    static uint8_t MidiControllerLoopStop;
+    
     static int FluidsynthPeriodSize;
     static bool FluidsynthEnableReverb;
     static bool FluidsynthEnableChorus;
