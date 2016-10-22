@@ -10,6 +10,15 @@
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
 
+string FluidsynthWrapper::SmfEventToString(smf_event_t* event)
+{
+    string ret = "event no.   : " + to_string(event->event_number);
+    ret +=     "\nin track no.: " + to_string(event->track_number);
+    ret +=     "\nat tick     : " + to_string(event->time_pulses);
+    
+    return ret;    
+}
+
 FluidsynthWrapper::FluidsynthWrapper(string filename) : StandardWrapper(filename)
 {
     this->initAttr();
@@ -31,15 +40,59 @@ FluidsynthWrapper::~FluidsynthWrapper ()
     this->close();
 }
 
-
-void FluidsynthWrapper::open ()
+void FluidsynthWrapper::setupSeq()
 {
-    // avoid multiple calls to open()
-    if(this->settings!=nullptr)
-    {
-        return;
-    }
+    this->sequencer = new_fluid_sequencer2(false /*i.e. use sample timer*/);
 
+    // register synth as first destination
+    this->synthSeqId = fluid_sequencer_register_fluidsynth(this->sequencer, this->synth);
+
+    // register myself as second destination
+//     mySeqID = fluid_sequencer_register_client(sequencer, "me", seq_callback, NULL);
+}
+
+void FluidsynthWrapper::setupSynth()
+{
+      /* Create the synthesizer */
+      this->synth = new_fluid_synth(this->settings);
+      if (this->synth == nullptr)
+      {
+              THROW_RUNTIME_ERROR("Failed to create the synth");
+      }
+      fluid_synth_set_reverb(this->synth, Config::FluidsynthRoomSize, Config::FluidsynthDamping, Config::FluidsynthWidth, Config::FluidsynthLevel);
+      
+      // retrieve this after the synth has been inited (just for sure)
+      fluid_settings_getint(this->settings, "audio.period-size", &Config::FluidsynthPeriodSize);
+      
+      
+      // find a soundfont
+      Nullable<string> soundfont;
+      if(!Config::FluidsynthForceDefaultSoundfont)
+      {
+          soundfont = ::findSoundfont(this->Filename);
+      }
+      
+      if(!soundfont.hasValue)
+      {
+          // so, either we were forced to use default, or we didnt find any suitable sf2
+          soundfont = Config::FluidsynthDefaultSoundfont;
+      }
+      
+      
+      /* Load the soundfont */
+      if (!fluid_is_soundfont(soundfont.Value.c_str()))
+      {
+              THROW_RUNTIME_ERROR("This is no SF2 (weak)");
+      }
+      
+      if (fluid_synth_sfload(this->synth, soundfont.Value.c_str(), true) == -1)
+      {
+              THROW_RUNTIME_ERROR("This is no SF2 (strong)");
+      }
+}
+
+void FluidsynthWrapper::setupSettings()
+{
       this->settings = new_fluid_settings();
       if (this->settings == nullptr)
       {
@@ -70,117 +123,173 @@ void FluidsynthWrapper::open ()
     fluid_settings_setstr(this->settings, "player.timing-source", "sample");
     fluid_settings_setint(this->settings, "synth.parallel-render", 0);
     fluid_settings_setint(this->settings, "synth.threadsafe-api", 0);
-    
-      /* Create the synthesizer */
-      this->synth = new_fluid_synth(this->settings);
-      if (this->synth == nullptr)
-      {
-              THROW_RUNTIME_ERROR("Failed to create the synth");
-      }
-      fluid_synth_set_reverb(this->synth, Config::FluidsynthRoomSize, Config::FluidsynthDamping, Config::FluidsynthWidth, Config::FluidsynthLevel);
-      
-      // retrieve this after the synth has been inited (just for sure)
-      fluid_settings_getint(this->settings, "audio.period-size", &Config::FluidsynthPeriodSize);
-      
-      if(!this->fileLen.hasValue)
-      {
-          this->dryRun();
-          fluid_synth_system_reset(this->synth);
-      }
-
-      // find a soundfont
-      Nullable<string> soundfont;
-      
-      if(!Config::FluidsynthForceDefaultSoundfont)
-      {
-          soundfont = ::findSoundfont(this->Filename);
-      }
-      
-      if(!soundfont.hasValue)
-      {
-          // so, either we were forced to use default, or we didnt find any suitable sf2
-          soundfont = Config::FluidsynthDefaultSoundfont;
-      }
-      
-      
-      /* Load the soundfont */
-      if (!fluid_is_soundfont(soundfont.Value.c_str()))
-      {
-              THROW_RUNTIME_ERROR("This is no SF2 (weak)");
-      }
-      
-      if (fluid_synth_sfload(this->synth, soundfont.Value.c_str(), true) == -1)
-      {
-              THROW_RUNTIME_ERROR("This is no SF2 (strong)");
-      }
-
-      this->player = new_fluid_player(this->synth);
-      if (this->player == nullptr)
-      {
-              THROW_RUNTIME_ERROR("Failed to create the player");
-      }
-      
-      if (fluid_is_midifile(this->Filename.c_str()))
-      {
-            fluid_player_add(this->player, this->Filename.c_str());
-      }
-      else
-      {
-        THROW_RUNTIME_ERROR("This is no midi file");
-      }
-   
-    fluid_player_play(this->player);
 }
 
-
-#include "fluid_player_private.h"
-
-void FluidsynthWrapper::dryRun()
+void FluidsynthWrapper::open ()
 {
-    fluid_player_t* localPlayer = new_fluid_player(this->synth);
-
-    fluid_player_add(localPlayer, this->Filename.c_str());
-
-    // setup a custom midi handler, that just returns, so no midievents are being sent to fluid's synth
-    // we just need playtime of that midi, no synthesizing, no voices, NOTHING ELSE!
-    fluid_player_set_playback_callback(localPlayer,
-                                       [](void* data, fluid_midi_event_t* event) -> int { (void)data;(void)event;return FLUID_OK; },
-                                       this->synth);
-    
-    /* play the midi files, if any */
-    fluid_player_play(localPlayer);
-    
-    constexpr short chan = 2;
-    float left[Config::FramesToRender];
-    float right[Config::FramesToRender];
-    float* buf[chan]={left, right};
-    
-    while (fluid_player_get_status(localPlayer) == FLUID_PLAYER_PLAYING)
+    // avoid multiple calls to open()
+    if(this->settings!=nullptr)
     {
-      if (fluid_synth_process(this->synth, Config::FramesToRender, 0, nullptr, chan, buf) != FLUID_OK)
-      {
-        break;
-      }
+        return;
     }
+    this->setupSettings();
     
-    this->fileLen = localPlayer->cur_msec - localPlayer->begin_msec;
+    
+        this->smf = smf_load(this->Filename.c_str());
+        if (this->smf == NULL)
+        {
+              THROW_RUNTIME_ERROR("Something is wrong with that midi, loading failed");
+        }
+        
+        double playtime = smf_get_length_seconds(this->smf);
+        if(playtime<0.0)
+        {
+            THROW_RUNTIME_ERROR("How can playtime be negative?!?");
+        }
+        
+        this->fileLen = static_cast<size_t>(playtime * 1000);
+    
+        this->setupSynth();
+        this->setupSeq();
+    
+        
+    fluid_event_t *fluidEvt = new_fluid_event();
+    fluid_event_set_source(fluidEvt, -1);
+    fluid_event_set_dest(fluidEvt, this->synthSeqId);
+    
+    smf_event_t *event;
+    while((event = smf_get_next_event(smf)) != nullptr)
+    {
+                if (smf_event_is_metadata(event) || smf_event_is_sysex(event))
+                {
+                        continue;
+                }
+
+                if (!smf_event_is_valid(event))
+                {
+                    CLOG(LogLevel::WARNING, "invalid midi event found, ignoring:" << FluidsynthWrapper::SmfEventToString(event));
+                    continue;
+                }
+ 
+//                 this->feedToFluidSeq(event);
+
+                uint16_t chan = event->midi_buffer[0] & 0x0F;
+                switch (event->midi_buffer[0] & 0xF0)
+                {
+                 case 0x80: // notoff
+                        fluid_event_noteoff(fluidEvt, chan, event->midi_buffer[1]);
+                         break;
+ 
+                 case 0x90:
+                        fluid_event_noteon(fluidEvt, chan, event->midi_buffer[1], event->midi_buffer[2]);
+                         break;
+
+                 case 0xA0:
+                         CLOG(LogLevel::DEBUG, "Aftertouch, channel " << chan << ", note " << static_cast<int>(event->midi_buffer[1]) << ", pressure " << static_cast<int>(event->midi_buffer[2]));
+                         CLOG(LogLevel::ERROR, "Fluidsynth does not support key specific pressure (aftertouch); discarding event");
+                         continue;
+                         break;
+ 
+                 case 0xB0:
+                     fluid_event_control_change(fluidEvt, chan, event->midi_buffer[1], event->midi_buffer[2]);
+                     CLOG(LogLevel::DEBUG, "Controller, channel " << chan << ", controller " << static_cast<int>(event->midi_buffer[1]) << ", value " << static_cast<int>(event->midi_buffer[2]));
+                         break;
+ 
+                case 0xC0:
+                        fluid_event_program_change(fluidEvt, chan, event->midi_buffer[1]);
+                        CLOG(LogLevel::DEBUG, "ProgChange, channel " << chan << ", program " << static_cast<int>(event->midi_buffer[1]));
+                         break;
+
+                 case 0xD0:
+                        fluid_event_channel_pressure(fluidEvt, chan, event->midi_buffer[1]);
+                         CLOG(LogLevel::DEBUG, "Channel Pressure, channel " << chan << ", pressure " << static_cast<int>(event->midi_buffer[1]));
+                         break;
+ 
+                 case 0xE0:
+                 {
+                     int16_t pitch = event->midi_buffer[2];
+                     pitch <<= 7;
+                     pitch |= event->midi_buffer[1];
+                     
+                     fluid_event_pitch_bend(fluidEvt, chan, pitch);
+                     CLOG(LogLevel::DEBUG, "Pitch Wheel, channel " << chan << ", value " << pitch);
+                 }
+                 break;
+                 
+
+                 default: // i.e. 0xF0 == System-ex event
+                     // impossible! we catched that above
+                     THROW_RUNTIME_ERROR("libsmf broken!");
+                     continue;
+                     break;
+                
+                    }
+                    
+                int ret = fluid_sequencer_send_at(this->sequencer, fluidEvt, static_cast<unsigned int>(event->time_seconds*1000), true);
+                if(ret != FLUID_OK)
+                {
+                    CLOG(LogLevel::ERROR, "fluidsynth was unable to queue midi event");
+                }
+//                 SkipSeqSend:
+    }
+    smf_rewind(smf);
     
     
-    /* wait for playback termination */
-    fluid_player_join(localPlayer);
-    /* cleanup */
-    delete_fluid_player(localPlayer);
+    delete_fluid_event(fluidEvt);
 }
+
+
+// #include "fluid_player_private.h"
+
+// void FluidsynthWrapper::dryRun()
+// {
+//     fluid_player_t* localPlayer = new_fluid_player(this->synth);
+// 
+//     fluid_player_add(localPlayer, this->Filename.c_str());
+// 
+//     // setup a custom midi handler, that just returns, so no midievents are being sent to fluid's synth
+//     // we just need playtime of that midi, no synthesizing, no voices, NOTHING ELSE!
+//     fluid_player_set_playback_callback(localPlayer,
+//                                        [](void* data, fluid_midi_event_t* event) -> int { (void)data;(void)event;return FLUID_OK; },
+//                                        this->synth);
+//     
+//     /* play the midi files, if any */
+//     fluid_player_play(localPlayer);
+//     
+//     constexpr short chan = 2;
+//     float left[Config::FramesToRender];
+//     float right[Config::FramesToRender];
+//     float* buf[chan]={left, right};
+//     
+//     while (fluid_player_get_status(localPlayer) == FLUID_PLAYER_PLAYING)
+//     {
+//       if (fluid_synth_process(this->synth, Config::FramesToRender, 0, nullptr, chan, buf) != FLUID_OK)
+//       {
+//         break;
+//       }
+//     }
+//     
+//     this->fileLen = localPlayer->cur_msec - localPlayer->begin_msec;
+//     
+//     
+//     /* wait for playback termination */
+//     fluid_player_join(localPlayer);
+//     /* cleanup */
+//     delete_fluid_player(localPlayer);
+// }
 
 void FluidsynthWrapper::close() noexcept
 {
-  if(this->player != nullptr)
-  {
-    fluid_player_stop(this->player);
-    fluid_player_join(this->player);
-  }
-    delete_fluid_player(this->player);
-    this->player = nullptr;
+//   if(this->player != nullptr)
+//   {
+//     fluid_player_stop(this->player);
+//     fluid_player_join(this->player);
+//   }
+//     delete_fluid_player(this->player);
+//     this->player = nullptr;
+    
+    delete_fluid_sequencer(this->sequencer);
+    this->sequencer = nullptr;
     
     delete_fluid_synth(this->synth);
     this->synth = nullptr;
