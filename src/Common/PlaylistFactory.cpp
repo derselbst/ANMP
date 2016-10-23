@@ -145,7 +145,7 @@ catch(exception& e)\
     delete pcm;\
     pcm=nullptr;\
 }\
-
+ 
 #define TRY_WITH(LIBWRAPPER) \
 if(pcm==nullptr)\
 {\
@@ -164,14 +164,14 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
         PlaylistFactory::parseCue(playlist, filePath);
 #endif
     }
-    
+
 #ifdef USE_FLUIDSYNTH
     else if (iEquals(ext, "mid") || iEquals(ext, "midi"))
     {
-      TRY_WITH(FluidsynthWrapper)
+        TRY_WITH(FluidsynthWrapper)
     }
 #endif
-    
+
 #ifdef USE_LAZYUSF
     else if (iEquals(ext, "usf") || iEquals(ext, "miniusf"))
     {
@@ -181,10 +181,10 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
 
 #ifdef USE_LIBGME
     else if((iEquals(ext, "gbs") || iEquals(ext, "nsf")) // for files that can contain multiple sub-songs
-             && !offset.hasValue && !len.hasValue) // and this is the first call for this file, i.e. no sub-songs and song lengths have been specified
+            && !offset.hasValue && !len.hasValue) // and this is the first call for this file, i.e. no sub-songs and song lengths have been specified
     {
-      // ... try to parse that file
-      
+        // ... try to parse that file
+
         Music_Emu * emu=nullptr;
         gme_err_t msg = gme_open_file(filePath.c_str(), &emu, gme_info_only);
         if(msg || emu == nullptr)
@@ -214,10 +214,10 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
 
     else if(iEquals(ext, "ebur128") || iEquals(ext, "mood"))
     {
-      // moodbar and loudness files, dont care
-      return false;
+        // moodbar and loudness files, dont care
+        return false;
     }
-    
+
     else
     {
         // so many formats to test here, try and error

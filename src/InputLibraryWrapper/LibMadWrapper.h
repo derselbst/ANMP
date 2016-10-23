@@ -57,7 +57,7 @@ private:
     unsigned char * mpegbuf = nullptr;
     int mpeglen = 0;
     struct mad_stream* stream = nullptr;
-    
+
     // these two are only really needed inside this->render()
     // however, we need to preserve these two across subsequent calls to this->render(), since they are somewhat interdependent
     // not saving them would cause ugly interruptions in produced audio
@@ -66,13 +66,13 @@ private:
     Nullable<struct mad_frame> frame;
     // and the member phase of synth is definitly reused
     Nullable<struct mad_synth> synth;
-    
+
     vector<int32_t> tempBuf;
 
     frame_t numFrames=0;
     static signed int toInt24Sample(mad_fixed_t sample);
     static string id3_get_tag (struct id3_tag const *tag, char const *what);
-    
+
     int findValidHeader(struct mad_header& header);
 
 };

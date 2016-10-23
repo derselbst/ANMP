@@ -50,9 +50,9 @@ void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, QString msg)
     {
         playbtn->setChecked(false);
     }
-    
+
     playbtn->blockSignals(oldState);
-    
+
     if(hasMsg)
     {
         QMessageBox msgBox;
@@ -607,28 +607,28 @@ void MainWindow::on_actionSettings_triggered()
 
 void MainWindow::on_actionShuffle_Playst_triggered()
 {
-     QItemSelection indexList = this->ui->tableView->selectionModel()->selection();
+    QItemSelection indexList = this->ui->tableView->selectionModel()->selection();
 
-     if(indexList.empty())
-     {
-         this->playlistModel->shuffle(0, this->playlistModel->rowCount(this->playlistModel->index(0,0)));
-     }
-     else
-     {
+    if(indexList.empty())
+    {
+        this->playlistModel->shuffle(0, this->playlistModel->rowCount(this->playlistModel->index(0,0)));
+    }
+    else
+    {
         for(QItemSelection::const_iterator i=indexList.cbegin(); i!=indexList.cend(); ++i)
         {
             int top = i->top();
             int btm = i->bottom();
-            
+
             QModelIndex b = this->playlistModel->index(btm,0);
             QModelIndex t = this->playlistModel->index(top,0);
-            
+
             if(b.isValid() && t.isValid())
             {
-            this->playlistModel->shuffle(min(top, btm), max(top, btm));
+                this->playlistModel->shuffle(min(top, btm), max(top, btm));
             }
         }
-     }
+    }
 }
 
 void MainWindow::on_actionReinit_AudioDriver_triggered()

@@ -32,7 +32,7 @@ public:
     const Nullable<T> & operator=(const Nullable<T> &value);
     const Nullable<T> & operator=(const T &value);
     const Nullable<T> & operator=(nullptr_t nullpointer);
-    
+
     T* operator->();
 
 public:

@@ -43,28 +43,28 @@ public:
      * can change while running ANMP
      *
      * can be called multiple times if necessary
-     * 
+     *
      * when finishing the call to this->init() the PCM stream shall be in state "stopped"
      */
     virtual void init (unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime=false) = 0;
 
     /**
      * Starts the PCM stream.
-     * 
+     *
      * If the stream is already started, no error shall be risen.
      */
     virtual void start () = 0;
 
     /**
      * Stops the PCM stream immediately, i.e. when returning from this->stop() all pcm must have been processed, favourably by dropping them at once.
-     * 
+     *
      * If the stream is already stopped, no error shall be risen.
      */
     virtual void stop () = 0;
 
     /**
      * closes the device, frees all ressources allocated by this->open()
-     * 
+     *
      * Multiple calls to this->close() without corresponding calls to this->open() shall raise no error.
      */
     virtual void close () = 0;
@@ -90,7 +90,7 @@ public:
      * i.e. sizeof(frameBuffer)==(frames*this->currentChannelCount*sizeof(DataTypePointedToByBuffer))
      *
      * @return number of frames successfully pushed to underlying audio driver
-     * 
+     *
      * @warning you can return a number smaller "frames" (but greater 0), however this case cannot always be recovered. you should better return 0 and play nothing, if you face such a problem.
      */
     virtual int write (pcm_t* frameBuffer, frame_t frames, int offset);
@@ -124,7 +124,7 @@ protected:
      * @note buffer has to contain (frames*this->currentChannelCount) items, i.e. sizeof(buffer)==(frames*this->currentChannelCount*sizeof(DataTypePointedToByBuffer))
      *
      * @return number of frames successfully pushed to underlying audio driver. if this is zero, nothing was played and the caller may try again, after waiting 1ms or so.
-     * 
+     *
      * @warning you can return a number smaller "frames" (but greater 0), however this case can only berecovered, if the whole song is hold in memory. you should better return 0 and play nothing, if you face such a problem.
      */
     virtual int write (float* buffer, frame_t frames) = 0;

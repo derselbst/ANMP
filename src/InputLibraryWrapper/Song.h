@@ -50,8 +50,8 @@ public:
     // an in-file-offset. its usage can be determined by child classes
     //
     // usual usage: how many milliseconds to skip when reading pcm from file
-    //    
-    // or it can be used as sub-song-offset (if one file contains multiple files) 
+    //
+    // or it can be used as sub-song-offset (if one file contains multiple files)
     Nullable<size_t> fileOffset;
 
     // how many milliseconds following "fileOffset" shall be used for playing
@@ -66,7 +66,7 @@ public:
 
     // indicates the data type of the raw decoded pcm
     SongFormat Format;
- 
+
     // how many items (i.e. floats, int16s, etc.) are there in data?
     size_t count = 0;
 
@@ -110,18 +110,18 @@ public:
      * specificly: defines samplerate, defines channelcount, provides a value for this->getFrames()
      *
      * @exceptions throws runtime_error if file cannot be opened, is a file of unsupported format or smth. else that is crucial for decoding goes wrong
-     * 
+     *
      * @note everytime this function returns (i.e. by NOT throwing an exception), it is assumed that the file tried to open can be decoded with that specific wrapper class
      */
     virtual void open () = 0;
 
     /**
      * frees all ressources acquired by this->open()
-     * 
+     *
      * shall always be called after a call to this->open(), even if this->open() threw an exception
-     * 
+     *
      * multiple calls to this method (i.e. without corresponding calls to this->open()) shall be possible, leading to no error
-     * 
+     *
      * thus this method should at least be called by the destructor
      */
     virtual void close () noexcept = 0 ;
@@ -135,7 +135,7 @@ public:
 
     /**
      * frees all ressources acquired by this->fillBuffer()
-     * 
+     *
      * multiple calls to this method (i.e. without corresponding calls to this->fillBuffer()) shall be possible, leading to no error
      */
     virtual void releaseBuffer () noexcept = 0;

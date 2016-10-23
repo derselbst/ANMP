@@ -70,7 +70,7 @@ vector<loop_t> Song::getLoopArray () const noexcept
  */
 void Song::buildMetadata() noexcept
 {
-  
+
 }
 
 // should sort descendingly

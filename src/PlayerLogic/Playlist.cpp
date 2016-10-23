@@ -123,9 +123,9 @@ void Playlist::shuffle(unsigned int start, unsigned int end)
 {
     if(start > end)
     {
-      throw invalid_argument("start>end");
+        throw invalid_argument("start>end");
     }
-  
+
     std::random_shuffle(this->queue.begin()+start, this->queue.begin()+end);
 }
 

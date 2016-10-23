@@ -156,9 +156,9 @@ int FFMpegWrapper::decode_packet(int16_t* (&pcm), int& framesToDo, int& got_fram
         int ret = avcodec_decode_audio4(this->handle->streams[this->audioStreamID]->codec, frame, &got_frame, &pkt);
         if (ret < 0)
         {
-                CLOG(LogLevel::ERROR, "Failed decoding audio frame");
+            CLOG(LogLevel::ERROR, "Failed decoding audio frame");
         }
-        
+
         /* Some audio decoders decode only part of the packet, and have to be
          * called again with the remainder of the packet data.
          * Sample: fate-suite/lossless-audio/luckynight-partial.shn
@@ -187,7 +187,7 @@ int FFMpegWrapper::decode_packet(int16_t* (&pcm), int& framesToDo, int& got_fram
     }
     else
     {
-      // dont care
+        // dont care
     }
 
     /* If we use frame reference counting, we own the data and need
@@ -214,7 +214,7 @@ void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
     //data packet read from the stream
     AVPacket packet;
-    
+
     /* initialize packet, set data to nullptr, let the demuxer fill it */
     av_init_packet(&packet);
     packet.data = nullptr;
@@ -234,17 +234,17 @@ void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     int16_t* pcm = static_cast<int16_t*>(bufferToFill);
     pcm += this->framesAlreadyRendered * this->Format.Channels;
 
-    
+
     while(!this->stopFillBuffer &&
             framesToDo > 0 &&
             pcm < static_cast<int16_t*>(bufferToFill) + this->count
          )
     {
-      
-      /* read frames from the file */
-      int ret = av_read_frame(this->handle,&packet);
-      if (ret < 0)
-      {
+
+        /* read frames from the file */
+        int ret = av_read_frame(this->handle,&packet);
+        if (ret < 0)
+        {
             if (ret == AVERROR_EOF || avio_feof(this->handle->pb))
             {
                 CLOG(LogLevel::DEBUG, "AVERROR_EOF");
@@ -256,7 +256,7 @@ void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
                 break;
             }
         }
-        
+
         AVPacket orig_pkt = packet;
         do
         {
@@ -266,7 +266,7 @@ void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             packet.data += ret;
             packet.size -= ret;
         } while (packet.size > 0);
-        
+
         av_packet_unref(&orig_pkt);
     }
 
@@ -278,7 +278,7 @@ void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
         decode_packet(pcm, framesToDo, frameFinished, packet, frame);
     } while (frameFinished);
 
-    
+
     av_frame_free(&frame);
 }
 

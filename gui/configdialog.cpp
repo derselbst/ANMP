@@ -102,26 +102,26 @@ void ConfigDialog::on_checkGmeForever_clicked(bool checked)
 void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
 {
     Config::audioDriver = static_cast<AudioDriver_t>(index);
-/** in case we ever use bitmasks for audioDriver
+    /** in case we ever use bitmasks for audioDriver
 
-    if(Config::audioDriver & (AudioDriver_t::WAVE | AudioDriver_t::ebur128))
-    {
-        Config::RenderWholeSong = false;
-        this->ui->checkRenderWhole->setEnabled(false);
-        this->ui->checkRenderWhole->setChecked(false);
-
-        if(Config::audioDriver & AudioDriver_t::ebur128)
+        if(Config::audioDriver & (AudioDriver_t::WAVE | AudioDriver_t::ebur128))
         {
-            Config::useAudioNormalization = false;
-            this->ui->checkAudioNorm->setEnabled(false);
-            this->ui->checkAudioNorm->setChecked(false);
+            Config::RenderWholeSong = false;
+            this->ui->checkRenderWhole->setEnabled(false);
+            this->ui->checkRenderWhole->setChecked(false);
+
+            if(Config::audioDriver & AudioDriver_t::ebur128)
+            {
+                Config::useAudioNormalization = false;
+                this->ui->checkAudioNorm->setEnabled(false);
+                this->ui->checkAudioNorm->setChecked(false);
+            }
         }
-    }
-    else
-    {
-        this->ui->checkRenderWhole->setEnabled(true);
-        this->ui->checkAudioNorm->setEnabled(true);
-    }*/
+        else
+        {
+            this->ui->checkRenderWhole->setEnabled(true);
+            this->ui->checkAudioNorm->setEnabled(true);
+        }*/
 
     switch(Config::audioDriver)
     {

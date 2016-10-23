@@ -54,14 +54,14 @@ Player::~Player ()
 
 void Player::initAudio()
 {
-  bool oldState = this->getIsPlaying();
-  this->pause();
-  this->_initAudio();
-  
-  if(oldState)
-  {
-    this->play();
-  }
+    bool oldState = this->getIsPlaying();
+    this->pause();
+    this->_initAudio();
+
+    if(oldState)
+    {
+        this->play();
+    }
 }
 
 void Player::_initAudio()
@@ -102,11 +102,11 @@ void Player::_initAudio()
     }
 
     this->audioDriver->open();
-    
+
     if(this->currentSong!=nullptr)
     {
-      SongFormat& format = this->currentSong->Format;
-      this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
+        SongFormat& format = this->currentSong->Format;
+        this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
     }
 }
 
@@ -399,7 +399,7 @@ void Player::_seekTo (frame_t frame)
     {
         return;
     }
-    
+
     this->playhead=frame;
 }
 
@@ -414,7 +414,7 @@ void Player::resetPlayhead ()
 
 /**
  * within a given loop "l": get that loop that starts just right after playhead
- * 
+ *
  * @return a subloop of "l"
  */
 core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)
@@ -439,7 +439,7 @@ core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)
 
 /**
  * THAT method which recursively walks through a loop tree, playing all the loops, subloops and subsubsubloops given by "loop" recursively
- * 
+ *
  * @note this method might be called recursively :P
  */
 void Player::playLoop (core::tree<loop_t>& loop)
@@ -489,10 +489,10 @@ void Player::playLoop (core::tree<loop_t>& loop)
  * plays a loop with the bounds specified by startFrame and stopFrame.
  * starts playing at whereever playhead stands.
  * returns as soon as playhead leaves the bounds, i.e. exceeding stopFrame or underceeding startFrame.
- * 
+ *
  * @param  startFrame zero-based array index == the lower bound this->playhead shall be in
  * @param  stopFrame zero-based array index == the upper bound this->playhead shall be in, i.e. play until we've reached stopFrame, although the frame at "stopFrame" will not be played.
- * 
+ *
  * @todo really ensure and test that this last frame is not being played
  */
 void Player::playFrames (frame_t startFrame, frame_t stopFrame)
@@ -524,9 +524,9 @@ void Player::playFrames (frame_t startFrame, frame_t stopFrame)
 
 /**
  * play "framesToPlay" frames from the current position (indicated by this->playhead)
- * 
+ *
  * it ought to start playing that frame, which is currently pointed to by this->playhead
- * 
+ *
  * @param framesToPlay no. of frames to play from the current position
  */
 void Player::playFrames (frame_t framesToPlay)
@@ -554,11 +554,11 @@ void Player::playFrames (frame_t framesToPlay)
         int itemOffset = FramesToItems(memorizedPlayhead) % bufSize;
         // number of frames we will write to audioDriver in this run
         int framesToPush = min(Config::FramesToRender, framesToPlay);
-        
+
         int framesWritten = 0;
 
         // PLAY!
-        again:
+again:
         framesWritten = this->audioDriver->write(this->currentSong->data, framesToPush, itemOffset);
         // before we go on rendering the next pcm chunk, make sure we really played the current one.
         //
@@ -578,7 +578,7 @@ void Player::playFrames (frame_t framesToPlay)
 
         // ensure PCM buffer(s) are well filled
         this->currentSong->fillBuffer();
-        
+
         if(framesWritten != framesToPush)
         {
             CLOG(LogLevel::INFO, "failed playing the rendered pcm chunk\nframes written: " << framesWritten << "\nframes pushed: " << framesToPush);
@@ -601,12 +601,12 @@ void Player::playInternal ()
 {
     Nullable<string> exceptionMsg = Nullable<string>();
     this->onIsPlayingChanged.Fire(this->isPlaying, exceptionMsg);
-    
+
     try
     {
         while(this->isPlaying)
         {
-        this->audioDriver->start();
+            this->audioDriver->start();
             core::tree<loop_t>& loops = this->currentSong->loopTree;
 
             this->playLoop(loops);
@@ -626,7 +626,7 @@ void Player::playInternal ()
         this->_pause();
         exceptionMsg = e.what();
     }
-    
+
     this->onIsPlayingChanged.Fire(this->isPlaying, exceptionMsg);
 }
 

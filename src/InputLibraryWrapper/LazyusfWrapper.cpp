@@ -161,10 +161,10 @@ int LazyusfWrapper::usf_info(void * context, const char * name, const char * val
 
     if (iEquals(name, "length"))
     {
-      if(!infoContext->fileLen.hasValue)
-      {
-        infoContext->fileLen = parse_time_crap(value);
-      }
+        if(!infoContext->fileLen.hasValue)
+        {
+            infoContext->fileLen = parse_time_crap(value);
+        }
     }
 
     else if (iEquals(name, "fade"))

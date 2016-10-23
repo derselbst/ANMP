@@ -183,29 +183,29 @@ char extBuf[_MAX_EXT];
 string mybasename(const string& path)
 {
     string s = string(path.c_str());
-    
+
 #ifdef _POSIX_SOURCE
     return string(basename( const_cast<char*>(s.c_str()) ));
 #elif _WINDOWS
     _splitpath(s.c_str(),
-   nullptr, // drive
-   dirBuf, // dir
-   fnameBuf, // filename
-   extBuf);
-   
-   if(fnameBuf[0] = '\0')
-   {
-       throw NotImplementedException();
-   }
-   else
-   {
-       string result = string(fnameBuf);
-       result.append(extBuf);
-       return result;
-   }
-   
+               nullptr, // drive
+               dirBuf, // dir
+               fnameBuf, // filename
+               extBuf);
+
+    if(fnameBuf[0] = '\0')
+    {
+        throw NotImplementedException();
+    }
+    else
+    {
+        string result = string(fnameBuf);
+        result.append(extBuf);
+        return result;
+    }
+
 #else
-    #error "Unsupported Platform"
+#error "Unsupported Platform"
 #endif
 }
 
@@ -229,7 +229,7 @@ size_t getFileSize(int fd)
     {
         THROW_RUNTIME_ERROR("fstat failed (" << strerror(errno) << ")");
     }
-    
+
     return stat.st_size;
 }
 
@@ -238,9 +238,9 @@ bool myExists(const std::string& name)
 #ifdef _POSIX_SOURCE
     struct stat buffer;
     int ret = stat(name.c_str(), &buffer);
-    return ret == 0; 
+    return ret == 0;
 #endif
-    
+
     if (FILE *file = fopen(name.c_str(), "r"))
     {
         fclose(file);
@@ -249,40 +249,40 @@ bool myExists(const std::string& name)
     else
     {
         return false;
-    }   
+    }
 }
 
 Nullable<string> findSoundfont(string midFile)
 {
     // trim extension
     midFile = midFile.erase(midFile.find_last_of("."), string::npos);
-    
+
     string soundffile = midFile + ".sf2";
-    
+
 //     if(fs::exists(midFile + ".sf2"))
     if(myExists(soundffile))
     {
         // a soundfont named like midi file, but with sf2 extension
         return Nullable<string>(soundffile);
     }
-    
+
     // get path to directory this file is in
     string dir = mydirname(midFile);
-    
+
     soundffile = dir + "/"; // the directory this soundfont might be in
     soundffile += mybasename(dir); // bare name of that soundfont
     soundffile += ".sf2"; // extension
-    
+
 //     if(fs::exists(dir + ".sf2"))
     if(myExists(soundffile))
     {
         return Nullable<string>(soundffile);
     }
-    
+
 //     for(directory_entry& dirEntry : fs::directory_iterator("sandbox"))
 //     {
 //         string ext = getFileExtension(dirEntry.path());
-//         
+//
 //         if(iEquals(ext, "sf2"))
 //         {
 //             // a soundfont in that directory

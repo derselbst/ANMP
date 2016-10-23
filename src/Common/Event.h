@@ -51,7 +51,7 @@ public:
     Event<Args...>& operator-=(void*obj);
 
     void Fire(Args... args);
-    
+
 private:
     mutable std::mutex mtx;
 };
@@ -60,7 +60,7 @@ template<typename... Args>
 Event<Args...>& Event<Args...>::operator+=(std::pair<void*, void(*)(void*, Args...)> t)
 {
     std::lock_guard<std::mutex> lock(this->mtx);
-  
+
     this->callbacks[t.first] = t.second;
 
     return *this;
@@ -70,7 +70,7 @@ template<typename... Args>
 Event<Args...>& Event<Args...>::operator-=(std::pair<void*, void(*)(void*, Args...)> t)
 {
     std::lock_guard<std::mutex> lock(this->mtx);
-    
+
     void* obj = t.first;
 
     typename std::map<void*, void(*)(void*, Args...)>::iterator it = this->callbacks.find(obj);
@@ -86,7 +86,7 @@ template<typename... Args>
 Event<Args...>& Event<Args...>::operator-=(void* obj)
 {
     std::lock_guard<std::mutex> lock(this->mtx);
-    
+
     this->callbacks.erase(obj);
 
     return *this;
@@ -96,7 +96,7 @@ template<typename... Args>
 void Event<Args...>::Fire(Args... args)
 {
     std::lock_guard<std::mutex> lock(this->mtx);
-    
+
     typename std::map<void*, void(*)(void*, Args...)>::iterator it;
 
     for(it = this->callbacks.begin(); it!=this->callbacks.end(); it++)

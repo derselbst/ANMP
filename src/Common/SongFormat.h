@@ -14,7 +14,7 @@ struct SongFormat
 {
     // specifies the number of samples per seconds
     unsigned int SampleRate = 0;
-    
+
     // specifies the number of (mono)-channels
     unsigned int Channels = 0;
 
@@ -26,7 +26,7 @@ struct SongFormat
      * returns bitrate in bit/s
      */
     void getBitrate ();
-    
+
     /**
      * whether this instance holds valid data
      */

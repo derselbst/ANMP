@@ -61,13 +61,13 @@ public:
     frame_t getFrames () const override;
 
     void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
-    
+
 private:
     AVFormatContext *handle = nullptr;
     SwrContext *swr = nullptr;
 
     int audioStreamID = -1;
-    
+
     int decode_packet(int16_t* (&pcm), int& framesToDo, int& got_frame, AVPacket& pkt, AVFrame * (&frame));
 };
 

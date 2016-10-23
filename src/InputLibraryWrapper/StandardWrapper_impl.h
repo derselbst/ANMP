@@ -49,7 +49,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
     {
         if(!this->Format.IsValid())
         {
-          THROW_RUNTIME_ERROR("Failed to allocate buffer: SongFormat not valid!");
+            THROW_RUNTIME_ERROR("Failed to allocate buffer: SongFormat not valid!");
         }
 
         // usually this shouldnt block at all, since we only end up here after releaseBuffer() was called
@@ -102,7 +102,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
         // Song::data already filled up with all the audiofile's PCM, nothing to do here ;)
         return;
     }
-    
+
     this->futureFillBuffer = async(launch::async, &WRAPPERCLASS::render, context/*==this*/, context->preRenderBuf, Config::FramesToRender);
 }
 

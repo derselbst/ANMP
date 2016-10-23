@@ -141,7 +141,7 @@ template<typename T> int PortAudioOutput::write(T* buffer, frame_t frames)
     Pa_WriteStream(this->handle, buffer, frames );
 
     delete [] processedBuffer;
-    
+
     // well, just hope that all of them have actually been written
     return frames;
 }
@@ -166,13 +166,13 @@ void PortAudioOutput::stop()
 {
     if(this->handle != nullptr)
     {
-       // dont call Pa_StopStream() here since it causes draining the pcm, which takes time and may cause deadlocks
-       // use Pa_AbortStream() instead which drops any PCM currently played
-       PaError err = Pa_AbortStream( this->handle );
-       if(err != PaErrorCode::paNoError && err != PaErrorCode::paStreamIsStopped)
-       {
+        // dont call Pa_StopStream() here since it causes draining the pcm, which takes time and may cause deadlocks
+        // use Pa_AbortStream() instead which drops any PCM currently played
+        PaError err = Pa_AbortStream( this->handle );
+        if(err != PaErrorCode::paNoError && err != PaErrorCode::paStreamIsStopped)
+        {
             THROW_RUNTIME_ERROR("unable to stop pcm (" << Pa_GetErrorText(err) << ")");
-       }
+        }
     }
 }
 

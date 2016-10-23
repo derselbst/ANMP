@@ -12,10 +12,10 @@
   * class StandardWrapper
   *
   * @brief provides common ways of opening, loading and decoding an audio file
-  * 
+  *
   * - automatically normalizes audio during rendering (if provided with an *.ebur128 file)
   * - decides whether to render whole song to memory at once or not
-  * 
+  *
   */
 
 #define STANDARDWRAPPER_RENDER(SAMPLEFORMAT, LIB_SPECIFIC_RENDER_FUNCTION)\

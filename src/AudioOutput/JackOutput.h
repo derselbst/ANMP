@@ -46,37 +46,37 @@ public:
 
 private:
 
-  vector<jack_port_t*> playbackPorts;
-  
-  /*not static, pointer can be reassigned by jack if name is not unique*/
-  const char* ClientName = "ANMP";
-  
-  jack_client_t* handle = nullptr;
-  SRC_STATE *srcState = nullptr;
-  
-  typedef struct
-  {
-      jack_default_audio_sample_t* buf = nullptr; // length of this buffer determined by jackBufSize
-      volatile bool ready = false;
-  } jack_buffer_t;
-  
-  SRC_DATA srcData;
-  mutable std::mutex mtx;
-  //*** Begin: mutex-protected vars ***//
-  jack_buffer_t interleavedProcessedBuffer;
-  volatile jack_nframes_t jackBufSize = 0;
-  volatile jack_nframes_t jackSampleRate = 0;
-  //*** End: mutex-protected vars ***//
-  
-  static int processCallback(jack_nframes_t nframes, void* arg);
-  static int onJackSampleRateChanged(jack_nframes_t nframes, void* arg);
-  static void onJackShutdown(void* arg);
-  static int onJackBufSizeChanged(jack_nframes_t nframes, void *arg);
-  
-  template<typename T> int write(T* buffer, frame_t frames);
-  template<typename T> void getAmplifiedFloatBuffer(const T* inBuf, float* outBuf, const size_t Items);
-  int doResampling(float* inBuf, const size_t Frames);
-  void connectPorts();
+    vector<jack_port_t*> playbackPorts;
+
+    /*not static, pointer can be reassigned by jack if name is not unique*/
+    const char* ClientName = "ANMP";
+
+    jack_client_t* handle = nullptr;
+    SRC_STATE *srcState = nullptr;
+
+    typedef struct
+    {
+        jack_default_audio_sample_t* buf = nullptr; // length of this buffer determined by jackBufSize
+        volatile bool ready = false;
+    } jack_buffer_t;
+
+    SRC_DATA srcData;
+    mutable std::mutex mtx;
+    //*** Begin: mutex-protected vars ***//
+    jack_buffer_t interleavedProcessedBuffer;
+    volatile jack_nframes_t jackBufSize = 0;
+    volatile jack_nframes_t jackSampleRate = 0;
+    //*** End: mutex-protected vars ***//
+
+    static int processCallback(jack_nframes_t nframes, void* arg);
+    static int onJackSampleRateChanged(jack_nframes_t nframes, void* arg);
+    static void onJackShutdown(void* arg);
+    static int onJackBufSizeChanged(jack_nframes_t nframes, void *arg);
+
+    template<typename T> int write(T* buffer, frame_t frames);
+    template<typename T> void getAmplifiedFloatBuffer(const T* inBuf, float* outBuf, const size_t Items);
+    int doResampling(float* inBuf, const size_t Frames);
+    void connectPorts();
 };
 
 #endif // JACKOUTPUT_H

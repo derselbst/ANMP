@@ -5,11 +5,11 @@
 
 /**
   * class Config
-  * 
+  *
   * holds configuration parameters that determine various aspects of how audio files are being decoded/played
-  * 
+  *
   * if not stated else, these settings will take effect after the next call to Song::open() (assuming the Song was Song::close() before)
-  * 
+  *
   * for var-specific doc see Config.cpp
   */
 
@@ -24,9 +24,9 @@ struct Config
     // no assign
     Config& operator=(const Config&) = delete;
 
-    
+
     static constexpr frame_t FramesToRender = 2048;
-    
+
     // Static Public attributes
     //
     static AudioDriver_t audioDriver;
@@ -46,10 +46,10 @@ struct Config
     static unsigned int gmeSampleRate;
     static float gmeEchoDepth;
     static bool gmePlayForever;
-    
+
     static uint8_t MidiControllerLoopStart;
     static uint8_t MidiControllerLoopStop;
-    
+
     static int FluidsynthPeriodSize;
     static bool FluidsynthEnableReverb;
     static bool FluidsynthEnableChorus;

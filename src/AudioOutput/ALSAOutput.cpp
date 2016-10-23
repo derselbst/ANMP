@@ -305,7 +305,7 @@ template<typename T> int ALSAOutput::write(T* buffer, frame_t frames)
     } /* while */
 LEAVE_LOOP:
     delete [] processedBuffer;
-    
+
     return total;
 }
 

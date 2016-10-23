@@ -5,7 +5,7 @@ class Song;
 
 /**
   * abstract base class IPlaylist for playlists
-  * 
+  *
   * Owns the songs to be played
   */
 
@@ -19,7 +19,7 @@ public:
 
     /**
      * @brief adds a song to the playlist
-     * 
+     *
      * appends a song to the playlist
      *
      * @param song the song to be added
@@ -42,7 +42,7 @@ public:
      * @param idx a zero-based index, specifying the element to be removed
      */
     virtual void remove (int idx) = 0;
- 
+
     /**
      * @brief clears the playlist
      *
@@ -58,7 +58,7 @@ public:
      * @return returns the song at the specified index, nullptr if song does not exist
      */
     virtual Song* getSong(unsigned int idx) = 0;
- 
+
 
     /**
      * @brief sets the next song to play
@@ -86,7 +86,7 @@ public:
      * @return returns the currently played back song, nullptr if there is no song set, which makes playback stop
      */
     virtual Song* current () = 0;
- 
+
     /**
      * @brief sets the song currently played back
      *

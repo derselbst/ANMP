@@ -40,22 +40,22 @@ LibMadWrapper::~LibMadWrapper ()
 
 int LibMadWrapper::findValidHeader(struct mad_header& header)
 {
-  int ret;
-  
-        while((ret=mad_header_decode(&header, this->stream))!=0 && MAD_RECOVERABLE(this->stream->error))
+    int ret;
+
+    while((ret=mad_header_decode(&header, this->stream))!=0 && MAD_RECOVERABLE(this->stream->error))
+    {
+        if(this->stream->error == MAD_ERROR_LOSTSYNC)
         {
-            if(this->stream->error == MAD_ERROR_LOSTSYNC)
+            long tagsize = id3_tag_query(this->stream->this_frame,this->stream->bufend - this->stream->this_frame);
+            if(tagsize > 0)
             {
-                long tagsize = id3_tag_query(this->stream->this_frame,this->stream->bufend - this->stream->this_frame);
-                if(tagsize > 0)
-                {
-                        mad_stream_skip(this->stream, tagsize);
-                        continue;
-                }
+                mad_stream_skip(this->stream, tagsize);
+                continue;
             }
         }
-        
-        return ret;
+    }
+
+    return ret;
 }
 
 void LibMadWrapper::open ()
@@ -93,14 +93,14 @@ void LibMadWrapper::open ()
     {
         struct mad_header header;
         mad_header_init(&header);
-    
+
         // try to find a valid header
         int ret = this->findValidHeader(header);
         if(ret!=0)
         {
             // only free the locally used header here, this->stream and this->mpegbuf are freed in LibMadWrapper::close()
             mad_header_finish(&header);
-            
+
             THROW_RUNTIME_ERROR("unable to find a valid frame-header for File \"" + this->Filename + ")\"");
         }
 
@@ -121,9 +121,9 @@ void LibMadWrapper::open ()
             this->Format.Channels = max<int>(MAD_NCHANNELS(&header), this->Format.Channels);
             this->Format.SampleRate = header.samplerate;
             CLOG(LogLevel::DEBUG, "found a second valid header within File \"" << this->Filename << ")\"\n\tchannels: " << MAD_NCHANNELS(&header) << "\nsrate: " << header.samplerate);
-            
+
             this->numFrames += 32 * MAD_NSBSAMPLES(&header);
-            
+
             // now lets go on and decode rest of file
             while(1)
             {
@@ -157,38 +157,38 @@ void LibMadWrapper::open ()
         {
             CLOG(LogLevel::WARNING, "only one valid header found, probably no valid mp3 File \"" << this->Filename << ")\"");
         }
-        
+
         // somehow reset libmad stream
         mad_stream_finish(this->stream);
         mad_stream_init(this->stream);
         /* load buffer with MPEG audio data */
         mad_stream_buffer(this->stream, this->mpegbuf, this->mpeglen);
-        
+
         mad_header_finish(&header);
     }
-    
+
     this->frame.hasValue=true;
     mad_frame_init(&this->frame.Value);
-    
+
     this->synth.hasValue=true;
     mad_synth_init(&this->synth.Value);
 }
 
 void LibMadWrapper::close() noexcept
 {
-  
+
     if(this->synth.hasValue)
     {
         mad_synth_finish(&this->synth.Value);
         this->synth.hasValue=false;
     }
-    
+
     if(this->frame.hasValue)
     {
         mad_frame_finish(&this->frame.Value);
         this->frame.hasValue=false;
     }
-    
+
     if(this->stream != nullptr)
     {
         mad_stream_finish(this->stream);
@@ -229,7 +229,7 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     fesetround(FE_TONEAREST);
 
     int32_t* pcm = static_cast<int32_t*>(bufferToFill);
-    
+
     // if buffer for whole song: adjusts the position where to start filling "bufferToFill", with respect to already rendered frames
     // if only small buffer: since "this->framesAlreadyRendered" should be multiple of this->count: should do pcm+=0
     pcm += (this->framesAlreadyRendered * this->Format.Channels) % this->count;
@@ -240,19 +240,19 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
         // write back tempbuffer, i.e. frames weve buffered from previous calls to libmad (necessary due to inelegant API of libmad, i.e. cant tell how many frames to render during one call)
         {
             const size_t itemsToCpy = min<size_t>(this->tempBuf.size(), framesToRender*this->Format.Channels);
-            
+
             memcpy(pcm, this->tempBuf.data(), itemsToCpy*sizeof(int32_t));
-            
+
             this->tempBuf.erase(this->tempBuf.begin(), this->tempBuf.begin()+itemsToCpy);
-            
+
             const size_t framesCpyd = itemsToCpy / this->Format.Channels;
             framesToRender -= framesCpyd;
             this->framesAlreadyRendered += framesCpyd;
-        
+
             // again: adjust position
             pcm += itemsToCpy;
         }
-        
+
         int framesToDoNow = (framesToRender/Config::FramesToRender)>0 ? Config::FramesToRender : framesToRender%Config::FramesToRender;
         if(framesToDoNow==0)
         {
@@ -262,22 +262,22 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
         {
             CLOG(LogLevel::ERROR, "framesToDoNow negative!!!: " << framesToDoNow);
         }
-        
+
         int ret = mad_frame_decode(&this->frame.Value, this->stream);
         if(ret!=0)
         {
             if(this->stream->error == MAD_ERROR_LOSTSYNC)
             {
-                  long tagsize = id3_tag_query(this->stream->this_frame,this->stream->bufend - this->stream->this_frame);
-                  if(tagsize > 0)
-                  {
-                          mad_stream_skip(this->stream, tagsize);
-                          continue;
-                  }
+                long tagsize = id3_tag_query(this->stream->this_frame,this->stream->bufend - this->stream->this_frame);
+                if(tagsize > 0)
+                {
+                    mad_stream_skip(this->stream, tagsize);
+                    continue;
+                }
             }
-          
-           string errstr=mad_stream_errorstr(this->stream);
-          
+
+            string errstr=mad_stream_errorstr(this->stream);
+
             if(MAD_RECOVERABLE(this->stream->error))
             {
                 errstr += " (recoverable)";
@@ -291,27 +291,27 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
                 break;
             }
         }
-        
+
         mad_synth_frame(&this->synth.Value, &this->frame.Value);
-        
+
         /* save PCM samples from synth.pcm */
         /* &synth.pcm->samplerate contains the sampling frequency */
 
         unsigned short nsamples     = this->synth->pcm.length;
         mad_fixed_t const *left_ch  = this->synth->pcm.samples[0];
         mad_fixed_t const *right_ch = this->synth->pcm.samples[1];
-        
+
         unsigned int item=0;
         /* audio normalization */
         /*const*/ float absoluteGain = (numeric_limits<int32_t>::max()) / (numeric_limits<int32_t>::max() * this->gainCorrection);
         /* reduce risk of clipping, remove that when using true sample peak */
         absoluteGain -= 0.01;
         for( ;
-            !this->stopFillBuffer &&
-            framesToDoNow>0 && // frames left during this loop
-            framesToRender>0 && // frames left during this call
-            nsamples>0; // frames left from libmad
-            framesToRender--, nsamples--, framesToDoNow--)
+                !this->stopFillBuffer &&
+                framesToDoNow>0 && // frames left during this loop
+                framesToRender>0 && // frames left during this call
+                nsamples>0; // frames left from libmad
+                framesToRender--, nsamples--, framesToDoNow--)
         {
             int32_t sample;
 
@@ -323,30 +323,30 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
             if (this->Format.Channels == 2) // our buffer is for 2 channels
             {
-              if(this->synth.Value.pcm.channels==2) // ...but did mad also decoded for 2 channels?
-              {
-                sample = LibMadWrapper::toInt24Sample(*right_ch++);
-                sample = Config::useAudioNormalization ? lrint(sample * absoluteGain) : sample;
-                pcm[item++] = sample;
-              }
-              else
-              {
-                // what? only one channel in a stereo file? well then: pseudo stereo
-                pcm[item++] = sample;
-                
-                CLOG(LogLevel::WARNING, "decoded only one channel, though this is a stereo file!");
-              }
+                if(this->synth.Value.pcm.channels==2) // ...but did mad also decoded for 2 channels?
+                {
+                    sample = LibMadWrapper::toInt24Sample(*right_ch++);
+                    sample = Config::useAudioNormalization ? lrint(sample * absoluteGain) : sample;
+                    pcm[item++] = sample;
+                }
+                else
+                {
+                    // what? only one channel in a stereo file? well then: pseudo stereo
+                    pcm[item++] = sample;
+
+                    CLOG(LogLevel::WARNING, "decoded only one channel, though this is a stereo file!");
+                }
             }
-            
+
             this->framesAlreadyRendered++;
         }
         pcm += item/* % this->count*/;
-        
+
         // "bufferToFill" (i.e. "pcm") seems to be full, drain the rest pcm samples from libmad and temporarily save them
         while (!this->stopFillBuffer && nsamples>0)
         {
             int32_t sample;
-            
+
             /* output sample(s) in 24-bit signed little-endian PCM */
 
             sample = LibMadWrapper::toInt24Sample(*left_ch++);
@@ -357,11 +357,11 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
                 sample = LibMadWrapper::toInt24Sample(*right_ch++);
                 this->tempBuf.push_back(Config::useAudioNormalization ? lrint(sample * absoluteGain) : sample);
             }
-            
+
             /* DONT do this: this->framesAlreadyRendered++; since we use framesAlreadyRendered as offset for "bufferToFill"*/
             nsamples--;
         }
-        
+
         if(item>this->count)
         {
             CLOG(LogLevel::ERROR, "THIS SHOULD NEVER HAPPEN: read " << item << " items but only expected " << this->count << "\n");
@@ -380,34 +380,34 @@ void LibMadWrapper::buildMetadata() noexcept
     // TODO we have to find ID3 tag in the mpeg file, but this should be done while trying decoding mpeg-frame-headers
     // whenever libmad returns lost_sync error, there might be a id3 tag
 
-  struct id3_file *s = id3_file_open(this->Filename.c_str(), ID3_FILE_MODE_READONLY);
-  
-        if(s == nullptr)
-        {
-          return;
-        }
+    struct id3_file *s = id3_file_open(this->Filename.c_str(), ID3_FILE_MODE_READONLY);
 
-        struct id3_tag *t = id3_file_tag(s);
-        if(t == nullptr)
-        {
-                id3_file_close(s);
-                return;
-        }
-        
-                this->Metadata.Title = id3_get_tag(t, ID3_FRAME_TITLE);
-                this->Metadata.Artist = id3_get_tag(t, ID3_FRAME_ARTIST);
-                this->Metadata.Album = id3_get_tag(t, ID3_FRAME_ALBUM);
-                this->Metadata.Year = id3_get_tag(t, ID3_FRAME_YEAR);
-                this->Metadata.Genre = id3_get_tag(t, ID3_FRAME_GENRE);
-                this->Metadata.Track = id3_get_tag(t, ID3_FRAME_TRACK);
-                this->Metadata.Comment = id3_get_tag(t, ID3_FRAME_COMMENT);
-                
-            id3_file_close(s);
+    if(s == nullptr)
+    {
+        return;
+    }
+
+    struct id3_tag *t = id3_file_tag(s);
+    if(t == nullptr)
+    {
+        id3_file_close(s);
+        return;
+    }
+
+    this->Metadata.Title = id3_get_tag(t, ID3_FRAME_TITLE);
+    this->Metadata.Artist = id3_get_tag(t, ID3_FRAME_ARTIST);
+    this->Metadata.Album = id3_get_tag(t, ID3_FRAME_ALBUM);
+    this->Metadata.Year = id3_get_tag(t, ID3_FRAME_YEAR);
+    this->Metadata.Genre = id3_get_tag(t, ID3_FRAME_GENRE);
+    this->Metadata.Track = id3_get_tag(t, ID3_FRAME_TRACK);
+    this->Metadata.Comment = id3_get_tag(t, ID3_FRAME_COMMENT);
+
+    id3_file_close(s);
 }
 
 
 /* stolen from mpg321
- * 
+ *
  * Convenience for retrieving already formatted id3 data
  * what parameter is one of
  *  ID3_FRAME_TITLE
@@ -453,7 +453,7 @@ string LibMadWrapper::id3_get_tag (struct id3_tag const *tag, char const *what)
         strncat (printable, reinterpret_cast<char*>(latin1), tocopy);
         free (latin1);
     }
-    
+
     else
     {
         frame = id3_tag_findframe (tag, what, 0);
