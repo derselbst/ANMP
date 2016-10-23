@@ -146,7 +146,7 @@ public:
     virtual void buildMetadata () noexcept;
 
     /**
-     * returns an unsorted array of loops that could be found in this->Filename
+     * returns an unsorted array of loops that could be found in this->Filename. Its only valid to call this method while the song is this->open(). Though it may work after calling this->close().
      */
     virtual vector<loop_t> getLoopArray () const noexcept;
 
@@ -162,7 +162,7 @@ public:
 
 
     /**
-     * public helper method for building up the this->loopTree
+     * public helper method for building up the this->loopTree, by requesting looparrays via this->getLoopArray()
      */
     void buildLoopTree();
 

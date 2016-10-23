@@ -52,19 +52,43 @@ public:
 
     void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
     
+    vector<loop_t> getLoopArray () const noexcept override;
+    
 private:
         smf_t* smf = nullptr;
         fluid_settings_t* settings = nullptr;
         fluid_synth_t* synth = nullptr;
         fluid_sequencer_t* sequencer = nullptr;
         
-        short synthSeqId;
+        short synthSeqId, mySeqID;
+        
+        
+        struct MidiLoopInfo
+        {
+            // same as event->track_number, i.e. one based
+            int trackId;
+            int eventId;
+            uint8_t channel;
+            uint8_t loopId;
+            Nullable<double> start;
+            Nullable<double> stop;
+            uint8_t count = 0;
+        };
+        
+        // first dimension: no. of the midi track
+        // second dim: midi channel
+        // third dim: id of the loop within that track
+        vector< vector< vector<MidiLoopInfo> > > trackLoops;
+        
         
         static string SmfEventToString(smf_event_t* event);
+        static void scheduleTrackLoop(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data);
         
         void initAttr();
         void setupSettings();
         void setupSynth();
         void setupSeq();
 
+        int scheduleNextCallback(smf_event_t* event, unsigned int time, void* data);
+        void feedToFluidSeq(smf_event_t * event, fluid_event_t* fluidEvt, double offset);
 };

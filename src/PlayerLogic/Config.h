@@ -6,7 +6,11 @@
 /**
   * class Config
   * 
-  * for doc see Config.cpp
+  * holds configuration parameters that determine various aspects of how audio files are being decoded/played
+  * 
+  * if not stated else, these settings will take effect after the next call to Song::open() (assuming the Song was Song::close() before)
+  * 
+  * for var-specific doc see Config.cpp
   */
 
 struct Config
@@ -32,7 +36,6 @@ struct Config
     static bool RenderWholeSong;
     static bool useAudioNormalization;
 
-    static unsigned int defaultFadeTime;
     static unsigned int fadeTimeStop;
     static unsigned int fadeTimePause;
 
@@ -43,6 +46,9 @@ struct Config
     static unsigned int gmeSampleRate;
     static float gmeEchoDepth;
     static bool gmePlayForever;
+    
+    static uint8_t MidiControllerLoopStart;
+    static uint8_t MidiControllerLoopStop;
     
     static int FluidsynthPeriodSize;
     static bool FluidsynthEnableReverb;
