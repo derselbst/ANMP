@@ -424,6 +424,8 @@ void FluidsynthWrapper::close() noexcept
 //     delete_fluid_player(this->player);
 //     this->player = nullptr;
     
+    smf_delete(this->smf);
+    
     delete_fluid_sequencer(this->sequencer);
     this->sequencer = nullptr;
     
@@ -445,7 +447,7 @@ frame_t FluidsynthWrapper::getFrames () const
 }
 
 // HACK there seems to be some strange bug in fluidsynth:
-// whenever we ask the synth to render something else than exactly 64 frames, we get strange timed audio
+// whenever we ask the synth to render something else than exactly 64 frames, we get strangely timed audio
 // thus obtain the period size (?always? == 64) within this->open() and use this value instead of our Config::FramesToRender
 // by replacing Config::FramesToRender with Config::FluidsynthPeriodSize
 #define FramesToRender FluidsynthPeriodSize
