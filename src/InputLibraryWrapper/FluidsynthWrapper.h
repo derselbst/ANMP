@@ -66,6 +66,7 @@ private:
             // same as event->track_number, i.e. one based
             int trackId;
             int eventId;
+            uint8_t channel;
             uint8_t loopId;
             Nullable<double> start;
             Nullable<double> stop;
@@ -73,8 +74,9 @@ private:
         };
         
         // first dimension: no. of the midi track
-        // second dim: id of the loop within that track
-        vector<vector<MidiLoopInfo>> trackLoops;
+        // second dim: midi channel
+        // third dim: id of the loop within that track
+        vector< vector< vector<MidiLoopInfo> > > trackLoops;
         
         
         static string SmfEventToString(smf_event_t* event);
@@ -86,5 +88,5 @@ private:
         void setupSeq();
 
         int scheduleNextCallback(smf_event_t* event, unsigned int time, void* data);
-        void feedToFluidSeq(smf_event_t * event, fluid_event_t* fluidEvt);
+        void feedToFluidSeq(smf_event_t * event, fluid_event_t* fluidEvt, double offset);
 };

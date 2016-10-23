@@ -11,9 +11,11 @@
 #include <chrono>
 
 #define IsControlChange(e) ((e->midi_buffer[0] & 0xF0) == 0xB0)
-#define IsLoopStart(e) (IsControlChange(e) && (e->midi_buffer[1] == Config::MidiControllerLoopStart))
-#define IsLoopStop(e) (IsControlChange(e) && (e->midi_buffer[1] == Config::MidiControllerLoopStop))
+#define IsLoopStart(e) (e->midi_buffer[1] == Config::MidiControllerLoopStart)
+#define IsLoopStop(e) (e->midi_buffer[1] == Config::MidiControllerLoopStop)
 
+
+// d3961aec428adf4eec59c90f57fd93d890cf1499
 
 string FluidsynthWrapper::SmfEventToString(smf_event_t* event)
 {
@@ -50,24 +52,25 @@ void FluidsynthWrapper::scheduleTrackLoop(unsigned int time, fluid_event_t* e, f
     smf_event_t* event;
     while((event = smf_get_next_event(pthis->smf)) != nullptr)
     {
-        if(event->track_number == loopInfo->trackId)
+        if(event->track_number == loopInfo->trackId &&
+            (event->midi_buffer[0] & 0x0F) == loopInfo->channel)
         {
-            if(IsLoopStop(event))
+            if(IsControlChange(event) && IsLoopStop(event))
             {
-                int ret = pthis->scheduleNextCallback(event, time, loopInfo);
+                int ret = pthis->scheduleNextCallback(event, time-static_cast<unsigned int>(loopInfo->start.Value*1000), loopInfo);
                 if(ret != FLUID_OK)
                 {
                     CLOG(LogLevel::ERROR, "fluidsynth was unable to queue midi event");
                 }
               break;
             }
-            else if(IsLoopStart(event))
+            else if(IsControlChange(event) && IsLoopStart(event))
             {
                 continue;
             }
             else
             {
-                pthis->feedToFluidSeq(event, fluidEvt);
+                pthis->feedToFluidSeq(event, fluidEvt, loopInfo->start.Value);
             }
         }
     }
@@ -206,7 +209,10 @@ void FluidsynthWrapper::open ()
         this->fileLen = static_cast<size_t>(playtime * 1000);
         
         this->trackLoops.resize(this->smf->number_of_tracks);
-        
+        for(unsigned int i = 0; i<this->trackLoops.size(); i++)
+        {
+            this->trackLoops[i].resize(16);
+        }
         this->setupSynth();
         this->setupSeq();
     
@@ -229,7 +235,7 @@ void FluidsynthWrapper::open ()
                     continue;
                 }
  
-                this->feedToFluidSeq(event, fluidEvt);
+                this->feedToFluidSeq(event, fluidEvt, 0.0);
 
     } // end of while
     
@@ -254,7 +260,7 @@ int FluidsynthWrapper::scheduleNextCallback(smf_event_t* event, unsigned int tim
         return ret;
 }
 
-void FluidsynthWrapper::feedToFluidSeq(smf_event_t * event, fluid_event_t* fluidEvt)
+void FluidsynthWrapper::feedToFluidSeq(smf_event_t * event, fluid_event_t* fluidEvt, double offset)
 {
         int ret; // fluidsynths return value
         
@@ -277,8 +283,8 @@ void FluidsynthWrapper::feedToFluidSeq(smf_event_t * event, fluid_event_t* fluid
  
                  case 0xB0:
                  {
-                     vector<MidiLoopInfo>& loops = this->trackLoops[event->track_number-1 /*because one based*/];
-                     if(event->midi_buffer[1] == Config::MidiControllerLoopStart)
+                     vector<MidiLoopInfo>& loops = this->trackLoops[event->track_number-1 /*because one based*/][chan];
+                     if(IsLoopStart(event))
                      {                         
                          // zero-based
                          unsigned int loopId = event->midi_buffer[2];
@@ -292,6 +298,7 @@ void FluidsynthWrapper::feedToFluidSeq(smf_event_t * event, fluid_event_t* fluid
                          info.trackId = event->track_number;
                          info.loopId = loopId;
                          info.eventId = event->event_number;
+                         info.channel = chan;
                          
                          if(!info.start.hasValue) // avoid multiple sets
                          {
@@ -328,8 +335,9 @@ void FluidsynthWrapper::feedToFluidSeq(smf_event_t * event, fluid_event_t* fluid
                      else // just a usual control change
                      {
                         fluid_event_control_change(fluidEvt, chan, event->midi_buffer[1], event->midi_buffer[2]);
-                        CLOG(LogLevel::DEBUG, "Controller, channel " << chan << ", controller " << static_cast<int>(event->midi_buffer[1]) << ", value " << static_cast<int>(event->midi_buffer[2]));
                      }
+                     
+                     CLOG(LogLevel::DEBUG, "Controller, channel " << chan << ", controller " << static_cast<int>(event->midi_buffer[1]) << ", value " << static_cast<int>(event->midi_buffer[2]));
                  }
                  break;
  
@@ -358,7 +366,7 @@ void FluidsynthWrapper::feedToFluidSeq(smf_event_t * event, fluid_event_t* fluid
                      return;
                 }
                     
-               ret = fluid_sequencer_send_at(this->sequencer, fluidEvt, static_cast<unsigned int>(event->time_seconds*1000), true);
+               ret = fluid_sequencer_send_at(this->sequencer, fluidEvt, static_cast<unsigned int>((event->time_seconds-offset)*1000) + fluid_sequencer_get_tick(this->sequencer), true);
                
                CHECK_RETURN_VALUE:
                 if(ret != FLUID_OK)
