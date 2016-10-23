@@ -44,9 +44,6 @@ bool Config::useLoopInfo = true;
 // play each and every loop that many time, -1 will ignore this setting
 int Config::overridingGlobalLoopCount = -1;
 
-// time in milliseconds to fade out a song (before it ends), if supported by the underlying WrapperLib
-unsigned int Config::defaultFadeTime = 3500;
-
 // time in milliseconds to fade out a song when the user hits stop
 unsigned int Config::fadeTimeStop = 3500;
 

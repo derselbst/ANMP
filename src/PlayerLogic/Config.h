@@ -36,7 +36,6 @@ struct Config
     static bool RenderWholeSong;
     static bool useAudioNormalization;
 
-    static unsigned int defaultFadeTime;
     static unsigned int fadeTimeStop;
     static unsigned int fadeTimePause;
 
