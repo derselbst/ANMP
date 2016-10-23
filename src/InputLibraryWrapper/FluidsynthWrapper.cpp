@@ -375,55 +375,8 @@ void FluidsynthWrapper::feedToFluidSeq(smf_event_t * event, fluid_event_t* fluid
                 }
 }
 
-// #include "fluid_player_private.h"
-
-// void FluidsynthWrapper::dryRun()
-// {
-//     fluid_player_t* localPlayer = new_fluid_player(this->synth);
-// 
-//     fluid_player_add(localPlayer, this->Filename.c_str());
-// 
-//     // setup a custom midi handler, that just returns, so no midievents are being sent to fluid's synth
-//     // we just need playtime of that midi, no synthesizing, no voices, NOTHING ELSE!
-//     fluid_player_set_playback_callback(localPlayer,
-//                                        [](void* data, fluid_midi_event_t* event) -> int { (void)data;(void)event;return FLUID_OK; },
-//                                        this->synth);
-//     
-//     /* play the midi files, if any */
-//     fluid_player_play(localPlayer);
-//     
-//     constexpr short chan = 2;
-//     float left[Config::FramesToRender];
-//     float right[Config::FramesToRender];
-//     float* buf[chan]={left, right};
-//     
-//     while (fluid_player_get_status(localPlayer) == FLUID_PLAYER_PLAYING)
-//     {
-//       if (fluid_synth_process(this->synth, Config::FramesToRender, 0, nullptr, chan, buf) != FLUID_OK)
-//       {
-//         break;
-//       }
-//     }
-//     
-//     this->fileLen = localPlayer->cur_msec - localPlayer->begin_msec;
-//     
-//     
-//     /* wait for playback termination */
-//     fluid_player_join(localPlayer);
-//     /* cleanup */
-//     delete_fluid_player(localPlayer);
-// }
-
 void FluidsynthWrapper::close() noexcept
-{
-//   if(this->player != nullptr)
-//   {
-//     fluid_player_stop(this->player);
-//     fluid_player_join(this->player);
-//   }
-//     delete_fluid_player(this->player);
-//     this->player = nullptr;
-    
+{    
     smf_delete(this->smf);
     
     delete_fluid_sequencer(this->sequencer);
