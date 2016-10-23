@@ -413,25 +413,32 @@ vector<loop_t> FluidsynthWrapper::getLoopArray () const noexcept
     
     
     for(unsigned int t=0; t<this->trackLoops.size(); t++)
+    {
         for(unsigned int c=0; c<this->trackLoops[t].size(); c++)
+        {
             for(unsigned int l=0; l<this->trackLoops[t][c].size(); l++)
             {
                 const MidiLoopInfo& info = this->trackLoops[t][c][l];
                 
-                if(max == nullptr)
+                if(info.start.hasValue && info.stop.hasValue)
                 {
-                    max = &info;
-                    continue;
-                }
-                
-                double duration = info.stop.Value - info.start.Value;
-                double durationMax = max->stop.Value - max->start.Value;
-                
-                if(durationMax < duration)
-                {
-                    max=&info;
+                    double duration = info.stop.Value - info.start.Value;
+                    if(max == nullptr)
+                    {
+                        max = &info;
+                    }
+                    else
+                    {
+                        double durationMax = max->stop.Value - max->start.Value;
+                        if(durationMax < duration)
+                        {
+                            max=&info;
+                        }
+                    }
                 }
             }
+        }
+    }
             
             vector<loop_t> loopArr;
             
