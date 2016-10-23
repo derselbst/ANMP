@@ -15,7 +15,20 @@
 #define IsLoopStop(e) (e->midi_buffer[1] == Config::MidiControllerLoopStop)
 
 
-// d3961aec428adf4eec59c90f57fd93d890cf1499
+/** This class got pretty complex. want to see an easier form? Goto git commit d3961aec428adf4eec59c90f57fd93d890cf1499
+ *
+ * Things we are doing here:
+ *
+ *  1. use libsmf to retrieve midi events from a midi file
+ *  2. feed these event to fluidsynth's sequencer (fluidseq)
+ *  3. fluidseq manages an internal queue. on every call to fluid_synth_process(), fluidsynth pops these events from the queue and synthesize them
+ *
+ * during 1) we observe the event sucked from a midi file. if we spot a MIDI CC102 (or 103), we've detected a midi track loop. so here we have to make sure,
+ * that fluidsynth calls us back whenever we reach the end of such a track loop
+ *
+ * TODO: this class should actually be split up into handling the bare SMF part and an extra synthesizer class 
+ */
+
 
 string FluidsynthWrapper::SmfEventToString(smf_event_t* event)
 {
