@@ -52,6 +52,8 @@ public:
 
     void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
     
+    vector<loop_t> getLoopArray () const noexcept override;
+    
 private:
         smf_t* smf = nullptr;
         fluid_settings_t* settings = nullptr;

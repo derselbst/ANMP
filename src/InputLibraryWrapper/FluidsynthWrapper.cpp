@@ -377,7 +377,11 @@ void FluidsynthWrapper::feedToFluidSeq(smf_event_t * event, fluid_event_t* fluid
 
 void FluidsynthWrapper::close() noexcept
 {    
-    smf_delete(this->smf);
+    if(this->smf != nullptr)
+    {
+        smf_delete(this->smf);
+        this->smf = nullptr;
+    }
     
     delete_fluid_sequencer(this->sequencer);
     this->sequencer = nullptr;
@@ -397,6 +401,51 @@ void FluidsynthWrapper::fillBuffer()
 frame_t FluidsynthWrapper::getFrames () const
 {
     return msToFrames(this->fileLen.Value, this->Format.SampleRate);
+}
+
+
+vector<loop_t> FluidsynthWrapper::getLoopArray () const noexcept
+{
+    // so, here we are, having a bunch of individually looped midi tracks (maybe)
+    // somehow trying to put those loops together so that we find a valid master loop within the generated PCM
+    
+    const MidiLoopInfo* max = nullptr;
+    
+    
+    for(unsigned int t=0; t<this->trackLoops.size(); t++)
+        for(unsigned int c=0; c<this->trackLoops[t].size(); c++)
+            for(unsigned int l=0; l<this->trackLoops[t][c].size(); l++)
+            {
+                const MidiLoopInfo& info = this->trackLoops[t][c][l];
+                
+                if(max == nullptr)
+                {
+                    max = &info;
+                    continue;
+                }
+                
+                double duration = info.stop.Value - info.start.Value;
+                double durationMax = max->stop.Value - max->start.Value;
+                
+                if(durationMax < duration)
+                {
+                    max=&info;
+                }
+            }
+            
+            vector<loop_t> loopArr;
+            
+            if(max != nullptr)
+            {
+                loop_t l;
+                l.start = ::msToFrames(static_cast<size_t>(max->start.Value*1000), this->Format.SampleRate);
+                l.stop = ::msToFrames(static_cast<size_t>(max->stop.Value*1000), this->Format.SampleRate);
+                l.count = max->count;
+                
+                loopArr.push_back(l);
+            }
+            
+            return loopArr;
 }
 
 // HACK there seems to be some strange bug in fluidsynth:
