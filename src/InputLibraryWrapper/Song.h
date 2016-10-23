@@ -162,7 +162,7 @@ public:
 
 
     /**
-     * public helper method for building up the this->loopTree
+     * public helper method for building up the this->loopTree, by requesting looparrays via this->getLoopArray()
      */
     void buildLoopTree();
 

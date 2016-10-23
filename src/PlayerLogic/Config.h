@@ -6,7 +6,11 @@
 /**
   * class Config
   * 
-  * for doc see Config.cpp
+  * holds configuration parameters that determine various aspects of how audio files are being decoded/played
+  * 
+  * if not stated else, these settings will take effect after the next call to Song::open() (assuming the Song was Song::close() before)
+  * 
+  * for var-specific doc see Config.cpp
   */
 
 struct Config

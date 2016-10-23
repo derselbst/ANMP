@@ -10,6 +10,7 @@
 //**********************************
 
 // indicates the default audio driver to use
+// you have to call Player::initAudio() for changes to take effect
 AudioDriver_t Config::audioDriver = AudioDriver_t::ALSA;
 
 // number of frames that are pushed to audioDriver during each run AND minimum no. of frames
