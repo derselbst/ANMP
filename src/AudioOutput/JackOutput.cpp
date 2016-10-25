@@ -154,7 +154,7 @@ void JackOutput::close()
     }
 }
 
-int JackOutput::write (float* buffer, frame_t frames)
+int JackOutput::write (const float* buffer, frame_t frames)
 {
     if(this->interleavedProcessedBuffer.ready)
     {
@@ -197,9 +197,9 @@ template<typename T> void JackOutput::getAmplifiedFloatBuffer(const T* inBuf, fl
     }
 }
 
-int JackOutput::doResampling(float* inBuf, const size_t Frames)
+int JackOutput::doResampling(const float* inBuf, const size_t Frames)
 {
-    this->srcData.data_in = inBuf;
+    this->srcData.data_in = /*const_cast<float*>*/(inBuf);
     this->srcData.input_frames = Frames;
 
     // this is not the last buffer passed to src
@@ -244,7 +244,7 @@ int JackOutput::doResampling(float* inBuf, const size_t Frames)
     return this->srcData.input_frames_used;
 }
 
-template<typename T> int JackOutput::write (T* buffer, frame_t frames)
+template<typename T> int JackOutput::write (const T* buffer, frame_t frames)
 {
     if(this->interleavedProcessedBuffer.ready)
     {
@@ -265,12 +265,12 @@ template<typename T> int JackOutput::write (T* buffer, frame_t frames)
 
 }
 
-int JackOutput::write (int16_t* buffer, frame_t frames)
+int JackOutput::write (const int16_t* buffer, frame_t frames)
 {
     return this->write<int16_t>(buffer, frames);
 }
 
-int JackOutput::write (int32_t* buffer, frame_t frames)
+int JackOutput::write (const int32_t* buffer, frame_t frames)
 {
     return this->write<int32_t>(buffer, frames);
 }

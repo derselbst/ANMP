@@ -96,7 +96,7 @@ void ebur128Output::close()
     this->framesWritten = 0;
 }
 
-int ebur128Output::write (float* buffer, frame_t frames)
+int ebur128Output::write (const float* buffer, frame_t frames)
 {
     int ret = ebur128_add_frames_float(this->handle, buffer, frames);
 
@@ -109,17 +109,17 @@ int ebur128Output::write (float* buffer, frame_t frames)
     THROW_RUNTIME_ERROR("ebur128: out of memory or something else");
 }
 
-int ebur128Output::write (int16_t* buffer, frame_t frames)
+int ebur128Output::write (const int16_t* buffer, frame_t frames)
 {
     int ret = ~EBUR128_SUCCESS;
 
     if(sizeof(short)==sizeof(int16_t))
     {
-        ret = ebur128_add_frames_short(this->handle, reinterpret_cast<short*>(buffer), frames);
+        ret = ebur128_add_frames_short(this->handle, reinterpret_cast<const short*>(buffer), frames);
     }
     else if(sizeof(int)==sizeof(int16_t))
     {
-        ret = ebur128_add_frames_int(this->handle, reinterpret_cast<int*>(buffer), frames);
+        ret = ebur128_add_frames_int(this->handle, reinterpret_cast<const int*>(buffer), frames);
     }
 
     if(ret == EBUR128_SUCCESS)
@@ -131,17 +131,17 @@ int ebur128Output::write (int16_t* buffer, frame_t frames)
     THROW_RUNTIME_ERROR("ebur128: out of memory or something else");
 }
 
-int ebur128Output::write (int32_t* buffer, frame_t frames)
+int ebur128Output::write (const int32_t* buffer, frame_t frames)
 {
     int ret = ~EBUR128_SUCCESS;
 
     if(sizeof(short)==sizeof(int32_t))
     {
-        ret = ebur128_add_frames_short(this->handle, reinterpret_cast<short*>(buffer), frames);
+        ret = ebur128_add_frames_short(this->handle, reinterpret_cast<const short*>(buffer), frames);
     }
     else if(sizeof(int)==sizeof(int32_t))
     {
-        ret = ebur128_add_frames_int(this->handle, reinterpret_cast<int*>(buffer), frames);
+        ret = ebur128_add_frames_int(this->handle, reinterpret_cast<const int*>(buffer), frames);
     }
 
     if(ret == EBUR128_SUCCESS)

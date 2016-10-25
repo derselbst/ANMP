@@ -35,11 +35,11 @@ public:
 
     void close () override;
 
-    int write (float* buffer, frame_t frames) override;
+    int write (const float* buffer, frame_t frames) override;
 
-    int write (int16_t* buffer, frame_t frames) override;
+    int write (const int16_t* buffer, frame_t frames) override;
 
-    int write (int32_t* buffer, frame_t frames) override;
+    int write (const int32_t* buffer, frame_t frames) override;
 
     void start () override;
     void stop () override;
@@ -73,9 +73,9 @@ private:
     static void onJackShutdown(void* arg);
     static int onJackBufSizeChanged(jack_nframes_t nframes, void *arg);
 
-    template<typename T> int write(T* buffer, frame_t frames);
+    template<typename T> int write(const T* buffer, frame_t frames);
     template<typename T> void getAmplifiedFloatBuffer(const T* inBuf, float* outBuf, const size_t Items);
-    int doResampling(float* inBuf, const size_t Frames);
+    int doResampling(const float* inBuf, const size_t Frames);
     void connectPorts();
 };
 

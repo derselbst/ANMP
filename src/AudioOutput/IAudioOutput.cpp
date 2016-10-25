@@ -16,27 +16,27 @@ void IAudioOutput::setVolume(float vol)
 }
 
 // takes care of pointer arithmetic
-int IAudioOutput::write (pcm_t* frameBuffer, frame_t frames, int offset)
+int IAudioOutput::write (const pcm_t* frameBuffer, frame_t frames, int offset)
 {
     switch (this->currentSampleFormat)
     {
     case float32:
     {
-        float* buf = static_cast<float*>(frameBuffer);
+        const float* buf = static_cast<const float*>(frameBuffer);
         buf += offset;
         return this->write(buf, frames);
         break;
     }
     case int16:
     {
-        int16_t* buf = static_cast<int16_t*>(frameBuffer);
+        const int16_t* buf = static_cast<const int16_t*>(frameBuffer);
         buf += offset;
         return this->write(buf, frames);
         break;
     }
     case int32:
     {
-        int32_t* buf = static_cast<int32_t*>(frameBuffer);
+        const int32_t* buf = static_cast<const int32_t*>(frameBuffer);
         buf += offset;
         return this->write(buf, frames);
         break;

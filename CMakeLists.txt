@@ -70,7 +70,7 @@ endif(ENABLE_ALSA)
 
 if(ENABLE_JACK)
   PKG_CHECK_MODULES(JACK jack)
-  PKG_CHECK_MODULES(SRC samplerate)
+  PKG_CHECK_MODULES(SRC samplerate>=0.1.9)# due to constness of SRC_DATA::data_in
   
   if(JACK_FOUND AND SRC_FOUND)
         add_definitions(-DUSE_JACK)

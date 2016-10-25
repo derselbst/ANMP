@@ -78,7 +78,7 @@ void WaveOutput::close()
     this->framesWritten = 0;
 }
 
-int WaveOutput::write (float* buffer, frame_t frames)
+int WaveOutput::write (const float* buffer, frame_t frames)
 {
     int ret = fwrite(buffer, sizeof(float), frames * this->currentChannelCount, this->handle);
     ret /= this->currentChannelCount;
@@ -87,7 +87,7 @@ int WaveOutput::write (float* buffer, frame_t frames)
     return ret;
 }
 
-int WaveOutput::write (int16_t* buffer, frame_t frames)
+int WaveOutput::write (const int16_t* buffer, frame_t frames)
 {
     int ret = fwrite(buffer, sizeof(int16_t), frames * this->currentChannelCount, this->handle);
     ret /= this->currentChannelCount;
@@ -96,7 +96,7 @@ int WaveOutput::write (int16_t* buffer, frame_t frames)
     return ret;
 }
 
-int WaveOutput::write (int32_t* buffer, frame_t frames)
+int WaveOutput::write (const int32_t* buffer, frame_t frames)
 {
     int ret = fwrite(buffer, sizeof(int32_t), frames * this->currentChannelCount, this->handle);
     ret /= this->currentChannelCount;

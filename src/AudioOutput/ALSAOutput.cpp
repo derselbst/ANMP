@@ -216,22 +216,22 @@ void ALSAOutput::close()
     }
 }
 
-int ALSAOutput::write (float* buffer, frame_t frames)
+int ALSAOutput::write (const float* buffer, frame_t frames)
 {
     return this->write<float>(buffer, frames);
 }
 
-int ALSAOutput::write (int16_t* buffer, frame_t frames)
+int ALSAOutput::write (const int16_t* buffer, frame_t frames)
 {
     return this->write<int16_t>(buffer, frames);
 }
 
-int ALSAOutput::write (int32_t* buffer, frame_t frames)
+int ALSAOutput::write (const int32_t* buffer, frame_t frames)
 {
     return this->write<int32_t>(buffer, frames);
 }
 
-template<typename T> int ALSAOutput::write(T* buffer, frame_t frames)
+template<typename T> int ALSAOutput::write(const T* buffer, frame_t frames)
 {
     const int items = frames*this->currentChannelCount;
     T* processedBuffer = new T[items];

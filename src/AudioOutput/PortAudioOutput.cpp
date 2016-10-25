@@ -111,22 +111,22 @@ void PortAudioOutput::close()
     }
 }
 
-int PortAudioOutput::write (float* buffer, frame_t frames)
+int PortAudioOutput::write (const float* buffer, frame_t frames)
 {
     return this->write<float>(buffer, frames);
 }
 
-int PortAudioOutput::write (int16_t* buffer, frame_t frames)
+int PortAudioOutput::write (const int16_t* buffer, frame_t frames)
 {
     return this->write<int16_t>(buffer, frames);
 }
 
-int PortAudioOutput::write (int32_t* buffer, frame_t frames)
+int PortAudioOutput::write (const int32_t* buffer, frame_t frames)
 {
     return this->write<int32_t>(buffer, frames);
 }
 
-template<typename T> int PortAudioOutput::write(T* buffer, frame_t frames)
+template<typename T> int PortAudioOutput::write(const T* buffer, frame_t frames)
 {
     if(this->handle == nullptr)
     {

@@ -93,7 +93,7 @@ public:
      *
      * @warning you can return a number smaller "frames" (but greater 0), however this case cannot always be recovered. you should better return 0 and play nothing, if you face such a problem.
      */
-    virtual int write (pcm_t* frameBuffer, frame_t frames, int offset);
+    virtual int write (const pcm_t* frameBuffer, frame_t frames, int offset);
 
 
 protected:
@@ -121,15 +121,15 @@ protected:
      * @param  buffer buffer that holds the pcm
      * @param  frames no. of frames to be played from the buffer
      *
-     * @note buffer has to contain (frames*this->currentChannelCount) items, i.e. sizeof(buffer)==(frames*this->currentChannelCount*sizeof(DataTypePointedToByBuffer))
+     * @note buffer has to contain (frames*this->currentChannelCount) items, i.e. sizeof(*buffer)==(frames*this->currentChannelCount*sizeof(DataTypePointedToByBuffer))
      *
      * @return number of frames successfully pushed to underlying audio driver. if this is zero, nothing was played and the caller may try again, after waiting 1ms or so.
      *
      * @warning you can return a number smaller "frames" (but greater 0), however this case can only berecovered, if the whole song is hold in memory. you should better return 0 and play nothing, if you face such a problem.
      */
-    virtual int write (float* buffer, frame_t frames) = 0;
-    virtual int write (int16_t* buffer, frame_t frames) = 0;
-    virtual int write (int32_t* buffer, frame_t frames) = 0;
+    virtual int write (const float* buffer, frame_t frames) = 0;
+    virtual int write (const int16_t* buffer, frame_t frames) = 0;
+    virtual int write (const int32_t* buffer, frame_t frames) = 0;
 
 };
 

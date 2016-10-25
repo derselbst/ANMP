@@ -34,11 +34,11 @@ public:
 
     void close () override;
 
-    int write (float* buffer, frame_t frames) override;
+    int write (const float* buffer, frame_t frames) override;
 
-    int write (int16_t* buffer, frame_t frames) override;
+    int write (const int16_t* buffer, frame_t frames) override;
 
-    int write (int32_t* buffer, frame_t frames) override;
+    int write (const int32_t* buffer, frame_t frames) override;
 
     void start () override;
     void stop () override;
