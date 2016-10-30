@@ -17,31 +17,12 @@ public:
     ~ConfigDialog();
 
 private slots:
-    void on_checkRenderWhole_clicked(bool checked);
-
-    void on_checkAudioNorm_clicked(bool checked);
-
-    void on_spinPreRenderTime_valueChanged(int arg1);
-
-    void on_checkLoopInfo_clicked(bool checked);
-
-    void on_spinLoopCount_valueChanged(int arg1);
-
-    void on_spinFadeStop_valueChanged(int arg1);
-
-    void on_spinFadePause_valueChanged(int arg1);
-
-    void on_usfUseHle_clicked(bool checked);
-
-    void on_spinGmeSfx_valueChanged(double arg1);
-
-    void on_spinGmeSampleRate_valueChanged(int arg1);
-
-    void on_checkGmeAccurate_clicked(bool checked);
-
-    void on_checkGmeForever_clicked(bool checked);
 
     void on_comboBoxAudioDriver_currentIndexChanged(int index);
+
+    void on_browseSF2_clicked();
+
+    void on_buttonBox_accepted();
 
 private:
     Ui::ConfigDialog *ui;

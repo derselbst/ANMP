@@ -3,6 +3,8 @@
 
 #include "Config.h"
 
+#include <QFileDialog>
+
 ConfigDialog::ConfigDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ConfigDialog)
@@ -26,77 +28,30 @@ ConfigDialog::ConfigDialog(QWidget *parent) :
     this->ui->spinFadeStop->setValue(Config::fadeTimeStop);
     this->ui->spinLoopCount->setValue(Config::overridingGlobalLoopCount);
 
-    this->ui->usfUseHle->setChecked(Config::useHle);
+    this->ui->checkUsfHle->setChecked(Config::useHle);
 
     this->ui->spinGmeSampleRate->setValue(Config::gmeSampleRate);
     this->ui->spinGmeSfx->setValue(Config::gmeEchoDepth);
     this->ui->checkGmeAccurate->setChecked(Config::gmeAccurateEmulation);
     this->ui->checkGmeForever->setChecked(Config::gmePlayForever);
+
+    this->ui->checkChorus->setChecked(Config::FluidsynthEnableChorus);
+
+    this->ui->spinFluidSampleRate->setValue(Config::FluidsynthSampleRate);
+    this->ui->checkMultiChannel->setChecked(Config::FluidsynthMultiChannel);
+    this->ui->defaultSF2Path->setText(QString::fromStdString(Config::FluidsynthDefaultSoundfont));
+    this->ui->checkForceDefaultSf->setChecked(Config::FluidsynthForceDefaultSoundfont);
+    this->ui->checkReverb->setChecked(Config::FluidsynthEnableReverb);
+    this->ui->spinRoomSize->setValue(Config::FluidsynthRoomSize);
+    this->ui->spinDamping->setValue(Config::FluidsynthDamping);
+    this->ui->spinWidth->setValue(Config::FluidsynthWidth);
+    this->ui->spinLevel->setValue(Config::FluidsynthLevel);
+    this->ui->checkChorus->setChecked(Config::FluidsynthEnableChorus);
 }
 
 ConfigDialog::~ConfigDialog()
 {
     delete ui;
-}
-
-void ConfigDialog::on_checkRenderWhole_clicked(bool checked)
-{
-    Config::RenderWholeSong = checked;
-}
-
-void ConfigDialog::on_checkAudioNorm_clicked(bool checked)
-{
-    Config::useAudioNormalization = checked;
-}
-
-void ConfigDialog::on_spinPreRenderTime_valueChanged(int arg1)
-{
-    Config::PreRenderTime = static_cast<unsigned int>(arg1);
-}
-
-void ConfigDialog::on_checkLoopInfo_clicked(bool checked)
-{
-    Config::useLoopInfo = checked;
-}
-
-void ConfigDialog::on_spinLoopCount_valueChanged(int arg1)
-{
-    Config::overridingGlobalLoopCount = arg1;
-}
-
-void ConfigDialog::on_spinFadeStop_valueChanged(int arg1)
-{
-    Config::fadeTimeStop = arg1;
-}
-
-void ConfigDialog::on_spinFadePause_valueChanged(int arg1)
-{
-    Config::fadeTimePause = arg1;
-}
-
-void ConfigDialog::on_usfUseHle_clicked(bool checked)
-{
-    Config::useHle = checked;
-}
-
-void ConfigDialog::on_spinGmeSfx_valueChanged(double arg1)
-{
-    Config::gmeEchoDepth = static_cast<float>(arg1);
-}
-
-void ConfigDialog::on_spinGmeSampleRate_valueChanged(int arg1)
-{
-    Config::gmeSampleRate = arg1;
-}
-
-void ConfigDialog::on_checkGmeAccurate_clicked(bool checked)
-{
-    Config::gmeAccurateEmulation = checked;
-}
-
-void ConfigDialog::on_checkGmeForever_clicked(bool checked)
-{
-    Config::gmePlayForever = checked;
 }
 
 void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
@@ -143,4 +98,42 @@ void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
         this->ui->checkAudioNorm->setEnabled(true);
         break;
     }
+}
+
+void ConfigDialog::on_browseSF2_clicked()
+{
+    QString sf2 = QFileDialog::getOpenFileName(this, "Select Soundfont");
+
+    this->ui->defaultSF2Path->setText(sf2);
+}
+
+void ConfigDialog::on_buttonBox_accepted()
+{
+    Config::RenderWholeSong = this->ui->checkRenderWhole->isChecked();
+    Config::useAudioNormalization = this->ui->checkAudioNorm->isChecked();
+    Config::PreRenderTime = static_cast<unsigned int>(this->ui->spinPreRenderTime->value());
+
+    Config::useLoopInfo = this->ui->checkLoopInfo->isChecked();
+    Config::overridingGlobalLoopCount = this->ui->spinLoopCount->value();
+    Config::fadeTimeStop = this->ui->spinFadeStop->value();
+    Config::fadeTimePause = this->ui->spinFadePause->value();
+
+    Config::useHle = this->ui->checkUsfHle->isChecked();
+
+    Config::gmeEchoDepth = static_cast<float>(this->ui->spinGmeSfx->value());
+    Config::gmeSampleRate = static_cast<unsigned int>(this->ui->spinGmeSampleRate->value());
+    Config::gmeAccurateEmulation = this->ui->checkGmeAccurate->isChecked();
+    Config::gmePlayForever = this->ui->checkGmeForever->isChecked();
+
+    Config::FluidsynthSampleRate = static_cast<unsigned int>(this->ui->spinFluidSampleRate->value());
+    Config::FluidsynthMultiChannel = this->ui->checkMultiChannel->isChecked();
+    Config::FluidsynthDefaultSoundfont = this->ui->defaultSF2Path->text().toUtf8().constData();
+    Config::FluidsynthForceDefaultSoundfont = this->ui->checkForceDefaultSf->isChecked();
+    Config::FluidsynthEnableReverb = this->ui->checkReverb->isChecked();
+    Config::FluidsynthRoomSize = this->ui->spinRoomSize->value();
+    Config::FluidsynthDamping = this->ui->spinDamping->value();
+    Config::FluidsynthWidth = this->ui->spinWidth->value();
+    Config::FluidsynthLevel = this->ui->spinLevel->value();
+    Config::FluidsynthEnableChorus = this->ui->checkChorus->isChecked();
+
 }
