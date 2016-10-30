@@ -71,14 +71,14 @@ public:
 
     /**
      * sets the playback volume
-     * @param vol volume [0;100]
+     * @param vol volume usually ranged [0.0,1.0]
      */
     virtual void setVolume(float vol);
 
     /**
-     * pushes the pcm pointed to by frameBuffer to the underlying audio driver and by that causes it to play
+     * pushes the pcm pointed to by frameBuffer to the underlying audio driver
      *
-     * this generic version also takes care of pointer arithmetic
+     * this generic version only takes care of pointer arithmetic, passing the call on to the specific write() methods below
      *
      * @param  frameBuffer buffer that holds the pcm
      * @param  frames no. of frames to be played from the buffer
@@ -102,7 +102,7 @@ protected:
     SampleFormat_t currentSampleFormat = SampleFormat_t::unknown;
 
 
-    // the current volume [0,1.0] to use
+    // the current volume [0,1.0] to use, i.e. a factor by that the PCM gets amplified.
     // mark this as volatile so the compiler doesnt come up with:
     // "oh, this member isnt modified in the current scope. lets put it to a register, while using this var inside a loop again and again."
     // volatile here hopefully forces that each read actually happens through memory (I dont worry too much about hardware caching here)

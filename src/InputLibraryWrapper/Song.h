@@ -21,7 +21,8 @@ using namespace std;
   * workflow:
   *    need to support a new audio format?
   *    -> find a library that supports decoding this format!
-  *    -> to make this library usable for ANMP: write a wrapper class by deriving this class, implementing all abstract methods
+  *    -> to make this library usable for ANMP: write a wrapper class by deriving this class (or StandardWrapper), implementing all abstract methods
+  *    -> update PlaylistFactory accordinly to use the newly written wrapper lib
   *    -> listen audio and enjoy
   */
 class Song
@@ -67,7 +68,7 @@ public:
     // indicates the data type of the raw decoded pcm
     SongFormat Format;
 
-    // how many items (i.e. floats, int16s, etc.) are there in data?
+    // how many items (i.e. floats, int16s, etc.) are there in this->data?
     size_t count = 0;
 
     // a tree, that holds the loops to be played
@@ -147,12 +148,16 @@ public:
 
     /**
      * returns an unsorted array of loops that could be found in this->Filename. Its only valid to call this method while the song is this->open(). Though it may work after calling this->close().
+     * 
+     * the song has no loops? --> return an empty vector
      */
     virtual vector<loop_t> getLoopArray () const noexcept;
 
 
     /**
-     * returns the number of frames this song lasts, they dont necessarily have to be in the pcm buffer all at one time
+     * gets the number of audio frames that are necessary to play the whole song once without respecting any loops!
+     * 
+     * those frames dont necessarily have to be in the pcm buffer all at one time
      *
      * this method mustn't return zero!
      *

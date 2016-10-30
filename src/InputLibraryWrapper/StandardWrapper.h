@@ -14,7 +14,7 @@
   * @brief provides common ways of opening, loading and decoding an audio file
   *
   * - automatically normalizes audio during rendering (if provided with an *.ebur128 file)
-  * - decides whether to render whole song to memory at once or not
+  * - decides whether to render the whole song to memory at once or not and allocates the pcm buffer (this->data) accordingly
   *
   */
 
