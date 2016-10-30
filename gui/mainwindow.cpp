@@ -603,6 +603,13 @@ void MainWindow::on_actionSettings_triggered()
     {
         this->player->initAudio();
     }
+    else
+    {
+        Config::audioDriver = oldDriver;
+    }
+
+    delete this->settingsView;
+    this->settingsView = nullptr;
 }
 
 void MainWindow::on_actionShuffle_Playst_triggered()
