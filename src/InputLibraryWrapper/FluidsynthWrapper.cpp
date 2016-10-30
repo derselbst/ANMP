@@ -182,7 +182,14 @@ void FluidsynthWrapper::setupSettings()
         fluid_settings_setnum(this->settings, "synth.sample-rate", Config::FluidsynthSampleRate);
         double srate;
         fluid_settings_getnum(this->settings, "synth.sample-rate", &srate);
-        this->Format.SampleRate = static_cast<unsigned int>(srate);
+        
+        if(this->Format.SampleRate != srate)
+        {
+            // the sample rate may have changed, if requested by user
+            this->Format.SampleRate = srate;
+            // so we have to build up the loop tree again
+            this->buildLoopTree();
+        }
 
         int stereoChannels = Config::FluidsynthMultiChannel ? 16 : 1;
         fluid_settings_setint(this->settings, "synth.audio-groups",    stereoChannels);
