@@ -39,6 +39,8 @@ bool Song::isPlayable () noexcept
   */
 void Song::buildLoopTree ()
 {
+    this->loopTree.clear();
+    
     loop_t root;
     root.start = 0;
     root.stop = this->getFrames();
