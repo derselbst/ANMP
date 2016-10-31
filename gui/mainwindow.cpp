@@ -154,62 +154,66 @@ MainWindow::~MainWindow()
 
 void MainWindow::createShortcuts()
 {
+#define SHORTCUT(KEYSEQ) QShortcut(KEYSEQ, this, nullptr, nullptr, Qt::ApplicationShortcut)
+
     // PLAY PAUSE STOP SHORTS
-    QShortcut *playShortcut = new QShortcut(QKeySequence(Qt::Key_MediaPlay), this);
+    QShortcut *playShortcut = new SHORTCUT(QKeySequence(Qt::Key_MediaPlay));
     connect(playShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPause);
 
-    playShortcut = new QShortcut(QKeySequence(Qt::Key_Space), this);
+    playShortcut = new SHORTCUT(QKeySequence(Qt::Key_Space));
     connect(playShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPause);
 
-    playShortcut = new QShortcut(QKeySequence(Qt::Key_F4), this);
+    playShortcut = new SHORTCUT(QKeySequence(Qt::Key_F4));
     connect(playShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPause);
 
-    QShortcut *pauseFadeShortcut = new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_F4), this);
+    QShortcut *pauseFadeShortcut = new SHORTCUT(QKeySequence(Qt::SHIFT + Qt::Key_F4));
     connect(pauseFadeShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPauseFade);
 
-    QShortcut *stopFadeShortcut = new QShortcut(QKeySequence(Qt::SHIFT + Qt::Key_F5), this);
+    QShortcut *stopFadeShortcut = new SHORTCUT(QKeySequence(Qt::SHIFT + Qt::Key_F5));
     connect(stopFadeShortcut, &QShortcut::activated, this, &MainWindow::stopFade);
 
-    QShortcut *stopShortcut = new QShortcut(QKeySequence(Qt::Key_F5), this);
+    QShortcut *stopShortcut = new SHORTCUT(QKeySequence(Qt::Key_F5));
     connect(stopShortcut, &QShortcut::activated, this, &MainWindow::stop);
 
     // CHANGE CURRENT SONG SHORTS
-    QShortcut *nextShortcut = new QShortcut(QKeySequence(Qt::Key_MediaNext), this);
+    QShortcut *nextShortcut = new SHORTCUT(QKeySequence(Qt::Key_MediaNext));
     connect(nextShortcut, &QShortcut::activated, this, &MainWindow::on_actionNext_Song_triggered);
 
-    nextShortcut = new QShortcut(QKeySequence(Qt::Key_F8), this);
+    nextShortcut = new SHORTCUT(QKeySequence(Qt::Key_F8));
     connect(nextShortcut, &QShortcut::activated, this, &MainWindow::on_actionNext_Song_triggered);
 
-    QShortcut *prevShortcut = new QShortcut(QKeySequence(Qt::Key_MediaPrevious), this);
+    QShortcut *prevShortcut = new SHORTCUT(QKeySequence(Qt::Key_MediaPrevious));
     connect(prevShortcut, &QShortcut::activated, this, &MainWindow::on_actionPrevious_Song_triggered);
 
-    prevShortcut = new QShortcut(QKeySequence(Qt::Key_F1), this);
+    prevShortcut = new SHORTCUT(QKeySequence(Qt::Key_F1));
     connect(prevShortcut, &QShortcut::activated, this, &MainWindow::on_actionPrevious_Song_triggered);
 
     // SEEK SHORTCUTS
-    QShortcut *seekForward = new QShortcut(QKeySequence(Qt::Key_Right), this);
+    QShortcut *seekForward = new SHORTCUT(QKeySequence(Qt::Key_Right));
     connect(seekForward, &QShortcut::activated, this, &MainWindow::seekForward);
 
-    seekForward = new QShortcut(QKeySequence(Qt::Key_F6), this);
+    seekForward = new SHORTCUT(QKeySequence(Qt::Key_F6));
     connect(seekForward, &QShortcut::activated, this, &MainWindow::seekForward);
 
-    QShortcut *seekBackward = new QShortcut(QKeySequence(Qt::Key_Left), this);
+    QShortcut *seekBackward = new SHORTCUT(QKeySequence(Qt::Key_Left));
     connect(seekBackward, &QShortcut::activated, this, &MainWindow::seekBackward);
 
-    seekBackward = new QShortcut(QKeySequence(Qt::Key_F3), this);
+    seekBackward = new SHORTCUT(QKeySequence(Qt::Key_F3));
     connect(seekBackward, &QShortcut::activated, this, &MainWindow::seekBackward);
 
-    QShortcut *fastSeekForward = new QShortcut(QKeySequence(Qt::ALT + Qt::Key_Right), this);
+    QShortcut *fastSeekForward = new SHORTCUT(QKeySequence(Qt::ALT + Qt::Key_Right));
     connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::fastSeekForward);
 
-    fastSeekForward = new QShortcut(QKeySequence(Qt::Key_F7), this);
+    fastSeekForward = new SHORTCUT(QKeySequence(Qt::Key_F7));
     connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::fastSeekForward);
 
-    QShortcut *fastSeekBackward = new QShortcut(QKeySequence(Qt::ALT + Qt::Key_Left), this);
+    QShortcut *fastSeekBackward = new SHORTCUT(QKeySequence(Qt::ALT + Qt::Key_Left));
     connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::fastSeekBackward);
 
-    fastSeekBackward = new QShortcut(QKeySequence(Qt::Key_F2), this);
+    fastSeekBackward = new SHORTCUT(QKeySequence(Qt::Key_F2));
     connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::fastSeekBackward);
+
+#undef SHORTCUT
 }
 
 void MainWindow::buildFileBrowser()
