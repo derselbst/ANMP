@@ -183,7 +183,7 @@ void Player::_setCurrentSong (Song* song)
         this->_pause();
         this->currentSong = song;
     }
-    else if(song != this->currentSong)
+    else /*if(song != this->currentSong) 2016-10-31: always update*/
     {
         // capture format of former current song
         SongFormat oldformat;
