@@ -112,8 +112,8 @@ vector<loop_t> VGMStreamWrapper::getLoopArray () const noexcept
             CLOG(LogLevel::WARNING, "\"" << this->Filename << "\" specifies the end of loop past the end of file. The loop was truncated to the last frame available." << endl)
         }
 
-        //TODO let the user adjust loopcount
-        l.count = 2;
+        // this will always be an infinite loop
+        l.count = 0;
         res.push_back(l);
     }
 
