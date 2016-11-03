@@ -8,12 +8,16 @@
 #  LIBSAMPLERATE_FOUND          Set to TRUE if libsamplerate librarys and include directory is found
 #  LIBSAMPLERATE_LIBRARY        The libsamplerate librarys
 #  LIBSAMPLERATE_INCLUDE_DIR    The libsamplerate include directory
+#  LIBSAMPLERATE_DEFINITIONS    cflags and so
 
 find_package(PkgConfig)
-pkg_check_modules(PC_LIBSAMPLERATE QUIET libsamplerate)
+    if (PKG_CONFIG_FOUND)
+	pkg_check_modules(PC_LIBSAMPLERATE QUIET samplerate>=0.1.9)# due to constness of SRC_DATA::data_in
+    endif (PKG_CONFIG_FOUND)
+    
 set(LIBSAMPLERATE_DEFINITIONS ${PC_LIBSAMPLERATE_CFLAGS_OTHER})
 
-find_library(LIBSAMPLERATE_LIBRARY NAMES samplerate libsamplerate-0 samplerate-0
+find_library(LIBSAMPLERATE_LIBRARY NAMES samplerate libsamplerate
 				HINTS ${PC_LIBSAMPLERATE_LIBDIR} ${PC_LIBSAMPLERATE_LIBRARY_DIRS})
 
 find_path(LIBSAMPLERATE_INCLUDE_DIR samplerate.h
