@@ -81,9 +81,11 @@ void AnalyzerApplet::setAnalyzer(AnalyzerType type )
     /* fall through */
     case Block:
         this->analyzerWidget = new BlockAnalyzer(this);
+        this->setWindowTitle("Block Analyzer");
         break;
     case Ascii:
         this->analyzerWidget = new ASCIIAnalyzer(this);
+        this->setWindowTitle("ASCII Analyzer");
         break;
     }
 
