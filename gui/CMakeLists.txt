@@ -34,17 +34,18 @@ if(USE_GUI)
     # should add all necessary compile and link flags
     qt5_use_modules(${PROJECT_NAME} Core OpenGL)
 
-    target_link_libraries(${PROJECT_NAME}
-        anmp
-        ${LD_FLAGS}
-    )
-    
     if(USE_VISUALIZER)
         # name of libraries that will be build in the applets subdir
         SET(LIBANAL analyzer)
         add_subdirectory(applets)
-        target_link_libraries(${PROJECT_NAME}  ${LIBANAL})
+        target_link_libraries(${PROJECT_NAME} ${LIBANAL})
     endif(USE_VISUALIZER)
+    
+    
+    target_link_libraries(${PROJECT_NAME}
+        anmp
+        ${LD_FLAGS}
+    )
     
     install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif(USE_GUI)
