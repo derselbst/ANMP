@@ -146,7 +146,11 @@ MainWindow::~MainWindow()
     this->player->onIsPlayingChanged -= this;
 
     delete this->settingsView;
+    
+#ifdef USE_VISUALIZER
     delete this->analyzerWindow;
+#endif
+    
     delete this->ui;
     delete this->player;
     delete this->playlistModel;
@@ -527,20 +531,29 @@ void MainWindow::fastSeekBackward()
 
 void MainWindow::on_actionBlocky_triggered()
 {
+#ifdef USE_VISUALIZER
     delete this->analyzerWindow;
     this->analyzerWindow = new AnalyzerApplet(this->player, this);
     this->analyzerWindow->setAnalyzer(AnalyzerApplet::AnalyzerType::Block);
     this->analyzerWindow->startGraphics();
     this->analyzerWindow->show();
+#else
+    this->showNoVisualizer();
+#endif
 }
 
 void MainWindow::on_actionASCII_triggered()
 {
+#ifdef USE_VISUALIZER
     delete this->analyzerWindow;
     this->analyzerWindow = new AnalyzerApplet(this->player, this);
     this->analyzerWindow->setAnalyzer(AnalyzerApplet::AnalyzerType::Ascii);
     this->analyzerWindow->startGraphics();
     this->analyzerWindow->show();
+#else
+    this->showNoVisualizer();
+#endif
+    
 }
 
 void MainWindow::on_forwardButton_clicked()
@@ -646,3 +659,14 @@ void MainWindow::on_actionReinit_AudioDriver_triggered()
 {
     this->player->initAudio();
 }
+
+#ifndef USE_VISUALIZER
+void MainWindow::showNoVisualizer()
+{
+    QMessageBox msgBox;
+    msgBox.setText("Unsupported");
+    msgBox.setIcon(QMessageBox::Information);
+    msgBox.setDetailedText("ANMP was built without Qt5OpenGL. No visualizers available.");
+    msgBox.exec();
+}
+#endif

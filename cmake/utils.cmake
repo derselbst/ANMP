@@ -72,16 +72,17 @@ endmacro()
 macro(MY_FIND_PKG prefix pkgname)
     find_package(${pkgname})
 
-    if(${prefix}_LIBRARIES)
-        set(${prefix}_FOUND TRUE)
+    HANDLE_FOUND(prefix)
+endmacro()
+
+
+macro(HANDLE_FOUND prefix)
+    if(${prefix}_FOUND)
     
-        add_definitions(-DUSE_${prefix})
         set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${${prefix}_INCLUDE_DIR} ${${prefix}_INCLUDE_DIRS})
                 
         set(LD_FLAGS ${LD_FLAGS} ${${prefix}_LIBRARIES})
         
         MY_PRINT(${prefix})
-    else(${prefix}_LIBRARIES)
-        set(${prefix}_FOUND FALSE)
-    endif(${prefix}_LIBRARIES)
+    endif(${prefix}_FOUND)
 endmacro()

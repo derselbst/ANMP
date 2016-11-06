@@ -62,30 +62,34 @@ option(ENABLE_PORTAUDIO "Compile with support to use PortAudio for playback" ON)
 option(ENABLE_EBUR128 "Enable support for noise normalization through libebur128" ON)
 
 if(ENABLE_ALSA)
-  MY_FIND_PKG(ALSA ALSA)
+  find_package(ALSA)
+  HANDLE_FOUND(ALSA)
   
-  summary_add("ALSA support" ALSA_FOUND)
+  if(ALSA_FOUND)
+        add_definitions(-DUSE_ALSA)
+        set(USE_ALSA TRUE)
+        
+  endif(ALSA_FOUND)
+  
+  summary_add("ALSA support" USE_ALSA)
 endif(ENABLE_ALSA)
 
 
 if(ENABLE_JACK)
-  PKG_CHECK_MODULES(JACK jack)
-  PKG_CHECK_MODULES(SRC samplerate>=0.1.9)# due to constness of SRC_DATA::data_in
+  find_package(Jack)
+  HANDLE_FOUND(JACK)
   
-  if(JACK_FOUND AND SRC_FOUND)
+  find_package(LibSamplerate)
+  HANDLE_FOUND(LIBSAMPLERATE)
+  
+  if(JACK_FOUND AND LIBSAMPLERATE_FOUND)
         add_definitions(-DUSE_JACK)
-        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${JACK_INCLUDE_DIRS})
-        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${SRC_INCLUDE_DIRS})
-        set(LD_FLAGS ${LD_FLAGS} ${JACK_LIBRARIES})
-        set(LD_FLAGS ${LD_FLAGS} ${SRC_LIBRARIES})
+        set(USE_JACK TRUE)
         
-        MY_PRINT(JACK)
-        MY_PRINT(SRC)
-        
-        summary_add("Jack support" TRUE)
-  else(JACK_FOUND AND SRC_FOUND)
-        summary_add("Jack support" FALSE)
-  endif(JACK_FOUND AND SRC_FOUND)
+  endif(JACK_FOUND AND LIBSAMPLERATE_FOUND)
+  
+  
+  summary_add("Jack support" USE_JACK)
         
 endif(ENABLE_JACK)
 
@@ -95,13 +99,14 @@ if(ENABLE_PORTAUDIO)
   
   if(PORTAUDIO_FOUND)
         add_definitions(-DUSE_PORTAUDIO)
+        set(USE_PORTAUDIO TRUE)
         set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${PORTAUDIO_INCLUDE_DIRS})
         set(LD_FLAGS ${LD_FLAGS} ${PORTAUDIO_LIBRARIES})
         
         MY_PRINT(PORTAUDIO)
   endif(PORTAUDIO_FOUND)
         
-    summary_add("PortAudio support" PORTAUDIO_FOUND)
+    summary_add("PortAudio support" USE_PORTAUDIO)
 endif(ENABLE_PORTAUDIO)
 
 
@@ -183,9 +188,15 @@ endif(ENABLE_VGMSTREAM)
 
 
 if(ENABLE_FFMPEG)
-  MY_FIND_PKG(FFMPEG FFmpeg)
+  find_package(FFmpeg)
+  HANDLE_FOUND(FFMPEG)
   
-  summary_add("FFmpeg support" FFMPEG_FOUND)
+  if(FFMPEG_FOUND)
+    set(USE_FFMPEG TRUE)
+    add_definitions(-DUSE_FFMPEG)
+  endif(FFMPEG_FOUND)
+  
+  summary_add("FFmpeg support" USE_FFMPEG)
 endif(ENABLE_FFMPEG)
 
 
@@ -221,6 +232,7 @@ endif(ENABLE_FLUIDSYNTH)
 ##################################
 option(ENABLE_CUE "Enable support for loading cue sheets" ON)
 option(ENABLE_GUI "Enable building the QT GUI" ON)
+option(ENABLE_VISUALIZER "Enable nice blinky audio visualizers" ON)
 
 if(ENABLE_CUE)
   PKG_CHECK_MODULES(LIBCUE libcue)
@@ -238,32 +250,50 @@ endif(ENABLE_CUE)
 
 
 if(ENABLE_GUI)
-    # Qt library
-    MY_FIND_PKG(Qt5Core Qt5Core)
-    
-    MY_FIND_PKG(Qt5OpenGL Qt5OpenGL)
 
-    # OpenGL & GLEW library
-    MY_FIND_PKG(OPENGL OpenGL)
-    
-    # Executables fail to build with Qt 5 in the default configuration
-    # without -fPIE. We add that here.
-#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS}")
-    
-    # We need add -DQT_WIDGETS_LIB when using QtWidgets in Qt 5.
-#     add_definitions(${Qt5Widgets_DEFINITIONS})
-
-    # TODO: this is very ugly, any easier way??
+    find_package(Qt5Widgets)
+    HANDLE_FOUND(Qt5Widgets)
+   
     if(${Qt5Widgets_FOUND})
-        if(${OPENGL_FOUND})
-            if(${Qt5OpenGL_FOUND})
-                set(QT5_FOUND TRUE)
-            endif(${Qt5OpenGL_FOUND})
-        endif(${OPENGL_FOUND})
+        set(USE_GUI TRUE)
+        add_definitions(-DUSE_GUI)
+        
+        # We need add -DQT_WIDGETS_LIB when using QtWidgets in Qt 5.
+        add_definitions(${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS})
+        
+        MY_PRINT(QT5CORE)
+
     endif(${Qt5Widgets_FOUND})
     
-    summary_add("QT GUI support" QT5_FOUND)
+    summary_add("QT GUI support" USE_GUI)
 endif(ENABLE_GUI)
+
+
+if(ENABLE_VISUALIZER)
+
+  if(NOT USE_GUI)
+     message(STATUS "cannot use visualizers when not building gui")
+     
+  else(NOT USE_GUI)
+  
+    find_package(Qt5OpenGL)
+    HANDLE_FOUND(Qt5OpenGL)
+
+    # OpenGL & GLEW library
+    find_package(OpenGL)
+    HANDLE_FOUND(OPENGL)
+    
+    if(Qt5OpenGL_FOUND AND OPENGL_FOUND)
+        set(USE_VISUALIZER TRUE)
+        add_definitions(-DUSE_VISUALIZER)
+    endif(Qt5OpenGL_FOUND AND OPENGL_FOUND)
+    
+  endif(NOT USE_GUI)
+  
+  
+    summary_add("Audio Visualizer support" USE_VISUALIZER)
+  
+endif(ENABLE_VISUALIZER)
 
 
 message("")

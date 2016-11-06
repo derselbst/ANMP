@@ -5,7 +5,7 @@
 #
 # This module defines:
 #
-#  FFMPEG_INCLUDE_DIR, where to find avformat.h, avcodec.h...
+#  FFMPEG_INCLUDE_DIRS, where to find avformat.h, avcodec.h...
 #  FFMPEG_LIBRARIES, the libraries to link against to use FFMPEG.
 #  FFMPEG_FOUND, If false, do not try to use FFMPEG.
 #
@@ -87,7 +87,7 @@ if(FFMPEG_INCLUDE_DIR1 AND
    FFMPEG_INCLUDE_DIR3 AND
    FFMPEG_INCLUDE_DIR4
 )
-  set(FFMPEG_INCLUDE_DIR ${FFMPEG_INCLUDE_DIR1}
+  set(FFMPEG_INCLUDE_DIRS ${FFMPEG_INCLUDE_DIR1}
                          ${FFMPEG_INCLUDE_DIR2}
                          ${FFMPEG_INCLUDE_DIR3}
                          ${FFMPEG_INCLUDE_DIR4}
@@ -126,8 +126,8 @@ find_library(FFMPEG_swresample_LIBRARY swresample
   /usr/lib${CMAKE_LIBDIR_SUFFIX}
 )
 
-if(FFMPEG_INCLUDE_DIR)
-  if(FFMPEG_avformat_LIBRARY AND
+if(  FFMPEG_INCLUDE_DIRS AND
+     FFMPEG_avformat_LIBRARY AND
      FFMPEG_avcodec_LIBRARY AND
      FFMPEG_avutil_LIBRARY AND
      FFMPEG_swresample_LIBRARY
@@ -138,6 +138,5 @@ if(FFMPEG_INCLUDE_DIR)
                          ${FFMPEG_avutil_LIBRARY}
                          ${FFMPEG_swresample_LIBRARY}
     )
-  endif()
 endif()
 

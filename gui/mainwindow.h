@@ -46,7 +46,10 @@ private:
     const float SeekFast = 0.1;
 
     Ui::MainWindow *ui = nullptr;
+#ifdef USE_VISUALIZER
     AnalyzerApplet * analyzerWindow = nullptr;
+#endif
+    
     ConfigDialog * settingsView = nullptr;
 
     PlaylistModel* playlistModel = new PlaylistModel(this);
@@ -60,6 +63,10 @@ private:
     void createShortcuts();
 
     void relativeSeek(int ms);
+    
+#ifndef USE_VISUALIZER
+    void showNoVisualizer();
+#endif
 
 
 private slots:
