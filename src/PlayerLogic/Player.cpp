@@ -395,7 +395,7 @@ void Player::_seekTo (frame_t frame)
         // negative frame not allowed for playhead, silently set it to 0
         frame = 0;
     }
-    else if(this->currentSong == nullptr || frame > this->currentSong->getFrames()-Config::FramesToRender)
+    else if(this->currentSong == nullptr || frame >= this->currentSong->getFrames())
     {
         return;
     }
