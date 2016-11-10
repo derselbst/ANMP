@@ -42,9 +42,9 @@ void LibSNDWrapper::open ()
     }
 
     memset(&sfinfo, 0, sizeof (sfinfo));
-    if (!(this->sndfile = sf_open (this->Filename.c_str(), SFM_READ, &sfinfo)))
+    if ( (this->sndfile = sf_open (this->Filename.c_str(), SFM_READ, &sfinfo))==nullptr )
     {
-        THROW_RUNTIME_ERROR(sf_strerror (NULL) << " (in File \"" << this->Filename << ")\"");
+        THROW_RUNTIME_ERROR(sf_strerror (nullptr) << " (in File \"" << this->Filename << ")\"");
     };
 
     if (sfinfo.channels < 1 || sfinfo.channels > 6)
@@ -188,7 +188,7 @@ frame_t LibSNDWrapper::getFrames () const
 
 void LibSNDWrapper::buildMetadata() noexcept
 {
-#define READ_METADATA(name, id) if(sf_get_string(this->sndfile, id) != nullptr) name = string(sf_get_string(this->sndfile, id))
+#define READ_METADATA(name, id) if(sf_get_string(this->sndfile, id) != nullptr) (name = string(sf_get_string(this->sndfile, id)))
 
     READ_METADATA (this->Metadata.Title, SF_STR_TITLE);
     READ_METADATA (this->Metadata.Artist, SF_STR_ARTIST);
