@@ -14,7 +14,7 @@ class IPlaylist
 public:
 
     // Empty virtual destructor for proper cleanup
-    virtual ~IPlaylist() {};
+    virtual ~IPlaylist() = default;
 
 
     /**
