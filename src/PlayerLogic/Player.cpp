@@ -348,21 +348,21 @@ void Player::fadeout (unsigned int fadeTime)
     }
 
     float vol = 0.0f;
-    for(unsigned int timePast=0; timePast <= fadeTime; timePast++)
+    for(float timePast=0.0; timePast <= fadeTime; timePast++)
     {
         switch (3)
         {
         case 1:
             // linear
-            vol =  1.0f - ((float)timePast / (float)fadeTime);
+            vol =  1.0f - (timePast / fadeTime);
             break;
         case 2:
             // logarithmic
-            vol = 1.0f - pow(0.1, (1 - ((float)timePast / (float)fadeTime)) * 1);
+            vol = 1.0f - pow(0.1, (1 - (timePast / fadeTime)) * 1);
             break;
         case 3:
             // sine
-            vol =  1.0f - sin( ((float)timePast / (float)fadeTime) * M_PI / 2 );
+            vol =  1.0f - sin( (timePast / fadeTime) * M_PI / 2 );
             break;
         }
 
@@ -468,7 +468,7 @@ void Player::playLoop (core::tree<loop_t>& loop)
         uint32_t mycount = Config::overridingGlobalLoopCount!=-1 ? Config::overridingGlobalLoopCount : (*(*subloop)).count;
         bool forever = mycount==0;
         mycount += 1; // +1 because the subloop we are just going to play, should be played one additional time by the parent of subloop (i.e. the loop we are currently in)
-        while(this->isPlaying && (forever || mycount--))
+        while(this->isPlaying && (forever || mycount-- != 0u))
         {
             // if we play this loop multiple time, make sure we start at the beginning again
             this->_seekTo((*(*subloop)).start);
