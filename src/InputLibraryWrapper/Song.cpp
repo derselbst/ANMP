@@ -18,10 +18,6 @@ Song::Song(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLe
 {
 }
 
-Song::~Song ()
-{
-
-}
 
 /**
   * called to check whether the current song is playable or not

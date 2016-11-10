@@ -36,7 +36,7 @@ protected:
 public:
 
     // empty virtual destructor for proper cleanup
-    virtual ~Song();
+    virtual ~Song() = default;
 
     // forbid copying
     Song(Song const&) = delete;
