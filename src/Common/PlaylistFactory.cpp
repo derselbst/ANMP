@@ -50,11 +50,6 @@ extern "C"
 
 
 #ifdef USE_CUE
-/**
- * @param  playlist
- * @param  filePath
- * @param  offset
- */
 
 void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
 {
@@ -314,6 +309,3 @@ l_LIBMAD:
 
     return true;
 }
-
-
-

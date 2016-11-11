@@ -14,6 +14,7 @@ class IPlaylist;
 /**
   * class PlaylistFactory
   *
+  * a helper class to aid filling up a playlist
   */
 
 class PlaylistFactory
@@ -29,11 +30,19 @@ public:
 
 
     /**
-     * @param  playlist
-     * @param  filePath
-     * @param  offset
+     * try to add a song to the playlist
+     * 
+     * @param  playlist the playlist object the songs get added to
+     * @param  filePath full path to an audio file on your HDD
+     * @param  offset see Song::fileOffset
+     * @param  len see Song::fileLen
+     * @param  overridingMetadata not the metadata from Song::buildMetadata() but the metadata specified here will be used
      */
-    static bool addSong (IPlaylist& playlist, const string filePath, Nullable<size_t> offset = Nullable<size_t>(), Nullable<size_t> len = Nullable<size_t>(), Nullable<SongInfo> overridingMetadata = Nullable<SongInfo>());
+    static bool addSong (IPlaylist& playlist,
+                         const string filePath,
+                         Nullable<size_t> offset = Nullable<size_t>(),
+                         Nullable<size_t> len = Nullable<size_t>(),
+                         Nullable<SongInfo> overridingMetadata = Nullable<SongInfo>());
 
 #ifdef USE_CUE
     static void parseCue (IPlaylist& playlist, const string&filePath);
