@@ -18,6 +18,8 @@ if(USE_GUI)
         configdialog.cpp
         main.cpp
         mainwindow.cpp
+        mainwindow.slots.cpp
+        mainwindow.callback.cpp
         overlaycontrol.cpp
         PlaylistModel.cpp
         PlaylistView.cpp

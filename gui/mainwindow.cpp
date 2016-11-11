@@ -1,3 +1,7 @@
+/**
+ * this file contains the gui logic of anmp's main window
+ */
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "applets/analyzer/AnalyzerApplet.h"
@@ -19,106 +23,6 @@
 #include <utility>      // std::pair
 #include <cmath>
 
-void MainWindow::callbackIsPlayingChanged(void* context, bool isPlaying, Nullable<string> msg)
-{
-    MainWindow* ctx = static_cast<MainWindow*>(context);
-    QMetaObject::invokeMethod( ctx, "slotIsPlayingChanged", Qt::QueuedConnection, Q_ARG(bool, isPlaying), Q_ARG(bool, msg.hasValue), Q_ARG(QString, QString::fromStdString(msg.Value)));
-}
-
-void MainWindow::callbackSeek(void* context, frame_t pos)
-{
-    MainWindow* ctx = static_cast<MainWindow*>(context);
-    QMetaObject::invokeMethod( ctx, "slotSeek", Qt::QueuedConnection, Q_ARG(long long, pos ) );
-}
-
-void MainWindow::callbackCurrentSongChanged(void * context)
-{
-    MainWindow* ctx = static_cast<MainWindow*>(context);
-    QMetaObject::invokeMethod( ctx, "slotCurrentSongChanged", Qt::QueuedConnection);
-}
-
-void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, QString msg)
-{
-
-    QPushButton* playbtn = this->ui->playButton;
-    bool oldState = playbtn->blockSignals(true);
-    if(isPlaying)
-    {
-        playbtn->setChecked(true);
-    }
-    else
-    {
-        playbtn->setChecked(false);
-    }
-
-    playbtn->blockSignals(oldState);
-
-    if(hasMsg)
-    {
-        QMessageBox msgBox;
-        msgBox.setText("The Playback unexpectedly stopped.");
-        msgBox.setIcon(QMessageBox::Critical);
-        msgBox.setDetailedText(msg);
-        msgBox.exec();
-    }
-}
-
-void MainWindow::slotSeek(long long pos)
-{
-    QSlider* playheadSlider = this->ui->seekBar;
-    bool oldState = playheadSlider->blockSignals(true);
-    playheadSlider->setSliderPosition(pos);
-    playheadSlider->blockSignals(oldState);
-
-    const Song* s = this->player->getCurrentSong();
-    if(s==nullptr)
-    {
-        return;
-    }
-
-    string temp;
-    {
-        temp = framesToTimeStr(pos,s->Format.SampleRate);
-        QString strTimePast = QString::fromStdString(temp);
-        this->ui->labelTimePast->setText(strTimePast);
-    }
-
-    {
-        temp = framesToTimeStr(s->getFrames()-pos, s->Format.SampleRate);
-        QString strTimeLeft = QString("-") + QString::fromStdString(temp);
-        this->ui->labelTimeLeft->setText(strTimeLeft);
-    }
-}
-
-void MainWindow::slotCurrentSongChanged()
-{
-    QSlider* playheadSlider = this->ui->seekBar;
-
-    const Song* s = this->player->getCurrentSong();
-    if(s==nullptr)
-    {
-        this->setWindowTitle("ANMP");
-
-        bool oldState = playheadSlider->blockSignals(true);
-        playheadSlider->setSliderPosition(0);
-        playheadSlider->setMaximum(0);
-        playheadSlider->blockSignals(oldState);
-    }
-    else
-    {
-        QString title = QString::fromStdString(s->Metadata.Title);
-        QString interpret = QString::fromStdString(s->Metadata.Artist);
-        if(title == "" || interpret == "")
-        {
-            this->setWindowTitle(QString::fromStdString(s->Filename) + " :: ANMP");
-        }
-        else
-        {
-            this->setWindowTitle(interpret + " - " + title  + " :: ANMP");
-        }
-        playheadSlider->setMaximum(s->getFrames());
-    }
-}
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -311,107 +215,19 @@ void MainWindow::resizeEvent(QResizeEvent* event)
     QMainWindow::resizeEvent(event);
 }
 
-void MainWindow::on_actionAdd_Songs_triggered()
+void MainWindow::showAnalyzer(enum AnalyzerApplet::AnalyzerType type)
 {
-    const QString dir;
-    const QStringList fileNames = QFileDialog::getOpenFileNames(this, "Open Audio Files", dir, "");//Wave Files (*.wav);;Text Files (*.txt)
-
-    QProgressDialog progress("Adding files...", "Abort", 0, fileNames.count(), this);
-    progress.setWindowModality(Qt::WindowModal);
-    progress.show();
-    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
-    for(int i=0; !progress.wasCanceled() && i<fileNames.count(); i++)
-    {
-        // only redraw progress dialog on every tenth song
-        if(i%(static_cast<int>(fileNames.count()*0.1)+1)==0)
-        {
-            progress.setValue(i);
-            QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
-        }
-
-        PlaylistFactory::addSong(*this->playlistModel, fileNames.at(i).toUtf8().constData());
-    }
-
-    progress.setValue(fileNames.count());
+#ifdef USE_VISUALIZER
+    delete this->analyzerWindow;
+    this->analyzerWindow = new AnalyzerApplet(this->player, this);
+    this->analyzerWindow->setAnalyzer(type);
+    this->analyzerWindow->startGraphics();
+    this->analyzerWindow->show();
+#else
+    this->showNoVisualizer();
+#endif
 }
 
-void MainWindow::on_actionPlay_triggered()
-{
-    this->play();
-}
-
-void MainWindow::on_actionStop_triggered()
-{
-    this->stop();
-}
-
-void MainWindow::on_actionPause_triggered()
-{
-    this->pause();
-}
-
-void MainWindow::on_actionNext_Song_triggered()
-{
-    this->next();
-}
-
-void MainWindow::on_actionPrevious_Song_triggered()
-{
-    this->previous();
-}
-
-void MainWindow::on_actionClear_Playlist_triggered()
-{
-    this->stop();
-    this->player->setCurrentSong(nullptr);
-    this->playlistModel->clear();
-}
-
-void MainWindow::on_treeView_clicked(const QModelIndex &index)
-{
-    if(!index.isValid())
-    {
-        return;
-    }
-    QString sPath = drivesModel->fileInfo(index).absoluteFilePath();
-    ui->listView->setRootIndex(filesModel->setRootPath(sPath));
-}
-
-
-void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
-{
-    if(!index.isValid())
-    {
-        return;
-    }
-    this->stop();
-    Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
-    this->player->setCurrentSong(songToPlay);
-    this->play();
-
-}
-
-void MainWindow::on_tableView_activated(const QModelIndex &index)
-{
-    if(!index.isValid())
-    {
-        return;
-    }
-    this->stop();
-    Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
-    this->player->setCurrentSong(songToPlay);
-    this->play();
-}
-
-void MainWindow::on_playButton_toggled(bool)
-{
-    this->tooglePlayPause();
-}
-
-void MainWindow::on_stopButton_clicked()
-{
-    this->stop();
-}
 
 void MainWindow::tooglePlayPause()
 {
@@ -484,11 +300,6 @@ void MainWindow::previous()
     }
 }
 
-void MainWindow::on_seekBar_sliderMoved(int position)
-{
-    this->player->seekTo(position);
-}
-
 void MainWindow::relativeSeek(int relpos)
 {
     const Song* s = this->player->getCurrentSong();
@@ -529,144 +340,3 @@ void MainWindow::fastSeekBackward()
     this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekFast), Config::FramesToRender));
 }
 
-void MainWindow::on_actionBlocky_triggered()
-{
-#ifdef USE_VISUALIZER
-    delete this->analyzerWindow;
-    this->analyzerWindow = new AnalyzerApplet(this->player, this);
-    this->analyzerWindow->setAnalyzer(AnalyzerApplet::AnalyzerType::Block);
-    this->analyzerWindow->startGraphics();
-    this->analyzerWindow->show();
-#else
-    this->showNoVisualizer();
-#endif
-}
-
-void MainWindow::on_actionASCII_triggered()
-{
-#ifdef USE_VISUALIZER
-    delete this->analyzerWindow;
-    this->analyzerWindow = new AnalyzerApplet(this->player, this);
-    this->analyzerWindow->setAnalyzer(AnalyzerApplet::AnalyzerType::Ascii);
-    this->analyzerWindow->startGraphics();
-    this->analyzerWindow->show();
-#else
-    this->showNoVisualizer();
-#endif
-    
-}
-
-void MainWindow::on_forwardButton_clicked()
-{
-    this->seekForward();
-}
-
-void MainWindow::on_fforwardButton_clicked()
-{
-    this->fastSeekForward();
-}
-
-void MainWindow::on_nextButton_clicked()
-{
-    this->next();
-}
-
-void MainWindow::on_previousButton_clicked()
-{
-    this->previous();
-}
-
-void MainWindow::on_fbackwardButton_clicked()
-{
-    this->fastSeekBackward();
-}
-
-void MainWindow::on_backwardButton_clicked()
-{
-    this->seekBackward();
-}
-
-void MainWindow::on_actionAdd_Playback_Stop_triggered()
-{
-    this->playlistModel->add(nullptr);
-}
-
-void MainWindow::on_actionFileBrowser_triggered(bool checked)
-{
-    if(checked)
-    {
-        this->ui->treeView->show();
-        this->ui->listView->show();
-    }
-    else
-    {
-        this->ui->treeView->hide();
-        this->ui->listView->hide();
-    }
-}
-
-void MainWindow::on_actionSettings_triggered()
-{
-    if(this->settingsView == nullptr)
-    {
-        this->settingsView = new ConfigDialog(this);
-    }
-
-    AudioDriver_t oldDriver = Config::audioDriver;
-
-    int ret = this->settingsView->exec();
-
-    if(ret == QDialog::Accepted && oldDriver != Config::audioDriver)
-    {
-        this->player->initAudio();
-    }
-    else
-    {
-        Config::audioDriver = oldDriver;
-    }
-
-    delete this->settingsView;
-    this->settingsView = nullptr;
-}
-
-void MainWindow::on_actionShuffle_Playst_triggered()
-{
-    QItemSelection indexList = this->ui->tableView->selectionModel()->selection();
-
-    if(indexList.empty())
-    {
-        this->playlistModel->shuffle(0, this->playlistModel->rowCount(this->playlistModel->index(0,0)));
-    }
-    else
-    {
-        for(QItemSelection::const_iterator i=indexList.cbegin(); i!=indexList.cend(); ++i)
-        {
-            int top = i->top();
-            int btm = i->bottom();
-
-            QModelIndex b = this->playlistModel->index(btm,0);
-            QModelIndex t = this->playlistModel->index(top,0);
-
-            if(b.isValid() && t.isValid())
-            {
-                this->playlistModel->shuffle(min(top, btm), max(top, btm));
-            }
-        }
-    }
-}
-
-void MainWindow::on_actionReinit_AudioDriver_triggered()
-{
-    this->player->initAudio();
-}
-
-#ifndef USE_VISUALIZER
-void MainWindow::showNoVisualizer()
-{
-    QMessageBox msgBox;
-    msgBox.setText("Unsupported");
-    msgBox.setIcon(QMessageBox::Information);
-    msgBox.setDetailedText("ANMP was built without Qt5OpenGL. No visualizers available.");
-    msgBox.exec();
-}
-#endif

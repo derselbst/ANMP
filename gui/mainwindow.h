@@ -6,7 +6,7 @@
 #include "IPlaylist.h"
 #include "Playlist.h"
 #include "PlaylistModel.h"
-
+#include "applets/analyzer/AnalyzerApplet.h"
 
 #include <QStringList>
 #include <QStandardItemModel>
@@ -103,6 +103,7 @@ private slots:
     void stopFade();
     void previous();
     void next();
+    void showAnalyzer(enum AnalyzerApplet::AnalyzerType type);
 
     void on_actionBlocky_triggered();
     void on_actionASCII_triggered();
