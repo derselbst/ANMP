@@ -115,8 +115,6 @@ bool Player::getIsPlaying()
     return this->isPlaying;
 }
 
-/**
- */
 void Player::play ()
 {
     if (this->isPlaying)
@@ -128,11 +126,15 @@ void Player::play ()
 
     if(this->currentSong==nullptr)
     {
+        // maybe we are uninitialized. ask playlist to be sure
         Song* s=this->playlist->current();
-        this->setCurrentSong(s);
         if(s==nullptr)
         {
             return;
+        }
+        else
+        {
+            this->setCurrentSong(s);
         }
     }
 
@@ -140,23 +142,17 @@ void Player::play ()
 
     this->isPlaying=true;
 
-// new thread that runs playInternal
+    // new thread that runs playInternal
     this->futurePlayInternal = async(launch::async, &Player::playInternal, this);
 }
 
 
-/**
- * @return Song
- */
 const Song* Player::getCurrentSong ()
 {
     return this->currentSong;
 }
 
 
-/**
- * @param  song
- */
 void Player::setCurrentSong (Song* song)
 {
     if(this->isPlaying)
@@ -281,32 +277,18 @@ void Player::_setCurrentSong (Song* song)
     this->onCurrentSongChanged.Fire();
 }*/
 
-
-/** @brief stops the playback
- * same as pause() but also resets playhead
- *
- */
 void Player::stop ()
 {
     this->pause();
     this->resetPlayhead();
 }
 
-
-/** @brief pauses the playback
- * stops the playback at the next opportunity
- *
- */
 void Player::pause ()
 {
     this->_pause();
     WAIT(this->futurePlayInternal);
 }
 
-/** @brief pauses the playback
- * stops the playback at the next opportunity
- *
- */
 void Player::_pause ()
 {
     this->isPlaying=false;
@@ -319,26 +301,17 @@ void Player::_pause ()
     }
 }
 
-/**
- * prepares the player for the next song to be played, but doesnt start playback
- */
 void Player::next ()
 {
     this->setCurrentSong(this->playlist->next());
 }
 
-
-/**
- */
 void Player::previous ()
 {
     this->setCurrentSong(this->playlist->previous());
 }
 
-
-/**
- */
-void Player::fadeout (unsigned int fadeTime)
+void Player::fadeout (unsigned int fadeTime, int8_t fadeType)
 {
     USERS_ARE_STUPID
 
@@ -350,7 +323,7 @@ void Player::fadeout (unsigned int fadeTime)
     float vol = 0.0f;
     for(float timePast=0.0; timePast <= fadeTime; timePast++)
     {
-        switch (3)
+        switch (fadeType)
         {
         case 1:
             // linear
@@ -368,14 +341,10 @@ void Player::fadeout (unsigned int fadeTime)
 
         float volToPush = vol*this->PreAmpVolume;
         this->audioDriver->setVolume(volToPush);
-        this_thread::sleep_for (chrono::milliseconds(1));
+        this_thread::sleep_for(chrono::milliseconds(1));
     }
 }
 
-
-/**
- * @param  frame seeks the playhead to frame "frame"
- */
 void Player::seekTo (frame_t frame)
 {
     if(SEEK_POSSIBLE)
@@ -384,10 +353,6 @@ void Player::seekTo (frame_t frame)
     }
 }
 
-
-/**
- * @param  frame seeks the playhead to frame "frame"
- */
 void Player::_seekTo (frame_t frame)
 {
     if(frame < 0)
@@ -403,20 +368,11 @@ void Player::_seekTo (frame_t frame)
     this->playhead=frame;
 }
 
-
-/**
- * resets the playhead to beginning of currentSong
- */
 void Player::resetPlayhead ()
 {
     this->_seekTo(0);
 }
 
-/**
- * within a given loop "l": get that loop that starts just right after playhead
- *
- * @return a subloop of "l"
- */
 core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)
 {
     loop_t compareLoop;
@@ -436,12 +392,6 @@ core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)
     return ptrToNearest;
 }
 
-
-/**
- * THAT method which recursively walks through a loop tree, playing all the loops, subloops and subsubsubloops given by "loop" recursively
- *
- * @note this method might be called recursively :P
- */
 void Player::playLoop (core::tree<loop_t>& loop)
 {
     USERS_ARE_STUPID
@@ -485,16 +435,6 @@ void Player::playLoop (core::tree<loop_t>& loop)
 }
 
 
-/**
- * plays a loop with the bounds specified by startFrame and stopFrame.
- * starts playing at whereever playhead stands.
- * returns as soon as playhead leaves the bounds, i.e. exceeding stopFrame or underceeding startFrame.
- *
- * @param  startFrame zero-based array index == the lower bound this->playhead shall be in
- * @param  stopFrame zero-based array index == the upper bound this->playhead shall be in, i.e. play until we've reached stopFrame, although the frame at "stopFrame" will not be played.
- *
- * @todo really ensure and test that this last frame is not being played
- */
 void Player::playFrames (frame_t startFrame, frame_t stopFrame)
 {
     USERS_ARE_STUPID
@@ -522,13 +462,6 @@ void Player::playFrames (frame_t startFrame, frame_t stopFrame)
     }
 }
 
-/**
- * play "framesToPlay" frames from the current position (indicated by this->playhead)
- *
- * it ought to start playing that frame, which is currently pointed to by this->playhead
- *
- * @param framesToPlay no. of frames to play from the current position
- */
 void Player::playFrames (frame_t framesToPlay)
 {
     USERS_ARE_STUPID

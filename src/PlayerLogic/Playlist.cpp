@@ -25,8 +25,6 @@ void Playlist::remove (Song* song)
     delete song;
 }
 
-/**
- */
 void Playlist::remove (int i)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
@@ -56,9 +54,6 @@ void Playlist::clear()
     this->queue.clear();
 }
 
-
-/**
- */
 Song* Playlist::current ()
 {
     lock_guard<recursive_mutex> lck(this->mtx);
@@ -66,8 +61,6 @@ Song* Playlist::current ()
     return this->getSong(this->currentSong);
 }
 
-/**
- */
 Song* Playlist::next ()
 {
     lock_guard<recursive_mutex> lck(this->mtx);
@@ -80,8 +73,6 @@ Song* Playlist::next ()
     return this->setCurrentSong((this->currentSong+1) % this->queue.size());
 }
 
-/**
- */
 Song* Playlist::previous ()
 {
     lock_guard<recursive_mutex> lck(this->mtx);
@@ -129,14 +120,14 @@ void Playlist::shuffle(unsigned int start, unsigned int end)
     std::random_shuffle(this->queue.begin()+start, this->queue.begin()+end);
 }
 
-/* @brief move songs within the playlist
+/** @brief move songs within the playlist
  *
  * rotates songs selected by [source, source+count] "steps" steps
  *
- * @param[in] source: zero-based index indicating the start of the selection
- * @param[in] count: number of elements to follow after source
- * @param[in] steps: if positive: move them "steps" steps further to the end of the queue
- *                   if negative: move them "steps" steps further to the start of the queue
+ * @param[in] source zero-based index indicating the start of the selection
+ * @param[in] count number of elements to follow after source
+ * @param[in] steps if positive: move them "steps" steps further to the end of the queue
+ *                  if negative: move them "steps" steps further to the start of the queue
  */
 void Playlist::move(signed int source, unsigned int count, int steps)
 {
