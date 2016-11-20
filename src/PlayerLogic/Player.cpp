@@ -512,7 +512,7 @@ again:
         // ensure PCM buffer(s) are well filled
         this->currentSong->fillBuffer();
 
-        if(framesWritten != framesToPush)
+        if(framesWritten != framesToPush && Config::audioDriver != JACK /*very spammy for jack*/)
         {
             CLOG(LogLevel::INFO, "failed playing the rendered pcm chunk\nframes written: " << framesWritten << "\nframes pushed: " << framesToPush);
         }
