@@ -46,7 +46,14 @@ public:
 
 #ifdef USE_CUE
     static void parseCue (IPlaylist& playlist, const string&filePath);
+    
+    template<typename T> 
+    static void tryWith(Song* (&pcm), const string& filePath, Nullable<size_t> offset, Nullable<size_t> len);
 #endif
 };
+
+
+#include "PlaylistFactory_impl.h"
+
 
 #endif // PLAYLISTFACTORY_H
