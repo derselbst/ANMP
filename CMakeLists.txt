@@ -33,6 +33,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall")
     set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -Wextra -Wdocumentation -fstack-protector-all")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g3 -O2 -Rpass=loop-vectorize -Rpass-analysis=loop-vectorize")
 endif()
 
 
