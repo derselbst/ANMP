@@ -76,9 +76,11 @@ public:
     virtual void setVolume(float vol);
 
     /**
-     * pushes the pcm pointed to by frameBuffer to the underlying audio driver
+     * pushes the pcm pointed to by frameBuffer to the underlying audio driver (or at least schedules it for pushing/playing)
      *
      * this generic version only takes care of pointer arithmetic, passing the call on to the specific write() methods below
+     * 
+     * if necessary, make a deep copy of frameBuffer, since it cannot be guaranteed that it is still alive after returning
      *
      * @param  frameBuffer buffer that holds the pcm
      * @param  frames no. of frames to be played from the buffer
@@ -111,6 +113,8 @@ protected:
     // this var (inside this->setVolume())
     // the worst things that can happen here are dirty reads, as far as I see; and who cares?
     // however, Im not absolutely sure if volatile if really required here
+    //
+    // update 2016-11-22: actually this is necessary, since it prohibits the optimizer to vectorize any loop where this var is used
     volatile float volume = 1.0f;
 
     template<typename T> void getAmplifiedBuffer(const T* inBuffer, T* outBuffer, unsigned long items);
