@@ -48,7 +48,7 @@ void Song::buildLoopTree ()
     // sorting the loop array here shall place the longest loops at the beginning and the shorter ones at the end.
     // thus the longest loop gets placed right under the root of the tree
     std::sort (loopvec.begin(), loopvec.end(), myLoopSort);
-    for(vector<loop_t>::iterator it = loopvec.begin(); it!=loopvec.end(); it++)
+    for(vector<loop_t>::iterator it = loopvec.begin(); it!=loopvec.end(); ++it)
     {
         core::tree<loop_t>& subNode = findRootLoopNode(this->loopTree, *it);
         subNode.insert(*it);
