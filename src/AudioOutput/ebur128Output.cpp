@@ -24,7 +24,7 @@ void ebur128Output::SongChanged(void* ctx)
         return;
     }
 
-    context->handle = ebur128_init(context->currentChannelCount, context->currentSampleRate, EBUR128_MODE_SAMPLE_PEAK);
+    context->handle = ebur128_init(context->currentChannelCount, context->currentSampleRate, EBUR128_MODE_TRUE_PEAK);
 
     // set channel map (note: see ebur128.h for the default map)
     if (context->currentChannelCount == 3)
