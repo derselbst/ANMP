@@ -30,7 +30,7 @@ void LoudnessFile::write(ebur128_state* state, string filePath) noexcept
     }
 
     double lufsLoudness;
-    if(ebur128_loudness_global(state, &lufsLoudness) == EBUR128_SUCCESS)
+    if(ebur128_true_peak(state, &lufsLoudness) == EBUR128_SUCCESS)
     {
         fwrite(&lufsLoudness, 1, sizeof(double), f);
     }
