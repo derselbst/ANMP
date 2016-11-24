@@ -6,8 +6,6 @@ set(CMAKE_AUTOMOC ON)
 # to always look for includes there:
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-include_directories(${PROJECT_INCLUDE_DIR})
-
 set(analyzer_SRCS
     AnalyzerApplet.cpp
     AnalyzerBase.cpp

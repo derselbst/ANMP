@@ -38,7 +38,7 @@ endif()
 
 
 ### setup project include dirs
-set(PROJECT_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/src/Common ${CMAKE_SOURCE_DIR}/src/PlayerLogic ${CMAKE_SOURCE_DIR}/src/InputLibraryWrapper ${CMAKE_SOURCE_DIR}/src/AudioOutput)
+set(PROJECT_LOCAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/Common ${CMAKE_SOURCE_DIR}/src/PlayerLogic ${CMAKE_SOURCE_DIR}/src/InputLibraryWrapper ${CMAKE_SOURCE_DIR}/src/AudioOutput)
 
 
 ### Search in the `cmake' directory for additional CMake modules.
@@ -101,7 +101,7 @@ if(ENABLE_PORTAUDIO)
   if(PORTAUDIO_FOUND)
         add_definitions(-DUSE_PORTAUDIO)
         set(USE_PORTAUDIO TRUE)
-        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${PORTAUDIO_INCLUDE_DIRS})
+        set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS})
         set(LD_FLAGS ${LD_FLAGS} ${PORTAUDIO_LIBRARIES})
         
         MY_PRINT(PORTAUDIO)
@@ -140,7 +140,7 @@ if(ENABLE_LIBMAD)
   
   if(ID3TAG_FOUND)
         
-        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${ID3TAG_INCLUDE_DIRS})
+        set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${ID3TAG_INCLUDE_DIRS})
         set(LD_FLAGS ${LD_FLAGS} ${ID3TAG_LIBRARIES})
         MY_PRINT(ID3TAG)
         
@@ -208,13 +208,13 @@ if(ENABLE_FLUIDSYNTH)
   if(LIBSMF_FOUND)
         if(FLUIDSYNTH_FOUND)
                 add_definitions(-DUSE_FLUIDSYNTH)
-                set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${FLUIDSYNTH_INCLUDE_DIRS})
+                set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${FLUIDSYNTH_INCLUDE_DIRS})
                 set(LD_FLAGS ${LD_FLAGS} ${FLUIDSYNTH_LIBRARIES})
                 
                 MY_PRINT(FLUIDSYNTH)
                 
                 
-                set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${LIBSMF_INCLUDE_DIRS})
+                set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${LIBSMF_INCLUDE_DIRS})
                 set(LD_FLAGS ${LD_FLAGS} ${LIBSMF_LIBRARIES})
                 
                 MY_PRINT(LIBSMF)
@@ -240,7 +240,7 @@ if(ENABLE_CUE)
   
   if(LIBCUE_FOUND)
         add_definitions(-DUSE_CUE)
-        set(PROJECT_INCLUDE_DIR ${PROJECT_INCLUDE_DIR} ${LIBCUE_INCLUDE_DIRS})
+        set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${LIBCUE_INCLUDE_DIRS})
         set(LD_FLAGS ${LD_FLAGS} ${LIBCUE_LIBRARIES})
         
         MY_PRINT(LIBCUE)
@@ -301,8 +301,8 @@ message("")
 ### Show a summary of what we got
 summary_show()
 
-
-include_directories(${PROJECT_INCLUDE_DIR})
+include_directories(${PROJECT_LOCAL_INCLUDE_DIRS})
+include_directories(SYSTEM ${PROJECT_SYSTEM_INCLUDE_DIRS})
 
 # anmp-core
 add_subdirectory(src)
