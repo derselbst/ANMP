@@ -4,6 +4,8 @@
 #include <cmath>
 #include <cstdio>
 
+mutex LoudnessFile::mtx;
+
 string LoudnessFile::toebur128Filename(string filePath)
 {
     string file = mybasename(filePath);
@@ -43,27 +45,12 @@ void LoudnessFile::write(ebur128_state* state, string filePath) noexcept
 }
 #endif
 
-#ifdef USE_EBUR128
-void LoudnessFile::write(ebur128_state* state, string filePath) noexcept
+void LoudnessFile::write(string filePath, const float& gainCorrection) noexcept
 {
-    double overallSamplePeak=0.0;
-    for(unsigned int c = 0; c<state->channels; c++)
-    {
-        double peak = -0.0;
-        if(ebur128_sample_peak(state, c, &peak) == EBUR128_SUCCESS)
-        {
-            overallSamplePeak = max(peak, overallSamplePeak);
-        }
-    }
-
-    float gainCorrection = overallSamplePeak;
-    if(gainCorrection<=0.0)
-    {
-        // TODO: log
-        return;
-    }
-
     filePath = toebur128Filename(filePath);
+    
+    std::lock_guard<std::mutex> lock(LoudnessFile::mtx);
+    
     FILE* f = fopen(filePath.c_str(), "wb");
     if(f==nullptr)
     {
@@ -74,7 +61,6 @@ void LoudnessFile::write(ebur128_state* state, string filePath) noexcept
     fwrite(&gainCorrection, 1, sizeof(float), f);
     fclose(f);
 }
-#endif
 
 /**
  * tries to find the corresponding loudnessfile for filePath and reads its loudness info
@@ -85,8 +71,10 @@ float LoudnessFile::read(string filePath) noexcept
 {
     filePath = toebur128Filename(filePath);
 
+    std::lock_guard<std::mutex> lock(LoudnessFile::mtx);
+    
     FILE* f = fopen(filePath.c_str(), "rb");
-
+    
     float gain = Target;
     if(f!=nullptr)
     {

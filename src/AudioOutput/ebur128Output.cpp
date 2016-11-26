@@ -85,9 +85,32 @@ void ebur128Output::close()
 {
     if (this->handle != nullptr)
     {
-        // write the collected loudness info
-        LoudnessFile::write(this->handle, this->currentSong->Filename);
+        double overallSamplePeak=0.0;
+        for(unsigned int c = 0; c<this->handle->channels; c++)
+        {
+            double peak = -0.0;
+            if(ebur128_true_peak(this->handle, c, &peak) == EBUR128_SUCCESS)
+            {
+                overallSamplePeak = max(peak, overallSamplePeak);
+            }
+        }
 
+        float gainCorrection = overallSamplePeak;
+        if(gainCorrection <= 0.0)
+        {
+            CLOG(LogLevel::ERROR, "ignoring gainCorrection == " << gainCorrection);
+        }
+        else
+        {
+            if(gainCorrection > 1.0)
+            {
+                CLOG(LogLevel::INFO, "gainCorrection == " << gainCorrection);
+            }
+        
+            // write the collected loudness info
+            LoudnessFile::write(this->currentSong->Filename, gainCorrection);
+        }
+        
         ebur128_destroy(&this->handle);
         this->handle = nullptr;
     }
