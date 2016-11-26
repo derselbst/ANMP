@@ -44,6 +44,23 @@ Player::Player (IPlaylist* playlist)
     this->playlist = playlist;
 }
 
+Player::Player (Player&& other)
+{
+    other.pause();
+  
+    this->currentSong = other.currentSong;
+    other.currentSong = nullptr;
+  
+    this->playlist = other.playlist;
+    other.playlist = nullptr;
+    
+    this->audioDriver = other.audioDriver;
+    other.audioDriver = nullptr;
+    
+    this->playhead = other.playhead;
+    this->PreAmpVolume = other.PreAmpVolume;
+}
+
 Player::~Player ()
 {
     CLOG(LogLevel::DEBUG, "destroy player " << hex << this);
