@@ -7,9 +7,9 @@ if(EBUR128_FOUND)
     set(LINK_FLAGS ${LINK_FLAGS} "-Wl,-whole-archive")
     
     target_link_libraries(${ANMP_NORM} anmp)
-    if (CMAKE_COMPILER_IS_GNUCXX)
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
       target_link_libraries(${ANMP_NORM} stdc++fs)
-    endif (CMAKE_COMPILER_IS_GNUCXX)
+    endif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     
     install(TARGETS ${ANMP_NORM} DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
     
