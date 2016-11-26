@@ -28,6 +28,8 @@
     {\
         framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);\
     }\
+    /* audio normalization */\
+    const float absoluteGain = (numeric_limits<SAMPLEFORMAT>::max()) / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);\
     fesetround(FE_TONEAREST);\
 \
     SAMPLEFORMAT* pcm = static_cast<SAMPLEFORMAT*>(bufferToFill);\
@@ -40,10 +42,6 @@
         /* render to raw pcm*/\
         LIB_SPECIFIC_RENDER_FUNCTION;\
 \
-        /* audio normalization */\
-        /*const*/ float absoluteGain = (numeric_limits<SAMPLEFORMAT>::max()) / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);\
-        /* reduce risk of clipping, remove that when using true sample peak */\
-        absoluteGain -= 0.01;\
         for(unsigned int i=0; Config::useAudioNormalization && i<framesToDoNow*this->Format.Channels; i++)\
         {\
 	    pcm[i] = static_cast<SAMPLEFORMAT>(pcm[i] * absoluteGain);\
