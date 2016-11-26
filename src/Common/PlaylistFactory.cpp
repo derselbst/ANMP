@@ -132,6 +132,21 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
 bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nullable<size_t> offset, Nullable<size_t> len, Nullable<SongInfo> overridingMetadata)
 {
     string ext = getFileExtension(filePath);
+    
+    if( iEquals(ext, "ebur128") ||
+        iEquals(ext, "mood")    ||
+        iEquals(ext, "usflib")  ||
+        iEquals(ext, "sf2")     ||
+        iEquals(ext, "txt")     ||
+        iEquals(ext, "bash")    ||
+        iEquals(ext, "jpg")
+    )
+    {
+        // moodbar and loudness files, dont care
+        return false;
+    }
+
+    
     Song* pcm=nullptr;
 
     if (iEquals(ext,"cue"))
@@ -187,13 +202,6 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
         goto l_LIBMAD;
     }
 #endif
-
-    else if(iEquals(ext, "ebur128") || iEquals(ext, "mood"))
-    {
-        // moodbar and loudness files, dont care
-        return false;
-    }
-
     else
     {
         // so many formats to test here, try and error
