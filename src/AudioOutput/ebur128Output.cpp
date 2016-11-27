@@ -6,7 +6,7 @@
 #include "LoudnessFile.h"
 #include "CommonExceptions.h"
 #include "AtomicWrite.h"
-
+#include "Common.h"
 
 #include <iostream>
 #include <string>
@@ -35,6 +35,11 @@ void ebur128Output::open()
     if(Config::useAudioNormalization)
     {
         THROW_RUNTIME_ERROR("You MUST DISABLE audio normalization when generating normalization data")
+    }
+    
+    if(Config::useLoopInfo)
+    {
+        THROW_RUNTIME_ERROR("You MUST NOT use loop info when generating normalization data")
     }
 }
 
@@ -101,7 +106,7 @@ void ebur128Output::close()
         {
             if(gainCorrection > 1.0)
             {
-                CLOG(LogLevel::INFO, "gainCorrection == " << gainCorrection);
+                CLOG(LogLevel::INFO, mybasename(this->currentSong->Filename) << " gainCorrection == " << gainCorrection);
             }
         
             // write the collected loudness info
@@ -113,7 +118,6 @@ void ebur128Output::close()
     }
 
     this->currentSong = nullptr;
-    this->framesWritten = 0;
 }
 
 int ebur128Output::write (const float* buffer, frame_t frames)
@@ -122,7 +126,6 @@ int ebur128Output::write (const float* buffer, frame_t frames)
 
     if(ret == EBUR128_SUCCESS)
     {
-        this->framesWritten += frames;
         return frames;
     }
 
@@ -144,7 +147,6 @@ int ebur128Output::write (const int16_t* buffer, frame_t frames)
 
     if(ret == EBUR128_SUCCESS)
     {
-        this->framesWritten += frames;
         return frames;
     }
 
@@ -166,7 +168,6 @@ int ebur128Output::write (const int32_t* buffer, frame_t frames)
 
     if(ret == EBUR128_SUCCESS)
     {
-        this->framesWritten += frames;
         return frames;
     }
 

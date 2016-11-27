@@ -45,6 +45,4 @@ private:
     ebur128_state* handle = nullptr;
 
     const Song* currentSong = nullptr;
-    frame_t framesWritten = 0;
-
 };
