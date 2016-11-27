@@ -122,8 +122,7 @@ void Player::_initAudio()
 
     if(this->currentSong!=nullptr)
     {
-        SongFormat& format = this->currentSong->Format;
-        this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
+        this->audioDriver->init(this->currentSong->Format);
     }
 }
 
@@ -213,13 +212,7 @@ void Player::_setCurrentSong (Song* song)
         // go ahead and start filling the pcm buffer
         this->currentSong->fillBuffer();
 
-        SongFormat& format = this->currentSong->Format;
-
-        // in case samplerate or channel count differ, reinit audioDriver
-        if(oldformat != format)
-        {
-            this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
-        }
+        this->audioDriver->init(this->currentSong->Format);
     }
 
     this->resetPlayhead();

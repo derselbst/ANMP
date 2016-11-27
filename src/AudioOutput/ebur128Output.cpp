@@ -12,50 +12,14 @@
 #include <string>
 #include <utility>      // std::pair
 
-void ebur128Output::SongChanged(void* ctx)
+ebur128Output::ebur128Output(Player* p):player(p)
 {
-    ebur128Output* context = static_cast<ebur128Output*>(ctx);
-
-    context->close();
-
-    context->currentSong = context->player->getCurrentSong();
-    if(context->currentSong == nullptr)
-    {
-        return;
-    }
-
-    context->handle = ebur128_init(context->currentChannelCount, context->currentSampleRate, EBUR128_MODE_TRUE_PEAK);
-
-    // set channel map (note: see ebur128.h for the default map)
-    if (context->currentChannelCount == 3)
-    {
-        ebur128_set_channel(context->handle, 0, EBUR128_LEFT);
-        ebur128_set_channel(context->handle, 1, EBUR128_RIGHT);
-        ebur128_set_channel(context->handle, 2, EBUR128_UNUSED);
-    }
-    else if (context->currentChannelCount == 5)
-    {
-        ebur128_set_channel(context->handle, 0, EBUR128_LEFT);
-        ebur128_set_channel(context->handle, 1, EBUR128_RIGHT);
-        ebur128_set_channel(context->handle, 2, EBUR128_CENTER);
-        ebur128_set_channel(context->handle, 3, EBUR128_LEFT_SURROUND);
-        ebur128_set_channel(context->handle, 4, EBUR128_RIGHT_SURROUND);
-    }
-    else
-    {
-        // default channel map should be fine here
-    }
-}
-
-ebur128Output::ebur128Output(Player* player):player(player)
-{
-    this->player->onCurrentSongChanged += std::make_pair(this, &ebur128Output::SongChanged);
+    
 }
 
 ebur128Output::~ebur128Output()
 {
     this->close();
-    this->player->onCurrentSongChanged -= this;
 }
 
 //
@@ -74,11 +38,44 @@ void ebur128Output::open()
     }
 }
 
-void ebur128Output::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool)
+void ebur128Output::init(SongFormat format, bool)
 {
-    this->currentChannelCount = channels;
-    this->currentSampleFormat = s;
-    this->currentSampleRate = sampleRate;
+    this->close();
+
+    this->currentSong = this->player->getCurrentSong();
+    
+    if(this->currentSong == nullptr || !format.IsValid())
+    {
+        return;
+    }
+
+    this->handle = ebur128_init(format.Channels, format.SampleRate, EBUR128_MODE_TRUE_PEAK);
+    if(this->handle == nullptr)
+    {
+        THROW_RUNTIME_ERROR("ebur128_init failed")
+    }
+    
+    // set channel map (note: see ebur128.h for the default map)
+    if (format.Channels == 3)
+    {
+        ebur128_set_channel(this->handle, 0, EBUR128_LEFT);
+        ebur128_set_channel(this->handle, 1, EBUR128_RIGHT);
+        ebur128_set_channel(this->handle, 2, EBUR128_UNUSED);
+    }
+    else if (format.Channels == 5)
+    {
+        ebur128_set_channel(this->handle, 0, EBUR128_LEFT);
+        ebur128_set_channel(this->handle, 1, EBUR128_RIGHT);
+        ebur128_set_channel(this->handle, 2, EBUR128_CENTER);
+        ebur128_set_channel(this->handle, 3, EBUR128_LEFT_SURROUND);
+        ebur128_set_channel(this->handle, 4, EBUR128_RIGHT_SURROUND);
+    }
+    else
+    {
+        // default channel map should be fine here
+    }
+    
+    this->currentFormat = format;
 }
 
 void ebur128Output::close()

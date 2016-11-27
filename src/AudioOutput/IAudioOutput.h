@@ -2,7 +2,7 @@
 #define IAUDIOOUTPUT_H
 
 #include "types.h"
-
+#include "SongFormat.h"
 
 #include <cstdint>
 
@@ -46,7 +46,7 @@ public:
      *
      * when finishing the call to this->init() the PCM stream shall be in state "stopped"
      */
-    virtual void init (unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime=false) = 0;
+    virtual void init (SongFormat format, bool realtime=false) = 0;
 
     /**
      * Starts the PCM stream.
@@ -99,10 +99,7 @@ public:
 
 
 protected:
-    uint8_t currentChannelCount = 0;
-    unsigned int currentSampleRate = 0;
-    SampleFormat_t currentSampleFormat = SampleFormat_t::unknown;
-
+    SongFormat currentFormat;
 
     // the current volume [0,1.0] to use, i.e. a factor by that the PCM gets amplified.
     // mark this as volatile so the compiler doesnt come up with:

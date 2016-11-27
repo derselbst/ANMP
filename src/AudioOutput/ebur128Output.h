@@ -23,14 +23,11 @@ public:
 
     virtual ~ebur128Output ();
 
-    static void SongChanged(void* ctx);
-
-
     // interface methods declaration
 
     void open () override;
 
-    void init (unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime = false) override;
+    void init (SongFormat format, bool realtime = false) override;
 
     void close () override;
 

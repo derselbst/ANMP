@@ -13,33 +13,12 @@
 #include <utility>      // std::pair
 #include <cstring>
 
-
-void WaveOutput::SongChanged(void* ctx)
-{
-    WaveOutput* context = static_cast<WaveOutput*>(ctx);
-
-    context->close();
-    context->currentSong = context->player->getCurrentSong();
-    if(context->currentSong == nullptr)
-    {
-        return;
-    }
-
-    string outFile = context->currentSong->Filename.c_str();
-    outFile += ".wav";
-    context->handle = fopen(outFile.c_str(), "wb");
-
-    fseek(context->handle, sizeof(WaveHeader), SEEK_SET);
-}
-
 WaveOutput::WaveOutput(Player* player):player(player)
 {
-    this->player->onCurrentSongChanged += std::make_pair(this, &WaveOutput::SongChanged);
 }
 
 WaveOutput::~WaveOutput()
 {
-    this->player->onCurrentSongChanged -= this;
     this->close();
 }
 
@@ -55,11 +34,29 @@ void WaveOutput::open()
     }
 }
 
-void WaveOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool)
+void WaveOutput::init(SongFormat format, bool)
 {
-    this->currentChannelCount = channels;
-    this->currentSampleFormat = s;
-    this->currentSampleRate = sampleRate;
+    this->close();
+    
+    this->currentSong = this->player->getCurrentSong();
+    
+    if(this->currentSong == nullptr || !format.IsValid())
+    {
+        return;
+    }
+
+    string outFile = this->currentSong->Filename.c_str();
+    outFile += ".wav";
+    
+    this->handle = fopen(outFile.c_str(), "wb");
+    if(this->handle == nullptr)
+    {
+        THROW_RUNTIME_ERROR("failed opening \"" << outFile << "\" for writing")
+    }
+
+    fseek(this->handle, sizeof(WaveHeader), SEEK_SET);
+    
+    this->currentFormat = format;
 }
 
 void WaveOutput::close()
@@ -80,8 +77,8 @@ void WaveOutput::close()
 
 int WaveOutput::write (const float* buffer, frame_t frames)
 {
-    int ret = fwrite(buffer, sizeof(float), frames * this->currentChannelCount, this->handle);
-    ret /= this->currentChannelCount;
+    int ret = fwrite(buffer, sizeof(float), frames * this->currentFormat.Channels, this->handle);
+    ret /= this->currentFormat.Channels;
 
     this->framesWritten += ret;
     return ret;
@@ -89,8 +86,8 @@ int WaveOutput::write (const float* buffer, frame_t frames)
 
 int WaveOutput::write (const int16_t* buffer, frame_t frames)
 {
-    int ret = fwrite(buffer, sizeof(int16_t), frames * this->currentChannelCount, this->handle);
-    ret /= this->currentChannelCount;
+    int ret = fwrite(buffer, sizeof(int16_t), frames * this->currentFormat.Channels, this->handle);
+    ret /= this->currentFormat.Channels;
 
     this->framesWritten += ret;
     return ret;
@@ -98,8 +95,8 @@ int WaveOutput::write (const int16_t* buffer, frame_t frames)
 
 int WaveOutput::write (const int32_t* buffer, frame_t frames)
 {
-    int ret = fwrite(buffer, sizeof(int32_t), frames * this->currentChannelCount, this->handle);
-    ret /= this->currentChannelCount;
+    int ret = fwrite(buffer, sizeof(int32_t), frames * this->currentFormat.Channels, this->handle);
+    ret /= this->currentFormat.Channels;
 
 
     this->framesWritten += ret;
