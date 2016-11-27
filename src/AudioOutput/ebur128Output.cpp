@@ -27,9 +27,9 @@ ebur128Output::~ebur128Output()
 //
 void ebur128Output::open()
 {
-    if(Config::RenderWholeSong)
+    if(Config::RenderWholeSong && Config::PreRenderTime!=0)
     {
-        THROW_RUNTIME_ERROR("You MUST NOT hold the whole audio file in memory, when using ebur128Output.")
+        THROW_RUNTIME_ERROR("You MUST NOT hold the whole audio file in memory, when using ebur128Output, while Config::PreRenderTime!=0")
     }
 
     if(Config::useAudioNormalization)
