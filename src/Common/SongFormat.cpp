@@ -1,10 +1,15 @@
 #include "SongFormat.h"
 
+bool operator == (SongFormat const& lhs, SongFormat const& rhs)
+{
+    return lhs.SampleRate  == rhs.SampleRate   &&
+           lhs.SampleFormat== rhs.SampleFormat &&
+           lhs.Channels    == rhs.Channels;
+}
+
 bool operator != (SongFormat const& lhs, SongFormat const& rhs)
 {
-    return lhs.SampleRate  != rhs.SampleRate ||
-           lhs.SampleFormat!= rhs.SampleFormat ||
-           lhs.Channels    != rhs.Channels;
+    return !(lhs == rhs);
 }
 
 /**

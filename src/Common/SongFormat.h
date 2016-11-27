@@ -8,6 +8,7 @@
   *
   */
 struct SongFormat;
+bool operator == (SongFormat const& lhs, SongFormat const& rhs);
 bool operator != (SongFormat const& lhs, SongFormat const& rhs);
 
 struct SongFormat
