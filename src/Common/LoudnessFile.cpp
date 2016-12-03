@@ -18,33 +18,6 @@ string LoudnessFile::toebur128Filename(string filePath)
 
 static const double Target = 1.0f;
 
-#if 0
-void LoudnessFile::write(ebur128_state* state, string filePath) noexcept
-{
-    filePath = toebur128Filename(filePath);
-
-    FILE* f = fopen(filePath.c_str(), "wb");
-
-    if(f==nullptr)
-    {
-        // TODO: log
-        return;
-    }
-
-    double lufsLoudness;
-    if(ebur128_true_peak(state, &lufsLoudness) == EBUR128_SUCCESS)
-    {
-        fwrite(&lufsLoudness, 1, sizeof(double), f);
-    }
-    else
-    {
-        fwrite(&TargetLUFS, 1, sizeof(double), f);
-    }
-
-    fclose(f);
-}
-#endif
-
 void LoudnessFile::write(string filePath, const float& gainCorrection) noexcept
 {
     filePath = toebur128Filename(filePath);
