@@ -403,14 +403,23 @@ void FluidsynthWrapper::close() noexcept
         this->smf = nullptr;
     }
 
-    delete_fluid_sequencer(this->sequencer);
-    this->sequencer = nullptr;
-
-    delete_fluid_synth(this->synth);
-    this->synth = nullptr;
-
-    delete_fluid_settings(this->settings);
-    this->settings = nullptr;
+    if(this->sequencer != nullptr)
+    {
+        delete_fluid_sequencer(this->sequencer);
+        this->sequencer = nullptr;
+    }
+    
+    if(this->synth != nullptr)
+    {
+        delete_fluid_synth(this->synth);
+        this->synth = nullptr;
+    }
+    
+    if(this->settings != nullptr)
+    {
+        delete_fluid_settings(this->settings);
+        this->settings = nullptr;
+    }
 }
 
 void FluidsynthWrapper::fillBuffer()
