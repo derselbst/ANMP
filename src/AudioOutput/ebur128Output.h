@@ -45,4 +45,6 @@ private:
     ebur128_state* handle = nullptr;
 
     const Song* currentSong = nullptr;
+    
+    void writeNoiseCalculation();
 };

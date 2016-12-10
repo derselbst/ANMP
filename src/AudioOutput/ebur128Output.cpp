@@ -41,23 +41,38 @@ void ebur128Output::open()
     {
         THROW_RUNTIME_ERROR("You MUST NOT use loop info when generating normalization data")
     }
+
+    this->handle = ebur128_init(0, 8000, EBUR128_MODE_TRUE_PEAK);
+    if(this->handle == nullptr)
+    {
+        THROW_RUNTIME_ERROR("ebur128_init failed")
+    }
 }
 
 void ebur128Output::init(SongFormat format, bool)
 {
-    this->close();
-
-    this->currentSong = this->player->getCurrentSong();
+    ebur128Output::writeNoiseCalculation();
     
+    this->currentSong = this->player->getCurrentSong();
     if(this->currentSong == nullptr || !format.IsValid())
     {
         return;
     }
-
-    this->handle = ebur128_init(format.Channels, format.SampleRate, EBUR128_MODE_TRUE_PEAK);
-    if(this->handle == nullptr)
+    
+    // invalidate the handle to force update
+    this->handle->channels = 0;
+    this->handle->samplerate = 0;
+    int ret = ebur128_change_parameters(this->handle, format.Channels, format.SampleRate);
+    switch(ret)
     {
-        THROW_RUNTIME_ERROR("ebur128_init failed")
+        case EBUR128_SUCCESS:
+            break;
+        case EBUR128_ERROR_NO_CHANGE:
+            CLOG(LogLevel::ERROR, "THIS SHOULD NEVER HAPPEN!")
+            [[fallthrough]];
+        default:
+            this->currentSong = nullptr;
+            THROW_RUNTIME_ERROR("ebur128 change params failed, code: " << ret)
     }
     
     // set channel map (note: see ebur128.h for the default map)
@@ -83,36 +98,44 @@ void ebur128Output::init(SongFormat format, bool)
     this->currentFormat = format;
 }
 
+void ebur128Output::writeNoiseCalculation()
+{
+    if(this->currentSong == nullptr)
+    {
+        return;
+    }
+    
+    double overallSamplePeak=0.0;
+    for(unsigned int c = 0; c<this->handle->channels; c++)
+    {
+        double peak = -0.0;
+        if(ebur128_true_peak(this->handle, c, &peak) == EBUR128_SUCCESS)
+        {
+            overallSamplePeak = max(peak, overallSamplePeak);
+        }
+    }
+
+    float gainCorrection = overallSamplePeak;
+    if(gainCorrection <= 0.0)
+    {
+        CLOG(LogLevel::ERROR, "ignoring gainCorrection == " << gainCorrection);
+    }
+    else
+    {
+        if(gainCorrection > 1.0)
+        {
+            CLOG(LogLevel::INFO, mybasename(this->currentSong->Filename) << " gainCorrection == " << gainCorrection);
+        }
+    
+        // write the collected loudness info
+        LoudnessFile::write(this->currentSong->Filename, gainCorrection);
+    }
+}
+
 void ebur128Output::close()
 {
     if (this->handle != nullptr)
     {
-        double overallSamplePeak=0.0;
-        for(unsigned int c = 0; c<this->handle->channels; c++)
-        {
-            double peak = -0.0;
-            if(ebur128_true_peak(this->handle, c, &peak) == EBUR128_SUCCESS)
-            {
-                overallSamplePeak = max(peak, overallSamplePeak);
-            }
-        }
-
-        float gainCorrection = overallSamplePeak;
-        if(gainCorrection <= 0.0)
-        {
-            CLOG(LogLevel::ERROR, "ignoring gainCorrection == " << gainCorrection);
-        }
-        else
-        {
-            if(gainCorrection > 1.0)
-            {
-                CLOG(LogLevel::INFO, mybasename(this->currentSong->Filename) << " gainCorrection == " << gainCorrection);
-            }
-        
-            // write the collected loudness info
-            LoudnessFile::write(this->currentSong->Filename, gainCorrection);
-        }
-        
         ebur128_destroy(&this->handle);
         this->handle = nullptr;
     }
