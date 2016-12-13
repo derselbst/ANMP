@@ -66,7 +66,7 @@ cmake ..
 make
 ```
 
-Also see [wiki/About-the-buildsystem]([Wiki] About the buildsystem).
+Also see [[[Wiki] About the buildsystem|About the buildsystem]]
 
 ## Building from Source (Windows)
 You probably want to use Visual Studio to get a native (preferably static) build of ANMP. Decide for one build architecture and one runtime library. Then:
