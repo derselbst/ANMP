@@ -1,0 +1,10 @@
+Source: anmp
+Section: kde
+Priority: optional
+Maintainer: Tom Mbrt <tom.mbrt@gmail.com>
+Build-Depends: debhelper (>= 9), clang-3.5, cmake (>= 3.0), libcue-dev, libgme-dev, libmad0-dev, libsndfile-dev, libfluidsynth-dev, libasound2-dev, libebur128-dev, qt5-default, qtbase5-dev, libqt5opengl5-dev
+
+Package: anmp
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: Audio Player TODO: longer description here...
