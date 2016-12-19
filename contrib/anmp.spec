@@ -156,4 +156,4 @@ ln -s /%{_bindir}/anmp-qt %{buildroot}/%{_bindir}/anmp
 %defattr(-,root,root)
 #%%{_bindir}/anmp-normalize
 
-%changelog
+
