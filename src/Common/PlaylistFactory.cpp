@@ -128,29 +128,25 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
 }
 #endif
 
-#define TRY_OPEN \
-try\
-{\
-    pcm->open();\
-}\
-catch(exception& e)\
-{\
-    cerr << e.what() << endl;\
-    pcm->close();\
-    delete pcm;\
-    pcm=nullptr;\
-}\
- 
-#define TRY_WITH(LIBWRAPPER) \
-if(pcm==nullptr)\
-{\
-    pcm = new LIBWRAPPER(filePath, offset, len);\
-    TRY_OPEN\
-}
 
 bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nullable<size_t> offset, Nullable<size_t> len, Nullable<SongInfo> overridingMetadata)
 {
     string ext = getFileExtension(filePath);
+    
+    if( iEquals(ext, "ebur128") ||
+        iEquals(ext, "mood")    ||
+        iEquals(ext, "usflib")  ||
+        iEquals(ext, "sf2")     ||
+        iEquals(ext, "txt")     ||
+        iEquals(ext, "bash")    ||
+        iEquals(ext, "jpg")
+    )
+    {
+        // moodbar and loudness files, dont care
+        return false;
+    }
+
+    
     Song* pcm=nullptr;
 
     if (iEquals(ext,"cue"))
@@ -163,14 +159,14 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
 #ifdef USE_FLUIDSYNTH
     else if (iEquals(ext, "mid") || iEquals(ext, "midi"))
     {
-        TRY_WITH(FluidsynthWrapper)
+        PlaylistFactory::tryWith<FluidsynthWrapper>(pcm, filePath, offset, len);
     }
 #endif
 
 #ifdef USE_LAZYUSF
     else if (iEquals(ext, "usf") || iEquals(ext, "miniusf"))
     {
-        TRY_WITH(LazyusfWrapper)
+        PlaylistFactory::tryWith<LazyusfWrapper>(pcm, filePath, offset, len);
     }
 #endif
 
@@ -206,13 +202,6 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
         goto l_LIBMAD;
     }
 #endif
-
-    else if(iEquals(ext, "ebur128") || iEquals(ext, "mood"))
-    {
-        // moodbar and loudness files, dont care
-        return false;
-    }
-
     else
     {
         // so many formats to test here, try and error
@@ -222,23 +211,23 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
 
 #ifdef USE_LIBSND
         // most common file types (WAVE, FLAC, Sun / NeXT AU, OGG VORBIS, AIFF, etc.)
-        TRY_WITH(LibSNDWrapper)
+        PlaylistFactory::tryWith<LibSNDWrapper>(pcm, filePath, offset, len);
 #endif
 
 #ifdef USE_LIBGME
         // emulated sound formats from old video consoles (SuperFamicon, Famicon, GAMEBOY, etc.)
-        TRY_WITH(LibGMEWrapper)
+        PlaylistFactory::tryWith<LibGMEWrapper>(pcm, filePath, offset, len);
 #endif
 
 #ifdef USE_VGMSTREAM
         // most fileformats from videogames
         // also eats raw pcm files (although they'll may have wrong samplerate
-        TRY_WITH(VGMStreamWrapper)
+        PlaylistFactory::tryWith<VGMStreamWrapper>(pcm, filePath, offset, len);
 #endif
 
 #ifdef USE_FFMPEG
         // OPUS, videofiles, etc.
-        TRY_WITH(FFMpegWrapper)
+        PlaylistFactory::tryWith<FFMpegWrapper>(pcm, filePath, offset, len);
 #endif
 
 // !!! libmad always has to be last !!!
@@ -247,7 +236,7 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
 #ifdef USE_LIBMAD
         // mp3 exclusive
 l_LIBMAD:
-        TRY_WITH(LibMadWrapper)
+        PlaylistFactory::tryWith<LibMadWrapper>(pcm, filePath, offset, len);
 #endif
     }
 
@@ -257,6 +246,7 @@ l_LIBMAD:
         return false;
     }
 
+    // TODO: do this check after every TRY_WITH
     if(pcm->getFrames() <= 0)
     {
         CLOG(LogLevel::ERROR, "Valid, but nothing to play for file: \"" << pcm->Filename << "\"");

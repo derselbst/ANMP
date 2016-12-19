@@ -44,6 +44,23 @@ Player::Player (IPlaylist* playlist)
     this->playlist = playlist;
 }
 
+Player::Player (Player&& other)
+{
+    other.pause();
+  
+    this->currentSong = other.currentSong;
+    other.currentSong = nullptr;
+  
+    this->playlist = other.playlist;
+    other.playlist = nullptr;
+    
+    this->audioDriver = other.audioDriver;
+    other.audioDriver = nullptr;
+    
+    this->playhead = other.playhead;
+    this->PreAmpVolume = other.PreAmpVolume;
+}
+
 Player::~Player ()
 {
     CLOG(LogLevel::DEBUG, "destroy player " << hex << this);
@@ -105,8 +122,7 @@ void Player::_initAudio()
 
     if(this->currentSong!=nullptr)
     {
-        SongFormat& format = this->currentSong->Format;
-        this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
+        this->audioDriver->init(this->currentSong->Format);
     }
 }
 
@@ -196,13 +212,7 @@ void Player::_setCurrentSong (Song* song)
         // go ahead and start filling the pcm buffer
         this->currentSong->fillBuffer();
 
-        SongFormat& format = this->currentSong->Format;
-
-        // in case samplerate or channel count differ, reinit audioDriver
-        if(oldformat != format)
-        {
-            this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
-        }
+        this->audioDriver->init(this->currentSong->Format);
     }
 
     this->resetPlayhead();
@@ -210,72 +220,6 @@ void Player::_setCurrentSong (Song* song)
     // now we are ready to do the callback
     this->onCurrentSongChanged.Fire();
 }
-
-
-/*
-void Player::_setCurrentSong (Song* song)
-{
-    this->resetPlayhead();
-    if(this->currentSong == song)
-    {
-        // nothing to do here
-        return;
-    }
-
-    // capture format of former current song
-    SongFormat oldformat;
-    if(this->currentSong != nullptr)
-    {
-        this->currentSong->releaseBuffer();
-        this->currentSong->close();
-        oldformat = this->currentSong->Format;
-    }
-
-    this->currentSong = song;
-    if(this->currentSong == nullptr)
-    {
-        this->_pause();
-        this->onCurrentSongChanged.Fire();
-        return;
-    }
-
-    this->currentSong->open();
-    // go ahead and start filling the pcm buffer
-    this->currentSong->fillBuffer();
-
-    if(this->audioDriver==nullptr)
-    {
-        this->_initAudio();
-    }
-
-    // if the audio has bee properly been initialized
-    if(this->audioDriver!=nullptr)
-    {
-        SongFormat& format = this->currentSong->Format;
-
-        // in case samplerate or channel count differ, reinit audioDriver
-        if(oldformat != format)
-        {
-            try
-            {
-                this->audioDriver->init(format.SampleRate, format.Channels, format.SampleFormat);
-            }
-            catch(exception& e)
-            {
-                cout << e.what() << endl;
-                this->_pause();
-                return;
-            }
-        }
-    }
-    else
-    {
-        cerr << "THIS SHOULD NEVER HAPPEN! audioDriver==nullptr" << endl;
-        return;
-    }
-
-    this->onCurrentSongChanged.Fire();
-}*/
 
 void Player::stop ()
 {
@@ -512,7 +456,11 @@ again:
         // ensure PCM buffer(s) are well filled
         this->currentSong->fillBuffer();
 
-        if(framesWritten != framesToPush)
+        if(framesWritten != framesToPush
+#ifdef USE_JACK
+            && Config::audioDriver != JACK /*very spammy for jack*/
+#endif      
+        )
         {
             CLOG(LogLevel::INFO, "failed playing the rendered pcm chunk\nframes written: " << framesWritten << "\nframes pushed: " << framesToPush);
         }

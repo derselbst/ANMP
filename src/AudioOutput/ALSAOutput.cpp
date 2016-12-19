@@ -45,9 +45,13 @@ void ALSAOutput::open()
     }
 } /* alsa_open */
 
-void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime)
+void ALSAOutput::init(SongFormat format, bool realtime)
 {
-    CLOG(LogLevel::DEBUG,"srate:" << sampleRate << " ; channels: " << (int)channels << endl);
+    if(this->currentFormat == format || !format.IsValid())
+    {
+        return;
+    }
+    
     // changing hw settings can only safely be done when pcm is not running
     // therefore stop the pcm and drain all pending frames
     // DO NOT drop pending frames, due to latency some frames might still be played,
@@ -82,7 +86,7 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
     /***************
      * INTERESTING *
      **************/
-    switch(s)
+    switch(format.SampleFormat)
     {
     case float32:
         err = snd_pcm_hw_params_set_format (this->alsa_dev, hw_params, SND_PCM_FORMAT_FLOAT);
@@ -106,13 +110,13 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
         THROW_RUNTIME_ERROR("cannot set sample format (" << snd_strerror(err) << ")");
     }
 
-    if ((err = snd_pcm_hw_params_set_rate_near (this->alsa_dev, hw_params, &sampleRate, 0)) < 0)
+    if ((err = snd_pcm_hw_params_set_rate_near (this->alsa_dev, hw_params, &format.SampleRate, 0)) < 0)
     {
         snd_pcm_hw_params_free (hw_params);
         THROW_RUNTIME_ERROR("cannot set sample rate (" << snd_strerror(err) << ")");
     }
 
-    if ((err = snd_pcm_hw_params_set_channels (this->alsa_dev, hw_params, channels)) < 0)
+    if ((err = snd_pcm_hw_params_set_channels (this->alsa_dev, hw_params, format.Channels)) < 0)
     {
         snd_pcm_hw_params_free (hw_params);
         THROW_RUNTIME_ERROR("cannot set channel count (" << snd_strerror(err) << ")");
@@ -192,9 +196,7 @@ void ALSAOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
     snd_pcm_sw_params_free (sw_params);
 
     // WOW, WE MADE IT TIL HERE, so update channelcount, srate and sformat
-    this->currentChannelCount = channels;
-    this->currentSampleFormat = s;
-    this->currentSampleRate   = sampleRate;
+    this->currentFormat = format;
 }
 
 void ALSAOutput::drain()
@@ -233,7 +235,7 @@ int ALSAOutput::write (const int32_t* buffer, frame_t frames)
 
 template<typename T> int ALSAOutput::write(const T* buffer, frame_t frames)
 {
-    const int items = frames*this->currentChannelCount;
+    const int items = frames*this->currentFormat.Channels;
     T* processedBuffer = new T[items];
     this->getAmplifiedBuffer<T>(buffer, processedBuffer, items);
     buffer = processedBuffer;
@@ -247,7 +249,7 @@ template<typename T> int ALSAOutput::write(const T* buffer, frame_t frames)
     int total = 0;
     while (total < frames)
     {
-        int retval = snd_pcm_writei(this->alsa_dev, buffer + total * this->currentChannelCount, frames - total);
+        int retval = snd_pcm_writei(this->alsa_dev, buffer + total * this->currentFormat.Channels, frames - total);
 
         if (retval >= 0)
         {

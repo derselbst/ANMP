@@ -2,7 +2,7 @@
 #define IAUDIOOUTPUT_H
 
 #include "types.h"
-
+#include "SongFormat.h"
 
 #include <cstdint>
 
@@ -46,7 +46,7 @@ public:
      *
      * when finishing the call to this->init() the PCM stream shall be in state "stopped"
      */
-    virtual void init (unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime=false) = 0;
+    virtual void init (SongFormat format, bool realtime=false) = 0;
 
     /**
      * Starts the PCM stream.
@@ -76,9 +76,11 @@ public:
     virtual void setVolume(float vol);
 
     /**
-     * pushes the pcm pointed to by frameBuffer to the underlying audio driver
+     * pushes the pcm pointed to by frameBuffer to the underlying audio driver (or at least schedules it for pushing/playing)
      *
      * this generic version only takes care of pointer arithmetic, passing the call on to the specific write() methods below
+     * 
+     * if necessary, make a deep copy of frameBuffer, since it cannot be guaranteed that it is still alive after returning
      *
      * @param  frameBuffer buffer that holds the pcm
      * @param  frames no. of frames to be played from the buffer
@@ -97,10 +99,7 @@ public:
 
 
 protected:
-    uint8_t currentChannelCount = 0;
-    unsigned int currentSampleRate = 0;
-    SampleFormat_t currentSampleFormat = SampleFormat_t::unknown;
-
+    SongFormat currentFormat;
 
     // the current volume [0,1.0] to use, i.e. a factor by that the PCM gets amplified.
     // mark this as volatile so the compiler doesnt come up with:
@@ -111,6 +110,8 @@ protected:
     // this var (inside this->setVolume())
     // the worst things that can happen here are dirty reads, as far as I see; and who cares?
     // however, Im not absolutely sure if volatile if really required here
+    //
+    // update 2016-11-22: actually this is necessary, since it prohibits the optimizer to vectorize any loop where this var is used
     volatile float volume = 1.0f;
 
     template<typename T> void getAmplifiedBuffer(const T* inBuffer, T* outBuffer, unsigned long items);

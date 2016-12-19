@@ -1,7 +1,5 @@
 project(anmp-audio-output)
 
-include_directories(${PROJECT_INCLUDE_DIR})
-
 SET(ANMP_AUDIO_SRC
        IAudioOutput.cpp
        WaveOutput.cpp

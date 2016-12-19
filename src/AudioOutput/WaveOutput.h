@@ -22,7 +22,7 @@ struct SampleLoop
 #define FMT_PCM 0x0001
 #define FMT_IEEE_FLOAT 0x0003
 
-constexpr int N = 1;
+constexpr int N = 0;
 struct WaveHeader
 {
     const char RiffID[4] = {'R','I','F','F'};
@@ -34,7 +34,7 @@ struct WaveHeader
      *  Sampler CHUNK (for loop info)
      ******************************************/
     const char SamplerID[4] = {'s','m','p','l'};
-    const chunk_size_t SamplerSize = sizeof(WaveHeader::Manufacturer) + sizeof(WaveHeader::Product) + sizeof(WaveHeader::SamplePeriod) + sizeof(WaveHeader::MidiRootNote) + sizeof(WaveHeader::MidiPitchFraction) + sizeof(WaveHeader::SMPTEFormat) + sizeof(WaveHeader::SMPTEOffset) + sizeof(WaveHeader::SampleLoops) + sizeof(WaveHeader::SamplerData) + sizeof(WaveHeader::loops);
+    const chunk_size_t SamplerSize = sizeof(WaveHeader::Manufacturer) + sizeof(WaveHeader::Product) + sizeof(WaveHeader::SamplePeriod) + sizeof(WaveHeader::MidiRootNote) + sizeof(WaveHeader::MidiPitchFraction) + sizeof(WaveHeader::SMPTEFormat) + sizeof(WaveHeader::SMPTEOffset) + sizeof(WaveHeader::SampleLoops) + sizeof(WaveHeader::SamplerData) /*+ sizeof(WaveHeader::loops)*/;
     const int32_t Manufacturer = 0; // not intended for specific manufacturer
     const int32_t Product = 0; // not intended for specific manufacturer's product
     uint32_t SamplePeriod; // == (1.0/SampleRate)/(1e-9)
@@ -44,7 +44,7 @@ struct WaveHeader
     const uint32_t SMPTEOffset = 0; // no SMPTE offset
     const uint32_t SampleLoops = N;
     const uint32_t SamplerData = 0; // no additional info following this chunk
-    struct SampleLoop loops[N];
+//     struct SampleLoop loops[N];
 
 
     /*******************************************
@@ -128,14 +128,11 @@ public:
 
     virtual ~WaveOutput ();
 
-    static void SongChanged(void* ctx);
-
-
     // interface methods declaration
 
     void open () override;
 
-    void init (unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime = false) override;
+    void init (SongFormat format, bool realtime = false) override;
 
     void close () override;
 

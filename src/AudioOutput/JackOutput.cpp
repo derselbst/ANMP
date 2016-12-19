@@ -81,12 +81,18 @@ void JackOutput::open()
     }
 }
 
-void JackOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t s, bool realtime)
+void JackOutput::init(SongFormat format, bool realtime)
 {
+    if(this->currentFormat == format || !format.IsValid())
+    {
+        return;
+    }
+    
     this->stop();
 
     // register "channels" number of input ports
 
+    decltype(format.Channels)& channels = format.Channels;
 
     if(this->playbackPorts.size() < channels)
     {
@@ -110,7 +116,7 @@ void JackOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
     else if(this->playbackPorts.size() > channels)
     {
         // 2016-08-06: dont deregister port!
-        /*          // assumption that (this->currentChannelCount == this->playbackPorts.size()) may not always be correct
+        /*          // assumption that (this->currentFormat.Channels == this->playbackPorts.size()) may not always be correct
           	  for(int i=this->playbackPorts.size()-1; i>=channels; i--)
         	  {
         	    int err = jack_port_unregister (this->handle, this->playbackPorts[i]);
@@ -140,9 +146,7 @@ void JackOutput::init(unsigned int sampleRate, uint8_t channels, SampleFormat_t 
     }
 
     // WOW, WE MADE IT TIL HERE, so update channelcount, srate and sformat
-    this->currentChannelCount = channels;
-    this->currentSampleFormat = s;
-    this->currentSampleRate   = sampleRate;
+    this->currentFormat = format;
 }
 
 void JackOutput::close()
@@ -162,7 +166,7 @@ int JackOutput::write (const float* buffer, frame_t frames)
         return 0;
     }
 
-    const size_t Items = frames*this->currentChannelCount;
+    const size_t Items = frames*this->currentFormat.Channels;
 
     // converted_to_float_but_not_resampled buffer
     float* tempBuf = new float[Items];
@@ -208,7 +212,7 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
     {
         lock_guard<mutex> lock(this->mtx);
         this->srcData.data_out = this->interleavedProcessedBuffer.buf;
-        this->srcData.data_out += this->srcData.output_frames_gen * this->currentChannelCount;
+        this->srcData.data_out += this->srcData.output_frames_gen * this->currentFormat.Channels;
 
         this->srcData.output_frames = this->jackBufSize - this->srcData.output_frames_gen;
 
@@ -216,7 +220,7 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
         this->srcData.output_frames_gen = 0;
 
         // output_sample_rate / input_sample_rate
-        this->srcData.src_ratio = (double)this->jackSampleRate / this->currentSampleRate;
+        this->srcData.src_ratio = (double)this->jackSampleRate / this->currentFormat.SampleRate;
 
         int err = src_process (this->srcState, &this->srcData);
         if(err != 0 )
@@ -252,7 +256,7 @@ template<typename T> int JackOutput::write (const T* buffer, frame_t frames)
         return 0;
     }
 
-    const size_t Items = frames*this->currentChannelCount;
+    const size_t Items = frames*this->currentFormat.Channels;
 
     // converted_to_float_but_not_resampled buffer
     float* tempBuf = new float[Items];
@@ -330,7 +334,7 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
     {
         jack_default_audio_sample_t* out = static_cast<jack_default_audio_sample_t*>(jack_port_get_buffer(pthis->playbackPorts[i], nframes));
 
-        for(unsigned int myIdx=i, jackIdx=0; jackIdx<nframes; myIdx+=pthis->currentChannelCount, jackIdx++)
+        for(unsigned int myIdx=i, jackIdx=0; jackIdx<nframes; myIdx+=pthis->currentFormat.Channels, jackIdx++)
         {
             out[jackIdx] = pthis->interleavedProcessedBuffer.buf[myIdx];
         }
@@ -365,7 +369,7 @@ int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
     }
 
     delete[] pthis->interleavedProcessedBuffer.buf;
-    pthis->interleavedProcessedBuffer.buf = new (nothrow) jack_default_audio_sample_t[pthis->jackBufSize * pthis->currentChannelCount];
+    pthis->interleavedProcessedBuffer.buf = new (nothrow) jack_default_audio_sample_t[pthis->jackBufSize * pthis->currentFormat.Channels];
 
     // TODO check if alloc successfull
 

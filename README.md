@@ -19,9 +19,9 @@ What ANMP does NOT:
 * arbitrary (forward) looping of songs (i.e. even nested loops)
 * easy attempt to implement new formats
 
-ANMP handles audio differently than others: Instead of retrieving only small buffers that hold the raw pcm data, ANMP fetches the pcm of the whole file and puts that into memory (well this is at least the case for streamed audio files). Todays computers have enough memory to hold raw pcm of even longer audio files. Uncompressing big audio files can take a long time. Thus filling the pcm buffer is usually done asynchronously. When the next song shall be played, the pcm buffer of the former song is released.
+ANMP handles audio differently than others: Instead of retrieving only small buffers that hold the raw pcm data, ANMP fetches the pcm of the whole file and puts that into memory. Todays computers have enough memory to hold raw pcm of even longer audio files. Uncompressing big audio files can take a long time, though. Thus filling the pcm buffer is usually done asynchronously. When the next song shall be played, the pcm buffer of the former song is released.
 
-However, ANMP also supports rendering pcm to a small buffer. The method will be used if there is not enough memory available to hold a whole song in memory. This is esp. true, if the user requests infinite playback and the underlying song supports that but doesnt specify any loop points (as it applies to e.g. the Ultra64 Sound Format (USF)). In this case pcm gets rendered to a small buffer. Whenever this method is used, there will be no seeking within the song possible though.
+However, ANMP also supports rendering pcm to a small buffer. This method will be used if there is not enough memory available to hold a whole song in memory. This is esp. true, if the user requests infinite playback and the underlying song supports that but doesnt specify any loop points (as it applies to emulated sound formats like the Ultra64 Sound Format (USF)). In this case pcm gets rendered to a small buffer. Whenever this method is used, there will be no seeking within the song possible though.
 
 Cue sheets will just add the same song file multiple times to a playlist, but with different file-offsets.
 
@@ -65,6 +65,8 @@ mkdir build && cd build
 cmake ..
 make
 ```
+
+Also see [[Wiki] About the buildsystem](https://github.com/derselbst/ANMP/wiki/About-the-buildsystem)
 
 ## Building from Source (Windows)
 You probably want to use Visual Studio to get a native (preferably static) build of ANMP. Decide for one build architecture and one runtime library. Then:

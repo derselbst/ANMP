@@ -18,7 +18,7 @@ void IAudioOutput::setVolume(float vol)
 // takes care of pointer arithmetic
 int IAudioOutput::write (const pcm_t* frameBuffer, frame_t frames, int offset)
 {
-    switch (this->currentSampleFormat)
+    switch (this->currentFormat.SampleFormat)
     {
     case float32:
     {

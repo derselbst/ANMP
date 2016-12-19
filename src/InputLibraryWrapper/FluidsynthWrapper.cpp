@@ -403,14 +403,23 @@ void FluidsynthWrapper::close() noexcept
         this->smf = nullptr;
     }
 
-    delete_fluid_sequencer(this->sequencer);
-    this->sequencer = nullptr;
-
-    delete_fluid_synth(this->synth);
-    this->synth = nullptr;
-
-    delete_fluid_settings(this->settings);
-    this->settings = nullptr;
+    if(this->sequencer != nullptr)
+    {
+        delete_fluid_sequencer(this->sequencer);
+        this->sequencer = nullptr;
+    }
+    
+    if(this->synth != nullptr)
+    {
+        delete_fluid_synth(this->synth);
+        this->synth = nullptr;
+    }
+    
+    if(this->settings != nullptr)
+    {
+        delete_fluid_settings(this->settings);
+        this->settings = nullptr;
+    }
 }
 
 void FluidsynthWrapper::fillBuffer()
@@ -494,9 +503,9 @@ void FluidsynthWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
                            fluid_synth_process(this->synth, framesToDoNow, 0, nullptr, this->Format.Channels, temp_buf);
                            for(int frame=0; frame<framesToDoNow; frame++)
                            for(unsigned int c=0; c<this->Format.Channels; c++)
-    {
-        pcm[frame * this->Format.Channels + c] = temp_buf[c][frame];
-        };
+                           {
+                                pcm[frame * this->Format.Channels + c] = temp_buf[c][frame];
+                           };
                           )
 
     for(unsigned int i=0; i < this->Format.Channels; i++)
