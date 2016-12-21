@@ -57,15 +57,15 @@ private:
     typedef struct
     {
         jack_default_audio_sample_t* buf = nullptr; // length of this buffer determined by jackBufSize
-        volatile bool ready = false;
+        bool ready = false;
     } jack_buffer_t;
 
     SRC_DATA srcData;
     mutable std::mutex mtx;
     //*** Begin: mutex-protected vars ***//
     jack_buffer_t interleavedProcessedBuffer;
-    volatile jack_nframes_t jackBufSize = 0;
-    volatile jack_nframes_t jackSampleRate = 0;
+    jack_nframes_t jackBufSize = 0;
+    jack_nframes_t jackSampleRate = 0;
     //*** End: mutex-protected vars ***//
 
     static int processCallback(jack_nframes_t nframes, void* arg);
