@@ -23,7 +23,7 @@ Requires: libanmp%{soname}
 %ifarch x86_64
 BuildRequires: clang >= 3.5
 %else
-BuildRequires: gcc-g++ >= 4.8.1
+BuildRequires: gcc-c++ >= 4.8.1
 %endif
 
 
