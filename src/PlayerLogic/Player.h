@@ -4,6 +4,7 @@
 #include "types.h"
 #include "Event.h"
 
+#include <atomic>
 #include <future>
 
 namespace core
@@ -121,14 +122,14 @@ private:
     IPlaylist* playlist = nullptr;
 
     // frame offset; (currentSong.data + playhead*currentSong.Format.Channels) points to the frame(s) that will be played on subsequent call to playFrames(frame_t)
-    frame_t playhead = 0;
+    atomic<frame_t> playhead{0};
 
     // pointer to the audioDriver, we currently use
     // we DO own this instance and should care about destruction
     IAudioOutput* audioDriver = nullptr;
 
     // are we currently playing back?
-    bool isPlaying = false;
+    atomic<bool> isPlaying{false};
 
     // future for the playing thread
     future<void> futurePlayInternal;

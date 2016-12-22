@@ -57,7 +57,7 @@ Player::Player (Player&& other)
     this->audioDriver = other.audioDriver;
     other.audioDriver = nullptr;
     
-    this->playhead = other.playhead;
+    this->playhead.store(other.playhead.load());
     this->PreAmpVolume = other.PreAmpVolume;
 }
 
