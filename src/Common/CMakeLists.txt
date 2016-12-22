@@ -2,6 +2,7 @@ project(anmp-common)
 
 SET(ANMP_COMMON_SRC
        AtomicWrite.cpp
+       AudioDriver.c
        Common.cpp
        LoudnessFile.cpp
        PlaylistFactory.cpp
