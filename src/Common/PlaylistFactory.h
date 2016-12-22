@@ -46,10 +46,10 @@ public:
 
 #ifdef USE_CUE
     static void parseCue (IPlaylist& playlist, const string&filePath);
-    
+#endif
+
     template<typename T> 
     static void tryWith(Song* (&pcm), const string& filePath, Nullable<size_t> offset, Nullable<size_t> len);
-#endif
 };
 
 
