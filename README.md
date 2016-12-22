@@ -36,7 +36,7 @@ see [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%
 ## Build Dependencies
 
 * cmake >= 3.1.0
-* a C99 and C++11 compilant compiler (e.g. clang >= 3.5 or gcc >= 4.8.1)
+* a C99 and C++11 compilant compiler (e.g. clang >= 3.5 or gcc >= 4.8)
 * Qt5Widgets (highly recommended for GUI support, since there currently is no CLI)
 
 #### At least one of the following codec libraries
