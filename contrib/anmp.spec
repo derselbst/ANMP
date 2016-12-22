@@ -115,7 +115,14 @@ Additional useful tools for %{name}
 
 %build
 
+# clang fails linking the stack guard on ppc and has problems with std::atomic on i586
+# but clang is cool, so use it on x86_64, else fallback to gcc
+%ifarch x86_64
 %cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
+%else
+%cmake
+%endif
+
 make %{?_smp_mflags} anmp-qt
 
 %install
