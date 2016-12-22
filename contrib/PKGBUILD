@@ -5,7 +5,7 @@ pkgdesc='Versatile Music Player'
 url='http://www.github.com/derselbst/ANMP/'
 license=('GPL2')
 arch=('i686' 'x86_64')
-depends=('clang' 'cmake' 'libcue' 'fluidsynth' 'libgme' 'libmad' 'libid3tag' 'libsndfile' 'alsa-lib' 'qt5-base' 'qt5-3d')
+depends=('cmake' 'libcue' 'fluidsynth' 'libgme' 'libmad' 'libid3tag' 'libsndfile' 'alsa-lib' 'qt5-base' 'qt5-3d')
 provides=('anmp')
 source=("${pkgname}-${pkgver}.tar.bz2")
 sha512sums=('SKIP')
@@ -14,8 +14,6 @@ build() {
      cd "${srcdir}/${pkgname}-${pkgver}"
      mkdir build
      cd build
-     export CC=clang
-     export CXX=clang++
      cmake -D CMAKE_BUILD_TYPE="Release" -D CMAKE_INSTALL_PREFIX=/usr ..
      make all
 }

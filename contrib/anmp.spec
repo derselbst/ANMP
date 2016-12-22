@@ -19,7 +19,13 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
 Requires: libanmp%{soname}
 
-BuildRequires: clang
+
+%ifarch x86_64
+BuildRequires: clang >= 3.5
+%else
+BuildRequires: gcc-g++ >= 4.8.1
+%endif
+
 
 %if 0%{?mageia}
 BuildRequires: cmake >= 1:3.1.0
@@ -115,7 +121,7 @@ Additional useful tools for %{name}
 
 %build
 
-# clang fails linking the stack guard on ppc and has problems with std::atomic on i586
+# clang fails linking the stack guard on ppc64 and has problems with std::atomic on i586
 # but clang is cool, so use it on x86_64, else fallback to gcc
 %ifarch x86_64
 %cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang

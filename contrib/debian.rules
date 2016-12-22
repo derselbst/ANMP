@@ -24,7 +24,7 @@ build-stamp:
 	pwd
 	if cd build_dir ; then echo "Changed"; else echo "Some Errors"; fi
 	pwd
-	cmake -D CMAKE_BUILD_TYPE="Release" -DCMAKE_C_COMPILER=/usr/bin/clang-3.5 -DCMAKE_CXX_COMPILER=/usr/bin/clang++-3.5 -D CMAKE_INSTALL_PREFIX=/usr .
+	cmake -D CMAKE_BUILD_TYPE="Release" -D CMAKE_INSTALL_PREFIX=/usr .
 	make anmp-qt
 
 	touch build-stamp
