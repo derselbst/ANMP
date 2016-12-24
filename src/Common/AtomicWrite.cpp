@@ -29,21 +29,37 @@ void AtomicWrite::write(enum LogLevel l, std::string s, std::ostream& o)
     switch(l)
     {
     case DEBUG:
+#ifdef NDEBUG
+        return;
+#endif
         logLev="Debug";
         break;
+        
     case INFO:
+#ifdef NDEBUG
+        return;
+#endif
         logLev="Info";
         break;
+        
     case WARNING:
         logLev="Warning";
         break;
+        
     case ERROR:
         logLev="Error";
-        out = &std::cerr;
+        if(out == &std::cout)
+        {
+            out = &std::cerr;
+        }
         break;
+        
     case FATAL:
         logLev="Fatal Error";
-        out = &std::cerr;
+        if(out == &std::cout)
+        {
+            out = &std::cerr;
+        }
         break;
     }
 
