@@ -317,3 +317,6 @@ add_subdirectory(gui)
 # anmp-normalize
 add_subdirectory(utils)
 
+ENABLE_TESTING()
+add_subdirectory(test)
+
