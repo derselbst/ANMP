@@ -40,6 +40,8 @@ void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, QString msg)
 
     if(hasMsg)
     {
+        this->slotSeek(0);
+        
         QMessageBox msgBox;
         msgBox.setText("The Playback unexpectedly stopped.");
         msgBox.setIcon(QMessageBox::Critical);
