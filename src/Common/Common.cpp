@@ -215,6 +215,36 @@ string mydirname(const string& path)
     return string(dirname( const_cast<char*>(s.c_str()) ));
 }
 
+string getUniqueFilename(const string& path)
+{
+    constexpr int Max = 1000;
+    const string ext = getFileExtension(path);
+    int i = 0;
+    
+    string unique = path;
+    while(myExists(unique) && i<Max)
+    {
+        unique = string(path.c_str());
+        
+        // remove the extension
+        unique.erase(unique.find_last_of(".")+1);
+        
+        // add a unique number with leading zeros
+        unique += string(log10(Max) - to_string(i).length(), '0') + to_string(i);
+        
+        // readd the extension
+        unique += "." + ext;
+        
+        i++;
+    }
+    
+    if(i>=Max)
+    {
+        throw runtime_error("failed to get unique filename, max try count exceeded");
+    }
+    
+     return unique;
+}
 
 size_t getFileSize(FILE* f)
 {
@@ -233,8 +263,13 @@ size_t getFileSize(int fd)
     return stat.st_size;
 }
 
-bool myExists(const std::string& name)
+bool myExists(const string& name)
 {
+    if(name.empty())
+    {
+        return false;
+    }
+    
 #ifdef _POSIX_SOURCE
     struct stat buffer;
     int ret = stat(name.c_str(), &buffer);
