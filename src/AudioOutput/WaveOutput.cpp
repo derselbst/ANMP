@@ -13,6 +13,7 @@
 #include <string>
 #include <utility>      // std::pair
 #include <cstring>
+#include <errno.h>
 
 WaveOutput::WaveOutput(Player* player):player(player)
 {
@@ -81,38 +82,42 @@ void WaveOutput::close()
     this->framesWritten = 0;
 }
 
-int WaveOutput::write (const float* buffer, frame_t frames)
+
+template<typename T> int WaveOutput::write(const T* buffer, frame_t frames)
 {
+    int ret=0;
+    
     lock_guard<mutex> lck(this->mtx);
     
-    int ret = fwrite(buffer, sizeof(float), frames * this->currentFormat.Channels, this->handle);
-    ret /= this->currentFormat.Channels;
+    if(this->handle!=nullptr)
+    {
+        ret = fwrite(buffer, sizeof(T), frames * this->currentFormat.Channels, this->handle);
+        ret /= this->currentFormat.Channels;
+        
+        if(ret != frames)
+        {
+            THROW_RUNTIME_ERROR("fwrite failed writing " << frames << " frames, errno says: " << strerror(errno))
+        }
 
-    this->framesWritten += ret;
+        this->framesWritten += ret;
+    }
+    
     return ret;
 }
 
-int WaveOutput::write (const int16_t* buffer, frame_t frames)
-{
-    lock_guard<mutex> lck(this->mtx);
-    
-    int ret = fwrite(buffer, sizeof(int16_t), frames * this->currentFormat.Channels, this->handle);
-    ret /= this->currentFormat.Channels;
+int WaveOutput::write (const float* buffer, frame_t frames)
+{    
+    return this->write<float>(buffer, frames);
+}
 
-    this->framesWritten += ret;
-    return ret;
+int WaveOutput::write (const int16_t* buffer, frame_t frames)
+{    
+    return this->write<int16_t>(buffer, frames);
 }
 
 int WaveOutput::write (const int32_t* buffer, frame_t frames)
 {
-    lock_guard<mutex> lck(this->mtx);
-    
-    int ret = fwrite(buffer, sizeof(int32_t), frames * this->currentFormat.Channels, this->handle);
-    ret /= this->currentFormat.Channels;
-
-
-    this->framesWritten += ret;
-    return ret;
+    return this->write<int32_t>(buffer, frames);
 }
 
 void WaveOutput::start()

@@ -156,4 +156,5 @@ private:
     const Song* currentSong = nullptr;
     frame_t framesWritten = 0;
 
+    template<typename T> int write(const T* buffer, frame_t frames);
 };
