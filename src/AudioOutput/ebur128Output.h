@@ -41,6 +41,9 @@ public:
     void stop () override;
 
 private:
+    // because this.stop() might be called concurrently to this.write()
+    mutable mutex mtx;
+    
     Player* player = nullptr;
     ebur128_state* handle = nullptr;
 

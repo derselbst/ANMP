@@ -27,6 +27,8 @@ ebur128Output::~ebur128Output()
 //
 void ebur128Output::open()
 {
+    lock_guard<mutex> lck(this->mtx);
+    
     if(Config::RenderWholeSong && Config::PreRenderTime!=0)
     {
         THROW_RUNTIME_ERROR("You MUST NOT hold the whole audio file in memory, when using ebur128Output, while Config::PreRenderTime!=0")
@@ -47,6 +49,8 @@ void ebur128Output::init(SongFormat format, bool)
 {
     this->close();
 
+    lock_guard<mutex> lck(this->mtx);
+    
     this->currentSong = this->player->getCurrentSong();
     
     if(this->currentSong == nullptr || !format.IsValid())
@@ -85,6 +89,8 @@ void ebur128Output::init(SongFormat format, bool)
 
 void ebur128Output::close()
 {
+    lock_guard<mutex> lck(this->mtx);
+    
     if (this->handle != nullptr)
     {
         double overallSamplePeak=0.0;
@@ -122,6 +128,13 @@ void ebur128Output::close()
 
 int ebur128Output::write (const float* buffer, frame_t frames)
 {
+    lock_guard<mutex> lck(this->mtx);
+    
+    if(this->handle == nullptr)
+    {
+        return 0;
+    }
+    
     int ret = ebur128_add_frames_float(this->handle, buffer, frames);
 
     if(ret == EBUR128_SUCCESS)
@@ -134,6 +147,13 @@ int ebur128Output::write (const float* buffer, frame_t frames)
 
 int ebur128Output::write (const int16_t* buffer, frame_t frames)
 {
+    lock_guard<mutex> lck(this->mtx);
+    
+    if(this->handle == nullptr)
+    {
+        return 0;
+    }
+    
     int ret = ~EBUR128_SUCCESS;
 
     if(sizeof(short)==sizeof(int16_t))
@@ -155,6 +175,13 @@ int ebur128Output::write (const int16_t* buffer, frame_t frames)
 
 int ebur128Output::write (const int32_t* buffer, frame_t frames)
 {
+    lock_guard<mutex> lck(this->mtx);
+    
+    if(this->handle == nullptr)
+    {
+        return 0;
+    }
+    
     int ret = ~EBUR128_SUCCESS;
 
     if(sizeof(short)==sizeof(int32_t))
@@ -181,6 +208,6 @@ void ebur128Output::start()
 
 void ebur128Output::stop()
 {
-
+    this->close();
 }
 
