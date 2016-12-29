@@ -2,6 +2,7 @@
 #include "Player.h"
 #include "Song.h"
 #include "Config.h"
+#include "Common.h"
 
 #include "LoudnessFile.h"
 #include "CommonExceptions.h"
@@ -27,6 +28,8 @@ WaveOutput::~WaveOutput()
 //
 void WaveOutput::open()
 {
+    lock_guard<mutex> lck(this->mtx);
+    
     if(Config::RenderWholeSong && Config::PreRenderTime!=0)
     {
         // writing the file might be done with one call to this->write(), but this doesnt mean that the song already has been fully rendered yet
@@ -38,6 +41,8 @@ void WaveOutput::init(SongFormat format, bool)
 {
     this->close();
     
+    lock_guard<mutex> lck(this->mtx);
+    
     this->currentSong = this->player->getCurrentSong();
     
     if(this->currentSong == nullptr || !format.IsValid())
@@ -45,8 +50,7 @@ void WaveOutput::init(SongFormat format, bool)
         return;
     }
 
-    string outFile = this->currentSong->Filename.c_str();
-    outFile += ".wav";
+    string outFile = ::getUniqueFilename(this->currentSong->Filename + ".wav");
     
     this->handle = fopen(outFile.c_str(), "wb");
     if(this->handle == nullptr)
@@ -61,6 +65,8 @@ void WaveOutput::init(SongFormat format, bool)
 
 void WaveOutput::close()
 {
+    lock_guard<mutex> lck(this->mtx);
+    
     if(this->handle != nullptr && this->currentSong != nullptr)
     {
         WaveHeader w(this->currentSong);
@@ -77,6 +83,8 @@ void WaveOutput::close()
 
 int WaveOutput::write (const float* buffer, frame_t frames)
 {
+    lock_guard<mutex> lck(this->mtx);
+    
     int ret = fwrite(buffer, sizeof(float), frames * this->currentFormat.Channels, this->handle);
     ret /= this->currentFormat.Channels;
 
@@ -86,6 +94,8 @@ int WaveOutput::write (const float* buffer, frame_t frames)
 
 int WaveOutput::write (const int16_t* buffer, frame_t frames)
 {
+    lock_guard<mutex> lck(this->mtx);
+    
     int ret = fwrite(buffer, sizeof(int16_t), frames * this->currentFormat.Channels, this->handle);
     ret /= this->currentFormat.Channels;
 
@@ -95,6 +105,8 @@ int WaveOutput::write (const int16_t* buffer, frame_t frames)
 
 int WaveOutput::write (const int32_t* buffer, frame_t frames)
 {
+    lock_guard<mutex> lck(this->mtx);
+    
     int ret = fwrite(buffer, sizeof(int32_t), frames * this->currentFormat.Channels, this->handle);
     ret /= this->currentFormat.Channels;
 
@@ -110,6 +122,6 @@ void WaveOutput::start()
 
 void WaveOutput::stop()
 {
-
+    this->close();
 }
 

@@ -4,6 +4,7 @@
 #include "Song.h"
 #include "CommonExceptions.h"
 #include <cstdio>
+#include <mutex>
 
 typedef int32_t chunk_size_t;
 
@@ -146,6 +147,9 @@ public:
     void stop () override;
 
 private:
+    // because this.stop() might be called concurrently to this.write()
+    mutable mutex mtx;
+    
     Player* player = nullptr;
     FILE* handle = nullptr;
 
