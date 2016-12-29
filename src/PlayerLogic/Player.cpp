@@ -189,24 +189,23 @@ void Player::_setCurrentSong (Song* song)
         // if not: exception will be thrown
         this->_initAudio();
     }
+    
+    // first: free resources
+    if(this->currentSong != nullptr)
+    {
+        this->currentSong->releaseBuffer();
+        this->currentSong->close();
+    }
+    
+    // then update currently played song
+    this->currentSong = song;
 
-    if(song == nullptr)
+    if(song == nullptr) // nullptr here means this.stop()
     {
         this->_pause();
-        this->currentSong = song;
     }
     else /*if(song != this->currentSong) 2016-10-31: always update*/
     {
-        // capture format of former current song
-        SongFormat oldformat;
-        if(this->currentSong != nullptr)
-        {
-            oldformat = this->currentSong->Format;
-            this->currentSong->releaseBuffer();
-            this->currentSong->close();
-        }
-
-        this->currentSong = song;
         // open the audio file
         this->currentSong->open();
         // go ahead and start filling the pcm buffer
