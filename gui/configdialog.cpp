@@ -2,6 +2,7 @@
 #include "ui_configdialog.h"
 
 #include "Config.h"
+#include "Common.h"
 
 #include <QFileDialog>
 
@@ -102,7 +103,10 @@ void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
 
 void ConfigDialog::on_browseSF2_clicked()
 {
-    QString sf2 = QFileDialog::getOpenFileName(this, "Select Soundfont");
+    string dir = ::mydirname(Config::FluidsynthDefaultSoundfont);
+
+    QString selFilter = "SoundFont (*.sf2)";
+    QString sf2 = QFileDialog::getOpenFileName(this, "Select Soundfont", QString::fromStdString(dir), "SoundFont (*.sf2);;All files (*.*)", &selFilter);
 
     this->ui->defaultSF2Path->setText(sf2);
 }
