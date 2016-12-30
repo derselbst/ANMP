@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <cstring> // strerror
+#include <cmath> // floor
 
 
 LibMadWrapper::LibMadWrapper(string filename) : StandardWrapper(filename)
@@ -226,7 +227,6 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     {
         framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);
     }
-    fesetround(FE_TONEAREST);
 
     int32_t* pcm = static_cast<int32_t*>(bufferToFill);
 
@@ -303,9 +303,8 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
         unsigned int item=0;
         /* audio normalization */
-        /*const*/ float absoluteGain = (numeric_limits<int32_t>::max()) / (numeric_limits<int32_t>::max() * this->gainCorrection);
-        /* reduce risk of clipping, remove that when using true sample peak */
-        absoluteGain -= 0.01;
+        const float absoluteGain = (numeric_limits<int32_t>::max()) / (numeric_limits<int32_t>::max() * this->gainCorrection);
+
         for( ;
                 !this->stopFillBuffer &&
                 framesToDoNow>0 && // frames left during this loop
@@ -318,7 +317,7 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             /* output sample(s) in 24-bit signed little-endian PCM */
 
             sample = LibMadWrapper::toInt24Sample(*left_ch++);
-            sample = Config::useAudioNormalization ? lrint(sample * absoluteGain) : sample;
+            sample = Config::useAudioNormalization ? floor(sample * absoluteGain) : sample;
             pcm[item++] = sample;
 
             if (this->Format.Channels == 2) // our buffer is for 2 channels
@@ -326,7 +325,7 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
                 if(this->synth.Value.pcm.channels==2) // ...but did mad also decoded for 2 channels?
                 {
                     sample = LibMadWrapper::toInt24Sample(*right_ch++);
-                    sample = Config::useAudioNormalization ? lrint(sample * absoluteGain) : sample;
+                    sample = Config::useAudioNormalization ? floor(sample * absoluteGain) : sample;
                     pcm[item++] = sample;
                 }
                 else
@@ -350,12 +349,12 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             /* output sample(s) in 24-bit signed little-endian PCM */
 
             sample = LibMadWrapper::toInt24Sample(*left_ch++);
-            this->tempBuf.push_back(Config::useAudioNormalization ? lrint(sample * absoluteGain) : sample);
+            this->tempBuf.push_back(Config::useAudioNormalization ? floor(sample * absoluteGain) : sample);
 
             if (this->Format.Channels == 2)
             {
                 sample = LibMadWrapper::toInt24Sample(*right_ch++);
-                this->tempBuf.push_back(Config::useAudioNormalization ? lrint(sample * absoluteGain) : sample);
+                this->tempBuf.push_back(Config::useAudioNormalization ? floor(sample * absoluteGain) : sample);
             }
 
             /* DONT do this: this->framesAlreadyRendered++; since we use framesAlreadyRendered as offset for "bufferToFill"*/
