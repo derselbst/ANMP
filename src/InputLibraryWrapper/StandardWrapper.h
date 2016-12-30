@@ -5,8 +5,6 @@
 #include "LoudnessFile.h"
 
 #include <future>
-#include <cfenv> // fesetround
-#include <cmath> // lrint
 
 /**
   * class StandardWrapper
@@ -30,7 +28,6 @@
     }\
     /* audio normalization */\
     const float absoluteGain = (numeric_limits<SAMPLEFORMAT>::max()) / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);\
-    fesetround(FE_TONEAREST);\
 \
     SAMPLEFORMAT* pcm = static_cast<SAMPLEFORMAT*>(bufferToFill);\
     pcm += (this->framesAlreadyRendered * this->Format.Channels) % this->count;\
