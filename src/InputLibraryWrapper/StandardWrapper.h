@@ -44,7 +44,7 @@
 \
         for(unsigned int i=0; Config::useAudioNormalization && i<framesToDoNow*this->Format.Channels; i++)\
         {\
-	    pcm[i] = static_cast<SAMPLEFORMAT>(floor(pcm[i] * absoluteGain));\
+	    pcm[i] = static_cast<SAMPLEFORMAT>(pcm[i] * absoluteGain);\
         }\
 \
         pcm += (framesToDoNow * this->Format.Channels) % this->count;\
