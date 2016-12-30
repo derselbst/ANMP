@@ -16,6 +16,12 @@
   *
   */
 
+
+/** @brief this is the common macro responsible for decoding the audio file and correctly filling the PCM buffer
+  *
+  * @warning whenever changing this implementation, dont forget LibMadWrapper::render(), which does
+  * pretty much the same thing, without using this macro
+  */
 #define STANDARDWRAPPER_RENDER(SAMPLEFORMAT, LIB_SPECIFIC_RENDER_FUNCTION)\
     if(framesToRender==0)\
     {\
