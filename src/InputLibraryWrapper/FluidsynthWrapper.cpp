@@ -70,7 +70,7 @@ void FluidsynthWrapper::scheduleTrackLoop(unsigned int time, fluid_event_t* e, f
         // does this event belongs to the same track and plays on the same channel as where we found the corresponding loop event?
         if(event->track_number == loopInfo->trackId && (event->midi_buffer[0] & 0x0F) == loopInfo->channel)
         {
-            if(IsControlChange(event) && IsLoopStop(event) && (event->midi_buffer[2] == loopInfo.loopId)) // is that our corresponding loop stop?
+            if(IsControlChange(event) && IsLoopStop(event) && (event->midi_buffer[2] == loopInfo->loopId)) // is that our corresponding loop stop?
             {
                 int ret = pthis->scheduleNextCallback(event, time-static_cast<unsigned int>(loopInfo->start.Value*1000), loopInfo);
                 if(ret != FLUID_OK)
