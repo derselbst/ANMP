@@ -51,6 +51,7 @@ void FluidsynthWrapper::scheduleTrackLoop(unsigned int time, fluid_event_t* e, f
         return;
     }
 
+    // seek back to where the loop started
     if(smf_seek_to_seconds(pthis->smf, loopInfo->start.Value) != 0)
     {
         CLOG(LogLevel::ERROR, "unable to seek to "<< loopInfo->start.Value << " seconds.");
@@ -63,12 +64,13 @@ void FluidsynthWrapper::scheduleTrackLoop(unsigned int time, fluid_event_t* e, f
     fluid_event_set_dest(fluidEvt, pthis->synthSeqId);
 
     smf_event_t* event;
+    // read in every single event following the position we currently are
     while((event = smf_get_next_event(pthis->smf)) != nullptr)
     {
-        if(event->track_number == loopInfo->trackId &&
-                (event->midi_buffer[0] & 0x0F) == loopInfo->channel)
+        // does this event belongs to the same track and plays on the same channel as where we found the corresponding loop event?
+        if(event->track_number == loopInfo->trackId && (event->midi_buffer[0] & 0x0F) == loopInfo->channel)
         {
-            if(IsControlChange(event) && IsLoopStop(event))
+            if(IsControlChange(event) && IsLoopStop(event) && (event->midi_buffer[2] == loopInfo.loopId)) // is that our corresponding loop stop?
             {
                 int ret = pthis->scheduleNextCallback(event, time-static_cast<unsigned int>(loopInfo->start.Value*1000), loopInfo);
                 if(ret != FLUID_OK)
@@ -301,7 +303,7 @@ void FluidsynthWrapper::feedToFluidSeq(smf_event_t * event, fluid_event_t* fluid
         return;
         break;
 
-    case 0xB0:
+    case 0xB0: // ctrl change
     {
         vector<MidiLoopInfo>& loops = this->trackLoops[event->track_number-1 /*because one based*/][chan];
         if(IsLoopStart(event))

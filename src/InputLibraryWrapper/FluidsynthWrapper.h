@@ -65,13 +65,26 @@ private:
 
     struct MidiLoopInfo
     {
+        // the track this loop is valid for
         // same as event->track_number, i.e. one based
         int trackId;
+        
+        // unique id of this midi event given by libsmf
         int eventId;
+        
+        // the channel this loop is valid for
+        // same as event->channel
         uint8_t channel;
+        
+        // unique id of this loop, as specified by value of MIDI CC102 and CC103
         uint8_t loopId;
+        
+        // time indexes in seconds
         Nullable<double> start;
         Nullable<double> stop;
+        
+        // how often this loop is repeated, 0 for infinite loops
+        // specified by MIDI CC104
         uint8_t count = 0;
     };
 
