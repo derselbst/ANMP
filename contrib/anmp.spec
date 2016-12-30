@@ -129,7 +129,7 @@ Additional useful tools for %{name}
 %cmake
 %endif
 
-make %{?_smp_mflags} anmp-qt
+make %{?_smp_mflags}
 
 %install
 
@@ -170,6 +170,6 @@ export CTEST_OUTPUT_ON_FAILURE=1
 
 %files progs
 %defattr(-,root,root)
-#%%{_bindir}/anmp-normalize
+%{_bindir}/anmp-normalize
 
 
