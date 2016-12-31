@@ -1,4 +1,16 @@
 -------------------------------------------------------------------
+Sat Dec 31 17:13:40 UTC 2016 - tom.mbrt@googlemail.com
+
+- use clang for x86_64 RPM builds, else gcc
+- get rid of C99 compiler warnings
+- add clangs undefined behaviour sanitizer
+- add unit tests
+- [Player] improve thread safety
+- [StandardWrapper] fix playback of float samples
+- [GUI] add file filter for soundfont selection dialog
+- [WaveOutput] use unique filenames
+
+-------------------------------------------------------------------
 Mon Dec 19 18:20:04 UTC 2016 - tom.mbrt@googlemail.com
 
 - initial

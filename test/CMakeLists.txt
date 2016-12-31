@@ -13,3 +13,6 @@ ADD_TEST(NAME TestCommon COMMAND TestCommon)
 ADD_EXECUTABLE(TestStandardWrapper TestStandardWrapper.cpp)
 TARGET_LINK_LIBRARIES(TestStandardWrapper anmp)
 ADD_TEST(NAME TestStandardWrapper COMMAND TestStandardWrapper)
+
+# make test only runs tests, but doesnt build them
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}  DEPENDS TestLoudnessFile TestCommon TestStandardWrapper)
