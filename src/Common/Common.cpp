@@ -48,7 +48,11 @@ bool iEqualsUgly(string strFirst, string strSecond)
 bool iEquals(const string& str1, const string& str2)
 {
 #ifdef _POSIX_SOURCE
-    return strncasecmp(str1.c_str(), str2.c_str(), min(str1.size(),str2.size())) == 0;
+    if(str1.size() != str2.size())
+    {
+        return false;
+    }
+    return strncasecmp(str1.c_str(), str2.c_str(), str1.size()) == 0;
 #else
     return iEqualsUgly(str1, str2);
 #endif
@@ -62,8 +66,7 @@ string getFileExtension(const string& filePath)
 #define BORK_TIME 0xC0CAC01A
 /** @brief converts a time string to ms
  *
- * @param[in] input: a string in the format of mm:ss
- *            where mm=minutes and ss=seconds
+ * @param[in] input a string in the format of mm:ss where mm=minutes and ss=seconds
  * @return an integer in milliseconds
  */
 unsigned long parse_time_crap(const char *input)
@@ -160,8 +163,8 @@ string framesToTimeStr(frame_t frames, const unsigned int& sampleRate)
 }
 
 /**
- * @param[in] ms: position in audiofile in milliseconds
- * @param[in] sampleRate: sample rate of audiofile in HZ
+ * @param[in] ms position in audiofile in milliseconds
+ * @param[in] sampleRate sample rate of audiofile in HZ
  *
  * @return position in audiofile in frames (i.e. samples)
  */
