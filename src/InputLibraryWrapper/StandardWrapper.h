@@ -19,6 +19,17 @@
 
 /** @brief this is the common macro responsible for decoding the audio file and correctly filling the PCM buffer
   *
+  * usually called within this->render() simply by putting e.g.:
+  * 
+  *   STANDARDWRAPPER_RENDER(float, 3rd_party_render_function(pcm, framesToDoNow))
+  * 
+  * "pcm" is the pointer to the buffer where the samples are being stored, as declared below
+  * 
+  * "framesToDoNow" is the number of frames the render function shall prepare for a given call
+  * depending on the semantic of this function you may have to pass the number of items being rendered (i.e. framesToDoNow  * this->Format.Channels)
+  * 
+  * obviously you may not change the name of these two vars (since they are declared within the scope of the macro), however you may reoder the arguments to fit your render function (this is also the reason why we cant use template function for this purpose, at least I dont see how this should work)
+  * 
   * @warning whenever changing this implementation, dont forget LibMadWrapper::render(), which does
   * pretty much the same thing, without using this macro
   */
