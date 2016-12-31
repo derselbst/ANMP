@@ -8,7 +8,7 @@
 using namespace std;
 
 
-#define GEN_FRAMES(FORMAT, ITEM) (numeric_limits<FORMAT>::max() / (ITEM + 1))
+#define GEN_FRAMES(FORMAT, MAX, ITEM) ((float)(ITEM) / (MAX))
 
 template<typename FORMAT>
 class TestSong : public StandardWrapper<FORMAT>
@@ -46,7 +46,7 @@ public:
         STANDARDWRAPPER_RENDER( FORMAT,
                                 for(unsigned int i=0; i<framesToDoNow * this->Format.Channels; i++)
                                 {
-                                    pcm[i] = GEN_FRAMES(FORMAT, i);
+                                    pcm[i] = GEN_FRAMES(FORMAT, framesToDoNow * this->Format.Channels, i);
                                 })
     }
 };
@@ -78,7 +78,7 @@ int main()
         float* pcm = static_cast<float*>(testFloat.data);
         for(unsigned int i=0; i < nItems; i++)
         {
-            float item = GEN_FRAMES(float, i);
+            float item = GEN_FRAMES(float, nItems, i);
             TEST_ASSERT(pcm[i] == item);
         }
         
