@@ -123,11 +123,12 @@ Additional useful tools for %{name}
 
 # clang fails linking the stack guard on ppc64 and has problems with std::atomic on i586
 # but clang is cool, so use it on x86_64, else fallback to gcc
-%ifarch x86_64
-%cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
-%else
+# update 2016-12-31: when trying to build c++14 code with libstdc++-4.8, clang complains: "no member named 'gets' in the global namespace"; so fallback to gcc :(
+# %%ifarch x86_64
+# %%cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
+# %%else
 %cmake
-%endif
+# %%endif
 
 make %{?_smp_mflags}
 
