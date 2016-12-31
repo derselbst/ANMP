@@ -146,6 +146,7 @@ ln -s /%{_libdir}/libanmp.so.%{soname} %{buildroot}/%{_libdir}/libanmp.so
 ln -s /%{_bindir}/anmp-qt %{buildroot}/%{_bindir}/anmp
 
 %check
+cd build
 export CTEST_OUTPUT_ON_FAILURE=1
 %__make check
 
