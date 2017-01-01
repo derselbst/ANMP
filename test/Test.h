@@ -8,5 +8,5 @@
 if(!(COND)) \
 { \
     std::cerr << __FILE__ << ":" << __LINE__ << " assertion (" << #COND << ") failed" << std::endl; \
-    return -1; \
+    std::exit(-1); \
 }
