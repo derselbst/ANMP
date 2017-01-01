@@ -51,6 +51,38 @@ public:
     }
 };
 
+template<typename T>
+void TestMethod(TestSong<T>& songUnderTest)
+{
+    
+    for(int c=1; c<=6; c++)
+    {
+        songUnderTest.Format.Channels = c;
+
+        songUnderTest.open();
+        
+        songUnderTest.fillBuffer();
+        TEST_ASSERT(songUnderTest.data != nullptr);
+        
+        unsigned int nItems = c * songUnderTest.getFrames();
+        TEST_ASSERT(songUnderTest.count == nItems);
+        
+        T* pcm = static_cast<T*>(songUnderTest.data);
+        for(unsigned int i=0; i < nItems; i++)
+        {
+            T item = static_cast<T>(GEN_FRAMES(T, nItems, i));
+            TEST_ASSERT(pcm[i] == item);
+        }
+        
+        TEST_ASSERT(songUnderTest.getFramesRendered() == songUnderTest.getFrames());
+        
+        songUnderTest.releaseBuffer();
+        TEST_ASSERT(songUnderTest.data == nullptr);
+        TEST_ASSERT(songUnderTest.count == 0);
+        songUnderTest.close();
+    }
+}
+
 
 int main()
 {
@@ -62,33 +94,12 @@ int main()
     TestSong<float> testFloat("");
     testFloat.Format.SampleFormat = SampleFormat_t::float32;
     testFloat.Format.SampleRate = 22050;
+    TestMethod<float>(testFloat);
     
-    for(int c=1; c<=6; c++)
-    {
-        testFloat.Format.Channels = c;
-
-        testFloat.open();
-        
-        testFloat.fillBuffer();
-        TEST_ASSERT(testFloat.data != nullptr);
-        
-        unsigned int nItems = c * testFloat.getFrames();
-        TEST_ASSERT(testFloat.count == nItems);
-        
-        float* pcm = static_cast<float*>(testFloat.data);
-        for(unsigned int i=0; i < nItems; i++)
-        {
-            float item = GEN_FRAMES(float, nItems, i);
-            TEST_ASSERT(pcm[i] == item);
-        }
-        
-        TEST_ASSERT(testFloat.getFramesRendered() == testFloat.getFrames());
-        
-        testFloat.releaseBuffer();
-        TEST_ASSERT(testFloat.data == nullptr);
-        TEST_ASSERT(testFloat.count == 0);
-        testFloat.close();
-    }
+    TestSong<int32_t> testint32("");
+    testint32.Format.SampleFormat = SampleFormat_t::int32;
+    testint32.Format.SampleRate = 1;
+    TestMethod<int32_t>(testint32);
     
     
     return 0;
