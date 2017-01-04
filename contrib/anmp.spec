@@ -148,6 +148,7 @@ ln -s /%{_bindir}/anmp-qt %{buildroot}/%{_bindir}/anmp
 %check
 cd build
 export CTEST_OUTPUT_ON_FAILURE=1
+export LD_LIBRARY_PATH=%{buildroot}/%{_libdir}/:$LD_LIBRARY_PATH
 %__make check
 
 %post -n libanmp%{soname} -p /sbin/ldconfig
