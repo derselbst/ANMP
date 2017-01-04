@@ -1,8 +1,7 @@
 #include "configdialog.h"
 #include "ui_configdialog.h"
 
-#include "Config.h"
-#include "Common.h"
+#include <anmp.hpp>
 
 #include <QFileDialog>
 

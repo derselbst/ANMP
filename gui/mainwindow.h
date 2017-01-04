@@ -1,13 +1,13 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
-#include "Player.h"
-#include "IPlaylist.h"
-#include "Playlist.h"
-#include "PlaylistModel.h"
+
 #include "applets/analyzer/AnalyzerApplet.h"
 
+#include <anmp.hpp>
+#include "PlaylistModel.h"
+
+#include <QMainWindow>
 #include <QStringList>
 #include <QStandardItemModel>
 #include <QAbstractItemView>

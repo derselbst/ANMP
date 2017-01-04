@@ -12,11 +12,8 @@
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
 
+#include <anmp.hpp>
 
-#include "Song.h"
-#include "Common.h"
-#include "Config.h"
-#include "PlaylistFactory.h"
 #include <QFileDialog>
 #include <QProgressDialog>
 #include <QMessageBox>

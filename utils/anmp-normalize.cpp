@@ -7,16 +7,7 @@
 #include <iostream>
 #include <string>
 
-// #include "unistd.h"
-
-#include "types.h"
-#include "Playlist.h"
-#include "PlaylistFactory.h"
-#include "Player.h"
-#include "Song.h"
-#include "Config.h"
-#include "AtomicWrite.h"
-
+#include <anmp.hpp>
 
 #include <experimental/filesystem>
 #include <thread>

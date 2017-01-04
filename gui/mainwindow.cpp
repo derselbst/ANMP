@@ -7,11 +7,8 @@
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
 
-#include "Common.h"
-#include "Config.h"
-#include "PlaylistFactory.h"
-#include "Playlist.h"
-#include "Song.h"
+#include <anmp.hpp>
+
 #include <QFileDialog>
 #include <QProgressDialog>
 #include <QMessageBox>

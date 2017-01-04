@@ -42,7 +42,12 @@ endif()
 
 
 ### setup project include dirs
-set(PROJECT_LOCAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/src/Common ${CMAKE_SOURCE_DIR}/src/PlayerLogic ${CMAKE_SOURCE_DIR}/src/InputLibraryWrapper ${CMAKE_SOURCE_DIR}/src/AudioOutput)
+set(PROJECT_LOCAL_INCLUDE_DIRS
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/src/Common
+        ${CMAKE_SOURCE_DIR}/src/PlayerLogic
+        ${CMAKE_SOURCE_DIR}/src/InputLibraryWrapper
+        ${CMAKE_SOURCE_DIR}/src/AudioOutput)
 
 
 ### Search in the `cmake' directory for additional CMake modules.
