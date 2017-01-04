@@ -123,6 +123,14 @@ Additional useful tools for %{name}
 %build
 mkdir -p %{builddir}
 cd %{builddir}
+
+# clang fails linking the stack guard on ppc64 and has problems with std::atomic on i586
+# but clang is cool, so use it on x86_64, else fallback to gcc
+%ifarch x86_64
+        export CC=clang
+        export CXX=clang++
+%endif
+
 cmake .. \
         -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} \
         -DINCLUDE_INSTALL_DIR:PATH=%{_includedir} \
@@ -131,12 +139,6 @@ cmake .. \
         -DSHARE_INSTALL_PREFIX:PATH=%{_datadir} \
         -DCMAKE_INSTALL_LIBDIR:PATH=%{_libdir} \
         -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-# clang fails linking the stack guard on ppc64 and has problems with std::atomic on i586
-# but clang is cool, so use it on x86_64, else fallback to gcc
-%ifarch x86_64
-        -DCMAKE_C_COMPILER=clang \
-        -DCMAKE_CXX_COMPILER=clang++ \
-%endif
         -DCMAKE_C_FLAGS="${CFLAGS:-%optflags} -DNDEBUG" \
         -DCMAKE_CXX_FLAGS="${CXXFLAGS:-%optflags} -DNDEBUG" \
         -DCMAKE_EXE_LINKER_FLAGS="-Wl,--as-needed -Wl,--no-undefined -Wl,-z,now" \
