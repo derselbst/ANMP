@@ -38,7 +38,6 @@
 #include <iomanip>
 #include <cstring>
 #include <iostream>
-#include <linux/limits.h>
 
 #ifdef USE_CUE
 extern "C"
