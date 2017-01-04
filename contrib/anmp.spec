@@ -5,6 +5,7 @@
 %endif
 
 %define soname 0
+%define builddir build
 
 Name: anmp
 Version: 2
@@ -120,36 +121,52 @@ Additional useful tools for %{name}
 %setup -q
 
 %build
-
+mkdir -p %{builddir}
+cd %{builddir}
+cmake .. \
+        -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} \
+        -DINCLUDE_INSTALL_DIR:PATH=%{_includedir} \
+        -DLIB_INSTALL_DIR:PATH=%{_libdir} \
+        -DSYSCONF_INSTALL_DIR:PATH=%{_sysconfdir} \
+        -DSHARE_INSTALL_PREFIX:PATH=%{_datadir} \
+        -DCMAKE_INSTALL_LIBDIR:PATH=%{_libdir} \
+        -DCMAKE_BUILD_TYPE=RelWithDebInfo \
 # clang fails linking the stack guard on ppc64 and has problems with std::atomic on i586
 # but clang is cool, so use it on x86_64, else fallback to gcc
 %ifarch x86_64
-%cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang
-%else
-%cmake
+        -DCMAKE_C_COMPILER=clang \
+        -DCMAKE_CXX_COMPILER=clang++ \
 %endif
+        -DCMAKE_C_FLAGS="${CFLAGS:-%optflags} -DNDEBUG" \
+        -DCMAKE_CXX_FLAGS="${CXXFLAGS:-%optflags} -DNDEBUG" \
+        -DCMAKE_EXE_LINKER_FLAGS="-Wl,--as-needed -Wl,--no-undefined -Wl,-z,now" \
+        -DCMAKE_MODULE_LINKER_FLAGS="-Wl,--as-needed -Wl,--no-undefined -Wl,-z,now" \
+        -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--as-needed -Wl,--no-undefined -Wl,-z,now" \
+%if "%{?_lib}" == "lib64"
+        -DLIB_SUFFIX=64 \
+%endif
+        -DCMAKE_SKIP_RPATH:BOOL=ON \
+        -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
+        -DBUILD_SHARED_LIBS:BOOL=ON \
+        -DBUILD_STATIC_LIBS:BOOL=OFF \
+        -DCMAKE_COLOR_MAKEFILE:BOOL=OFF \
+        -DCMAKE_INSTALL_DO_STRIP:BOOL=OFF \
+        -DCMAKE_MODULES_INSTALL_DIR=%{_datadir}/cmake/Modules
 
 make %{?_smp_mflags} anmp-qt
 
 %install
-
-%if %{defined suse_version}
-%__make VERBOSE=1 DESTDIR=%{buildroot} install/fast -C %__builddir
-%else
-%cmake_install
-%endif
+make VERBOSE=1 DESTDIR=%{buildroot} install/fast -C %{builddir}
 
 mv %{buildroot}/%{_libdir}/libanmp.so %{buildroot}/%{_libdir}/libanmp.so.%{soname}
-
 ln -s /%{_libdir}/libanmp.so.%{soname} %{buildroot}/%{_libdir}/libanmp.so
-
 ln -s /%{_bindir}/anmp-qt %{buildroot}/%{_bindir}/anmp
 
 %check
-cd build
+cd %{builddir}
 export CTEST_OUTPUT_ON_FAILURE=1
 export LD_LIBRARY_PATH=%{buildroot}/%{_libdir}/:$LD_LIBRARY_PATH
-%__make check
+make check
 
 %post -n libanmp%{soname} -p /sbin/ldconfig
 
