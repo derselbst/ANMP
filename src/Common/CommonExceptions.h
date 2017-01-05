@@ -27,8 +27,8 @@ public:
     LoopTreeConstructionException():std::runtime_error("The user propably defined illegal (e.g. intersecting) loop points") {}
 };
 
-class AssertionException : public std::runtime_error
+class AssertionException : public std::logic_error
 {
 public:
-    AssertionException(const char* msg):std::logic_error(msg) {}
+    AssertionException(string& msg):std::logic_error(msg) {}
 };
