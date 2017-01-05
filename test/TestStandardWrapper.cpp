@@ -92,6 +92,8 @@ int main()
     Config::RenderWholeSong = true;
     Config::useAudioNormalization = true;
 
+    bool failed=false;
+
     try
     {
       TestSong<double> test(100);
@@ -103,6 +105,7 @@ int main()
     {
       cerr << "testing double failed" << endl;
       cerr << e.what() << endl;
+      failed |= true;
     }
     
     try
@@ -116,6 +119,7 @@ int main()
     {
       cerr << "testing float failed" << endl;
       cerr << e.what() << endl;
+      failed |= true;
     }
     
     try
@@ -129,6 +133,7 @@ int main()
     {
       cerr << "testing int32 failed" << endl;
       cerr << e.what() << endl;
+      failed |= true;
     }
     
     try
@@ -142,6 +147,7 @@ int main()
     {
       cerr << "testing int16 failed" << endl;
       cerr << e.what() << endl;
+      failed |= true;
     }
     
     try
@@ -155,7 +161,8 @@ int main()
     {
       cerr << "testing uint8 failed" << endl;
       cerr << e.what() << endl;
+      failed |= true;
     }
     
-    return 0;
+    return failed ? -1 : 0;
 }
