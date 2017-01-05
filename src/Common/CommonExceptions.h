@@ -30,5 +30,5 @@ public:
 class AssertionException : public std::logic_error
 {
 public:
-    AssertionException(string& msg):std::logic_error(msg) {}
+    AssertionException(std::string& msg):std::logic_error(msg) {}
 };
