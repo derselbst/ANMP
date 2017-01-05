@@ -23,3 +23,10 @@ package() {
      cd build
      make DESTDIR="${pkgdir}" install
 }
+
+check() {
+     cd "${srcdir}/${pkgname}-${pkgver}"
+     cd build
+     export CTEST_OUTPUT_ON_FAILURE=1
+     make check
+}
