@@ -8,14 +8,15 @@
 using namespace std;
 
 
-#define GEN_FRAMES(FORMAT, MAX, ITEM) ((float)(ITEM) / (MAX))
+#define GEN_FRAMES(FORMAT, MAX, ITEM) static_cast<FORMAT>(((ITEM) * 1.0L) / (MAX))
 
 // minimal example implementation of StandardWrapper
 template<typename FORMAT>
 class TestSong : public StandardWrapper<FORMAT>
 {
+    const frame_t frames;
 public:
-    TestSong(string filename) : StandardWrapper<FORMAT>(filename)
+    TestSong(frame_t frames, string filename="") : StandardWrapper<FORMAT>(filename),frames(frames)
     {}
 
     // forbid copying
@@ -39,7 +40,7 @@ public:
 
     frame_t getFrames () const override
     {
-        return 100;
+        return this->frames;
     }
     
     void render(pcm_t* bufferToFill, frame_t framesToRender=0) override
@@ -70,7 +71,7 @@ void TestMethod(TestSong<T>& songUnderTest)
         T* pcm = static_cast<T*>(songUnderTest.data);
         for(unsigned int i=0; i < nItems; i++)
         {
-            T item = static_cast<T>(GEN_FRAMES(T, nItems, i));
+            T item = GEN_FRAMES(T, nItems, i);
             TEST_ASSERT_EQ(pcm[i], item);
         }
         
@@ -90,19 +91,71 @@ int main()
     Config::PreRenderTime = 0;
     Config::RenderWholeSong = true;
     Config::useAudioNormalization = true;
+
+    try
+    {
+      TestSong<double> test(100);
+      test.Format.SampleFormat = SampleFormat_t::float64;
+      test.Format.SampleRate = 47999;
+      TestMethod<double>(test);
+    }
+    catch(const AssertionException& e)
+    {
+      cerr << "testing double failed" << endl;
+      cerr << e.what() << endl;
+    }
     
-    TestSong<float> testFloat("");
-    testFloat.Format.SampleFormat = SampleFormat_t::float32;
-    testFloat.Format.SampleRate = 22050;
-    TestMethod<float>(testFloat);
+    try
+    {
+      TestSong<float> testFloat(100);
+      testFloat.Format.SampleFormat = SampleFormat_t::float32;
+      testFloat.Format.SampleRate = 22050;
+      TestMethod<float>(testFloat);
+    }
+    catch(const AssertionException& e)
+    {
+      cerr << "testing float failed" << endl;
+      cerr << e.what() << endl;
+    }
     
-    TestSong<int32_t> testint32("");
-    testint32.Format.SampleFormat = SampleFormat_t::int32;
-    testint32.Format.SampleRate = 1;
-    TestMethod<int32_t>(testint32);
+    try
+    {
+      TestSong<int32_t> test(1024);
+      test.Format.SampleFormat = SampleFormat_t::int32;
+      test.Format.SampleRate = 1;
+      TestMethod<int32_t>(test);
+    }
+    catch(const AssertionException& e)
+    {
+      cerr << "testing int32 failed" << endl;
+      cerr << e.what() << endl;
+    }
     
+    try
+    {
+      TestSong<int16_t> testint16(1024);
+      testint16.Format.SampleFormat = SampleFormat_t::int16;
+      testint16.Format.SampleRate = 11025;
+      TestMethod<int16_t>(testint16);
+    }
+    catch(const AssertionException& e)
+    {
+      cerr << "testing int16 failed" << endl;
+      cerr << e.what() << endl;
+    }
+    
+    try
+    {
+      TestSong<uint8_t> testuint8(9876);
+      testuint8.Format.SampleFormat = SampleFormat_t::uint8;
+      testuint8.Format.SampleRate = 1234;
+      TestMethod<uint8_t>(testuint8);
+    }
+    catch(const AssertionException& e)
+    {
+      cerr << "testing uint8 failed" << endl;
+      cerr << e.what() << endl;
+    }
     
     return 0;
-
-
 }
