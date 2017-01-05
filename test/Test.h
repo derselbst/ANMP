@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <string>
 
 
 #define TEST_ASSERT(COND) \
@@ -18,7 +19,7 @@ if(!(COND)) \
 if((LHS) != (RHS)) \
 { \
      std::stringstream ss; \
-     std::ss << __FILE__ << ":" << __LINE__ << " : assertion failed: " << LHS << " == " << RHS; \
+     ss << __FILE__ << ":" << __LINE__ << " : assertion failed: " << LHS << " == " << RHS; \
      std::string msg = ss.str(); \
      throw AssertionException(msg); \
 }
