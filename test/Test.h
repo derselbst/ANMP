@@ -1,7 +1,10 @@
 
 #pragma once
 
+#include "CommonExceptions.h"
+
 #include <iostream>
+#include <sstream>
 
 
 #define TEST_ASSERT(COND) \
@@ -14,5 +17,8 @@ if(!(COND)) \
 #define TEST_ASSERT_EQ(LHS, RHS) \
 if((LHS) != (RHS)) \
 { \
-     throw AssertionException(__FILE__ ":"  #__LINE__ " : assertion failed: " #LHS "==" #RHS);
+     stringstream ss; \
+     ss << __FILE__ << ":" << __LINE__ << " : assertion failed: " << LHS << " == " << RHS; \
+     string msg = ss.str(); \
+     throw AssertionException(msg); \
 }
