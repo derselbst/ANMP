@@ -17,8 +17,8 @@ if(!(COND)) \
 #define TEST_ASSERT_EQ(LHS, RHS) \
 if((LHS) != (RHS)) \
 { \
-     stringstream ss; \
-     ss << __FILE__ << ":" << __LINE__ << " : assertion failed: " << LHS << " == " << RHS; \
-     string msg = ss.str(); \
+     std::stringstream ss; \
+     std::ss << __FILE__ << ":" << __LINE__ << " : assertion failed: " << LHS << " == " << RHS; \
+     std::string msg = ss.str(); \
      throw AssertionException(msg); \
 }
