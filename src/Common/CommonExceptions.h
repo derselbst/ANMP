@@ -15,6 +15,13 @@ public:
     LoopTreeImplementationException():std::logic_error("There seems to be an error in Song::buildLoopTree()") {}
 };
 
+class AssertionException : public std::logic_error
+{
+public:
+    AssertionException(std::string& msg):std::logic_error(msg) {}
+};
+
+
 class NotInitializedException : public std::runtime_error
 {
 public:
@@ -27,8 +34,8 @@ public:
     LoopTreeConstructionException():std::runtime_error("The user propably defined illegal (e.g. intersecting) loop points") {}
 };
 
-class AssertionException : public std::logic_error
+class InvalidVersionException : public std::runtime_error
 {
 public:
-    AssertionException(std::string& msg):std::logic_error(msg) {}
+    InvalidVersionException(uint32_t actual):std::runtime_error("Unknown version: " + std::to_string(actual)) {}
 };
