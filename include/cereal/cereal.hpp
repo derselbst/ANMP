@@ -469,8 +469,7 @@ namespace cereal
       /*! If this is the first time this class has been serialized, we will record its
           version number and serialize that.
 
-          @tparam T The type of the class being serialized
-          @param version The version number associated with it */
+          @tparam T The type of the class being serialized */
       template <class T> inline
       std::uint32_t registerClassVersion()
       {
@@ -847,8 +846,7 @@ namespace cereal
       /*! If this is the first time this class has been serialized, we will record its
           version number and serialize that.
 
-          @tparam T The type of the class being serialized
-          @param version The version number associated with it */
+          @tparam T The type of the class being serialized */
       template <class T> inline
       std::uint32_t loadClassVersion()
       {
