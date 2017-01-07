@@ -152,16 +152,20 @@ void FluidsynthWrapper::setupSynth()
         soundfont = Config::FluidsynthDefaultSoundfont;
     }
 
+    if(!::myExists(soundfont.Value))
+    {
+        THROW_RUNTIME_ERROR("Cant synthesize this MIDI, soundfont not found: \"" << soundfont.Value << "\"");
+    }
 
     /* Load the soundfont */
     if (!fluid_is_soundfont(soundfont.Value.c_str()))
     {
-        THROW_RUNTIME_ERROR("This is no SF2 (weak)");
+        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (weak test): \"" << soundfont.Value << "\"");
     }
 
     if (fluid_synth_sfload(this->synth, soundfont.Value.c_str(), true) == -1)
     {
-        THROW_RUNTIME_ERROR("This is no SF2 (strong)");
+        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (strong test): \"" << soundfont.Value << "\"");
     }
 }
 
