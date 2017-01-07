@@ -108,7 +108,7 @@ struct Config
     }
 };
 
-CEREAL_CLASS_VERSION( Config, 1 );
+CEREAL_CLASS_VERSION( Config, 1 )
 
 
 #endif // CONFIG_H
