@@ -17,10 +17,15 @@
 #ifdef _POSIX_SOURCE
 #include <strings.h> // strncasecmp
 #include <sys/stat.h>
+#include <sys/types.h>
+
 extern "C"
 {
 #include <libgen.h> // basename, dirname
 }
+
+#include <unistd.h>
+#include <pwd.h>
 #endif
 
 using namespace std;
@@ -288,6 +293,46 @@ bool myExists(const string& name)
     {
         return false;
     }
+}
+
+string myHomeDir()
+{
+    string home;
+    
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+    
+    char* drive = getenv ("HOMEDRIVE");
+    char* path = getenv("HOMEPATH");
+    
+    if(drive == nullptr || *drive == '\0' || path == nullptr || *path == '\0')
+    {
+        THROW_RUNTIME_ERROR("failed to get home directory")
+    }
+    
+    home = string(drive) + string(path);
+    
+#elif defined(_POSIX_SOURCE)
+        
+    const char* path = getenv("HOME");
+    
+    if(path == nullptr || *path == '\0')
+    {
+        struct passwd *pw = getpwuid(getuid());
+        path = pw->pw_dir;
+        
+        if(path == nullptr || *path == '\0')
+        {
+            THROW_RUNTIME_ERROR("failed to get home directory")
+        }
+    }
+    
+    home = string(path);
+    
+#else
+    #error "Dont know how to determine the home directory on your platform"
+#endif
+    
+    return home;
 }
 
 Nullable<string> findSoundfont(string midFile)

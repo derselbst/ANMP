@@ -35,6 +35,9 @@ public:
     //**********************************
     //     GLOBAL INTERNAL SECTION     *
     //**********************************
+    
+    static constexpr const char* UserDir = ".anmp";
+    static constexpr const char* UserFile = "config.json";
 
     // number of frames that are pushed to audioDriver during each run AND minimum no. of frames
     // that have to be prepared (i.e. rendered) by a single call to Song::fillBuffer()
@@ -145,6 +148,8 @@ public:
     int FluidsynthWidth = 0;
     double FluidsynthLevel = 0.8;
     
+    void Load() noexcept;
+    void Save() noexcept;
     
     template<class Archive>
     void serialize(Archive& archive, const uint32_t version)

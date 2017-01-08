@@ -27,6 +27,7 @@ frame_t msToFrames(const size_t& ms, const unsigned int& sampleRate);
 string mybasename(const string&);
 string mydirname(const string&);
 bool myExists(const string& name);
+string myHomeDir();
 
 string getUniqueFilename(const string& path);
 string getFileExtension(const string& filePath);

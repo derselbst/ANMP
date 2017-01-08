@@ -33,5 +33,8 @@ int main()
     equal = iEquals("zzz", "ZZZz");
     TEST_ASSERT(equal == false);
     
+    string s = ::myHomeDir();
+    TEST_ASSERT(s.size() >= 1);
+    
     return 0;
 }

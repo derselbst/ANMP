@@ -282,13 +282,13 @@ void MainWindow::on_actionSettings_triggered()
 
     int ret = this->settingsView->exec();
 
-    if(ret == QDialog::Accepted && oldDriver != gConfig.audioDriver)
+    if(ret == QDialog::Accepted)
     {
-        this->player->initAudio();
-    }
-    else
-    {
-        gConfig.audioDriver = oldDriver;
+        if(oldDriver != gConfig.audioDriver)
+        {
+            this->player->initAudio();
+        }
+        gConfig.Save();
     }
 
     delete this->settingsView;
