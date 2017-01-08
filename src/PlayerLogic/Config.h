@@ -140,7 +140,7 @@ public:
 
     // the soundfont to use, if there are no more suitable soundfonts found
     // this should be a GM Midi conform SF2
-    string FluidsynthDefaultSoundfont = "/home/tom/Musik/Banjo-Kazooie [Banjo to Kazooie no Daibouken] (1998-05-31)(Rare)(Nintendo)/BK.sf2";
+    string FluidsynthDefaultSoundfont = "";
 
     // parameters for fluidsynth's reverb effect
     double FluidsynthRoomSize = 0.8;
