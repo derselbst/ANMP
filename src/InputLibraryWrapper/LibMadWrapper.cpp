@@ -253,7 +253,7 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             pcm += itemsToCpy;
         }
 
-        int framesToDoNow = (framesToRender/Config::FramesToRender)>0 ? Config::FramesToRender : framesToRender%Config::FramesToRender;
+        int framesToDoNow = (framesToRender/gConfig.FramesToRender)>0 ? gConfig.FramesToRender : framesToRender%gConfig.FramesToRender;
         if(framesToDoNow==0)
         {
             continue;
@@ -317,7 +317,7 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             /* output sample(s) in 24-bit signed little-endian PCM */
 
             sample = LibMadWrapper::toInt24Sample(*left_ch++);
-            sample = Config::useAudioNormalization ? floor(sample * absoluteGain) : sample;
+            sample = gConfig.useAudioNormalization ? floor(sample * absoluteGain) : sample;
             pcm[item++] = sample;
 
             if (this->Format.Channels == 2) // our buffer is for 2 channels
@@ -325,7 +325,7 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
                 if(this->synth.Value.pcm.channels==2) // ...but did mad also decoded for 2 channels?
                 {
                     sample = LibMadWrapper::toInt24Sample(*right_ch++);
-                    sample = Config::useAudioNormalization ? floor(sample * absoluteGain) : sample;
+                    sample = gConfig.useAudioNormalization ? floor(sample * absoluteGain) : sample;
                     pcm[item++] = sample;
                 }
                 else
@@ -349,12 +349,12 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             /* output sample(s) in 24-bit signed little-endian PCM */
 
             sample = LibMadWrapper::toInt24Sample(*left_ch++);
-            this->tempBuf.push_back(Config::useAudioNormalization ? floor(sample * absoluteGain) : sample);
+            this->tempBuf.push_back(gConfig.useAudioNormalization ? floor(sample * absoluteGain) : sample);
 
             if (this->Format.Channels == 2)
             {
                 sample = LibMadWrapper::toInt24Sample(*right_ch++);
-                this->tempBuf.push_back(Config::useAudioNormalization ? floor(sample * absoluteGain) : sample);
+                this->tempBuf.push_back(gConfig.useAudioNormalization ? floor(sample * absoluteGain) : sample);
             }
 
             /* DONT do this: this->framesAlreadyRendered++; since we use framesAlreadyRendered as offset for "bufferToFill"*/

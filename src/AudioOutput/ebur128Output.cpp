@@ -29,17 +29,17 @@ void ebur128Output::open()
 {
     lock_guard<mutex> lck(this->mtx);
     
-    if(Config::RenderWholeSong && Config::PreRenderTime!=0)
+    if(gConfig.RenderWholeSong && gConfig.PreRenderTime!=0)
     {
-        THROW_RUNTIME_ERROR("You MUST NOT hold the whole audio file in memory, when using ebur128Output, while Config::PreRenderTime!=0")
+        THROW_RUNTIME_ERROR("You MUST NOT hold the whole audio file in memory, when using ebur128Output, while gConfig.PreRenderTime!=0")
     }
 
-    if(Config::useAudioNormalization)
+    if(gConfig.useAudioNormalization)
     {
         THROW_RUNTIME_ERROR("You MUST DISABLE audio normalization when generating normalization data")
     }
     
-    if(Config::useLoopInfo)
+    if(gConfig.useLoopInfo)
     {
         THROW_RUNTIME_ERROR("You MUST NOT use loop info when generating normalization data")
     }

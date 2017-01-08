@@ -40,7 +40,7 @@ public:
     /**
      * initializes the audio driver. usually called automatically if required.
      * 
-     * the audio driver to be used is indicated by Config::audioDriver
+     * the audio driver to be used is indicated by gConfig.audioDriver
      */
     void initAudio();
 

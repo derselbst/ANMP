@@ -88,9 +88,9 @@ void TestMethod(TestSong<T>& songUnderTest)
 int main()
 {
     // render everything into one buffer, but make sure, buffer is fully filled after fillBuffer() call
-    Config::PreRenderTime = 0;
-    Config::RenderWholeSong = true;
-    Config::useAudioNormalization = true;
+    gConfig.PreRenderTime = 0;
+    gConfig.RenderWholeSong = true;
+    gConfig.useAudioNormalization = true;
 
     bool failed=false;
 

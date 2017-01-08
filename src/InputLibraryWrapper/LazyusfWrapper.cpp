@@ -60,7 +60,7 @@ void LazyusfWrapper::open()
     usf_set_compare(this->usfHandle, this->enable_compare);
     usf_set_fifo_full(this->usfHandle, this->enable_fifo_full);
 
-    if(Config::useHle)
+    if(gConfig.useHle)
     {
         usf_set_hle_audio(this->usfHandle, 1);
     }

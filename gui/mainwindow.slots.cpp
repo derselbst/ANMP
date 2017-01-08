@@ -278,17 +278,17 @@ void MainWindow::on_actionSettings_triggered()
         this->settingsView = new ConfigDialog(this);
     }
 
-    AudioDriver_t oldDriver = Config::audioDriver;
+    AudioDriver_t oldDriver = gConfig.audioDriver;
 
     int ret = this->settingsView->exec();
 
-    if(ret == QDialog::Accepted && oldDriver != Config::audioDriver)
+    if(ret == QDialog::Accepted && oldDriver != gConfig.audioDriver)
     {
         this->player->initAudio();
     }
     else
     {
-        Config::audioDriver = oldDriver;
+        gConfig.audioDriver = oldDriver;
     }
 
     delete this->settingsView;

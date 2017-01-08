@@ -112,7 +112,7 @@ void LibSNDWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
         // allocate an extra tempbuffer to store the int64s in
         // then convert them to int32
 
-        int* int64_temp_buf = new int[Config::FramesToRender*this->Format.Channels];
+        int* int64_temp_buf = new int[gConfig.FramesToRender*this->Format.Channels];
 
         STANDARDWRAPPER_RENDER(int32_t,
 

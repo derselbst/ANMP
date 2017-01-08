@@ -81,7 +81,7 @@ void PortAudioOutput::init(SongFormat format, bool realtime)
                                 format.Channels,   /* no. of output channels */
                                 paSampleFmt,  /* 32 bit floating point output */
                                 format.SampleRate,
-                                Config::FramesToRender,  /* frames per buffer, i.e. the number of sample frames that PortAudio will request from the callback.*/
+                                gConfig.FramesToRender,  /* frames per buffer, i.e. the number of sample frames that PortAudio will request from the callback.*/
                                 nullptr, /* this is my callback function */
                                 this ); /* This is a pointer that will be passed to my callback */
 

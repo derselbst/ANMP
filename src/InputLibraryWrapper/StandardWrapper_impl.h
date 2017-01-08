@@ -35,7 +35,7 @@ StandardWrapper<SAMPLEFORMAT>::~StandardWrapper ()
  * @brief manages that Song::data holds new PCM
  *
  * this method trys to alloc a buffer that is big enough to hold the whole PCM of whatever audiofile in memory
- * if this fails it trys to allocate a buffer big enough to hold Config::FramesToRender frames and fills this with new PCM on each call
+ * if this fails it trys to allocate a buffer big enough to hold gConfig.FramesToRender frames and fills this with new PCM on each call
  *
  * if even that allocation fails, an exception will be thrown
  *
@@ -56,7 +56,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
         // and releaseBuffer already waits for the render thread to finish... however it doesnt hurt
         WAIT(this->futureFillBuffer);
 
-        if(Config::RenderWholeSong)
+        if(gConfig.RenderWholeSong)
         {
             this->count = this->getFrames() * this->Format.Channels;
 
@@ -69,7 +69,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
             // buffer successfully allocated, fill it asynchronously
 
             // (pre-)render the first few milliseconds
-            this->render(this->data, msToFrames(Config::PreRenderTime, this->Format.SampleRate));
+            this->render(this->data, msToFrames(gConfig.PreRenderTime, this->Format.SampleRate));
 
             // immediatly start filling the rest of the pcm buffer
             this->futureFillBuffer = async(launch::async, &WRAPPERCLASS::render, context/*==this*/, context->data, 0/*render everything*/);
@@ -83,14 +83,14 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
         // well something went wrong during alloc (not enough memory??)
         // so try to alloc at least enough to do double buffering
         // if this fails too, an exception will be thrown
-        this->count = Config::FramesToRender * this->Format.Channels;
+        this->count = gConfig.FramesToRender * this->Format.Channels;
 
         this->data = new SAMPLEFORMAT[this->count];
         this->preRenderBuf = new SAMPLEFORMAT[this->count];
 
-        this->render(this->data, Config::FramesToRender);
+        this->render(this->data, gConfig.FramesToRender);
     }
-    else if(this->count == Config::FramesToRender * this->Format.Channels)
+    else if(this->count == gConfig.FramesToRender * this->Format.Channels)
     {
         WAIT(this->futureFillBuffer);
 
@@ -103,7 +103,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
         return;
     }
 
-    this->futureFillBuffer = async(launch::async, &WRAPPERCLASS::render, context/*==this*/, context->preRenderBuf, Config::FramesToRender);
+    this->futureFillBuffer = async(launch::async, &WRAPPERCLASS::render, context/*==this*/, context->preRenderBuf, gConfig.FramesToRender);
 }
 
 template<typename SAMPLEFORMAT>

@@ -11,8 +11,8 @@
 #include <chrono>
 
 #define IsControlChange(e) ((e->midi_buffer[0] & 0xF0) == 0xB0)
-#define IsLoopStart(e) (e->midi_buffer[1] == Config::MidiControllerLoopStart)
-#define IsLoopStop(e) (e->midi_buffer[1] == Config::MidiControllerLoopStop)
+#define IsLoopStart(e) (e->midi_buffer[1] == gConfig.MidiControllerLoopStart)
+#define IsLoopStop(e) (e->midi_buffer[1] == gConfig.MidiControllerLoopStop)
 
 
 /** This class got pretty complex. want to see an easier form? Goto git commit d3961aec428adf4eec59c90f57fd93d890cf1499
@@ -133,15 +133,15 @@ void FluidsynthWrapper::setupSynth()
     {
         THROW_RUNTIME_ERROR("Failed to create the synth");
     }
-    fluid_synth_set_reverb(this->synth, Config::FluidsynthRoomSize, Config::FluidsynthDamping, Config::FluidsynthWidth, Config::FluidsynthLevel);
+    fluid_synth_set_reverb(this->synth, gConfig.FluidsynthRoomSize, gConfig.FluidsynthDamping, gConfig.FluidsynthWidth, gConfig.FluidsynthLevel);
 
     // retrieve this after the synth has been inited (just for sure)
-    fluid_settings_getint(this->settings, "audio.period-size", &Config::FluidsynthPeriodSize);
+    fluid_settings_getint(this->settings, "audio.period-size", &gConfig.FluidsynthPeriodSize);
 
 
     // find a soundfont
     Nullable<string> soundfont;
-    if(!Config::FluidsynthForceDefaultSoundfont)
+    if(!gConfig.FluidsynthForceDefaultSoundfont)
     {
         soundfont = ::findSoundfont(this->Filename);
     }
@@ -149,7 +149,7 @@ void FluidsynthWrapper::setupSynth()
     if(!soundfont.hasValue)
     {
         // so, either we were forced to use default, or we didnt find any suitable sf2
-        soundfont = Config::FluidsynthDefaultSoundfont;
+        soundfont = gConfig.FluidsynthDefaultSoundfont;
     }
 
     if(!::myExists(soundfont.Value))
@@ -177,15 +177,15 @@ void FluidsynthWrapper::setupSettings()
         THROW_RUNTIME_ERROR("Failed to create the settings");
     }
 
-    fluid_settings_setstr(this->settings, "synth.reverb.active", Config::FluidsynthEnableReverb ? "yes" : "no");
-    fluid_settings_setstr(this->settings, "synth.chorus.active", Config::FluidsynthEnableChorus ? "yes" : "no");
+    fluid_settings_setstr(this->settings, "synth.reverb.active", gConfig.FluidsynthEnableReverb ? "yes" : "no");
+    fluid_settings_setstr(this->settings, "synth.chorus.active", gConfig.FluidsynthEnableChorus ? "yes" : "no");
 
     fluid_settings_setint(this->settings, "synth.min-note-length", 1);
     // only in mma mode, bank high and bank low controllers are handled as specified by MIDI standard
     fluid_settings_setstr(this->settings, "synth.midi-bank-select", "mma");
 
     {
-        fluid_settings_setnum(this->settings, "synth.sample-rate", Config::FluidsynthSampleRate);
+        fluid_settings_setnum(this->settings, "synth.sample-rate", gConfig.FluidsynthSampleRate);
         double srate;
         fluid_settings_getnum(this->settings, "synth.sample-rate", &srate);
         
@@ -197,7 +197,7 @@ void FluidsynthWrapper::setupSettings()
             this->buildLoopTree();
         }
 
-        int stereoChannels = Config::FluidsynthMultiChannel ? 16 : 1;
+        int stereoChannels = gConfig.FluidsynthMultiChannel ? 16 : 1;
         fluid_settings_setint(this->settings, "synth.audio-groups",    stereoChannels);
         fluid_settings_setint(this->settings, "synth.audio-channels",  stereoChannels);
         fluid_settings_getint(this->settings, "synth.audio-channels", &stereoChannels);
@@ -492,8 +492,8 @@ vector<loop_t> FluidsynthWrapper::getLoopArray () const noexcept
 
 // HACK there seems to be some strange bug in fluidsynth:
 // whenever we ask the synth to render something else than exactly 64 frames, we get strangely timed audio
-// thus obtain the period size (?always? == 64) within this->open() and use this value instead of our Config::FramesToRender
-// by replacing Config::FramesToRender with Config::FluidsynthPeriodSize
+// thus obtain the period size (?always? == 64) within this->open() and use this value instead of our gConfig.FramesToRender
+// by replacing gConfig.FramesToRender with gConfig.FluidsynthPeriodSize
 #define FramesToRender FluidsynthPeriodSize
 void FluidsynthWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
@@ -501,7 +501,7 @@ void FluidsynthWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
     for(unsigned int i = 0; i< this->Format.Channels; i++)
     {
-        temp_buf[i] = new float[Config::FramesToRender];
+        temp_buf[i] = new float[gConfig.FramesToRender];
     }
 
     STANDARDWRAPPER_RENDER(float,

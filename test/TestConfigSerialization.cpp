@@ -13,15 +13,13 @@ int main()
     {
         std::ofstream os("/home/tom/Eigene Programme/ANMP/build/config.json");
         cereal::JSONOutputArchive ar(os);
-        
-        Config c;
-        ar(c);
+        ar(gConfig);
     }
     /*
     {
         std::ifstream is("config.json");
         cereal::JSONInputArchive archive(is);
-        Config::serialize(ar);
+        gConfig.serialize(ar);
     }*/
   
     return 0;

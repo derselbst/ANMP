@@ -49,7 +49,7 @@ void LibGMEWrapper::open()
         return;
     }
 
-    gme_err_t msg = gme_open_file(this->Filename.c_str(), &this->handle, Config::gmeSampleRate);
+    gme_err_t msg = gme_open_file(this->Filename.c_str(), &this->handle, gConfig.gmeSampleRate);
     if(msg)
     {
         THROW_RUNTIME_ERROR("libgme failed on file \"" << this->Filename << ")\"" << " with message " << msg);
@@ -64,11 +64,11 @@ void LibGMEWrapper::open()
 
 #if GME_VERSION >= 0x000600
     /* Enable most accurate sound emulation */
-    gme_enable_accuracy( this->handle, Config::gmeAccurateEmulation );
+    gme_enable_accuracy( this->handle, gConfig.gmeAccurateEmulation );
 #endif
 
     /* Add some stereo enhancement */
-    gme_set_stereo_depth( this->handle, Config::gmeEchoDepth );
+    gme_set_stereo_depth( this->handle, gConfig.gmeEchoDepth );
 
     /* Start track and begin fade at 10 seconds */
     int offset = this->fileOffset.hasValue ? this->fileOffset.Value : 0;
@@ -86,7 +86,7 @@ void LibGMEWrapper::open()
         THROW_RUNTIME_ERROR("libgme failed to retrieve track info for track no. " << offset << " for file \"" << this->Filename << "\" with message: " << msg);
     }
 
-    if(Config::gmePlayForever)
+    if(gConfig.gmePlayForever)
     {
         gme_set_fade(this->handle, -1);
     }
@@ -110,10 +110,10 @@ void LibGMEWrapper::open()
         gme_set_fade(this->handle, this->fileLen.Value);
     }
 
-    if(this->Format.SampleRate != Config::gmeSampleRate)
+    if(this->Format.SampleRate != gConfig.gmeSampleRate)
     {
         // the sample rate may have changed, if requested by user
-        this->Format.SampleRate = Config::gmeSampleRate;
+        this->Format.SampleRate = gConfig.gmeSampleRate;
         // so we have to build up the loop tree again
         this->buildLoopTree();
     }
@@ -143,7 +143,7 @@ void LibGMEWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
 frame_t LibGMEWrapper::getFrames () const
 {
-    return Config::gmePlayForever ? msToFrames(-1, this->Format.SampleRate) : msToFrames(this->fileLen.Value, this->Format.SampleRate);
+    return gConfig.gmePlayForever ? msToFrames(-1, this->Format.SampleRate) : msToFrames(this->fileLen.Value, this->Format.SampleRate);
 }
 
 vector<loop_t> LibGMEWrapper::getLoopArray () const noexcept
@@ -181,5 +181,5 @@ void LibGMEWrapper::buildMetadata() noexcept
 // true if we can hold the whole song in memory
 bool LibGMEWrapper::wholeSong() const
 {
-    return !Config::gmePlayForever;
+    return !gConfig.gmePlayForever;
 }

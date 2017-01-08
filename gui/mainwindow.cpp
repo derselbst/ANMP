@@ -242,7 +242,7 @@ void MainWindow::tooglePlayPauseFade()
 {
     if(this->player->getIsPlaying())
     {
-        this->player->fadeout(Config::fadeTimePause);
+        this->player->fadeout(gConfig.fadeTimePause);
         this->pause();
     }
     else
@@ -263,7 +263,7 @@ void MainWindow::pause()
 
 void MainWindow::stopFade()
 {
-    this->player->fadeout(Config::fadeTimeStop);
+    this->player->fadeout(gConfig.fadeTimeStop);
     this->stop();
 }
 
@@ -319,21 +319,21 @@ void MainWindow::relativeSeek(int relpos)
 
 void MainWindow::seekForward()
 {
-    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekNormal), Config::FramesToRender));
+    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekNormal), gConfig.FramesToRender));
 }
 
 void MainWindow::seekBackward()
 {
-    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekNormal), Config::FramesToRender));
+    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekNormal), gConfig.FramesToRender));
 }
 
 void MainWindow::fastSeekForward()
 {
-    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekFast), Config::FramesToRender));
+    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekFast), gConfig.FramesToRender));
 }
 
 void MainWindow::fastSeekBackward()
 {
-    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekFast), Config::FramesToRender));
+    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekFast), gConfig.FramesToRender));
 }
 

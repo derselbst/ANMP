@@ -87,7 +87,7 @@ void Player::_initAudio()
 
     delete this->audioDriver;
 
-    switch(Config::audioDriver)
+    switch(gConfig.audioDriver)
     {
 #ifdef USE_ALSA
     case ALSA:
@@ -343,7 +343,7 @@ void Player::playLoop (core::tree<loop_t>& loop)
     core::tree<loop_t>* subloop;
 
     while(this->isPlaying && // are we still playing?
-            Config::useLoopInfo && // user wishes to use available loop info
+            gConfig.useLoopInfo && // user wishes to use available loop info
             SEEK_POSSIBLE && // we loop by setting the playhead, if this is not possible, since we dont hold the whole pcm, no loops are available
             ((subloop = this->getNextLoop(loop)) != nullptr)) // are there subloops left that need to be played?
     {
@@ -358,7 +358,7 @@ void Player::playLoop (core::tree<loop_t>& loop)
         this->playFrames((*loop).start, (*(*subloop)).start);
         // at this point: playhead==subloop.start
 
-        uint32_t mycount = Config::overridingGlobalLoopCount!=-1 ? Config::overridingGlobalLoopCount : (*(*subloop)).count;
+        uint32_t mycount = gConfig.overridingGlobalLoopCount!=-1 ? gConfig.overridingGlobalLoopCount : (*(*subloop)).count;
         bool forever = mycount==0;
         mycount += 1; // +1 because the subloop we are just going to play, should be played one additional time by the parent of subloop (i.e. the loop we are currently in)
         while(this->isPlaying && (forever || mycount-- != 0u))
@@ -429,7 +429,7 @@ void Player::playFrames (frame_t framesToPlay)
         // seek within the pcm buffer to that item where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
         int itemOffset = FramesToItems(memorizedPlayhead) % bufSize;
         // number of frames we will write to audioDriver in this run
-        int framesToPush = min(Config::FramesToRender, framesToPlay);
+        int framesToPush = min(gConfig.FramesToRender, framesToPlay);
 
         int framesWritten = 0;
 
@@ -457,7 +457,7 @@ again:
 
         if(framesWritten != framesToPush
 #ifdef USE_JACK
-            && Config::audioDriver != JACK /*very spammy for jack*/
+            && gConfig.audioDriver != JACK /*very spammy for jack*/
 #endif      
         )
         {

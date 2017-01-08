@@ -51,12 +51,12 @@
 \
     while(framesToRender>0 && !this->stopFillBuffer)\
     {\
-        int framesToDoNow = (framesToRender/Config::FramesToRender)>0 ? Config::FramesToRender : framesToRender%Config::FramesToRender;\
+        int framesToDoNow = (framesToRender/gConfig.FramesToRender)>0 ? gConfig.FramesToRender : framesToRender%gConfig.FramesToRender;\
 \
         /* render to raw pcm*/\
         LIB_SPECIFIC_RENDER_FUNCTION;\
 \
-        for(unsigned int i=0; Config::useAudioNormalization && i<framesToDoNow*this->Format.Channels; i++)\
+        for(unsigned int i=0; gConfig.useAudioNormalization && i<framesToDoNow*this->Format.Channels; i++)\
         {\
 	    pcm[i] = static_cast<SAMPLEFORMAT>(pcm[i] * absoluteGain);\
         }\

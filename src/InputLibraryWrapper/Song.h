@@ -62,7 +62,7 @@ public:
 //--------------------------------------------------------------------
 // RAW PCM Buffer specific area
 //--------------------------------------------------------------------
-    // after each call to this->fillBuffer(), this pointer will point to a buffer holding "Config::FramesToRender" freshly rendered PCM frames
+    // after each call to this->fillBuffer(), this pointer will point to a buffer holding "gConfig.FramesToRender" freshly rendered PCM frames
     pcm_t* data = nullptr;
 
     // indicates the data type of the raw decoded pcm
@@ -127,9 +127,9 @@ public:
      */
     virtual void close () noexcept = 0 ;
 
-    /** fills the pcm buffer this->data, preparing atleast "Config::FramesToRender" PCM frames
+    /** fills the pcm buffer this->data, preparing atleast "gConfig.FramesToRender" PCM frames
      *
-     * synchronous part: allocates the pcm buffer and fills it up to have enough for Config::PreRenderTime time of playback
+     * synchronous part: allocates the pcm buffer and fills it up to have enough for gConfig.PreRenderTime time of playback
      * asynchronous part: fills rest of pcm buffer
      */
     virtual void fillBuffer () = 0;

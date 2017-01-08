@@ -34,7 +34,7 @@
 
 AnalyzerBase::AnalyzerBase( QWidget *parent )
     : QGLWidget( parent )
-    , m_fht( new FHT( log2( Config::FramesToRender ) ) )
+    , m_fht( new FHT( log2( gConfig.FramesToRender ) ) )
     , m_renderTimer( new QTimer( this ) )
 {
     setFps( 60 ); // Default unless changed by subclass
@@ -109,7 +109,7 @@ void AnalyzerBase::processData( const Song* s, frame_t playhead )
 
 // fill the buffer that will be fourier transformed
 #define PREPARE_SCOPE(PCMBUF) \
-  for(unsigned int frame = 0; (frame < Config::FramesToRender) && ((playhead + frame) < s->getFrames()); frame++)\
+  for(unsigned int frame = 0; (frame < gConfig.FramesToRender) && ((playhead + frame) < s->getFrames()); frame++)\
   {\
     /* init the frame'th element */\
     scope[frame] = float( *PCMBUF );\
@@ -150,7 +150,7 @@ void AnalyzerBase::processData( const Song* s, frame_t playhead )
     {
         float* pcmBuf = static_cast<float*>(s->data) + playhead * s->Format.Channels;
         
-          for(unsigned int frame = 0; (frame < Config::FramesToRender) && ((playhead + frame) < s->getFrames()); frame++)
+          for(unsigned int frame = 0; (frame < gConfig.FramesToRender) && ((playhead + frame) < s->getFrames()); frame++)
           {
               /* init the frame'th element */
                 scope[frame] = *pcmBuf;
