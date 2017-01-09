@@ -8,7 +8,7 @@
 %define builddir build
 
 Name: anmp
-Version: 2
+Version: 3
 Release: 0
 License: GPL-2.0
 Summary: Another Nameless Music Player
@@ -165,7 +165,7 @@ mv %{buildroot}/%{_libdir}/libanmp.so %{buildroot}/%{_libdir}/libanmp.so.%{sonam
 ln -s /%{_libdir}/libanmp.so.%{soname} %{buildroot}/%{_libdir}/libanmp.so
 ln -s /%{_bindir}/anmp-qt %{buildroot}/%{_bindir}/anmp
 
-mkdir %{buildroot}%{_datadir}/%{name}/
+mkdir -p %{buildroot}%{_datadir}/%{name}/
 install %{SOURCE1} %{buildroot}%{_datadir}/%{name}/
 
 %check
