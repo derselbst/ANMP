@@ -15,6 +15,7 @@ Summary: Another Nameless Music Player
 Url: https://www.github.com/derselbst/ANMP
 Group: Development/Libraries/C and C++
 Source0: anmp-%{version}.tar.bz2
+Source1: OldSeiterPiano.sf2
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
@@ -164,6 +165,9 @@ mv %{buildroot}/%{_libdir}/libanmp.so %{buildroot}/%{_libdir}/libanmp.so.%{sonam
 ln -s /%{_libdir}/libanmp.so.%{soname} %{buildroot}/%{_libdir}/libanmp.so
 ln -s /%{_bindir}/anmp-qt %{buildroot}/%{_bindir}/anmp
 
+mkdir %{buildroot}%{_datadir}/%{name}/
+install %{SOURCE1} %{buildroot}%{_datadir}/%{name}/
+
 %check
 cd %{builddir}
 export CTEST_OUTPUT_ON_FAILURE=1
@@ -179,6 +183,8 @@ make check
 %defattr(-,root,root)
 %{_bindir}/anmp
 %{_bindir}/anmp-qt
+%dir %{_datadir}/%{name}/
+%{_datadir}/%{name}/*
 
 %files devel
 %defattr(-,root,root)
