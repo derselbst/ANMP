@@ -135,7 +135,7 @@ cd %{builddir}
 %endif
 
 cmake .. \
-        -DFLUIDSYNTH_DEFAULT_SF2=%{_datadir}/%{name}/%{sffile}
+        -DFLUIDSYNTH_DEFAULT_SF2=%{_datadir}/%{name}/%{sffile} \
         -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} \
         -DINCLUDE_INSTALL_DIR:PATH=%{_includedir} \
         -DLIB_INSTALL_DIR:PATH=%{_libdir} \
