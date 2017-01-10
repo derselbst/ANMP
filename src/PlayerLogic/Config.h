@@ -138,9 +138,13 @@ public:
     // always use the default soundfont
     bool FluidsynthForceDefaultSoundfont = false;
 
+    // package builders may define this, to default to a bundled soundfont
+    #ifndef FLUIDSYNTH_DEFAULT_SF2
+        #define FLUIDSYNTH_DEFAULT_SF2 ""
+    #endif
     // the soundfont to use, if there are no more suitable soundfonts found
     // this should be a GM Midi conform SF2
-    string FluidsynthDefaultSoundfont = "";
+    string FluidsynthDefaultSoundfont = FLUIDSYNTH_DEFAULT_SF2;
 
     // parameters for fluidsynth's reverb effect
     double FluidsynthRoomSize = 0.8;

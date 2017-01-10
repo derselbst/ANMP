@@ -15,7 +15,9 @@ Summary: Another Nameless Music Player
 Url: https://www.github.com/derselbst/ANMP
 Group: Development/Libraries/C and C++
 Source0: anmp-%{version}.tar.bz2
-Source1: OldSeiterPiano.sf2
+
+%define sffile OldSeiterPiano.sf2
+Source1: %{sffile}
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
@@ -133,6 +135,7 @@ cd %{builddir}
 %endif
 
 cmake .. \
+        -DFLUIDSYNTH_DEFAULT_SF2=%{_datadir}/%{name}/%{sffile}
         -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} \
         -DINCLUDE_INSTALL_DIR:PATH=%{_includedir} \
         -DLIB_INSTALL_DIR:PATH=%{_libdir} \
@@ -184,7 +187,7 @@ make check
 %{_bindir}/anmp
 %{_bindir}/anmp-qt
 %dir %{_datadir}/%{name}/
-%{_datadir}/%{name}/*
+%{_datadir}/%{name}/%{sffile}
 
 %files devel
 %defattr(-,root,root)

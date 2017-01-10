@@ -217,6 +217,10 @@ if(ENABLE_FLUIDSYNTH)
   if(LIBSMF_FOUND)
         if(FLUIDSYNTH_FOUND)
                 add_definitions(-DUSE_FLUIDSYNTH)
+                if(DEFINED FLUIDSYNTH_DEFAULT_SF2)
+                    add_definitions(-DFLUIDSYNTH_DEFAULT_SF2="${FLUIDSYNTH_DEFAULT_SF2}")
+                endif()
+                
                 set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${FLUIDSYNTH_INCLUDE_DIRS})
                 set(LD_FLAGS ${LD_FLAGS} ${FLUIDSYNTH_LIBRARIES})
                 
