@@ -160,6 +160,7 @@ private:
     /**
      * THAT method which recursively walks through a loop tree, playing all the loops, subloops and subsubsubloops given by "loop" recursively
      *
+     * @note this is not the playing threads mainloop
      * @note this method might be called recursively :P
      */
     void playLoop (core::tree<loop_t>& loop);
