@@ -5,18 +5,21 @@
 
 ## Features
 
-ANMP aims to be a versatile but lightweight audio player, just as the other hundred thousands out there. As being only a frontend, ANMP itself doesnt know anything about audioformats and how to decode them. That's why it uses 3rd party libraries to decode them. By using VgmStream, GameMusicEmu, LazyUSF and supporting looped songs natively, ANMP is esp. suited to play various audio formats from video games. Moreover it supports [Looped Midi Tracks](https://github.com/derselbst/ANMP/wiki/MIDI-Customizations).
+ANMP aims to be a versatile but lightweight audio player, just as the other hundred thousands out there. It is written in C++11. As being only a frontend, ANMP itself doesnt know anything about audioformats and how to decode them. That's why it uses 3rd party libraries to decode them. By using VgmStream, GameMusicEmu, LazyUSF and supporting looped songs natively, ANMP is esp. suited to play various audio formats from video games. Moreover it supports [Looped Midi Tracks](https://github.com/derselbst/ANMP/wiki/MIDI-Customizations).
 
 What ANMP does NOT:
 * crawl through your music library, building a huge useless database for all artists, albums, genres, titles, etc., just because the user wants to have a nice overview over what is on his HDD (SSD); the filesystem is our database!
 * mess around with any audio files, i.e. no changing of ID3 tags, no writing of ReplayGain or whatever; additional info will always be written to separate files and ONLY then, when the user explicitly says so (e.g. by executing anmp-normalize)
+* support ReplayGain tags, since video game codecs don't do (instead it uses a custom approach using helper files to handle loudness normalization independently from audio formats)
 * provide a multilingual GUI; everything is done in English!
+
 
 #### Main Features
 
 * gapless playback
 * cue sheets
 * arbitrary (forward) looping of songs (i.e. even nested loops)
+* unrolling looped MIDI tracks
 * easy attempt to implement new formats
 
 ANMP handles audio differently than others: Instead of retrieving only small buffers that hold the raw pcm data, ANMP fetches the pcm of the whole file and puts that into memory. Todays computers have enough memory to hold raw pcm of even longer audio files. Uncompressing big audio files can take a long time, though. Thus filling the pcm buffer is usually done asynchronously. When the next song shall be played, the pcm buffer of the former song is released.
@@ -27,11 +30,10 @@ Cue sheets will just add the same song file multiple times to a playlist, but wi
 
 Implementing new formats shall be done by deriving the abstract base class **Song**. By that a wrapper for any library that actually supports this format is written.
 
-The core of ANMP (i.e. everything in [src/](src/)) is strictly keept free of any QT5 dependencies. Makes reuseage a lot easier.
+The core of ANMP (i.e. everything in [src/](src/)) is strictly keept **free of any QT5 dependencies**. Makes reuseage a lot easier.
 
 ## Get ANMP
-see [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%3Aanmp&package=anmp) for precompiled packages
-
+See [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%3Aanmp&package=anmp) for precompiled packages. Due to a lack of vgmstream and lazyusf on ArchLinux and Debian/Ubuntu, only the RPM packages are built with all features and codec support available for ANMP.
 
 ## Build Dependencies
 
