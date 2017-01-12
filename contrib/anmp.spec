@@ -49,7 +49,8 @@ BuildRequires: lazyusf2-devel
 %endif
 
 # SuSE specific:
-%if 0%{?suse_version} >= 1320
+# everything newer openSUSE 13.2 or openSUSE Leap
+%if 0%{?suse_version} >= 1320 || 0%{?suse_version} == 1315
 BuildRequires: libavcodec-devel
 BuildRequires: libavformat-devel
 BuildRequires: libavutil-devel
@@ -175,7 +176,9 @@ install %{SOURCE1} %{buildroot}%{_datadir}/%{name}/
 cd %{builddir}
 export CTEST_OUTPUT_ON_FAILURE=1
 export LD_LIBRARY_PATH=%{buildroot}/%{_libdir}/:$LD_LIBRARY_PATH
-make check
+%if !%{defined fedora}
+  make check
+%endif
 
 %post -n libanmp%{soname} -p /sbin/ldconfig
 
