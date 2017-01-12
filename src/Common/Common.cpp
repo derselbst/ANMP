@@ -68,7 +68,6 @@ string getFileExtension(const string& filePath)
     return filePath.substr(filePath.find_last_of(".") + 1);
 }
 
-#define BORK_TIME 0xC0CAC01A
 /** @brief converts a time string to ms
  *
  * @param[in] input a string in the format of mm:ss where mm=minutes and ss=seconds
@@ -88,11 +87,11 @@ unsigned long parse_time_crap(const char *input)
     }
     if (colon_count > 2)
     {
-        return BORK_TIME;
+        THROW_RUNTIME_ERROR("too many colons in time string");
     }
     if (*ptr && *ptr != '.' && *ptr != ',')
     {
-        return BORK_TIME;
+        THROW_RUNTIME_ERROR("unexpected character");
     }
     if (*ptr)
     {
@@ -104,7 +103,7 @@ unsigned long parse_time_crap(const char *input)
     }
     if (*ptr)
     {
-        return BORK_TIME;
+        THROW_RUNTIME_ERROR("time contains non-numeric character");
     }
 
     ptr = strrchr(input, ':');
@@ -124,7 +123,7 @@ unsigned long parse_time_crap(const char *input)
             double temp = strtod(ptr, &end);
             if (temp >= 60.0)
             {
-                return BORK_TIME;
+                THROW_RUNTIME_ERROR("seconds and minutes must not be >= 60");
             }
             value = (long)(temp * 1000.0f);
         }
@@ -133,7 +132,7 @@ unsigned long parse_time_crap(const char *input)
             unsigned long temp = strtoul(ptr, &end, 10);
             if (temp >= 60 && multiplier < 3600000)
             {
-                return BORK_TIME;
+                THROW_RUNTIME_ERROR("seconds and minutes must not be >= 60");
             }
             value += temp * multiplier;
         }

@@ -163,13 +163,23 @@ int LazyusfWrapper::usf_info(void * context, const char * name, const char * val
     {
         if(!infoContext->fileLen.hasValue)
         {
-            infoContext->fileLen = parse_time_crap(value);
+            try
+            {
+                infoContext->fileLen = parse_time_crap(value);
+            }
+            catch(runtime_error& e)
+            {}
         }
     }
 
     else if (iEquals(name, "fade"))
     {
-        infoContext->fade_ms = parse_time_crap(value);
+        try
+        {
+            infoContext->fade_ms = parse_time_crap(value);
+        }
+        catch(runtime_error& e)
+        {}
     }
 
     else if (iEquals(name, "title"))
@@ -216,12 +226,6 @@ int LazyusfWrapper::usf_info(void * context, const char * name, const char * val
     {
         infoContext->enable_fifo_full = 1;
     }
-
-//     Therefore we have ebur128 loundness normalization:
-//     else if (iEquals(name, "volume"))
-//     {
-//         infoContext->volume = atoi(value);
-//     }
 
     return 0;
 }
