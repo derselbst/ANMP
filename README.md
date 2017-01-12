@@ -19,7 +19,7 @@ What ANMP does NOT:
 * gapless playback
 * cue sheets
 * arbitrary (forward) looping of songs (i.e. even nested loops)
-* unrolling looped MIDI tracks
+* unrolling [looped MIDI tracks](https://github.com/derselbst/ANMP/wiki/MIDI-Customizations)
 * easy attempt to implement new formats
 
 ANMP handles audio differently than others: Instead of retrieving only small buffers that hold the raw pcm data, ANMP fetches the pcm of the whole file and puts that into memory. Todays computers have enough memory to hold raw pcm of even longer audio files. Uncompressing big audio files can take a long time, though. Thus filling the pcm buffer is usually done asynchronously. When the next song shall be played, the pcm buffer of the former song is released.
