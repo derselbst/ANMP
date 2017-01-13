@@ -155,14 +155,18 @@ if(ENABLE_LIBMAD)
         
         MY_FIND_LIB(LIBMAD mad)
         
+        if(LIBMAD_FOUND)
+            set(USE_MAD TRUE)
+        endif(LIBMAD_FOUND)
   
-        summary_add("libmad support" LIBMAD_FOUND)
   endif(ID3TAG_FOUND)
+  
+  summary_add("libmad support" USE_MAD)
 endif(ENABLE_LIBMAD)
 
 
 if(ENABLE_LIBSND)
-  MY_FIND_LIB(LIBSND sndfile)
+    MY_FIND_LIB(LIBSND sndfile)
   
     summary_add("libsndfile support" LIBSND_FOUND)
 endif(ENABLE_LIBSND)
@@ -177,12 +181,12 @@ if(ENABLE_LAZYUSF)
     if(${LAZYUSF_FOUND})
         if(${PSFLIB_FOUND})
             if(${ZLIB_FOUND})
-                set(LAZYUSF_FOUND TRUE)
+                set(USE_LAZYUSF TRUE)
             endif(${ZLIB_FOUND})
         endif(${PSFLIB_FOUND})
     endif(${LAZYUSF_FOUND})
     
-    summary_add("lazyusf support" LAZYUSF_FOUND)
+    summary_add("lazyusf support" USE_LAZYUSF)
 endif(ENABLE_LAZYUSF)
 
 
@@ -214,8 +218,7 @@ if(ENABLE_FLUIDSYNTH)
   PKG_CHECK_MODULES(FLUIDSYNTH fluidsynth)
   PKG_CHECK_MODULES(LIBSMF smf)
   
-  if(LIBSMF_FOUND)
-        if(FLUIDSYNTH_FOUND)
+  if(LIBSMF_FOUND AND FLUIDSYNTH_FOUND)
                 add_definitions(-DUSE_FLUIDSYNTH)
                 if(DEFINED FLUIDSYNTH_DEFAULT_SF2)
                     add_definitions(-DFLUIDSYNTH_DEFAULT_SF2="${FLUIDSYNTH_DEFAULT_SF2}")
@@ -231,13 +234,11 @@ if(ENABLE_FLUIDSYNTH)
                 set(LD_FLAGS ${LD_FLAGS} ${LIBSMF_LIBRARIES})
                 
                 MY_PRINT(LIBSMF)
-        endif(FLUIDSYNTH_FOUND)
-        
-  else(LIBSMF_FOUND)
-        set(FLUIDSYNTH_FOUND FALSE)
-  endif(LIBSMF_FOUND)
+                
+                set(USE_FLUIDSYNTH TRUE)
+  endif(LIBSMF_FOUND AND FLUIDSYNTH_FOUND)
   
-    summary_add("fluidsynth support" FLUIDSYNTH_FOUND)
+  summary_add("fluidsynth support" USE_FLUIDSYNTH)
 endif(ENABLE_FLUIDSYNTH)
 
 
