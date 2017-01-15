@@ -1,5 +1,6 @@
 #include "PlaylistFactory.h"
 
+#include "AtomicWrite.h"
 #include "IPlaylist.h"
 #include "Song.h"
 #include "CommonExceptions.h"
