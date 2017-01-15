@@ -11,9 +11,9 @@ if(LIBGME_FOUND)
 endif(LIBGME_FOUND)
 
 
-if(LIBMAD_FOUND)
+if(USE_LIBMAD)
     set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} LibMadWrapper.cpp)
-endif(LIBMAD_FOUND)
+endif(USE_LIBMAD)
 
 
 if(LIBSND_FOUND)
@@ -30,13 +30,13 @@ if(VGMSTREAM_FOUND)
     set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} VGMStreamWrapper.cpp)
 endif(VGMSTREAM_FOUND)
 
-if(FFMPEG_FOUND)
+if(USE_FFMPEG)
     set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} FFMpegWrapper.cpp)
-endif(FFMPEG_FOUND)
+endif(USE_FFMPEG)
 
-if(FLUIDSYNTH_FOUND)
+if(USE_FLUIDSYNTH)
     set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} FluidsynthWrapper.cpp)
-endif(FLUIDSYNTH_FOUND)
+endif(USE_FLUIDSYNTH)
 
 
 
