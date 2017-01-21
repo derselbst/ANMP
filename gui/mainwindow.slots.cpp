@@ -94,7 +94,7 @@ void MainWindow::slotCurrentSongChanged()
         QString interpret = QString::fromStdString(s->Metadata.Artist);
         if(title == "" || interpret == "")
         {
-            this->setWindowTitle(QString::fromStdString(s->Filename) + " :: ANMP");
+            this->setWindowTitle(QString::fromStdString(::mybasename(s->Filename)) + " :: ANMP");
         }
         else
         {
