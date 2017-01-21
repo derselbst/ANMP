@@ -23,7 +23,7 @@ void LibGMEWrapper::initAttr()
     this->Format.SampleFormat = SampleFormat_t::int16;
 
     // there will always be 2 channels, if this will be real stereo sound or only mono depends on the game
-    this->Format.Channels = 2;
+    this->Format.Channels = 2*8;
 }
 
 LibGMEWrapper::~LibGMEWrapper ()
@@ -54,6 +54,12 @@ void LibGMEWrapper::open()
     {
         THROW_RUNTIME_ERROR("libgme failed on file \"" << this->Filename << ")\"" << " with message " << msg);
     }
+    
+    bool multiChannelSupport = gme_multi_channel(this->handle);
+    
+    CLOG(LogLevel::WARNING, "multisupport: " << multiChannelSupport);
+    
+    gme_mute_voices(this->handle, 0);
 
     if(this->handle == nullptr)
     {
