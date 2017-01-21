@@ -16,8 +16,8 @@ What ANMP does NOT:
 
 #### Main Features
 
-* gapless playback
 * cue sheets
+* gapless playback (for most streamed audio formats)
 * arbitrary (forward) looping of songs (i.e. even nested loops)
 * unrolling [looped MIDI tracks](https://github.com/derselbst/ANMP/wiki/MIDI-Customizations)
 * easy attempt to implement new formats
