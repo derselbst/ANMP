@@ -11,9 +11,9 @@ if(LIBGME_FOUND)
 endif(LIBGME_FOUND)
 
 
-if(USE_LIBMAD)
+if(USE_MAD)
     set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} LibMadWrapper.cpp)
-endif(USE_LIBMAD)
+endif(USE_MAD)
 
 
 if(LIBSND_FOUND)
