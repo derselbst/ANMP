@@ -21,10 +21,13 @@ if(LIBSND_FOUND)
 endif(LIBSND_FOUND)
 
 
-if(LAZYUSF_FOUND)
+if(USE_LAZYUSF)
     set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} LazyusfWrapper.cpp)
-endif(LAZYUSF_FOUND)
+endif(USE_LAZYUSF)
 
+if(USE_AOPSF)
+    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} AopsfWrapper.cpp)
+endif(USE_AOPSF)
 
 if(VGMSTREAM_FOUND)
     set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} VGMStreamWrapper.cpp)
