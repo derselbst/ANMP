@@ -52,7 +52,15 @@ void LazyusfWrapper::open()
     this->usfHandle = new unsigned char[usf_get_state_size()];
     usf_clear(this->usfHandle);
 
-    if ( psf_load( this->Filename.c_str(), &stdio_callbacks, 0x21, &LazyusfWrapper::usf_loader, this->usfHandle, &LazyusfWrapper::usf_info, this, 1 ) <= 0 )
+    if ( psf_load( this->Filename.c_str(),
+                   &stdio_callbacks,
+                   0x21, // usf files are psf files with version 0x21
+                   &LazyusfWrapper::usf_loader, // callback function to call on loading this usf file
+                   this->usfHandle, // context, i.e. pointer to the struct we place the usf file in
+                   &LazyusfWrapper::usf_info, // callback function to call for info on this usf file
+                   this, // info context
+                   1 // yes we want nested info tags, whatever that means
+                 ) <= 0 )
     {
         THROW_RUNTIME_ERROR("psf_load failed on file \"" << this->Filename << ")\"");
     }
