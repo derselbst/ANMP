@@ -3,7 +3,7 @@
 
 #include "StandardWrapper.h"
 
-#include "psx_external.h"
+#include <aopsf.h>
 
 /**
   * class AopsfWrapper

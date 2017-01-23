@@ -5,8 +5,8 @@
 #include "Common.h"
 #include "AtomicWrite.h"
 
-#include <usf.h>
 #include <psflib.h>
+#include <cstring>
 
 AopsfWrapper::AopsfWrapper(string filename) : StandardWrapper(filename)
 {
@@ -69,11 +69,11 @@ void AopsfWrapper::open()
         THROW_RUNTIME_ERROR("this is neither a PSF1 nor a PSF2 file \"" << this->Filename << ")\"");
     }
     
-    this->psfHandle = new unsigned char[psx_get_state_size(this->psfVersion)];
+    this->psfHandle = reinterpret_cast<PSX_STATE*>(new unsigned char[psx_get_state_size(this->psfVersion)]);
     memset(this->psfHandle, 0, psx_get_state_size(this->psfVersion));
 
 
-    this->Format.SampleRate = this->psfVersion == 2 ? 48000 : 44100
+    this->Format.SampleRate = this->psfVersion == 2 ? 48000 : 44100;
     
     int ret = psf_load( this->Filename.c_str(),
                         &stdio_callbacks,
@@ -104,7 +104,7 @@ void AopsfWrapper::close() noexcept
             psf_stop(this->psfHandle);
         }
         
-        delete [] this->psfHandle;
+        delete [] reinterpret_cast<unsigned char*>(this->psfHandle);
         this->psfHandle = nullptr;
     }
 }

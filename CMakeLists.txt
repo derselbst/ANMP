@@ -133,6 +133,7 @@ option(ENABLE_LIBGME "Use blargg's game-music-emu to support several video game 
 option(ENABLE_LIBMAD "Use MAD to support MPEG audio formats" ON)
 option(ENABLE_LIBSND "Use sndfile to support common audio formats (FLAC, WAVE, OGG, etc.)" ON)
 option(ENABLE_LAZYUSF "Use lazyusf to support USF (Ultra64 Sound Format)" ON)
+option(ENABLE_AOPSF "Use aopsf to support PSF1 and PSF2 files (Portable Sound Format)" ON)
 option(ENABLE_VGMSTREAM "Use vgmstream to support innumerable streamed audio formats from video games." ON)
 option(ENABLE_FFMPEG "Use ffmpeg to support innumerable streamed audio formats, also from video streams." ON)
 option(ENABLE_FLUIDSYNTH "Use fluidsynth to synthesize MIDI files." ON)
@@ -188,6 +189,18 @@ if(ENABLE_LAZYUSF)
     
     summary_add("lazyusf support" USE_LAZYUSF)
 endif(ENABLE_LAZYUSF)
+
+
+if(ENABLE_AOPSF)
+    MY_FIND_LIB(AOPSF aopsf)
+    MY_FIND_LIB(PSFLIB psflib)
+    
+    if(${AOPSF_FOUND} AND ${PSFLIB_FOUND})
+        set(USE_AOPSF TRUE)
+    endif(${AOPSF_FOUND} AND ${PSFLIB_FOUND})
+    
+    summary_add("aopsf support" USE_AOPSF)
+endif(ENABLE_AOPSF)
 
 
 if(ENABLE_VGMSTREAM)
