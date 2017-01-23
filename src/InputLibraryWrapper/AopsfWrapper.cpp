@@ -6,7 +6,9 @@
 #include "AtomicWrite.h"
 
 #include <psflib.h>
-#include <cstring>
+#include <psf2fs.h>
+
+#include <cstring> // memset
 
 AopsfWrapper::AopsfWrapper(string filename) : StandardWrapper(filename)
 {
@@ -68,6 +70,10 @@ void AopsfWrapper::open()
     {
         THROW_RUNTIME_ERROR("this is neither a PSF1 nor a PSF2 file \"" << this->Filename << ")\"");
     }
+    else
+    {
+        CLOG(LogLevel::DEBUG, "'" << this->Filename << "' seems to be a PSF" << this->psfVersion);
+    }
     
     this->psfHandle = reinterpret_cast<PSX_STATE*>(new unsigned char[psx_get_state_size(this->psfVersion)]);
     memset(this->psfHandle, 0, psx_get_state_size(this->psfVersion));
@@ -75,24 +81,63 @@ void AopsfWrapper::open()
 
     this->Format.SampleRate = this->psfVersion == 2 ? 48000 : 44100;
     
-    int ret = psf_load( this->Filename.c_str(),
-                        &stdio_callbacks,
-                        this->psfVersion,
-                        &AopsfWrapper::psf_loader, // callback function to call on loading this usf file
-                        this->psfHandle, // context, i.e. pointer to the struct we place the usf file in
-                        nullptr,
-                        nullptr,
-                        0
-                );
-    
-    if(ret != this->psfVersion)
+    if(this->psfVersion == 1)
     {
-        THROW_RUNTIME_ERROR("psf_load failed while decoding on file \"" << this->Filename << ")\"");
+        // things are pretty simple here: we ask psflib to load that file by calling OUR loader method
+        
+        int ret = psf_load( this->Filename.c_str(),
+                            &stdio_callbacks,
+                            this->psfVersion,
+                            &AopsfWrapper::psf_loader, // callback function to call on loading this usf file
+                            this->psfHandle, // context, i.e. pointer to the struct we place the usf file in
+                            nullptr,
+                            nullptr,
+                            0
+                    );
+        
+        if(ret != this->psfVersion)
+        {
+            THROW_RUNTIME_ERROR("Invalid PSF1 file \"" << this->Filename << ")\"");
+        }
+        
+        psf_start(this->psfHandle);
+    }
+    else
+    {
+        this->psf2fs = ::psf2fs_create();
+        
+        if(this->psf2fs == nullptr)
+        {
+            throw std::bad_alloc();
+        }
+        
+        int ret = psf_load( this->Filename.c_str(),
+                            &stdio_callbacks,
+                            this->psfVersion,
+                            ::psf2fs_load_callback, // callback function to call on loading this usf file
+                            this->psf2fs, // context, i.e. pointer to the struct we place the usf file in
+                            nullptr,
+                            nullptr,
+                            0
+                    );
+        
+        if(ret != this->psfVersion)
+        {
+            THROW_RUNTIME_ERROR("Invalid PSF2 file \"" << this->Filename << ")\"");
+        }
+        
+        psf2_register_readfile(this->psfHandle, ::psf2fs_virtual_readfile, this->psf2fs);
+        psf2_start(this->psfHandle);
     }
 }
 
 void AopsfWrapper::close() noexcept
 {
+    if(this->psf2fs != nullptr)
+    {
+        psf2fs_delete(this->psf2fs);
+    }
+    
     if(this->psfHandle != nullptr)
     {
         if(this->psfVersion == 2)

@@ -1,5 +1,5 @@
-#ifndef LAZYUSFWRAPPER_H
-#define LAZYUSFWRAPPER_H
+
+#pragma once
 
 #include "StandardWrapper.h"
 
@@ -45,6 +45,7 @@ private:
     unsigned long fade_ms = 0;
 
     PSX_STATE* psfHandle = nullptr;
+    void* psf2fs = nullptr;
 
 public:
     static void * stdio_fopen( const char * path );
@@ -66,4 +67,3 @@ public:
 
 };
 
-#endif // LAZYUSFWRAPPER_H

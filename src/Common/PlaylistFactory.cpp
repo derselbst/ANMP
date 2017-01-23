@@ -9,6 +9,10 @@
 #include "LazyusfWrapper.h"
 #endif
 
+#ifdef USE_AOPSF
+#include "AopsfWrapper.h"
+#endif
+
 #ifdef USE_LIBSND
 #include "LibSNDWrapper.h"
 #endif
@@ -167,6 +171,13 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
     else if (iEquals(ext, "usf") || iEquals(ext, "miniusf"))
     {
         PlaylistFactory::tryWith<LazyusfWrapper>(pcm, filePath, offset, len);
+    }
+#endif
+
+#ifdef USE_AOPSF
+    else if (iEquals(ext, "psf") || iEquals(ext, "minipsf") || iEquals(ext, "psf2") || iEquals(ext, "minipsf2"))
+    {
+        PlaylistFactory::tryWith<AopsfWrapper>(pcm, filePath, offset, len);
     }
 #endif
 
