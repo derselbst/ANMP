@@ -174,15 +174,19 @@ long AopsfWrapper::stdio_ftell( void * f )
     return ftell( (FILE*) f );
 }
 
-int AopsfWrapper::psf_loader(void * context, const uint8_t * exe, size_t exe_size,
-                               const uint8_t * reserved, size_t reserved_size)
+int AopsfWrapper::psf_loader(void * context, const uint8_t * exe, size_t exe_size, const uint8_t * reserved, size_t reserved_size)
 {
-    if ( exe && exe_size > 0 )
+    if (reserved && reserved_size)
     {
         return -1;
     }
-
-    return usf_upload_section( context, reserved, reserved_size );
+    
+    if (psf_load_section(reinterpret_cast<PSX_STATE *>(context), exe, exe_size, true) != 0)
+    {
+        return -1;
+    }
+    
+    return 0;
 }
 
 
@@ -257,18 +261,18 @@ int AopsfWrapper::psf_info(void * context, const char * name, const char * value
         }
         catch(const invalid_argument& e)
         {
-            CLOG(LogLevel::INFO, "psx_set_refresh failed: " << e.what() << " in file '" << this->Filename << "'");
+            CLOG(LogLevel::INFO, "psx_set_refresh failed: " << e.what() << " in file '" << infoContext->Filename << "'");
         }
     }
     
     else if (iEquals(name, "utf8"))
     {
-        CLOG(LogLevel::INFO, "psf utf8 file found: '" << this->Filename << "'");
+        CLOG(LogLevel::INFO, "psf utf8 file found: '" << infoContext->Filename << "'");
     }
     
     else
     {
-        CLOG(LogLevel::WARNING, "found unknown tag '" << name << "' value '" << value << "' in file '" << this->Filename << "'");
+        CLOG(LogLevel::WARNING, "found unknown tag '" << name << "' value '" << value << "' in file '" << infoContext->Filename << "'");
     }
 
     return 0;
