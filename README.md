@@ -49,6 +49,7 @@ See [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%
 * [lazyusf2](https://gitlab.kode54.net/kode54/lazyusf2) (to play Ultra64 Sound Format (usf))
 * [libgme](https://bitbucket.org/mpyne/game-music-emu) (Famicom (nsf), SuperFamicon (spc), GameBoy (gbs), etc.)
 * [vgmstream](https://gitlab.kode54.net/kode54/vgmstream) (various audio formats from sixth generation video game consoles and following)
+* [aopsf](https://gitlab.kode54.net/kode54/aopsf) (to play Portable Sound Format (PSF1 and PSF2))
 
 #### For audio playback: at least one of the following audio I/O libraries
 (if none of them, only WAVE files can be written)
