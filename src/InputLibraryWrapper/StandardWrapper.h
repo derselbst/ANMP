@@ -30,7 +30,7 @@
   * 
   * obviously you may not change the name of these two vars (since they are declared within the scope of the macro), however you may reoder the arguments to fit your render function (this is also the reason why we cant use template function for this purpose, at least I dont see how this should work)
   * 
-  * @warning whenever changing this implementation, dont forget LibMadWrapper::render(), which does
+  * @warning whenever changing this implementation, dont forget LibMadWrapper::render() AND FFMpegWrapper::render(), which does
   * pretty much the same thing, without using this macro
   */
 #define STANDARDWRAPPER_RENDER(SAMPLEFORMAT, LIB_SPECIFIC_RENDER_FUNCTION)\

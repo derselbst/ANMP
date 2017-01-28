@@ -10,7 +10,7 @@ using namespace std;
   *
   */
 
-// IMPLEMENTERS: when adding new members here dont forget to update PlaylistFactory
+// IMPLEMENTERS: when adding new members here dont forget to update PlaylistFactory (i.e. parsing metadata from cue sheets and handling of overridingMetadata)
 struct SongInfo
 {
     string Track = "";
