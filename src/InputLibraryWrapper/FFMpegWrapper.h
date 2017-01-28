@@ -61,6 +61,8 @@ public:
     frame_t getFrames () const override;
 
     void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
+    
+    void buildMetadata() noexcept override;
 
 private:
     AVFormatContext *handle = nullptr;

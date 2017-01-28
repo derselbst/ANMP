@@ -288,3 +288,56 @@ frame_t FFMpegWrapper::getFrames () const
 
     return totalFrames;
 }
+
+void FFMpegWrapper::buildMetadata() noexcept
+{
+    AVDictionaryEntry* tag = nullptr;
+    
+    tag = av_dict_get(this->handle->metadata, "artist", nullptr, AV_DICT_IGNORE_SUFFIX);
+    if(tag != nullptr)
+    {
+        this->Metadata.Artist = tag->value;
+    }
+    
+    tag = av_dict_get(this->handle->metadata, "title", nullptr, AV_DICT_IGNORE_SUFFIX);
+    if(tag != nullptr)
+    {
+        this->Metadata.Title = tag->value;
+    }
+    
+    tag = av_dict_get(this->handle->metadata, "album", nullptr, AV_DICT_IGNORE_SUFFIX);
+    if(tag != nullptr)
+    {
+        this->Metadata.Album = tag->value;
+    }
+    
+    tag = av_dict_get(this->handle->metadata, "composer", nullptr, AV_DICT_IGNORE_SUFFIX);
+    if(tag != nullptr)
+    {
+        this->Metadata.Composer = tag->value;
+    }
+    
+    tag = av_dict_get(this->handle->metadata, "track", nullptr, AV_DICT_IGNORE_SUFFIX);
+    if(tag != nullptr)
+    {
+        this->Metadata.Track = tag->value;
+    }
+    
+    tag = av_dict_get(this->handle->metadata, "date", nullptr, AV_DICT_IGNORE_SUFFIX);
+    if(tag != nullptr)
+    {
+        this->Metadata.Year = tag->value;
+    }
+    
+    tag = av_dict_get(this->handle->metadata, "genre", nullptr, AV_DICT_IGNORE_SUFFIX);
+    if(tag != nullptr)
+    {
+        this->Metadata.Genre = tag->value;
+    }
+    
+    tag = av_dict_get(this->handle->metadata, "comment", nullptr, AV_DICT_IGNORE_SUFFIX);
+    if(tag != nullptr)
+    {
+        this->Metadata.Comment = tag->value;
+    }
+}
