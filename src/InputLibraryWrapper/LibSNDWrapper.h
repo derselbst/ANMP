@@ -4,14 +4,13 @@
 #include "StandardWrapper.h"
 
 #include <sndfile.h>
-#include <future>
 
 
 /**
   * class LibSNDWrapper
   *
+  * Wrapper for libsndfile, for supporting multiple common audio formats
   */
-
 class LibSNDWrapper : public StandardWrapper<int32_t>
 {
 public:
@@ -27,31 +26,14 @@ public:
 
     // interface methods declaration
 
-    /**
-     * opens the current file using the corresponding lib
-     */
     void open () override;
 
-
-    /**
-     */
     void close () noexcept override;
 
-
-    /** PCM buffer fill call to underlying library goes here
-     */
     void fillBuffer () override;
 
-    /**
-     * @return vector
-     */
     vector<loop_t> getLoopArray () const noexcept override;
 
-
-    /**
-     * returns number of frames this song lasts, they dont necessarily have to be in the pcm buffer at one time
-     * @return unsigned int
-     */
     frame_t getFrames () const override;
 
     void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;

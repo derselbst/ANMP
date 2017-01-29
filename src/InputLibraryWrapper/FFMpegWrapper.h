@@ -39,25 +39,12 @@ public:
 
     // interface methods declaration
 
-    /**
-     * opens the current file using the corresponding lib
-     */
     void open () override;
 
-
-    /**
-     */
     void close () noexcept override;
 
-
-    /** PCM buffer fill call to underlying library goes here
-     */
     void fillBuffer () override;
 
-    /**
-     * returns number of frames this song lasts, they dont necessarily have to be in the pcm buffer at one time
-     * @return unsigned int
-     */
     frame_t getFrames () const override;
 
     void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;

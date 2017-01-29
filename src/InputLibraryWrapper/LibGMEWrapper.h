@@ -9,6 +9,7 @@
 /**
   * class LibGMEWrapper
   *
+  * Wrapper for Game Music Emu (libgme), for supporting several video game music formats
   */
 class LibGMEWrapper : public StandardWrapper<int16_t>
 {
@@ -27,25 +28,12 @@ public:
 
     virtual ~LibGMEWrapper();
 
-    /**
-     * opens the current file using the corresponding lib
-     */
     void open () override;
 
-
-    /**
-     */
     void close () noexcept override;
 
-
-    /** PCM buffer fill call to underlying library goes here
-     */
     void fillBuffer () override;
-
-    /**
-     * returns number of frames this song lasts, they dont necessarily have to be in the pcm buffer at one time
-     * @return unsigned int
-     */
+    
     frame_t getFrames () const override;
 
     vector<loop_t> getLoopArray () const noexcept override;

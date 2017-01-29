@@ -6,6 +6,7 @@
 /**
   * class LazyusfWrapper
   *
+  * Wrapper for lazyusf, for supporting the Ultra64 Sound Format, enabling playback of many beloved N64 titles
   */
 class LazyusfWrapper : public StandardWrapper<int16_t>
 {
@@ -23,25 +24,12 @@ public:
 
     virtual ~LazyusfWrapper();
 
-    /**
-     * opens the current file using the corresponding lib
-     */
     void open () override;
 
-
-    /**
-     */
     void close () noexcept override;
 
-
-    /** PCM buffer fill call to underlying library goes here
-     */
     void fillBuffer () override;
 
-    /**
-     * returns number of frames this song lasts, they dont necessarily have to be in the pcm buffer at one time
-     * @return unsigned int
-     */
     frame_t getFrames () const override;
 
     void buildMetadata() noexcept override;
