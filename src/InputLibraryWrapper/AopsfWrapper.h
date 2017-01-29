@@ -58,7 +58,8 @@ public:
 
     static long stdio_ftell( void * f );
 
-
+    static void console_log(void * context, const char * message);
+    
     static int psf_loader(void * context, const uint8_t * exe, size_t exe_size, const uint8_t * reserved, size_t reserved_size);
 
 

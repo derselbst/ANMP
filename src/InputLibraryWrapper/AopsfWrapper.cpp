@@ -56,9 +56,9 @@ void AopsfWrapper::open()
                                 0, // psf files might have version 1 or 2, we dont know, so probe for version with 0
                                 nullptr,
                                 nullptr,
-                                &AopsfWrapper::psf_info, // callback function to call for info on this usf file
-                                this, // info context
-                                1 // yes we want nested info tags, whatever that means
+                                nullptr,
+                                nullptr,
+                                0
                             );
     
     if(this->psfVersion <= 0)
@@ -80,7 +80,7 @@ void AopsfWrapper::open()
 
 
     this->Format.SampleRate = this->psfVersion == 2 ? 48000 : 44100;
-    
+    psx_register_console_callback(this->psfHandle, &AopsfWrapper::console_log, this);
     if(this->psfVersion == 1)
     {
         // things are pretty simple here: we ask psflib to load that file by calling OUR loader method
@@ -90,9 +90,9 @@ void AopsfWrapper::open()
                             this->psfVersion,
                             &AopsfWrapper::psf_loader, // callback function to call on loading this usf file
                             this->psfHandle, // context, i.e. pointer to the struct we place the usf file in
-                            nullptr,
-                            nullptr,
-                            0
+                            &AopsfWrapper::psf_info, // callback function to call for info on this usf file
+                            this, // info context
+                            1 // yes we want nested info tags, whatever that means
                     );
         
         if(ret != this->psfVersion)
@@ -116,9 +116,9 @@ void AopsfWrapper::open()
                             this->psfVersion,
                             ::psf2fs_load_callback, // callback function to call on loading this usf file
                             this->psf2fs, // context, i.e. pointer to the struct we place the usf file in
-                            nullptr,
-                            nullptr,
-                            0
+                            &AopsfWrapper::psf_info, // callback function to call for info on this usf file
+                            this, // info context
+                            1 // yes we want nested info tags, whatever that means
                     );
         
         if(ret != this->psfVersion)
@@ -161,15 +161,29 @@ void AopsfWrapper::fillBuffer()
 
 void AopsfWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
+    int err;
+    
     // TODO: UGLY CAST AHEAD!
     STANDARDWRAPPER_RENDER(int16_t,
                            if(this->psfVersion == 2)
                            {
-                                psf2_gen(this->psfHandle, pcm, framesToDoNow);
+                                err = psf2_gen(this->psfHandle, pcm, framesToDoNow);
                            }
                            else
                            {
-                                psf_gen(this->psfHandle, pcm, framesToDoNow);
+                                err = psf_gen(this->psfHandle, pcm, framesToDoNow);
+                           }
+                           if(err != AO_SUCCESS)
+                           {
+                               const char* msg = psx_get_last_error(this->psfHandle);
+                               if(msg != nullptr)
+                               {
+                                   THROW_RUNTIME_ERROR("PSF emulation failed with error: " << msg);
+                               }
+                               else
+                               {
+                                   THROW_RUNTIME_ERROR("PSF emulation failed with unknown error.");
+                               }
                            }
                           )
 }
@@ -217,6 +231,12 @@ int AopsfWrapper::stdio_fclose( void * f )
 long AopsfWrapper::stdio_ftell( void * f )
 {
     return ftell( (FILE*) f );
+}
+
+void AopsfWrapper::console_log(void * context, const char * message)
+{
+//     input_psf * pthis = (input_psf *)context;
+    CLOG(LogLevel::DEBUG, message);
 }
 
 int AopsfWrapper::psf_loader(void * context, const uint8_t * exe, size_t exe_size, const uint8_t * reserved, size_t reserved_size)
