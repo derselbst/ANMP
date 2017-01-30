@@ -5,12 +5,12 @@
 #include "CommonExceptions.h"
 #include "AtomicWrite.h"
 
-
+#include <errno.h>
+#include <unistd.h>
+#include <sys/mman.h>
 #include <cstring>
-#include <thread>         // std::this_thread::sleep_for
-#include <chrono>
 
-ModPlug_Settings ModPlugWrapper::settings{};
+ModPlug_Settings ModPlugWrapper::settings;
 
 ModPlugWrapper::ModPlugWrapper(string filename) : StandardWrapper(filename)
 {
@@ -59,40 +59,40 @@ void ModPlugWrapper::open ()
     ModPlug_GetSettings(&ModPlugWrapper::settings);
     ModPlugWrapper::settings.mFlags  = MODPLUG_ENABLE_OVERSAMPLING;
     
-    if(Config::ModPlugEnableNoiseRed)
+    if(gConfig.ModPlugEnableNoiseRed)
     {
         ModPlugWrapper::settings.mFlags |= MODPLUG_ENABLE_NOISE_REDUCTION;
     }
-    if(Config::ModPlugEnableReverb)
+    if(gConfig.ModPlugEnableReverb)
     {
         ModPlugWrapper::settings.mFlags |= MODPLUG_ENABLE_REVERB;
     }
-    if(Config::ModPlugEnableBass)
+    if(gConfig.ModPlugEnableBass)
     {
         ModPlugWrapper::settings.mFlags |= MODPLUG_ENABLE_MEGABASS;
     }
-    if(Config::ModPlugEnableSurround)
+    if(gConfig.ModPlugEnableSurround)
     {
         ModPlugWrapper::settings.mFlags |= MODPLUG_ENABLE_SURROUND;
     }
     
     ModPlugWrapper::settings.mChannels = this->Format.Channels = 2;
     ModPlugWrapper::settings.mBits = 32;
-    ModPlugWrapper::settings.mFrequency = this->Format.SampleRate = Config::ModPlugSampleRate;
+    ModPlugWrapper::settings.mFrequency = this->Format.SampleRate = gConfig.ModPlugSampleRate;
     
     ModPlugWrapper::settings.mResamplingMode = MODPLUG_RESAMPLE_FIR;
 
     ModPlugWrapper::settings.mStereoSeparation = 128;
     ModPlugWrapper::settings.mMaxMixChannels = 64;
 
-    ModPlugWrapper::settings.mReverbDepth = Config::ModPlugReverbDepth;
-    ModPlugWrapper::settings.mReverbDelay = Config::ModPlugReverbDelay;
+    ModPlugWrapper::settings.mReverbDepth = gConfig.ModPlugReverbDepth;
+    ModPlugWrapper::settings.mReverbDelay = gConfig.ModPlugReverbDelay;
     
-    ModPlugWrapper::settings.mBassAmount = Config::ModPlugBassAmount;
-    ModPlugWrapper::settings.mBassRange = Config::ModPlugBassRange;
+    ModPlugWrapper::settings.mBassAmount = gConfig.ModPlugBassAmount;
+    ModPlugWrapper::settings.mBassRange = gConfig.ModPlugBassRange;
     
-    ModPlugWrapper::settings.mSurroundDepth = Config::ModPlugSurroundDepth;
-    ModPlugWrapper::settings.mSurroundDelay = Config::ModPlugSurroundDelay;
+    ModPlugWrapper::settings.mSurroundDepth = gConfig.ModPlugSurroundDepth;
+    ModPlugWrapper::settings.mSurroundDelay = gConfig.ModPlugSurroundDelay;
     
     ModPlugWrapper::settings.mLoopCount = 2;
     

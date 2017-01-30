@@ -137,6 +137,7 @@ option(ENABLE_AOPSF "Use aopsf to support PSF1 and PSF2 files (Portable Sound Fo
 option(ENABLE_VGMSTREAM "Use vgmstream to support innumerable streamed audio formats from video games." ON)
 option(ENABLE_FFMPEG "Use ffmpeg to support innumerable streamed audio formats, also from video streams." ON)
 option(ENABLE_FLUIDSYNTH "Use fluidsynth to synthesize MIDI files." ON)
+option(ENABLE_MODPLUG "Use libmodplug to support multiple tracker formats." ON)
 
 if(ENABLE_LIBGME)
     MY_FIND_LIB(LIBGME gme)
@@ -254,6 +255,25 @@ if(ENABLE_FLUIDSYNTH)
   summary_add("fluidsynth support" USE_FLUIDSYNTH)
 endif(ENABLE_FLUIDSYNTH)
 
+
+if(ENABLE_MODPLUG)
+  PKG_CHECK_MODULES(LIBMODPLUG libmodplug)
+  
+  if(LIBMODPLUG_FOUND)
+                add_definitions(-DUSE_MODPLUG)
+                
+# modplug ships an sndfile.h, which conflicts with libsndfile's sndfile.h
+# so dont include modplugs include path in compiler search list to avoid wrong includes
+#                 set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${LIBMODPLUG_INCLUDE_DIRS})
+                set(LD_FLAGS ${LD_FLAGS} ${LIBMODPLUG_LIBRARIES})
+                
+                MY_PRINT(LIBMODPLUG)
+                
+                set(USE_MODPLUG TRUE)
+  endif(LIBMODPLUG_FOUND)
+  
+  summary_add("modplug support" USE_MODPLUG)
+endif(ENABLE_MODPLUG)
 
 ##################################
 ### miscellaneous dependencies ###

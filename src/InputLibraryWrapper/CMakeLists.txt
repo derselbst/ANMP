@@ -41,6 +41,9 @@ if(USE_FLUIDSYNTH)
     set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} FluidsynthWrapper.cpp)
 endif(USE_FLUIDSYNTH)
 
+if(USE_MODPLUG)
+    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} ModPlugWrapper.cpp)
+endif(USE_MODPLUG)
 
 
 #---------------------------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 
 #include "StandardWrapper.h"
 
-#include <modplug.h>
+#include <libmodplug/modplug.h>
 
 
 /**
@@ -43,4 +43,3 @@ private:
     ModPlugFile* handle = nullptr;
 };
 
-#endif // LIBSNDWRAPPER_H
