@@ -25,6 +25,10 @@
 #include "LibGMEWrapper.h"
 #endif
 
+#ifdef USE_MODPLUG
+#include "ModPlugWrapper.h"
+#endif
+
 #ifdef USE_VGMSTREAM
 #include "VGMStreamWrapper.h"
 #endif
@@ -230,6 +234,11 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
         PlaylistFactory::tryWith<LibGMEWrapper>(pcm, filePath, offset, len);
 #endif
 
+#ifdef USE_MODPLUG
+        // tracker formats (.mod, .it)
+        PlaylistFactory::tryWith<ModPlugWrapper>(pcm, filePath, offset, len);
+#endif
+        
 #ifdef USE_VGMSTREAM
         // most fileformats from videogames
         // also eats raw pcm files (although they'll may have wrong samplerate
