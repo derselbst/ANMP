@@ -152,6 +152,40 @@ public:
     int FluidsynthWidth = 0;
     double FluidsynthLevel = 0.8;
     
+    
+    //**********************************
+    //   LIBMODPLUG-SPECIFIC SECTION   *
+    //**********************************
+    
+    bool ModPlugEnableNoiseRed = false;
+    
+    bool ModPlugEnableReverb = false;
+    
+    bool ModPlugEnableBass = false;
+    
+    bool ModPlugEnableSurround = false;
+    
+    int ModPlugSampleRate = 44100;
+    
+    // Reverb level 0(quiet)-100(loud)
+    int ModPlugReverbDepth = 50;
+    
+    // Reverb delay in ms, usually 40-200ms
+    int ModPlugReverbDelay = 100;
+    
+    // XBass level 0(quiet)-100(loud)
+    int ModPlugBassAmount = 25;
+    
+    // XBass cutoff in Hz 10-100
+    int ModPlugBassRange = 60;
+    
+    // Surround level 0(quiet)-100(heavy)
+    int ModPlugSurroundDepth = 50;
+    
+    // Surround delay in ms, usually 5-40ms
+    int ModPlugSurroundDelay = 10;
+    
+    
     void Load() noexcept;
     void Save() noexcept;
     
@@ -160,6 +194,19 @@ public:
     {
         switch(version)
         {
+            case 2: // only added modplug variables, rest is the same as in version 1
+                archive( CEREAL_NVP(this->ModPlugEnableNoiseRed) );
+                archive( CEREAL_NVP(this->ModPlugEnableReverb) );
+                archive( CEREAL_NVP(this->ModPlugEnableBass) );
+                archive( CEREAL_NVP(this->ModPlugEnableSurround) );
+                archive( CEREAL_NVP(this->ModPlugSampleRate) );
+                archive( CEREAL_NVP(this->ModPlugReverbDepth) );
+                archive( CEREAL_NVP(this->ModPlugReverbDelay) );
+                archive( CEREAL_NVP(this->ModPlugBassAmount) );
+                archive( CEREAL_NVP(this->ModPlugBassRange) );
+                archive( CEREAL_NVP(this->ModPlugSurroundDepth) );
+                archive( CEREAL_NVP(this->ModPlugSurroundDelay) );
+                [[fallthrough]];
             case 1:
                 archive( CEREAL_NVP(this->audioDriver) );
                 archive( CEREAL_NVP(this->useLoopInfo) );
@@ -193,13 +240,14 @@ public:
                 archive( CEREAL_NVP(this->FluidsynthWidth) );
                 archive( CEREAL_NVP(this->FluidsynthLevel) );
                 break;
+
             default:
                 throw InvalidVersionException(version);
         }
     }
 };
 
-CEREAL_CLASS_VERSION( Config, 1 )
+CEREAL_CLASS_VERSION( Config, 2 )
 
 // global var holding the singleton Config instance
 // just a nice little shortcut, so one doesnt always have to write Config::Singleton()
