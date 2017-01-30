@@ -43,7 +43,7 @@ BuildRequires: libcue-devel
 BuildRequires: libgme-devel
 BuildRequires: libmad-devel pkgconfig(id3tag)
 BuildRequires: pkgconfig(sndfile)
-BuildRequires: pkgconfig(modplug)
+BuildRequires: libmodplug-devel
 BuildRequires: vgmstream-devel
 %ifarch x86_64 i586 i686
 BuildRequires: lazyusf2-devel
