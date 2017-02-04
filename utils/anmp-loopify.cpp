@@ -16,7 +16,7 @@ using namespace std::experimental::filesystem;
  * Checks whether the frames given by "left" and "right" can be used as looppoints for "song". Therefore we check that "delta" frames before left and right match the epsilon environment respectively.
  */
 template<typename T>
-bool evaluate(const Song* song, frame_t left, frame_t right, frame_t delta, const long long epsilon)
+bool evaluate(const Song* song, frame_t left, frame_t right, const frame_t delta, const long long epsilon)
 {
     bool result = true;
     T* buffer = static_cast<T*>(song->data);
@@ -24,15 +24,15 @@ bool evaluate(const Song* song, frame_t left, frame_t right, frame_t delta, cons
     right *= song->Format.Channels;
 
     // walk along the delta environment
-    for (delta*=song->Format.Channels; result && delta >= 0; delta--)
+    for (int i=0; result && i<delta*song->Format.Channels; i++)
     {
-        if(left-delta < 0 || left+delta>song->count || right+delta > song->count)
-        {
-            cerr << "Dings: left " << left << " right " << right << endl;
-        }
+//         if(left-i < 0 || left+i>song->count || right+i > song->count)
+//         {
+//             cerr << "Dings: left " << left << " right " << right << endl;
+//         }
         // does the amplitude left and right in the delta environment match the specified epsilon env?
-        result&= fabs(static_cast<float>(buffer[left-delta]) - static_cast<float>(buffer[right-delta])) <= epsilon;
-        result&= fabs(static_cast<float>(buffer[left+delta]) - static_cast<float>(buffer[right+delta])) <= epsilon;
+//         result&= fabs(static_cast<float>(buffer[left-delta]) - static_cast<float>(buffer[right-delta])) <= epsilon;
+        result&= fabs(static_cast<float>(buffer[left+i]) - static_cast<float>(buffer[right+i])) <= epsilon;
     }    
     
     return result;
@@ -89,9 +89,9 @@ int main(int argc, char** argv)
         song->open();
         song->fillBuffer();
         
-        for (frame_t left = delta; left < song->getFrames()-2*delta; left+=delta)
+        for (frame_t left = delta; left < song->getFrames()-2*delta && left < 90000; left+=delta/2)
         {
-            for (frame_t right = song->getFrames()-1-delta; left+delta < right-delta; right-=delta)
+            for (frame_t right = song->getFrames()-1-delta; left+delta < right && right > 6000000; right-=delta/2)
             {
                 bool match = false;
                 
