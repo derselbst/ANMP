@@ -21,9 +21,6 @@ LibGMEWrapper::LibGMEWrapper(string filename, Nullable<size_t> offset, Nullable<
 void LibGMEWrapper::initAttr()
 {
     this->Format.SampleFormat = SampleFormat_t::int16;
-
-    // there will always be 2 channels, if this will be real stereo sound or only mono depends on the game
-    this->Format.Channels = 2;
 }
 
 LibGMEWrapper::~LibGMEWrapper ()
@@ -49,11 +46,38 @@ void LibGMEWrapper::open()
         return;
     }
 
+#if GME_VERSION > 0x000601
+    gme_err_t msg = gme_open_file(this->Filename.c_str(), &this->handle, gConfig.gmeSampleRate, gConfig.gmeMultiChannel);
+#else
     gme_err_t msg = gme_open_file(this->Filename.c_str(), &this->handle, gConfig.gmeSampleRate);
+#endif
+
     if(msg)
     {
         THROW_RUNTIME_ERROR("libgme failed on file \"" << this->Filename << ")\"" << " with message " << msg);
     }
+
+    this->Format.Channels = 2;
+#if GME_VERSION > 0x000601
+    bool multiChannelSupport = gme_multi_channel(this->handle);
+    
+    // there will always be at least a stereo channel, if this will be real stereo sound or only mono depends on the game
+    if(multiChannelSupport)
+    {
+        this->Format.Channels = 2*8;
+    }
+    
+    if(gConfig.gmeMultiChannel && !multiChannelSupport)
+    {
+        CLOG(LogLevel::WARNING, "though requested, gme does not support multichannel rendering for file '" << this->Filename << "'");
+    }
+    if(multiChannelSupport)
+    {
+        CLOG(LogLevel::INFO, "multichannel rendering activated for file '" << this->Filename << "'");
+    }
+#endif
+
+//     gme_mute_voices(this->handle, 0);
 
     if(this->handle == nullptr)
     {
