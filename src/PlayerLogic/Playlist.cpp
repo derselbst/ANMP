@@ -117,6 +117,8 @@ void Playlist::shuffle(unsigned int start, unsigned int end)
         throw invalid_argument("start>end");
     }
 
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     std::random_shuffle(this->queue.begin()+start, this->queue.begin()+end);
 }
 
