@@ -104,6 +104,8 @@ public:
     float gmeEchoDepth = 0.2f;
 
     bool gmePlayForever = false;
+    
+    bool gmeMultiChannel = false;
 
     //**********************************
     //      MIDI-GENERAL SECTION       *
@@ -194,7 +196,9 @@ public:
     {
         switch(version)
         {
-            case 2: // only added modplug variables, rest is the same as in version 1
+            case 2: // only added modplug variables and gmeMultiChannel, rest is the same as in version 1
+                archive( CEREAL_NVP(this->gmeMultiChannel) );
+                
                 archive( CEREAL_NVP(this->ModPlugEnableNoiseRed) );
                 archive( CEREAL_NVP(this->ModPlugEnableReverb) );
                 archive( CEREAL_NVP(this->ModPlugEnableBass) );
