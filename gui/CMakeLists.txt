@@ -23,6 +23,7 @@ if(USE_GUI)
         overlaycontrol.cpp
         PlaylistModel.cpp
         PlaylistView.cpp
+        PlayheadSlider.cpp
     )
 
     qt5_wrap_ui(UI_HEADERS

@@ -4,6 +4,7 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "PlayheadSlider.h"
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
 
@@ -27,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     // init UI
     this->ui->setupUi(this);
+    this->ui->seekBar->SetMainWindow(this);
 
     this->setWindowState(Qt::WindowMaximized);
 
@@ -52,6 +54,7 @@ MainWindow::~MainWindow()
     delete this->analyzerWindow;
 #endif
     
+    this->ui->seekBar->SetMainWindow(nullptr);
     delete this->ui;
     delete this->player;
     delete this->playlistModel;

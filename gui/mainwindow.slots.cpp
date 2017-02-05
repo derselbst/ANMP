@@ -21,7 +21,6 @@
 
 void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, QString msg)
 {
-
     QPushButton* playbtn = this->ui->playButton;
     bool oldState = playbtn->blockSignals(true);
     if(isPlaying)

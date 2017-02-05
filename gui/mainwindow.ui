@@ -278,7 +278,7 @@ background-color: rgb(255, 209, 205);
        </widget>
       </item>
       <item>
-       <widget class="QSlider" name="seekBar">
+       <widget class="PlayheadSlider" name="seekBar">
         <property name="styleSheet">
          <string notr="true">QSlider::groove:horizontal {
 border: 0px solid #bbb;
@@ -592,14 +592,19 @@ border-radius: 4px;
     <signal>remove(QModelIndexList)</signal>
    </slots>
   </customwidget>
+  <customwidget>
+   <class>PlayheadSlider</class>
+   <extends>QSlider</extends>
+   <header>PlayheadSlider.h</header>
+  </customwidget>
  </customwidgets>
  <resources>
   <include location="icons.qrc"/>
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="controlButtonsHideSecond"/>
   <buttongroup name="controlButtonsHideFirst"/>
+  <buttongroup name="controlButtonsHideSecond"/>
   <buttongroup name="controlButtonsAlwaysVisible">
    <property name="exclusive">
     <bool>false</bool>

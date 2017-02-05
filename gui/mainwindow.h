@@ -71,6 +71,7 @@ private:
 
 private slots:
     friend class PlaylistModel;
+    friend class PlayheadSlider;
 
     void slotIsPlayingChanged(bool isPlaying, bool, QString);
     void slotSeek(long long);

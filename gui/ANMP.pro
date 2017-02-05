@@ -25,6 +25,7 @@ SOURCES += main.cpp\
         mainwindow.cpp\
         PlaylistView.cpp\
         PlaylistModel.cpp \
+        PlayheadSlider.cpp\
         configdialog.cpp \
     applets/analyzer/AnalyzerApplet.cpp overlaycontrol.cpp
 
