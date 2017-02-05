@@ -23,8 +23,8 @@
  *  2. feed these event to fluidsynth's sequencer (fluidseq)
  *  3. fluidseq manages an internal queue. on every call to fluid_synth_process(), fluidsynth pops these events from the queue and synthesize them
  *
- * during 1) we observe the event sucked from a midi file. if we spot a MIDI CC102 (or 103), we've detected a midi track loop. so here we have to make sure,
- * that fluidsynth calls us back whenever we reach the end of such a track loop
+ * during 1) we observe the events sucked from a midi file. if we spot a MIDI CC102 (or 103), we've detected a midi track loop. so here we have to make sure,
+ * that fluidsynth calls us back whenever we reach the end of such a track loop during synthesization, in order to keep this midi track playing
  *
  * TODO: this class should actually be split up into handling the bare SMF part and an extra synthesizer class
  */
