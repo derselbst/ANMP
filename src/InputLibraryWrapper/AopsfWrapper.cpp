@@ -83,16 +83,16 @@ void AopsfWrapper::open()
     psx_register_console_callback(this->psfHandle, &AopsfWrapper::console_log, this);
     if(this->psfVersion == 1)
     {
-        // things are pretty simple here: we ask psflib to load that file by calling OUR loader method
+        // we ask psflib to load that file using OUR loader method
         
         int ret = psf_load( this->Filename.c_str(),
                             &stdio_callbacks,
                             this->psfVersion,
-                            &AopsfWrapper::psf_loader, // callback function to call on loading this usf file
-                            this->psfHandle, // context, i.e. pointer to the struct we place the usf file in
-                            &AopsfWrapper::psf_info, // callback function to call for info on this usf file
+                            &AopsfWrapper::psf_loader, // callback function to call on loading this psf file
+                            this->psfHandle, // context, i.e. pointer to the struct we place the psf file in
+                            &AopsfWrapper::psf_info, // callback function to call for info on this psf file
                             this, // info context
-                            1 // yes we want nested info tags, whatever that means
+                            1 // yes we want nested info tags
                     );
         
         if(ret != this->psfVersion)
@@ -104,6 +104,8 @@ void AopsfWrapper::open()
     }
     else
     {
+        // we are creating some psf2fs that handles loading and fiddling around with that psf2 file
+        
         this->psf2fs = ::psf2fs_create();
         
         if(this->psf2fs == nullptr)
@@ -114,11 +116,11 @@ void AopsfWrapper::open()
         int ret = psf_load( this->Filename.c_str(),
                             &stdio_callbacks,
                             this->psfVersion,
-                            ::psf2fs_load_callback, // callback function to call on loading this usf file
-                            this->psf2fs, // context, i.e. pointer to the struct we place the usf file in
-                            &AopsfWrapper::psf_info, // callback function to call for info on this usf file
+                            ::psf2fs_load_callback, // callback function provided by psf2fs
+                            this->psf2fs, // context
+                            &AopsfWrapper::psf_info, // callback function to call for info on this psf file
                             this, // info context
-                            1 // yes we want nested info tags, whatever that means
+                            1 // yes we want nested info tag
                     );
         
         if(ret != this->psfVersion)
@@ -162,8 +164,7 @@ void AopsfWrapper::fillBuffer()
 void AopsfWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
     int err;
-    
-    // TODO: UGLY CAST AHEAD!
+                                
     STANDARDWRAPPER_RENDER(int16_t,
                            if(this->psfVersion == 2)
                            {
@@ -235,7 +236,6 @@ long AopsfWrapper::stdio_ftell( void * f )
 
 void AopsfWrapper::console_log(void * context, const char * message)
 {
-//     input_psf * pthis = (input_psf *)context;
     CLOG(LogLevel::DEBUG, message);
 }
 
@@ -246,7 +246,7 @@ int AopsfWrapper::psf_loader(void * context, const uint8_t * exe, size_t exe_siz
         return -1;
     }
     
-    if (psf_load_section(reinterpret_cast<PSX_STATE *>(context), exe, exe_size, true) != 0)
+    if (psf_load_section(static_cast<PSX_STATE *>(context), exe, exe_size, true) != 0)
     {
         return -1;
     }
@@ -257,19 +257,19 @@ int AopsfWrapper::psf_loader(void * context, const uint8_t * exe, size_t exe_siz
 
 int AopsfWrapper::psf_info(void * context, const char * name, const char * value)
 {
-    AopsfWrapper* infoContext = reinterpret_cast<AopsfWrapper*>(context);
+    AopsfWrapper* infoContext = static_cast<AopsfWrapper*>(context);
 
     if (iEquals(name, "length"))
     {
-//         if(!infoContext->fileLen.hasValue)
-//         {
+        if(!infoContext->fileLen.hasValue) // we might get multiple length tags (e.g. from psflib), only use the first one
+        {
             try
             {
                 infoContext->fileLen = parse_time_crap(value);
             }
             catch(runtime_error& e)
             {}
-//         }
+        }
     }
 
     else if (iEquals(name, "fade"))

@@ -43,24 +43,28 @@
     {\
         framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);\
     }\
-    /* audio normalization */\
+    /* audio normalization factor */\
     const float absoluteGain = (numeric_limits<SAMPLEFORMAT>::max()) / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);\
 \
     SAMPLEFORMAT* pcm = static_cast<SAMPLEFORMAT*>(bufferToFill);\
+    /* advance the pcm pointer by that many items where we previously ended filling it */\
     pcm += (this->framesAlreadyRendered * this->Format.Channels) % this->count;\
 \
     while(framesToRender>0 && !this->stopFillBuffer)\
     {\
+        /* render in chunks of gConfig.FramesToRender size */\
         int framesToDoNow = (framesToRender/gConfig.FramesToRender)>0 ? gConfig.FramesToRender : framesToRender%gConfig.FramesToRender;\
 \
-        /* render to raw pcm*/\
+        /* call the function whatever is responsible for decoding to raw pcm */\
         LIB_SPECIFIC_RENDER_FUNCTION;\
 \
+        /* actually do the audio normalization */\
         for(unsigned int i=0; gConfig.useAudioNormalization && i<framesToDoNow*this->Format.Channels; i++)\
         {\
 	    pcm[i] = static_cast<SAMPLEFORMAT>(pcm[i] * absoluteGain);\
         }\
 \
+        /* advance the pcm pointer by that many items that have just been rendered */\
         pcm += (framesToDoNow * this->Format.Channels) % this->count;\
         this->framesAlreadyRendered += framesToDoNow;\
 \

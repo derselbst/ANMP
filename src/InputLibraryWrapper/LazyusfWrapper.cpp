@@ -169,7 +169,7 @@ int LazyusfWrapper::usf_info(void * context, const char * name, const char * val
 
     if (iEquals(name, "length"))
     {
-        if(!infoContext->fileLen.hasValue)
+        if(!infoContext->fileLen.hasValue) // we might get multiple length tags (e.g. from usflib), only use the first one
         {
             try
             {
