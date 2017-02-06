@@ -46,6 +46,9 @@ private:
 
     PSX_STATE* psfHandle = nullptr;
     void* psf2fs = nullptr;
+    
+    // only for psf1 files: indicates whether psf_loader() is called the very first time
+    bool first = true;
 
 public:
     static void * stdio_fopen( const char * path );

@@ -89,7 +89,7 @@ void AopsfWrapper::open()
                             &stdio_callbacks,
                             this->psfVersion,
                             &AopsfWrapper::psf_loader, // callback function to call on loading this psf file
-                            this->psfHandle, // context, i.e. pointer to the struct we place the psf file in
+                            this, // context, i.e. pointer to the struct we place the psf file in
                             &AopsfWrapper::psf_info, // callback function to call for info on this psf file
                             this, // info context
                             1 // yes we want nested info tags
@@ -154,6 +154,8 @@ void AopsfWrapper::close() noexcept
         delete [] reinterpret_cast<unsigned char*>(this->psfHandle);
         this->psfHandle = nullptr;
     }
+    
+    this->first = true;
 }
 
 void AopsfWrapper::fillBuffer()
@@ -241,15 +243,19 @@ void AopsfWrapper::console_log(void * context, const char * message)
 
 int AopsfWrapper::psf_loader(void * context, const uint8_t * exe, size_t exe_size, const uint8_t * reserved, size_t reserved_size)
 {
+    AopsfWrapper* pthis = static_cast<AopsfWrapper*>(context);
+    
     if (reserved && reserved_size)
     {
         return -1;
     }
     
-    if (psf_load_section(static_cast<PSX_STATE *>(context), exe, exe_size, true) != 0)
+    if (psf_load_section(static_cast<PSX_STATE *>(pthis->psfHandle), exe, exe_size, pthis->first) != 0)
     {
         return -1;
     }
+    
+    pthis->first = false;
     
     return 0;
 }
