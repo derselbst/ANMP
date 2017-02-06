@@ -367,11 +367,7 @@ void PlaylistModel::clear()
 
     const int Elements = this->rowCount(QModelIndex());
 
-    for(int i=0; i<Elements; i++)
-    {
-        Playlist::remove(0);
-        this->removeRows(0, 1);
-    }
+    this->removeRows(0, Elements);
 }
 
 Song* PlaylistModel::setCurrentSong (unsigned int id)
