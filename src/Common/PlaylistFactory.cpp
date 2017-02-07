@@ -158,7 +158,15 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
     else if (iEquals(ext,"cue"))
     {
 #ifdef USE_CUE
-        PlaylistFactory::parseCue(playlist, filePath);
+        try
+        {
+            PlaylistFactory::parseCue(playlist, filePath);
+            return true;
+        }
+        catch(const runtime_error& e)
+        {
+            CLOG(LogLevel::ERROR, "failed parsing '" << filePath << "' error: '" << e.what() << "'");
+        }
 #endif
     }
 
@@ -200,11 +208,11 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
             
             if(msg)
             {
-                CLOG(Level::ERROR, "though assumed GME compatible file, got error: '" << msg "' for file '" << filePath << "'");
+                CLOG(LogLevel::ERROR, "though assumed GME compatible file, got error: '" << msg << "' for file '" << filePath << "'");
             }
             else
             {
-                CLOG(Level::ERROR, "though assumed GME compatible file, GME failed without error for file '" << filePath << "'");
+                CLOG(LogLevel::ERROR, "though assumed GME compatible file, GME failed without error for file '" << filePath << "'");
             }
             
             return false;

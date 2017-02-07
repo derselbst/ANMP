@@ -2,6 +2,8 @@
 #pragma once
 
 #include "Song.h"
+#include "AtomicWrite.h"
+#include "CommonExceptions.h"
 #include <iostream>
 
 template<typename T>
