@@ -139,6 +139,8 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
 
 bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nullable<size_t> offset, Nullable<size_t> len, Nullable<SongInfo> overridingMetadata)
 {
+    Song* pcm=nullptr;
+    
     string ext = getFileExtension(filePath);
     
     if( iEquals(ext, "ebur128") ||
@@ -153,11 +155,7 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
         // moodbar and loudness files, dont care
         return false;
     }
-
-    
-    Song* pcm=nullptr;
-
-    if (iEquals(ext,"cue"))
+    else if (iEquals(ext,"cue"))
     {
 #ifdef USE_CUE
         PlaylistFactory::parseCue(playlist, filePath);
@@ -195,7 +193,20 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
         gme_err_t msg = gme_open_file(filePath.c_str(), &emu, gme_info_only);
         if(msg || emu == nullptr)
         {
-            // an error msg has been set or the emulator is null
+            if(emu != nullptr)
+            {
+                gme_delete(emu);
+            }
+            
+            if(msg)
+            {
+                CLOG(Level::ERROR, "though assumed GME compatible file, got error: '" << msg "' for file '" << filePath << "'");
+            }
+            else
+            {
+                CLOG(Level::ERROR, "though assumed GME compatible file, GME failed without error for file '" << filePath << "'");
+            }
+            
             return false;
         }
 
@@ -263,13 +274,6 @@ l_LIBMAD:
     if(pcm==nullptr)
     {
         CLOG(LogLevel::ERROR, "No library seems to support that file: \"" << filePath << "\"");
-        return false;
-    }
-
-    // TODO: do this check after every TRY_WITH
-    if(pcm->getFrames() <= 0)
-    {
-        CLOG(LogLevel::ERROR, "Valid, but nothing to play for file: \"" << pcm->Filename << "\"");
         return false;
     }
 

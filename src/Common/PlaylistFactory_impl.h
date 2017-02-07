@@ -12,11 +12,16 @@ void PlaylistFactory::tryWith(Song* (&pcm), const string& filePath, Nullable<siz
         pcm = new T(filePath, offset, len);
         try
         {
-            pcm->open();            
+            pcm->open();
+            
+            if(pcm->getFrames() <= 0)
+            {
+                THROW_RUNTIME_ERROR("Nothing to play, refusing to add file: '" << filePath << "'");
+            }
         }
         catch(exception& e)
         {
-            cerr << e.what() << endl;
+            CLOG(LogLevel::ERROR, e.what());
             pcm->close();
             delete pcm;
             pcm=nullptr;
