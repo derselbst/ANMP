@@ -401,10 +401,19 @@ QColor PlaylistModel::calculateRowColor(int row) const
     {
         return QColor(255, 0, 0, 127);
     }
-    else if(row % 2 == 0)
+    else if(this->getSong(row) == nullptr)
+    {
+        return QColor(255,225,0);
+    }
+    else if(row > 0 && row % 10 == 0)
     {
         return QColor(222,222,222);
     }
+    else if(row % 2 == 0)
+    {
+        return QColor(233,233,233);
+    }
+    
     return QColor(Qt::white);
 }
 
