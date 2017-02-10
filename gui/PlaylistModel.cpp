@@ -331,7 +331,7 @@ bool PlaylistModel::dropMimeData(const QMimeData *data, Qt::DropAction action, i
     QProgressDialog progress("Adding files...", "Abort", 0, urls.count(), wnd);
     progress.setWindowModality(Qt::WindowModal);
     progress.show();
-    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+    QApplication::processEvents(QEventLoop::ExcludeSocketNotifiers);
 
     for(int i=0; !progress.wasCanceled() && i<urls.count(); i++)
     {
@@ -339,7 +339,7 @@ bool PlaylistModel::dropMimeData(const QMimeData *data, Qt::DropAction action, i
         if(i%(static_cast<int>(urls.count()*0.1)+1)==0)
         {
             progress.setValue(i);
-            QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+            QApplication::processEvents(QEventLoop::ExcludeSocketNotifiers);
         }
 
         PlaylistFactory::addSong(*this, urls.at(i).toLocalFile().toStdString());

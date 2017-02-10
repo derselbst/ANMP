@@ -10,9 +10,6 @@
 
 #include <anmp.hpp>
 
-#include <QFileDialog>
-#include <QProgressDialog>
-#include <QMessageBox>
 #include <QShortcut>
 #include <QResizeEvent>
 

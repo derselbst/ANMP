@@ -112,14 +112,14 @@ void MainWindow::on_actionAdd_Songs_triggered()
     QProgressDialog progress("Adding files...", "Abort", 0, fileNames.count(), this);
     progress.setWindowModality(Qt::WindowModal);
     progress.show();
-    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+    QApplication::processEvents(QEventLoop::ExcludeSocketNotifiers);
     for(int i=0; !progress.wasCanceled() && i<fileNames.count(); i++)
     {
         // only redraw progress dialog on every tenth song
         if(i%(static_cast<int>(fileNames.count()*0.1)+1)==0)
         {
             progress.setValue(i);
-            QApplication::processEvents(QEventLoop::ExcludeUserInputEvents | QEventLoop::ExcludeSocketNotifiers);
+            QApplication::processEvents(QEventLoop::ExcludeSocketNotifiers);
         }
 
         PlaylistFactory::addSong(*this->playlistModel, fileNames.at(i).toUtf8().constData());
