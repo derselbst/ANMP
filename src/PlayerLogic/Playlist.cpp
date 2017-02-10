@@ -85,7 +85,7 @@ Song* Playlist::previous ()
     return this->setCurrentSong((this->currentSong+this->queue.size()-1) % this->queue.size());
 }
 
-Song* Playlist::getSong(unsigned int id)
+Song* Playlist::getSong(unsigned int id) const
 {
     lock_guard<recursive_mutex> lck(this->mtx);
 

@@ -31,7 +31,7 @@ public:
 
     Song* previous () override;
 
-    Song* getSong(unsigned int id) override;
+    Song* getSong(unsigned int id) const override;
 
     Song* setCurrentSong(unsigned int id) override;
 

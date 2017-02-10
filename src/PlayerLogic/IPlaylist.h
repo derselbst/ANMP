@@ -57,7 +57,7 @@ public:
      *
      * @return returns the song at the specified index, nullptr if song does not exist
      */
-    virtual Song* getSong(unsigned int idx) = 0;
+    virtual Song* getSong(unsigned int idx) const = 0;
 
 
     /**
