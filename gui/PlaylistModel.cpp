@@ -290,13 +290,7 @@ bool PlaylistModel::canDropMimeData(const QMimeData *data, Qt::DropAction action
     Q_UNUSED(row);
     Q_UNUSED(parent);
 
-    if (!data->hasFormat("text/uri-list"))
-        return false;
-
-    if (column > 0)
-        return false;
-
-    return true;
+    return data->hasFormat("text/uri-list");
 }
 
 
