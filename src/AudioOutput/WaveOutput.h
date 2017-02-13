@@ -7,10 +7,30 @@
 #include <mutex>
 
 typedef int32_t chunk_size_t;
+union chunk_element_t
+{
+    uint32_t uDword = 0;
+     int32_t sDword;
+    uint16_t Word[2];
+    char Byte[4];
+    
+    chunk_element_t(uint32_t val) : uDword(val) {}
+    chunk_element_t( int32_t val) : sDword(val) {}
+    chunk_element_t(uint16_t val0, uint16_t val1)
+    {
+        this->Word[0] = val0;
+        this->Word[1] = val1;
+    }
+    chunk_element_t(const char val[4])
+    {
+            this->Byte[0] = val[0];
+            this->Byte[1] = val[1];
+            this->Byte[2] = val[2];
+            this->Byte[3] = val[3];
+    }
+};
 
-class Player;
-
-struct SampleLoop
+struct sample_loop_t
 {
     uint32_t Identifier; // some unique number
     uint32_t LoopType;
@@ -23,13 +43,15 @@ struct SampleLoop
 #define FMT_PCM 0x0001
 #define FMT_IEEE_FLOAT 0x0003
 
-constexpr int N = 0;
 struct WaveHeader
 {
+public:
+    vector<chunk_element_t> data;
+    
+private:
     const char RiffID[4] = {'R','I','F','F'};
     chunk_size_t RiffSize;
     const char WaveID[4] = {'W','A','V','E'};
-
 
     /*******************************************
      *  Sampler CHUNK (for loop info)
@@ -43,10 +65,15 @@ struct WaveHeader
     const uint32_t MidiPitchFraction = 0; // no fine tuning;
     const uint32_t SMPTEFormat = 0; // no SMPTE offset
     const uint32_t SMPTEOffset = 0; // no SMPTE offset
-    const uint32_t SampleLoops = N;
+          uint32_t SampleLoops;
     const uint32_t SamplerData = 0; // no additional info following this chunk
-//     struct SampleLoop loops[N];
 
+    /*******************************************
+     *  List CHUNK (for metadata)
+     ******************************************/
+    const char ListID[4] = {'L','I','S','T'};
+    const chunk_size_t ListSize = sizeof(WaveHeader::Manufacturer) + sizeof(WaveHeader::Product) + sizeof(WaveHeader::SamplePeriod) + sizeof(WaveHeader::MidiRootNote) + sizeof(WaveHeader::MidiPitchFraction) + sizeof(WaveHeader::SMPTEFormat) + sizeof(WaveHeader::SMPTEOffset) + sizeof(WaveHeader::SampleLoops) + sizeof(WaveHeader::SamplerData) /*+ sizeof(WaveHeader::loops)*/;
+    const char ListType[4] = {'I','N','F','O'}; // this list chunk is of type INFO
 
     /*******************************************
      *  FORMAT CHUNK (must precede data chunk)
@@ -109,8 +136,116 @@ struct WaveHeader
         this->RiffSize -= (sizeof(RiffID) + sizeof(RiffSize));
         // add no. of bytes that are in data chunk
         this->RiffSize += DataSize;
+        
+        
+        // the outer most RIFF chunk
+        data.push_back(chunk_element_t(RiffID));
+        data.push_back(RiffSize);
+        data.push_back(WaveID);
+        
+        vector<loop_t> loops = s->getLoopArray();
+        if(loops.size())
+        {
+            // smpl chunk
+            data.push_back(SamplerID);
+            data.push_back(SamplerSize);
+            data.push_back(Manufacturer);
+            data.push_back(Product);
+            data.push_back(SamplePeriod);
+            data.push_back(MidiRootNote);
+            data.push_back(MidiPitchFraction);
+            data.push_back(SMPTEFormat);
+            data.push_back(SMPTEOffset);
+            
+            SampleLoops = loops.size();
+            data.push_back(SampleLoops);
+            data.push_back(SamplerData);
+            
+//             struct SampleLoop loops
+        }
+        
+        // LIST chunk - metadata
+        data.push_back(ListID);
+        data.push_back(ListSize);
+        data.push_back(ListType);
+        
+        bool atLeastOne = false;
+        const SongInfo& m = s->Metadata;
+        {
+#define WRITE_META(a,b,c,d) \
+            if(!meta.empty())\
+            {\
+                constexpr char ID[4] = {a,b,c,d};\
+                atLeastOne |= true;\
+                \
+                /* require that meta.size() % 4 == 0 */\
+                size_t padd = sizeof(chunk_element_t) - (meta.size() & sizeof(chunk_element_t));\
+                for(size_t i=0; i<padd; i++)\
+                {\
+                    meta.push_back('\0');\
+                }\
+                \
+                data.push_back(ID);\
+                uint32_t size = meta.size();\
+                data.push_back(size);\
+                for(size_t i=0; i<size; i+=4)\
+                {\
+                    const char dings[4] = {meta[i], meta[i+1], meta[i+2], meta[i+3]};\
+                    data.push_back(dings);\
+                }\
+            }
+            
+        string meta = m.Artist;
+        WRITE_META('I','A','R','T');
+        
+        meta = m.Genre;
+        WRITE_META('I','G','N','R');
+        
+        meta = m.Title;
+        WRITE_META('I','N','A','M');
+        
+        meta = m.Track;
+        WRITE_META('I','T','R','K');
+        
+        meta = m.Comment;
+        WRITE_META('I','C','M','T');
+        
+        meta = m.Year;
+        WRITE_META('I','C','R','D');
+        
+        meta = m.Album;
+        WRITE_META('I','P','R','D');
+        
+#undef WRITE_META
+        }
+        
+        if(!atLeastOne)
+        {
+            // not a single metadata set? well then, remove the list chunk
+            data.pop_back();
+            data.pop_back();
+            data.pop_back();
+        }
+        
+        
+        // fmt chunk
+        data.push_back(FormatID);
+        data.push_back(FormatSize);
+        data.push_back(FormatType);
+        data.push_back(Channels);
+        data.push_back(SampleRate);
+        data.push_back(BytesPerSecond);
+        data.push_back(BlockAlign);
+        data.push_back(BitsPerSample);
+        
+        // start the data chunk
+        data.push_back(DataID);
+        data.push_back(DataSize);
     }
 };
+
+
+class Player;
 
 /**
   * class WaveOutput
