@@ -407,7 +407,7 @@ QColor PlaylistModel::calculateRowColor(int row) const
     }
     else if(row > 0 && row % 10 == 0)
     {
-        return QColor(222,222,222);
+        return QColor(220,220,220);
     }
     else if(row % 2 == 0)
     {
