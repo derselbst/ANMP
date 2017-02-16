@@ -161,10 +161,10 @@ public:
             for(size_t i=0; i<SampleLoops; i++)
             {
                 data.push_back(i); // unique loop identifier
-                data.push_back(0); // forward loop;
+                data.push_back(0U); // forward loop;
                 data.push_back(loops[i].start);
                 data.push_back(loops[i].stop);
-                data.push_back(0); // no fine loop adjustment
+                data.push_back(0U); // no fine loop adjustment
                 data.push_back(loops[i].count);
             }
         }
