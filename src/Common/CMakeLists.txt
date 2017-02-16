@@ -7,6 +7,7 @@ SET(ANMP_COMMON_SRC
        LoudnessFile.cpp
        PlaylistFactory.cpp
        SongFormat.cpp
+       StringFormatter.cpp
 )
 
 
