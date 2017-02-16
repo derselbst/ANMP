@@ -7,6 +7,7 @@
 #include "LoudnessFile.h"
 #include "CommonExceptions.h"
 #include "AtomicWrite.h"
+#include "StringFormatter.h"
 
 
 #include <iostream>
@@ -297,7 +298,7 @@ void WaveOutput::init(SongFormat format, bool)
         return;
     }
 
-    string outFile = ::getUniqueFilename(this->currentSong->Filename + ".wav");
+    string outFile = StringFormatter::Singleton().GetFilename(this->currentSong, ".wav");
     
     this->handle = fopen(outFile.c_str(), "wb");
     if(this->handle == nullptr)

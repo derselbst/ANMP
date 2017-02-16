@@ -17,7 +17,10 @@ StringFormatter& StringFormatter::Singleton()
 
 void StringFormatter::UpdateReplacements(const SongInfo& info) noexcept    
 {
-    this->wildcards.erase(this->wildcards.begin());
+    if(!this->wildcards.empty())
+    {
+        this->wildcards.erase(this->wildcards.begin(), this->wildcards.end());
+    }
     this->wildcards.reserve(10);
     
     wildcard_t wild;
@@ -59,11 +62,11 @@ string StringFormatter::GetFilename(const Song* song, string extension) noexcept
         
         filename = this->pattern;
 
-        for(size_t i = 0; this->wildcards.size(); i++)
+        for(size_t i = 0; i<this->wildcards.size(); i++)
         {
             // find placeholder
             size_t pos = filename.find(this->wildcards[i].wildcard);
-            if(pos == string::npos)
+            if(pos != string::npos)
             {
                 filename.replace(pos, this->wildcards[i].wildcard.size(), this->wildcards[i].replacement->c_str());
             }
