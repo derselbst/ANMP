@@ -71,6 +71,33 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
     Cd *cd = cue_parse_file(f);
     cue_assert ("error parsing CUE", cd != NULL);
 
+    SongInfo overridingMetadata;
+    {
+        // get metadata of overall CD
+        Cdtext* albumtext = cd_get_cdtext(cd);
+
+        const char* val = cdtext_get (PTI_PERFORMER, albumtext);
+        if(val != NULL)
+        {
+            // overall CD interpret
+            overridingMetadata.Artist = string(val);
+        }
+
+        val = cdtext_get (PTI_COMPOSER, albumtext);
+        if(val != NULL)
+        {
+            // overall CD Composer
+            overridingMetadata.Composer = string(val);
+        }
+
+        val = cdtext_get (PTI_TITLE, albumtext);
+        if(val != NULL)
+        {
+            // album title
+            overridingMetadata.Album = string(val);
+        }
+    }
+    
     int ntrk = cd_get_ntrack (cd);
     for(int i=0; i< ntrk; i++)
     {
@@ -83,7 +110,6 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
         Cdtext* cdtext = track_get_cdtext (track);
         cue_assert ("error getting track CDTEXT", cdtext != NULL);
 
-        SongInfo overridingMetadata;
         {
             stringstream ss;
             ss << setw(2) << setfill('0') << i+1;
@@ -197,8 +223,12 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
     {
         // ... try to parse that file
 
-        Music_Emu * emu=nullptr;
+        Music_Emu * emu=nullptr;  
+#if GME_VERSION > 0x000601
+        gme_err_t msg = gme_open_file(filePath.c_str(), &emu, gme_info_only, false);
+#else
         gme_err_t msg = gme_open_file(filePath.c_str(), &emu, gme_info_only);
+#endif        
         if(msg || emu == nullptr)
         {
             if(emu != nullptr)
