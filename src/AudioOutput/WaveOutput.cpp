@@ -24,7 +24,7 @@ union chunk_element_t
     char Byte[4];
     
     chunk_element_t(uint32_t val) : uDword(val) {}
-    chunk_element_t( int32_t val) : sDword(val) {}
+//     chunk_element_t( int32_t val) : sDword(val) {}
     chunk_element_t(uint16_t val0, uint16_t val1)
     {
         this->Word[0] = val0;
@@ -39,16 +39,6 @@ union chunk_element_t
     }
 };
 
-struct sample_loop_t
-{
-    uint32_t Identifier; // some unique number
-    uint32_t LoopType;
-    uint32_t Start; // frame offset
-    uint32_t End; // frame offset, will also be played
-    static const uint32_t Fraction = 0; // no fine loop adjustment
-    uint32_t PlayCount;
-};
-
 #define FMT_PCM 0x0001
 #define FMT_IEEE_FLOAT 0x0003
 
@@ -56,14 +46,14 @@ struct WaveHeader
 {
 private:
     const char RiffID[4] = {'R','I','F','F'};
-    chunk_size_t RiffSize;
+    chunk_size_t RiffSize = 0; // calculated at the very end
     const char WaveID[4] = {'W','A','V','E'};
 
     /*******************************************
      *  Sampler CHUNK (for loop info)
      ******************************************/
     const char SamplerID[4] = {'s','m','p','l'};
-    const chunk_size_t SamplerSize = sizeof(WaveHeader::Manufacturer) + sizeof(WaveHeader::Product) + sizeof(WaveHeader::SamplePeriod) + sizeof(WaveHeader::MidiRootNote) + sizeof(WaveHeader::MidiPitchFraction) + sizeof(WaveHeader::SMPTEFormat) + sizeof(WaveHeader::SMPTEOffset) + sizeof(WaveHeader::SampleLoops) + sizeof(WaveHeader::SamplerData) /*+ sizeof(WaveHeader::loops)*/;
+    chunk_size_t SamplerSize = sizeof(WaveHeader::Manufacturer) + sizeof(WaveHeader::Product) + sizeof(WaveHeader::SamplePeriod) + sizeof(WaveHeader::MidiRootNote) + sizeof(WaveHeader::MidiPitchFraction) + sizeof(WaveHeader::SMPTEFormat) + sizeof(WaveHeader::SMPTEOffset) + sizeof(WaveHeader::SampleLoops) + sizeof(WaveHeader::SamplerData) /*+ sizeof(WaveHeader::loops)*/;
     const int32_t Manufacturer = 0; // not intended for specific manufacturer
     const int32_t Product = 0; // not intended for specific manufacturer's product
     uint32_t SamplePeriod; // == (1.0/SampleRate)/(1e-9)
@@ -78,14 +68,14 @@ private:
      *  List CHUNK (for metadata)
      ******************************************/
     const char ListID[4] = {'L','I','S','T'};
-    const chunk_size_t ListSize = sizeof(WaveHeader::Manufacturer) + sizeof(WaveHeader::Product) + sizeof(WaveHeader::SamplePeriod) + sizeof(WaveHeader::MidiRootNote) + sizeof(WaveHeader::MidiPitchFraction) + sizeof(WaveHeader::SMPTEFormat) + sizeof(WaveHeader::SMPTEOffset) + sizeof(WaveHeader::SampleLoops) + sizeof(WaveHeader::SamplerData) /*+ sizeof(WaveHeader::loops)*/;
+    chunk_size_t ListSize = 0; // calculated during writing metadata
     const char ListType[4] = {'I','N','F','O'}; // this list chunk is of type INFO
 
     /*******************************************
      *  FORMAT CHUNK (must precede data chunk)
      ******************************************/
     const char FormatID[4] = {'f','m','t',' '};
-    const chunk_size_t FormatSize = sizeof(WaveHeader::FormatType) + sizeof(WaveHeader::Channels) + sizeof(WaveHeader::SampleRate) + sizeof(WaveHeader::BytesPerSecond) + sizeof(WaveHeader::BlockAlign) + sizeof(WaveHeader::BitsPerSample) /*==16*/;
+    const chunk_size_t FormatSize = sizeof(WaveHeader::FormatType) + sizeof(WaveHeader::Channels) + sizeof(WaveHeader::SampleRate) + sizeof(WaveHeader::BytesPerSecond) + sizeof(WaveHeader::BlockAlign) + sizeof(WaveHeader::BitsPerSample); // all in all 16
     uint16_t FormatType;
     uint16_t Channels;
     uint32_t SampleRate;
@@ -140,23 +130,22 @@ public:
 
         /// end calcs
 
-        this->RiffSize = sizeof(*this);
-        // the 8 bytes of RIFF chunk dont count
-        this->RiffSize -= (sizeof(RiffID) + sizeof(RiffSize));
-        // add no. of bytes that are in data chunk
-        this->RiffSize += DataSize;
         
         
         // the outer most RIFF chunk
         data.push_back(chunk_element_t(RiffID));
+        
         data.push_back(RiffSize);
+        size_t RiffSizeIdx = data.size()-1; // remember where size of riff chunk is stored, correct it later
+        
         data.push_back(WaveID);
         
         vector<loop_t> loops = s->getLoopArray();
-        if(loops.size())
+        if((SampleLoops = loops.size()) > 0)
         {
             // smpl chunk
             data.push_back(SamplerID);
+            SamplerSize += SampleLoops * 24; // sizeof each loop array embedded in the file
             data.push_back(SamplerSize);
             data.push_back(Manufacturer);
             data.push_back(Product);
@@ -166,16 +155,26 @@ public:
             data.push_back(SMPTEFormat);
             data.push_back(SMPTEOffset);
             
-            SampleLoops = loops.size();
             data.push_back(SampleLoops);
             data.push_back(SamplerData);
-            
-//             struct SampleLoop loops
+
+            for(size_t i=0; i<SampleLoops; i++)
+            {
+                data.push_back(i); // unique loop identifier
+                data.push_back(0); // forward loop;
+                data.push_back(loops[i].start);
+                data.push_back(loops[i].stop);
+                data.push_back(0); // no fine loop adjustment
+                data.push_back(loops[i].count);
+            }
         }
         
         // LIST chunk - metadata
         data.push_back(ListID);
-        data.push_back(ListSize);
+        
+        data.push_back(chunk_element_t(ListSize + sizeof(ListType)));
+        size_t ListSizeIdx = data.size()-1;
+        
         data.push_back(ListType);
         
         bool atLeastOne = false;
@@ -187,15 +186,18 @@ public:
                 constexpr char ID[4] = {a,b,c,d};\
                 atLeastOne |= true;\
                 \
-                /* require that meta.size() % 4 == 0 */\
-                size_t padd = sizeof(chunk_element_t) - (meta.size() & sizeof(chunk_element_t));\
-                for(size_t i=0; i<padd; i++)\
+                if(meta.size() % 4 != 0)\
                 {\
-                    meta.push_back('\0');\
+                    size_t padd = sizeof(chunk_element_t) - (meta.size() % sizeof(chunk_element_t));\
+                    for(size_t i=0; i<padd; i++)\
+                    {\
+                        meta.push_back('\0');\
+                    }\
                 }\
                 \
                 data.push_back(ID);\
                 uint32_t size = meta.size();\
+                data[ListSizeIdx].uDword += sizeof(ID) + sizeof(size) + size;\
                 data.push_back(size);\
                 for(size_t i=0; i<size; i+=4)\
                 {\
@@ -204,26 +206,26 @@ public:
                 }\
             }
             
-        string meta = m.Artist;
-        WRITE_META('I','A','R','T');
-        
-        meta = m.Genre;
-        WRITE_META('I','G','N','R');
-        
-        meta = m.Title;
-        WRITE_META('I','N','A','M');
-        
-        meta = m.Track;
-        WRITE_META('I','T','R','K');
-        
-        meta = m.Comment;
-        WRITE_META('I','C','M','T');
-        
-        meta = m.Year;
-        WRITE_META('I','C','R','D');
-        
-        meta = m.Album;
-        WRITE_META('I','P','R','D');
+            string meta = m.Artist;
+            WRITE_META('I','A','R','T');
+            
+            meta = m.Genre;
+            WRITE_META('I','G','N','R');
+            
+            meta = m.Title;
+            WRITE_META('I','N','A','M');
+            
+            meta = m.Track;
+            WRITE_META('I','T','R','K');
+            
+            meta = m.Comment;
+            WRITE_META('I','C','M','T');
+            
+            meta = m.Year;
+            WRITE_META('I','C','R','D');
+            
+            meta = m.Album;
+            WRITE_META('I','P','R','D');
         
 #undef WRITE_META
         }
@@ -240,16 +242,22 @@ public:
         // fmt chunk
         data.push_back(FormatID);
         data.push_back(FormatSize);
-        data.push_back(FormatType);
-        data.push_back(Channels);
+        data.push_back(chunk_element_t(FormatType, Channels));
         data.push_back(SampleRate);
         data.push_back(BytesPerSecond);
-        data.push_back(BlockAlign);
-        data.push_back(BitsPerSample);
+        data.push_back(chunk_element_t(BlockAlign, BitsPerSample));
         
         // start the data chunk
         data.push_back(DataID);
         data.push_back(DataSize);
+                
+        
+        this->RiffSize = this->data.size();
+        // add no. of bytes that are in data chunk
+        this->RiffSize += DataSize;
+        // the 8 bytes of RIFF chunk dont count
+        this->RiffSize -= (sizeof(RiffID) + sizeof(RiffSize));
+        data[RiffSizeIdx].uDword = this->RiffSize;
     }
 };
 
@@ -311,7 +319,7 @@ void WaveOutput::close()
         WaveHeader w(this->currentSong);
 
         fseek(this->handle, 0, SEEK_SET);
-        fwrite(&w, sizeof(w), 1, this->handle);
+        fwrite(w.data.data(), w.data.size(), sizeof(decltype(w.data)::value_type), this->handle);
         fclose(this->handle);
         this->handle = nullptr;
     }
