@@ -284,7 +284,7 @@ void WaveOutput::open()
     if(gConfig.RenderWholeSong && gConfig.PreRenderTime!=0)
     {
         // writing the file might be done with one call to this->write(), but this doesnt mean that the song already has been fully rendered yet
-        THROW_RUNTIME_ERROR("You MUST NOT hold the whole audio file in memory, when using WaveOutput, while gConfig.PreRenderTime!=0")
+        THROW_RUNTIME_ERROR("You MUST NOT hold the whole audio file in memory, when using WaveOutput, unless you set gConfig.PreRenderTime==0")
     }
 }
 
