@@ -62,7 +62,16 @@ public:
 //--------------------------------------------------------------------
 // RAW PCM Buffer specific area
 //--------------------------------------------------------------------
-    // after each call to this->fillBuffer(), this pointer will point to a buffer holding "gConfig.FramesToRender" freshly rendered PCM frames
+    // points to at least "gConfig.FramesToRender" freshly rendered PCM frames,
+    // but usually contains as many as "this->getFrames()" frames of PCM
+    // 
+    // PCM will have its channels interleaved, i.e.:
+    //    __________________________________________________________________
+    //    ||                      FRAME 0                  ||    FRAME 1   ||   
+    //    ||  Item for   |  Item  for  | ... |  Item  for  ||   (...dito)  ||
+    //    ||  channel 0  |  channel 1  | ... |  channel n  ||              ||
+    //
+    // item is an alias for sample
     pcm_t* data = nullptr;
 
     // indicates the data type of the raw decoded pcm
