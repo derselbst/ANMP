@@ -51,10 +51,28 @@ private:
     const char WaveID[4] = {'W','A','V','E'};
 
     /*******************************************
+     *  FORMAT CHUNK (must precede data chunk)
+     ******************************************/
+    const char FormatID[4] = {'f','m','t',' '};
+    uint16_t FormatType;
+    uint16_t Channels;
+    uint32_t SampleRate;
+    uint32_t BytesPerSecond; // == SampleRate*BlockAlign
+    uint16_t BlockAlign; // == (BitsPerSample * Channels) / 8
+    uint16_t BitsPerSample;
+    static constexpr chunk_size_t FormatSize = sizeof(FormatType) + sizeof(Channels) + sizeof(SampleRate) + sizeof(BytesPerSecond) + sizeof(BlockAlign) + sizeof(BitsPerSample); // all in all 16
+
+    /*******************************************
+     *  DATA CHUNK
+     ******************************************/
+    const char DataID[4] = {'d','a','t','a'};
+    chunk_size_t DataSize; // == Frames*Channels*(BitsPerSample/8)
+    
+    /*******************************************
      *  Sampler CHUNK (for loop info)
      ******************************************/
     const char SamplerID[4] = {'s','m','p','l'};
-    chunk_size_t SamplerSize = sizeof(WaveHeader::Manufacturer) + sizeof(WaveHeader::Product) + sizeof(WaveHeader::SamplePeriod) + sizeof(WaveHeader::MidiRootNote) + sizeof(WaveHeader::MidiPitchFraction) + sizeof(WaveHeader::SMPTEFormat) + sizeof(WaveHeader::SMPTEOffset) + sizeof(WaveHeader::SampleLoops) + sizeof(WaveHeader::SamplerData) /*+ sizeof(WaveHeader::loops)*/;
+    chunk_size_t SamplerSize = sizeof(Manufacturer) + sizeof(Product) + sizeof(SamplePeriod) + sizeof(MidiRootNote) + sizeof(MidiPitchFraction) + sizeof(SMPTEFormat) + sizeof(SMPTEOffset) + sizeof(SampleLoops) + sizeof(SamplerData) /*+ sizeof(loops)*/;
     const int32_t Manufacturer = 0; // not intended for specific manufacturer
     const int32_t Product = 0; // not intended for specific manufacturer's product
     uint32_t SamplePeriod; // == (1.0/SampleRate)/(1e-9)
@@ -72,28 +90,16 @@ private:
     chunk_size_t ListSize = 0; // calculated during writing metadata
     const char ListType[4] = {'I','N','F','O'}; // this list chunk is of type INFO
 
-    /*******************************************
-     *  FORMAT CHUNK (must precede data chunk)
-     ******************************************/
-    const char FormatID[4] = {'f','m','t',' '};
-    const chunk_size_t FormatSize = sizeof(WaveHeader::FormatType) + sizeof(WaveHeader::Channels) + sizeof(WaveHeader::SampleRate) + sizeof(WaveHeader::BytesPerSecond) + sizeof(WaveHeader::BlockAlign) + sizeof(WaveHeader::BitsPerSample); // all in all 16
-    uint16_t FormatType;
-    uint16_t Channels;
-    uint32_t SampleRate;
-    uint32_t BytesPerSecond; // == SampleRate*BlockAlign
-    uint16_t BlockAlign; // == (BitsPerSample * Channels) / 8
-    uint16_t BitsPerSample;
-
-    /*******************************************
-     *  DATA CHUNK
-     ******************************************/
-    const char DataID[4] = {'d','a','t','a'};
-    chunk_size_t DataSize; // == Frames*Channels*(BitsPerSample/8)
-
 public:
-    vector<chunk_element_t> data;
+    // in file offset, where to start writing pcm
+    static constexpr chunk_size_t DataOffset = sizeof(RiffID) + sizeof(RiffSize) + sizeof(WaveID) + sizeof(FormatID) + sizeof(FormatSize) + FormatSize + sizeof(DataID) + sizeof(DataSize); // == 44
     
-    WaveHeader(const Song* s)
+    // contains the riff, fmt and data chunks, i.e. fixed length
+    vector<chunk_element_t> header;
+    // contains list and smpl chunks, i.e. might be there, or not
+    vector<chunk_element_t> meta;
+    
+    WaveHeader(const Song* s, const int framesWritten)
     {
         this->Channels = s->Format.Channels;
         this->SampleRate = s->Format.SampleRate;
@@ -124,59 +130,70 @@ public:
 
         /// calculations following
 
-        this->DataSize = s->getFrames() * s->Format.Channels * (this->BitsPerSample/8);
+        this->DataSize = framesWritten * s->Format.Channels * (this->BitsPerSample/8);
         this->BlockAlign = this->BitsPerSample * this->Channels / 8;
         this->BytesPerSecond = this->SampleRate * this->BlockAlign;
         this->SamplePeriod = (1.0/this->SampleRate)/(1e-9);
 
         /// end calcs
-
-        
         
         // the outer most RIFF chunk
-        data.push_back(chunk_element_t(RiffID));
+        this->header.push_back(chunk_element_t(RiffID));
         
-        data.push_back(RiffSize);
-        size_t RiffSizeIdx = data.size()-1; // remember where size of riff chunk is stored, correct it later
+        this->header.push_back(RiffSize);
+        size_t RiffSizeIdx = this->header.size()-1; // remember where size of riff chunk is stored, correct it later
         
-        data.push_back(WaveID);
+        this->header.push_back(WaveID);
         
-        vector<loop_t> loops = s->getLoopArray();
+        // fmt chunk
+        this->header.push_back(FormatID);
+        this->header.push_back(FormatSize);
+        this->header.push_back(chunk_element_t(FormatType, Channels));
+        this->header.push_back(SampleRate);
+        this->header.push_back(BytesPerSecond);
+        this->header.push_back(chunk_element_t(BlockAlign, BitsPerSample));
+        
+        // start the data chunk
+        this->header.push_back(DataID);
+        this->header.push_back(DataSize);
+        
+        
+        const vector<loop_t>& loops = s->getLoopArray();
         if((SampleLoops = loops.size()) > 0)
         {
             // smpl chunk
-            data.push_back(SamplerID);
+            this->meta.push_back(SamplerID);
             SamplerSize += SampleLoops * 24; // sizeof each loop array embedded in the file
-            data.push_back(SamplerSize);
-            data.push_back(Manufacturer);
-            data.push_back(Product);
-            data.push_back(SamplePeriod);
-            data.push_back(MidiRootNote);
-            data.push_back(MidiPitchFraction);
-            data.push_back(SMPTEFormat);
-            data.push_back(SMPTEOffset);
+            this->meta.push_back(SamplerSize);
+            this->meta.push_back(Manufacturer);
+            this->meta.push_back(Product);
+            this->meta.push_back(SamplePeriod);
+            this->meta.push_back(MidiRootNote);
+            this->meta.push_back(MidiPitchFraction);
+            this->meta.push_back(SMPTEFormat);
+            this->meta.push_back(SMPTEOffset);
             
-            data.push_back(SampleLoops);
-            data.push_back(SamplerData);
+            this->meta.push_back(SampleLoops);
+            this->meta.push_back(SamplerData);
 
             for(size_t i=0; i<SampleLoops; i++)
             {
-                data.push_back(i); // unique loop identifier
-                data.push_back(0U); // forward loop;
-                data.push_back(loops[i].start);
-                data.push_back(loops[i].stop);
-                data.push_back(0U); // no fine loop adjustment
-                data.push_back(loops[i].count);
+                this->meta.push_back(i); // unique loop identifier
+                this->meta.push_back(0U); // forward loop;
+                this->meta.push_back(loops[i].start);
+                this->meta.push_back(loops[i].stop);
+                this->meta.push_back(0U); // no fine loop adjustment
+                this->meta.push_back(loops[i].count);
             }
         }
         
         // LIST chunk - metadata
-        data.push_back(ListID);
+        this->meta.push_back(ListID);
         
-        data.push_back(chunk_element_t(ListSize + sizeof(ListType)));
-        size_t ListSizeIdx = data.size()-1;
+        this->meta.push_back(chunk_element_t(ListSize + sizeof(ListType)));
+        size_t ListSizeIdx = this->meta.size()-1;
         
-        data.push_back(ListType);
+        this->meta.push_back(ListType);
         
         bool atLeastOne = false;
         const SongInfo& m = s->Metadata;
@@ -196,14 +213,14 @@ public:
                     }\
                 }\
                 \
-                data.push_back(ID);\
+                this->meta.push_back(ID);\
                 uint32_t size = meta.size();\
-                data[ListSizeIdx].uDword += sizeof(ID) + sizeof(size) + size;\
-                data.push_back(size);\
+                this->meta[ListSizeIdx].uDword += sizeof(ID) + sizeof(size) + size;\
+                this->meta.push_back(size);\
                 for(size_t i=0; i<size; i+=4)\
                 {\
                     const char dings[4] = {meta[i], meta[i+1], meta[i+2], meta[i+3]};\
-                    data.push_back(dings);\
+                    this->meta.push_back(dings);\
                 }\
             }
             
@@ -234,31 +251,17 @@ public:
         if(!atLeastOne)
         {
             // not a single metadata set? well then, remove the list chunk
-            data.pop_back();
-            data.pop_back();
-            data.pop_back();
+            this->meta.pop_back();
+            this->meta.pop_back();
+            this->meta.pop_back();
         }
         
-        
-        // fmt chunk
-        data.push_back(FormatID);
-        data.push_back(FormatSize);
-        data.push_back(chunk_element_t(FormatType, Channels));
-        data.push_back(SampleRate);
-        data.push_back(BytesPerSecond);
-        data.push_back(chunk_element_t(BlockAlign, BitsPerSample));
-        
-        // start the data chunk
-        data.push_back(DataID);
-        data.push_back(DataSize);
-                
-        
-        this->RiffSize = this->data.size();
+        this->RiffSize = this->header.size() + this->meta.size();
         // add no. of bytes that are in data chunk
         this->RiffSize += DataSize;
         // the 8 bytes of RIFF chunk dont count
         this->RiffSize -= (sizeof(RiffID) + sizeof(RiffSize));
-        data[RiffSizeIdx].uDword = this->RiffSize;
+        this->header[RiffSizeIdx].uDword = this->RiffSize;
     }
 };
 
@@ -306,7 +309,7 @@ void WaveOutput::init(SongFormat format, bool)
         THROW_RUNTIME_ERROR("failed opening \"" << outFile << "\" for writing")
     }
 
-    fseek(this->handle, sizeof(WaveHeader), SEEK_SET);
+    fseek(this->handle, WaveHeader::DataOffset, SEEK_SET);
     
     this->currentFormat = format;
 }
@@ -317,10 +320,12 @@ void WaveOutput::close()
     
     if(this->handle != nullptr && this->currentSong != nullptr)
     {
-        WaveHeader w(this->currentSong);
+        WaveHeader w(this->currentSong, this->framesWritten);
+        
+        fwrite(w.meta.data(), w.meta.size(), sizeof(decltype(w.meta)::value_type), this->handle);
 
         fseek(this->handle, 0, SEEK_SET);
-        fwrite(w.data.data(), w.data.size(), sizeof(decltype(w.data)::value_type), this->handle);
+        fwrite(w.header.data(), w.header.size(), sizeof(decltype(w.header)::value_type), this->handle);
         fclose(this->handle);
         this->handle = nullptr;
     }
