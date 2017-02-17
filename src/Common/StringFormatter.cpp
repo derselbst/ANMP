@@ -15,7 +15,7 @@ StringFormatter& StringFormatter::Singleton()
     return instance;
 }
 
-void StringFormatter::UpdateReplacements(const SongInfo& info) noexcept    
+void StringFormatter::UpdateReplacements(const SongInfo& info)    
 {
     if(!this->wildcards.empty())
     {
@@ -53,7 +53,7 @@ void StringFormatter::UpdateReplacements(const SongInfo& info) noexcept
     this->wildcards.push_back(wild);
 }
 
-string StringFormatter::GetFilename(const Song* song, string extension) noexcept
+string StringFormatter::GetFilename(const Song* song, string extension)
 {
     string filename;
     if(!this->pattern.empty())
