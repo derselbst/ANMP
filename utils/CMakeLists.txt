@@ -15,8 +15,23 @@ if(EBUR128_FOUND)
     
     set_property(TARGET ${ANMP_NORM} PROPERTY CXX_STANDARD 14)
     set_property(TARGET ${ANMP_NORM} PROPERTY CXX_STANDARD_REQUIRED ON)
-endif(EBUR128_FOUND) 
+endif(EBUR128_FOUND)
 
+
+SET(ANMP_DUMP anmp-dump)
+
+add_executable(${ANMP_DUMP} anmp-dump.cpp)
+set(LINK_FLAGS ${LINK_FLAGS} "-Wl,-whole-archive")
+
+target_link_libraries(${ANMP_DUMP} anmp)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    target_link_libraries(${ANMP_DUMP} stdc++fs)
+endif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+
+install(TARGETS ${ANMP_DUMP} DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
+
+set_property(TARGET ${ANMP_DUMP} PROPERTY CXX_STANDARD 14)
+set_property(TARGET ${ANMP_DUMP} PROPERTY CXX_STANDARD_REQUIRED ON)
 
 
 SET(ANMP_LOOP anmp-loopify)
