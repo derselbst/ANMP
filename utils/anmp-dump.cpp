@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
         switch (ch)
         {
         case 'o':
-            StringFormatter.SetPattern(string(optarg));
+            StringFormatter::Singleton().SetFormat(string(optarg));
             break;
 
         case 'l':
