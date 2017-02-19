@@ -6,6 +6,7 @@
 #include "Config.h"
 #include "Common.h"
 #include "AtomicWrite.h"
+#include "StringFormatter.h"
 
 #include "Playlist.h"
 #include "PlaylistFactory.h"

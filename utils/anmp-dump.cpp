@@ -8,6 +8,7 @@
 #include <experimental/filesystem>
 #include <thread>
 #include <chrono>
+#include <getopt.h>
 
 using namespace std;
 using namespace std::experimental::filesystem;
