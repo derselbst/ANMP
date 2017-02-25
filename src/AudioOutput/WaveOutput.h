@@ -52,5 +52,6 @@ private:
     const Song* currentSong = nullptr;
     frame_t framesWritten = 0;
 
+    static void onCurrentSongChanged(void* ctx);
     template<typename T> int write(const T* buffer, frame_t frames);
 };

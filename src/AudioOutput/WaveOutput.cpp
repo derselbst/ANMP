@@ -267,11 +267,13 @@ public:
 
 WaveOutput::WaveOutput(Player* player):player(player)
 {
+    this->player->onCurrentSongChanged += make_pair(this, WaveOutput::onCurrentSongChanged);
 }
 
 WaveOutput::~WaveOutput()
 {
     this->close();
+    this->player->onCurrentSongChanged -= this;
 }
 
 //
@@ -290,35 +292,46 @@ void WaveOutput::open()
 
 void WaveOutput::init(SongFormat format, bool)
 {
-    this->close();
-    
-    lock_guard<mutex> lck(this->mtx);
-    
-    this->currentSong = this->player->getCurrentSong();
-    
-    if(this->currentSong == nullptr || !format.IsValid())
+    if(!format.IsValid())
     {
         return;
     }
+    this->currentFormat = format;
+}
 
-    string outFile = StringFormatter::Singleton().GetFilename(this->currentSong, ".wav");
+void WaveOutput::onCurrentSongChanged(void* context)
+{
+    WaveOutput* pthis = static_cast<WaveOutput*>(context);
     
-    this->handle = fopen(outFile.c_str(), "wb");
-    if(this->handle == nullptr)
+    const Song* newSong = pthis->player->getCurrentSong();
+    if(newSong == nullptr)
+    {
+        return; // no song previously loaded, nothing more to do
+    }
+    // else close the wave file we just finished writing
+    pthis->close();
+    
+    lock_guard<mutex> lck(pthis->mtx);
+    
+    // newSong is now our new currentSong
+    pthis->currentSong = newSong;
+
+    string outFile = StringFormatter::Singleton().GetFilename(pthis->currentSong, ".wav");
+    
+    pthis->handle = fopen(outFile.c_str(), "wb");
+    if(pthis->handle == nullptr)
     {
         THROW_RUNTIME_ERROR("failed opening \"" << outFile << "\" for writing")
     }
 
-    fseek(this->handle, WaveHeader::DataOffset, SEEK_SET);
-    
-    this->currentFormat = format;
+    fseek(pthis->handle, WaveHeader::DataOffset, SEEK_SET);
 }
 
 void WaveOutput::close()
 {
     lock_guard<mutex> lck(this->mtx);
     
-    if(this->handle != nullptr && this->currentSong != nullptr)
+    if(this->handle != nullptr && this->currentSong != nullptr && this->framesWritten>0)
     {
         WaveHeader w(this->currentSong, this->framesWritten);
         
