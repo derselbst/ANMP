@@ -30,7 +30,13 @@ static const struct option long_options[] =
 
 void usage(char* prog)
 {
-//     cout << 
+    cout << "usage: " << prog << " [OPTIONS] FILES|DIRS\n"
+         << "\n" 
+         << "options:\n"
+         << "      -l      --unroll-loop     If there are loops in an audio file, unroll them according to the interal settings.\n"
+         << "      -o      --output PATTERN  Specifies the naming pattern for file names.\n"
+         << "      -h      --help            Print this.\n"
+         << endl;
 }
 
 int main(int argc, char* argv[])
@@ -40,6 +46,11 @@ int main(int argc, char* argv[])
     gConfig.RenderWholeSong = false;
     gConfig.useAudioNormalization = true;
 
+    if(argc <= 1)
+    {
+        usage(argv[0]);
+    }
+        
     
     /* getopt_long stores the option index here. */
     int option_index = 0;
@@ -77,7 +88,7 @@ int main(int argc, char* argv[])
     
     int curThread = 0;
     
-    for(int i=1; i<argc; i++)
+    for(int i=optind; i<argc; i++)
     {
         for (directory_entry dirEntry : recursive_directory_iterator(argv[i]))
         {
