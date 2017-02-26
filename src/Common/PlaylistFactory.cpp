@@ -289,14 +289,14 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
         PlaylistFactory::tryWith<VGMStreamWrapper>(pcm, filePath, offset, len);
 #endif
 
-#ifdef USE_MODPLUG
-        // tracker formats (.mod, .it)
-        PlaylistFactory::tryWith<ModPlugWrapper>(pcm, filePath, offset, len);
-#endif
-
 #ifdef USE_FFMPEG
         // OPUS, videofiles, etc.
         PlaylistFactory::tryWith<FFMpegWrapper>(pcm, filePath, offset, len);
+#endif
+
+#ifdef USE_MODPLUG
+        // tracker formats (.mod, .it)
+        PlaylistFactory::tryWith<ModPlugWrapper>(pcm, filePath, offset, len);
 #endif
 
 // !!! libmad always has to be last !!!
