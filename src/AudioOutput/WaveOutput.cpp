@@ -281,7 +281,7 @@ WaveOutput::~WaveOutput()
 //
 void WaveOutput::open()
 {
-    lock_guard<mutex> lck(this->mtx);
+    lock_guard<recursive_mutex> lck(this->mtx);
     
     if(gConfig.RenderWholeSong && gConfig.PreRenderTime!=0)
     {
@@ -304,32 +304,37 @@ void WaveOutput::onCurrentSongChanged(void* context)
     WaveOutput* pthis = static_cast<WaveOutput*>(context);
     
     const Song* newSong = pthis->player->getCurrentSong();
-    if(newSong == nullptr)
+    
+    lock_guard<recursive_mutex> lck(pthis->mtx);
+    try
     {
-        return; // no song previously loaded, nothing more to do
+        pthis->close();
+        
+        if(newSong != nullptr)
+        {
+            string outFile = StringFormatter::Singleton().GetFilename(newSong, ".wav");
+
+            pthis->handle = fopen(outFile.c_str(), "wb");
+            if(pthis->handle == nullptr)
+            {
+                THROW_RUNTIME_ERROR("failed opening \"" << outFile << "\" for writing")
+            }
+
+            fseek(pthis->handle, WaveHeader::DataOffset, SEEK_SET);
+        }
     }
-    // else close the wave file we just finished writing
-    pthis->close();
+    catch(...)
+    {
+        pthis->currentSong = nullptr;
+        throw;
+    }
     
-    lock_guard<mutex> lck(pthis->mtx);
-    
-    // newSong is now our new currentSong
     pthis->currentSong = newSong;
-
-    string outFile = StringFormatter::Singleton().GetFilename(pthis->currentSong, ".wav");
-    
-    pthis->handle = fopen(outFile.c_str(), "wb");
-    if(pthis->handle == nullptr)
-    {
-        THROW_RUNTIME_ERROR("failed opening \"" << outFile << "\" for writing")
-    }
-
-    fseek(pthis->handle, WaveHeader::DataOffset, SEEK_SET);
 }
 
 void WaveOutput::close()
 {
-    lock_guard<mutex> lck(this->mtx);
+    lock_guard<recursive_mutex> lck(this->mtx);
     
     if(this->handle != nullptr && this->currentSong != nullptr && this->framesWritten>0)
     {
@@ -352,7 +357,7 @@ template<typename T> int WaveOutput::write(const T* buffer, frame_t frames)
 {
     int ret=0;
     
-    lock_guard<mutex> lck(this->mtx);
+    lock_guard<recursive_mutex> lck(this->mtx);
     
     if(this->handle!=nullptr)
     {

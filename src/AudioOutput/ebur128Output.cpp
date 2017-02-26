@@ -14,12 +14,13 @@
 
 ebur128Output::ebur128Output(Player* p):player(p)
 {
-    
+    this->player->onCurrentSongChanged += make_pair(this, ebur128Output::onCurrentSongChanged);
 }
 
 ebur128Output::~ebur128Output()
 {
     this->close();
+    this->player->onCurrentSongChanged -= this;
 }
 
 //
@@ -27,7 +28,7 @@ ebur128Output::~ebur128Output()
 //
 void ebur128Output::open()
 {
-    lock_guard<mutex> lck(this->mtx);
+    lock_guard<recursive_mutex> lck(this->mtx);
     
     if(gConfig.RenderWholeSong && gConfig.PreRenderTime!=0)
     {
@@ -47,49 +48,64 @@ void ebur128Output::open()
 
 void ebur128Output::init(SongFormat format, bool)
 {
-    this->close();
-
-    lock_guard<mutex> lck(this->mtx);
-    
-    this->currentSong = this->player->getCurrentSong();
-    
-    if(this->currentSong == nullptr || !format.IsValid())
+    if(!format.IsValid())
     {
         return;
     }
-
-    this->handle = ebur128_init(format.Channels, format.SampleRate, EBUR128_MODE_TRUE_PEAK);
-    if(this->handle == nullptr)
-    {
-        THROW_RUNTIME_ERROR("ebur128_init failed")
-    }
-    
-    // set channel map (note: see ebur128.h for the default map)
-    if (format.Channels == 3)
-    {
-        ebur128_set_channel(this->handle, 0, EBUR128_LEFT);
-        ebur128_set_channel(this->handle, 1, EBUR128_RIGHT);
-        ebur128_set_channel(this->handle, 2, EBUR128_UNUSED);
-    }
-    else if (format.Channels == 5)
-    {
-        ebur128_set_channel(this->handle, 0, EBUR128_LEFT);
-        ebur128_set_channel(this->handle, 1, EBUR128_RIGHT);
-        ebur128_set_channel(this->handle, 2, EBUR128_CENTER);
-        ebur128_set_channel(this->handle, 3, EBUR128_LEFT_SURROUND);
-        ebur128_set_channel(this->handle, 4, EBUR128_RIGHT_SURROUND);
-    }
-    else
-    {
-        // default channel map should be fine here
-    }
-    
     this->currentFormat = format;
+}
+
+void ebur128Output::onCurrentSongChanged(void* context)
+{
+    ebur128Output* pthis = static_cast<ebur128Output*>(context);
+    
+    const Song* newSong = pthis->player->getCurrentSong();
+    lock_guard<recursive_mutex> lck(pthis->mtx);
+    try
+    {
+        pthis->close();
+        
+        if(newSong != nullptr)
+        {   
+            pthis->handle = ebur128_init(pthis->currentFormat.Channels, pthis->currentFormat.SampleRate, EBUR128_MODE_TRUE_PEAK);
+            if(pthis->handle == nullptr)
+            {
+                THROW_RUNTIME_ERROR("ebur128_init failed")
+            }
+            
+            // set channel map (note: see ebur128.h for the default map)
+            if (pthis->currentFormat.Channels == 3)
+            {
+                ebur128_set_channel(pthis->handle, 0, EBUR128_LEFT);
+                ebur128_set_channel(pthis->handle, 1, EBUR128_RIGHT);
+                ebur128_set_channel(pthis->handle, 2, EBUR128_UNUSED);
+            }
+            else if (pthis->currentFormat.Channels == 5)
+            {
+                ebur128_set_channel(pthis->handle, 0, EBUR128_LEFT);
+                ebur128_set_channel(pthis->handle, 1, EBUR128_RIGHT);
+                ebur128_set_channel(pthis->handle, 2, EBUR128_CENTER);
+                ebur128_set_channel(pthis->handle, 3, EBUR128_LEFT_SURROUND);
+                ebur128_set_channel(pthis->handle, 4, EBUR128_RIGHT_SURROUND);
+            }
+            else
+            {
+                // default channel map should be fine here
+            }
+        }
+    }
+    catch(...)
+    {
+        pthis->currentSong = nullptr;
+        throw;
+    }
+    
+    pthis->currentSong = newSong;
 }
 
 void ebur128Output::close()
 {
-    lock_guard<mutex> lck(this->mtx);
+    lock_guard<recursive_mutex> lck(this->mtx);
     
     if (this->handle != nullptr)
     {
@@ -128,7 +144,7 @@ void ebur128Output::close()
 
 int ebur128Output::write (const float* buffer, frame_t frames)
 {
-    lock_guard<mutex> lck(this->mtx);
+    lock_guard<recursive_mutex> lck(this->mtx);
     
     if(this->handle == nullptr)
     {
@@ -147,7 +163,7 @@ int ebur128Output::write (const float* buffer, frame_t frames)
 
 int ebur128Output::write (const int16_t* buffer, frame_t frames)
 {
-    lock_guard<mutex> lck(this->mtx);
+    lock_guard<recursive_mutex> lck(this->mtx);
     
     if(this->handle == nullptr)
     {
@@ -175,7 +191,7 @@ int ebur128Output::write (const int16_t* buffer, frame_t frames)
 
 int ebur128Output::write (const int32_t* buffer, frame_t frames)
 {
-    lock_guard<mutex> lck(this->mtx);
+    lock_guard<recursive_mutex> lck(this->mtx);
     
     if(this->handle == nullptr)
     {

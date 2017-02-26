@@ -42,10 +42,11 @@ public:
 
 private:
     // because this.stop() might be called concurrently to this.write()
-    mutable mutex mtx;
+    mutable recursive_mutex mtx;
     
     Player* player = nullptr;
     ebur128_state* handle = nullptr;
 
     const Song* currentSong = nullptr;
+    static void onCurrentSongChanged(void* ctx);
 };
