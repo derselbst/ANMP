@@ -39,6 +39,9 @@ string FluidsynthWrapper::SmfEventToString(smf_event_t* event)
     return ret;
 }
 
+/**
+ * @param time value returned by fluid_sequencer_get_tick(), i.e. usually time in milliseconds
+ */
 void FluidsynthWrapper::scheduleTrackLoop(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data)
 {
     (void)seq;
@@ -67,7 +70,7 @@ void FluidsynthWrapper::scheduleTrackLoop(unsigned int time, fluid_event_t* e, f
     // read in every single event following the position we currently are
     while((event = smf_get_next_event(pthis->smf)) != nullptr)
     {
-        // does this event belongs to the same track and plays on the same channel as where we found the corresponding loop event?
+        // does this event belong to the same track and plays on the same channel as where we found the corresponding loop event?
         if(event->track_number == loopInfo->trackId && (event->midi_buffer[0] & 0x0F) == loopInfo->channel)
         {
             if(IsControlChange(event) && IsLoopStop(event) && (event->midi_buffer[2] == loopInfo->loopId)) // is that our corresponding loop stop?
@@ -435,7 +438,13 @@ void FluidsynthWrapper::fillBuffer()
 
 frame_t FluidsynthWrapper::getFrames () const
 {
-    return msToFrames(this->fileLen.Value, this->Format.SampleRate);
+    size_t len = this->fileLen.Value;
+    if(gConfig.FluidsynthEnableReverb)
+    {
+        len += (gConfig.FluidsynthRoomSize*10.0 * gConfig.FluidsynthLevel * 1000) / 2;
+    }
+    
+    return msToFrames(len, this->Format.SampleRate);
 }
 
 
