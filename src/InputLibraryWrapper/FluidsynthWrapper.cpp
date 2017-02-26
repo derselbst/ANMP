@@ -170,6 +170,9 @@ void FluidsynthWrapper::setupSynth()
     {
         THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (strong test): \"" << soundfont.Value << "\"");
     }
+    
+    
+    fluid_synth_bank_select(this->synth, 9, 0);
 }
 
 void FluidsynthWrapper::setupSettings()
@@ -274,17 +277,23 @@ void FluidsynthWrapper::open ()
 }
 
 int FluidsynthWrapper::scheduleNextCallback(smf_event_t* event, unsigned int time, void* data)
-{
-    fluid_event_t* evt = new_fluid_event();
-    fluid_event_set_source(evt, -1);
-    fluid_event_set_dest(evt, this->mySeqID);
-    fluid_event_timer(evt, data);
-
+{    
     unsigned int callbackdate = time;
     callbackdate += static_cast<unsigned int>(event->time_seconds * 1000);
+    
+    int ret=FLUID_OK;
+    // the end of this looped sequence shall not be beyound the end of the song
+    if(callbackdate < this->fileLen.Value)
+    {
+        fluid_event_t* evt = new_fluid_event();
+        fluid_event_set_source(evt, -1);
+        fluid_event_set_dest(evt, this->mySeqID);
+        fluid_event_timer(evt, data);
 
-    int ret = fluid_sequencer_send_at(this->sequencer, evt, callbackdate, true);
-    delete_fluid_event(evt);
+        ret = fluid_sequencer_send_at(this->sequencer, evt, callbackdate, true);
+        
+        delete_fluid_event(evt);
+    }
 
     return ret;
 }
