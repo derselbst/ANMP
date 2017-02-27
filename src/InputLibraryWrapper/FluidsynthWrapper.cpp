@@ -14,6 +14,7 @@
 #define IsLoopStart(e) (e->midi_buffer[1] == gConfig.MidiControllerLoopStart)
 #define IsLoopStop(e) (e->midi_buffer[1] == gConfig.MidiControllerLoopStop)
 
+static constexpr int NChannels = 16;
 
 /** This class got pretty complex. want to see an easier form? Goto git commit d3961aec428adf4eec59c90f57fd93d890cf1499
  *
@@ -73,7 +74,11 @@ void FluidsynthWrapper::scheduleTrackLoop(unsigned int time, fluid_event_t* e, f
         // does this event belong to the same track and plays on the same channel as where we found the corresponding loop event?
         if(event->track_number == loopInfo->trackId && (event->midi_buffer[0] & 0x0F) == loopInfo->channel)
         {
-            if(IsControlChange(event) && IsLoopStop(event) && (event->midi_buffer[2] == loopInfo->loopId)) // is that our corresponding loop stop?
+            // events shall not be looped beyond the end of the song
+            if(time + event->time_seconds*1000 <= pthis->fileLen.Value)
+            {
+            // is that our corresponding loop stop?
+            if(IsControlChange(event) && IsLoopStop(event) && (event->midi_buffer[2] == loopInfo->loopId))
             {
                 int ret = pthis->scheduleNextCallback(event, time-static_cast<unsigned int>(loopInfo->start.Value*1000), loopInfo);
                 if(ret != FLUID_OK)
@@ -89,6 +94,7 @@ void FluidsynthWrapper::scheduleTrackLoop(unsigned int time, fluid_event_t* e, f
             else
             {
                 pthis->feedToFluidSeq(event, fluidEvt, loopInfo->start.Value);
+            }
             }
         }
     }
@@ -203,7 +209,7 @@ void FluidsynthWrapper::setupSettings()
             this->buildLoopTree();
         }
 
-        int stereoChannels = gConfig.FluidsynthMultiChannel ? 16 : 1;
+        int stereoChannels = gConfig.FluidsynthMultiChannel ? NChannels : 1;
         fluid_settings_setint(this->settings, "synth.audio-groups",    stereoChannels);
         fluid_settings_setint(this->settings, "synth.audio-channels",  stereoChannels);
         fluid_settings_getint(this->settings, "synth.audio-channels", &stereoChannels);
@@ -238,12 +244,15 @@ void FluidsynthWrapper::open ()
         THROW_RUNTIME_ERROR("How can playtime be negative?!?");
     }
 
-    this->fileLen = static_cast<size_t>(playtime * 1000);
-
+    if(!this->fileLen.hasValue)
+    {
+        this->fileLen = static_cast<size_t>(playtime * 1000);
+    }
+    
     this->trackLoops.resize(this->smf->number_of_tracks);
     for(unsigned int i = 0; i<this->trackLoops.size(); i++)
     {
-        this->trackLoops[i].resize(16);
+        this->trackLoops[i].resize(NChannels);
     }
     this->setupSynth();
     this->setupSeq();
@@ -272,17 +281,26 @@ void FluidsynthWrapper::open ()
     } // end of while
 
     smf_rewind(this->smf);
-
+    
+    // finally send note offs on all channels 5 ms after the song ended
+    // we have to do this, because some wind might be blowing (DK64)
+    const int endOfSong = this->fileLen.Value;
+    for(int i=0; i<NChannels; i++)
+    {
+        fluid_event_all_notes_off(fluidEvt, i);
+        fluid_sequencer_send_at(this->sequencer, fluidEvt, endOfSong, true);
+    }
+    
     delete_fluid_event(fluidEvt);
 }
 
 int FluidsynthWrapper::scheduleNextCallback(smf_event_t* event, unsigned int time, void* data)
-{    
+{
     unsigned int callbackdate = time;
     callbackdate += static_cast<unsigned int>(event->time_seconds * 1000);
     
     int ret=FLUID_OK;
-    // the end of this looped sequence shall not be beyound the end of the song
+    // the end of this looped sequence shall not be beyond the end of the song
     if(callbackdate < this->fileLen.Value)
     {
         fluid_event_t* evt = new_fluid_event();
