@@ -77,24 +77,24 @@ void FluidsynthWrapper::scheduleTrackLoop(unsigned int time, fluid_event_t* e, f
             // events shall not be looped beyond the end of the song
             if(time + event->time_seconds*1000 <= pthis->fileLen.Value)
             {
-            // is that our corresponding loop stop?
-            if(IsControlChange(event) && IsLoopStop(event) && (event->midi_buffer[2] == loopInfo->loopId))
-            {
-                int ret = pthis->scheduleNextCallback(event, time-static_cast<unsigned int>(loopInfo->start.Value*1000), loopInfo);
-                if(ret != FLUID_OK)
+                // is that our corresponding loop stop?
+                if(IsControlChange(event) && IsLoopStop(event) && (event->midi_buffer[2] == loopInfo->loopId))
                 {
-                    CLOG(LogLevel::ERROR, "fluidsynth was unable to queue midi event");
+                    int ret = pthis->scheduleNextCallback(event, time-static_cast<unsigned int>(loopInfo->start.Value*1000), loopInfo);
+                    if(ret != FLUID_OK)
+                    {
+                        CLOG(LogLevel::ERROR, "fluidsynth was unable to queue midi event");
+                    }
+                    break;
                 }
-                break;
-            }
-            else if(IsControlChange(event) && IsLoopStart(event))
-            {
-                continue;
-            }
-            else
-            {
-                pthis->feedToFluidSeq(event, fluidEvt, loopInfo->start.Value);
-            }
+                else if(IsControlChange(event) && IsLoopStart(event))
+                {
+                    continue;
+                }
+                else
+                {
+                    pthis->feedToFluidSeq(event, fluidEvt, loopInfo->start.Value);
+                }
             }
         }
     }
