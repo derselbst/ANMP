@@ -75,7 +75,7 @@ void FluidsynthWrapper::scheduleTrackLoop(unsigned int time, fluid_event_t* e, f
         if(event->track_number == loopInfo->trackId && (event->midi_buffer[0] & 0x0F) == loopInfo->channel)
         {
             // events shall not be looped beyond the end of the song
-            if(time + event->time_seconds*1000 <= pthis->fileLen.Value)
+            if(time + event->time_seconds*1000 < pthis->fileLen.Value)
             {
                 // is that our corresponding loop stop?
                 if(IsControlChange(event) && IsLoopStop(event) && (event->midi_buffer[2] == loopInfo->loopId))
