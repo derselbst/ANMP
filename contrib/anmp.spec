@@ -21,7 +21,7 @@ Source1: %{sffile}
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
-Requires: libanmp%{soname}
+Requires: libanmp%{soname} = %{version}
 
 
 %ifarch x86_64
