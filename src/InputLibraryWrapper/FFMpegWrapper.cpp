@@ -71,8 +71,10 @@ void FFMpegWrapper::open ()
         this->audioStreamID = ret;
     }
 
+    AVStream* audioStream = this->handle->streams[this->audioStreamID];
+    
     // Get a pointer to the codec context for the audio stream
-    AVCodecContext *pCodecCtx = this->handle->streams[this->audioStreamID]->codec;
+    AVCodecContext *pCodecCtx = audioStream->codec;
 
     // Find the decoder for the audio stream
     AVCodec *decoder = avcodec_find_decoder(pCodecCtx->codec_id);
@@ -90,16 +92,32 @@ void FFMpegWrapper::open ()
     this->Format.Channels = pCodecCtx->channels;
     this->Format.SampleRate = pCodecCtx->sample_rate;
 
-    // get the timebase for this stream. The presentation timestamp,
-    // decoding timestamp and packet duration is expressed in timestamp
-    // as unit:
-    // e.g. if timebase is 1/90000, a packet with duration 4500
-    // is 4500 * 1/90000 seconds long, that is 0.05 seconds == 20 ms.
-    AVRational& tb = this->handle->streams[this->audioStreamID]->time_base;
-    double time_base =  (double)tb.num / (double)tb.den;
-    double msDuration = (double)this->handle->streams[this->audioStreamID]->duration * time_base * 1000.0;
-    this->fileLen = msDuration;
-
+    // we now have to retrieve the playduration of this file
+    // if it's possible to retrieve this from the currently decoded audio stream itself, we prefer that way
+    if(audioStream->duration != AV_NOPTS_VALUE && audioStream->duration >= 0)
+    {
+        // get the timebase for this stream. The presentation timestamp,
+        // decoding timestamp and packet duration is expressed in timestamp
+        // as unit:
+        // e.g. if timebase is 1/90000, a packet with duration 4500
+        // is 4500 * 1/90000 seconds long, that is 0.05 seconds == 50 ms.
+        AVRational& tb = audioStream->time_base;
+        double time_base =  (double)tb.num / (double)tb.den;
+        double msDuration = audioStream->duration * time_base * 1000.0;
+        this->fileLen = msDuration;
+    }
+    else if(this->handle->duration != AV_NOPTS_VALUE && this->handle->duration >= 0)
+    {
+        // this line seems to be completely pointless
+        // stolen from FFMPEG/libavformat/dump.c:558
+        int64_t duration = this->handle->duration + (this->handle->duration <= INT64_MAX - 5000 ? 5000 : 0);
+        size_t msDuration = (static_cast<double>(duration) / AV_TIME_BASE)/*sec*/ * 1000;
+        this->fileLen = msDuration;
+    }
+    else
+    {
+        THROW_RUNTIME_ERROR("FFMpeg doesnt specify duration for this file."); // either this, or there is some other weird way of getting the duration, which is not implemented
+    }
 
     if(pCodecCtx->channel_layout==0)
     {
@@ -284,7 +302,7 @@ void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
 frame_t FFMpegWrapper::getFrames () const
 {
-    size_t totalFrames = this->fileLen.hasValue ? msToFrames(this->fileLen.Value, this->Format.SampleRate) : 0;
+    frame_t totalFrames = this->fileLen.hasValue ? msToFrames(this->fileLen.Value, this->Format.SampleRate) : 0;
 
     return totalFrames;
 }
