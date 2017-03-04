@@ -88,16 +88,16 @@ void ALSAOutput::init(SongFormat format, bool realtime)
      **************/
     switch(format.SampleFormat)
     {
-    case float32:
+    case SampleFormat_t::float32:
         err = snd_pcm_hw_params_set_format (this->alsa_dev, hw_params, SND_PCM_FORMAT_FLOAT);
         break;
-    case int16:
+    case SampleFormat_t::int16:
         err = snd_pcm_hw_params_set_format (this->alsa_dev, hw_params, SND_PCM_FORMAT_S16);
         break;
-    case int32:
+    case SampleFormat_t::int32:
         err = snd_pcm_hw_params_set_format (this->alsa_dev, hw_params, SND_PCM_FORMAT_S32);
         break;
-    case unknown:
+    case SampleFormat_t::unknown:
         THROW_RUNTIME_ERROR("ALSAOutput::init(): Sample Format not set");
 
     default:

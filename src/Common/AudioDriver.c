@@ -5,22 +5,22 @@
 const char* AudioDriverName[] =
 {
 #ifdef USE_ALSA
-    [ALSA] = "ALSA",
+    [Alsa] = "ALSA",
 #endif
 
 #ifdef USE_EBUR128
-    [ebur128] = "ebur128 audio normalization",
+    [Ebur128] = "ebur128 audio normalization",
 #endif
 
 #ifdef USE_JACK
-    [JACK] = "JACK",
+    [Jack] = "JACK",
 #endif
 
 #ifdef USE_PORTAUDIO
-    [PORTAUDIO] = "PortAudio",
+    [Portaudio] = "PortAudio",
 #endif
 
-    [WAVE] = "write WAVE files",
+    [Wave] = "write WAVE files",
 
     [END] = "Srsly?",
 };

@@ -108,7 +108,7 @@ void LibMadWrapper::open ()
         // a first valid header is good, but it may contain garbage
         this->Format.Channels = MAD_NCHANNELS(&header);
         this->Format.SampleRate = header.samplerate;
-        CLOG(LogLevel::DEBUG, "found a first valid header within File \"" << this->Filename << ")\"\n\tchannels: " << MAD_NCHANNELS(&header) << "\nsrate: " << header.samplerate);
+        CLOG(LogLevel_t::Debug, "found a first valid header within File \"" << this->Filename << ")\"\n\tchannels: " << MAD_NCHANNELS(&header) << "\nsrate: " << header.samplerate);
 
         // no clue what this 32 does
         // stolen from mad_synth_frame() in synth.c
@@ -121,7 +121,7 @@ void LibMadWrapper::open ()
             // better use format infos from this header
             this->Format.Channels = max<int>(MAD_NCHANNELS(&header), this->Format.Channels);
             this->Format.SampleRate = header.samplerate;
-            CLOG(LogLevel::DEBUG, "found a second valid header within File \"" << this->Filename << ")\"\n\tchannels: " << MAD_NCHANNELS(&header) << "\nsrate: " << header.samplerate);
+            CLOG(LogLevel_t::Debug, "found a second valid header within File \"" << this->Filename << ")\"\n\tchannels: " << MAD_NCHANNELS(&header) << "\nsrate: " << header.samplerate);
 
             this->numFrames += 32 * MAD_NSBSAMPLES(&header);
 
@@ -143,12 +143,12 @@ void LibMadWrapper::open ()
                 // sanity checks
                 if(this->Format.Channels != MAD_NCHANNELS(&header))
                 {
-                    CLOG(LogLevel::WARNING, "channelcount varies (now: " << MAD_NCHANNELS(&header) << ") within File \"" << this->Filename << ")\"");
+                    CLOG(LogLevel_t::Warning, "channelcount varies (now: " << MAD_NCHANNELS(&header) << ") within File \"" << this->Filename << ")\"");
                 }
 
                 if(this->Format.SampleRate != header.samplerate)
                 {
-                    CLOG(LogLevel::WARNING, "samplerate varies (now: " << header.samplerate << ") within File \"" << this->Filename << ")\"");
+                    CLOG(LogLevel_t::Warning, "samplerate varies (now: " << header.samplerate << ") within File \"" << this->Filename << ")\"");
                 }
 
                 this->numFrames += 32 * MAD_NSBSAMPLES(&header);
@@ -156,7 +156,7 @@ void LibMadWrapper::open ()
         }
         else
         {
-            CLOG(LogLevel::WARNING, "only one valid header found, probably no valid mp3 File \"" << this->Filename << ")\"");
+            CLOG(LogLevel_t::Warning, "only one valid header found, probably no valid mp3 File \"" << this->Filename << ")\"");
         }
 
         // somehow reset libmad stream
@@ -260,7 +260,7 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
         }
         else if(framesToDoNow < 0)
         {
-            CLOG(LogLevel::ERROR, "framesToDoNow negative!!!: " << framesToDoNow);
+            CLOG(LogLevel_t::Error, "framesToDoNow negative!!!: " << framesToDoNow);
         }
 
         int ret = mad_frame_decode(&this->frame.Value, this->stream);
@@ -281,13 +281,13 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             if(MAD_RECOVERABLE(this->stream->error))
             {
                 errstr += " (recoverable)";
-                CLOG(LogLevel::INFO, errstr);
+                CLOG(LogLevel_t::Info, errstr);
                 continue;
             }
             else
             {
                 errstr += " (not recoverable)";
-                CLOG(LogLevel::WARNING, errstr);
+                CLOG(LogLevel_t::Warning, errstr);
                 break;
             }
         }
@@ -333,7 +333,7 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
                     // what? only one channel in a stereo file? well then: pseudo stereo
                     pcm[item++] = sample;
 
-                    CLOG(LogLevel::WARNING, "decoded only one channel, though this is a stereo file!");
+                    CLOG(LogLevel_t::Warning, "decoded only one channel, though this is a stereo file!");
                 }
             }
 
@@ -363,7 +363,7 @@ void LibMadWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
         if(item>this->count)
         {
-            CLOG(LogLevel::ERROR, "THIS SHOULD NEVER HAPPEN: read " << item << " items but only expected " << this->count << "\n");
+            CLOG(LogLevel_t::Error, "THIS SHOULD NEVER HAPPEN: read " << item << " items but only expected " << this->count << "\n");
             break;
         }
     }

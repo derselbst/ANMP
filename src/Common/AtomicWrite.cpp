@@ -17,36 +17,36 @@ AtomicWrite& AtomicWrite::getSingleton()
 
 void AtomicWrite::write(std::string s, std::ostream& o)
 {
-    this->write(INFO, s, o);
+    this->write(LogLevel_t::Info, s, o);
 }
 
 
-void AtomicWrite::write(enum LogLevel l, std::string s, std::ostream& o)
+void AtomicWrite::write(LogLevel_t l, std::string s, std::ostream& o)
 {
     std::ostream* out = &o;
 
     std::string logLev;
     switch(l)
     {
-    case DEBUG:
+    case LogLevel_t::Debug:
 #ifdef NDEBUG
         return;
 #endif
         logLev="Debug";
         break;
         
-    case INFO:
+    case LogLevel_t::Info:
 #ifdef NDEBUG
         return;
 #endif
         logLev="Info";
         break;
         
-    case WARNING:
+    case LogLevel_t::Warning:
         logLev="Warning";
         break;
         
-    case ERROR:
+    case LogLevel_t::Error:
         logLev="Error";
         if(out == &std::cout)
         {
@@ -54,7 +54,7 @@ void AtomicWrite::write(enum LogLevel l, std::string s, std::ostream& o)
         }
         break;
         
-    case FATAL:
+    case LogLevel_t::Fatal:
         logLev="Fatal Error";
         if(out == &std::cout)
         {

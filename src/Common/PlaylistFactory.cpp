@@ -191,7 +191,7 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
         }
         catch(const runtime_error& e)
         {
-            CLOG(LogLevel::ERROR, "failed parsing '" << filePath << "' error: '" << e.what() << "'");
+            CLOG(LogLevel_t::Error, "failed parsing '" << filePath << "' error: '" << e.what() << "'");
         }
 #endif
     }
@@ -238,11 +238,11 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
             
             if(msg)
             {
-                CLOG(LogLevel::ERROR, "though assumed GME compatible file, got error: '" << msg << "' for file '" << filePath << "'");
+                CLOG(LogLevel_t::Error, "though assumed GME compatible file, got error: '" << msg << "' for file '" << filePath << "'");
             }
             else
             {
-                CLOG(LogLevel::ERROR, "though assumed GME compatible file, GME failed without error for file '" << filePath << "'");
+                CLOG(LogLevel_t::Error, "though assumed GME compatible file, GME failed without error for file '" << filePath << "'");
             }
             
             return false;
@@ -311,7 +311,7 @@ l_LIBMAD:
 
     if(pcm==nullptr)
     {
-        CLOG(LogLevel::ERROR, "No library seems to support that file: \"" << filePath << "\"");
+        CLOG(LogLevel_t::Error, "No library seems to support that file: \"" << filePath << "\"");
         return false;
     }
 

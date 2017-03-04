@@ -12,7 +12,7 @@ ConfigDialog::ConfigDialog(QWidget *parent) :
     this->ui->setupUi(this);
 
     bool oldState = this->ui->comboBoxAudioDriver->blockSignals(true);
-    for(int i=AudioDriver_t::BEGIN; i<AudioDriver_t::END; i++)
+    for(int i=static_cast<int>(AudioDriver_t::BEGIN); i<static_cast<int>(AudioDriver_t::END); i++)
     {
         this->ui->comboBoxAudioDriver->insertItem(i, AudioDriverName[i]);
     }
@@ -59,13 +59,13 @@ void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
     gConfig.audioDriver = static_cast<AudioDriver_t>(index);
     /** in case we ever use bitmasks for audioDriver
 
-        if(gConfig.audioDriver & (AudioDriver_t::WAVE | AudioDriver_t::ebur128))
+        if(gConfig.audioDriver & (AudioDriver_t::Wave | AudioDriver_t::Ebur128))
         {
             gConfig.RenderWholeSong = false;
             this->ui->checkRenderWhole->setEnabled(false);
             this->ui->checkRenderWhole->setChecked(false);
 
-            if(gConfig.audioDriver & AudioDriver_t::ebur128)
+            if(gConfig.audioDriver & AudioDriver_t::Ebur128)
             {
                 gConfig.useAudioNormalization = false;
                 this->ui->checkAudioNorm->setEnabled(false);
@@ -81,13 +81,13 @@ void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
     switch(gConfig.audioDriver)
     {
 #ifdef USE_EBUR128
-    case AudioDriver_t::ebur128:
+    case AudioDriver_t::Ebur128:
         gConfig.useAudioNormalization = false;
         this->ui->checkAudioNorm->setEnabled(false);
         this->ui->checkAudioNorm->setChecked(false);
         [[fallthrough]];
 #endif
-    case AudioDriver_t::WAVE:
+    case AudioDriver_t::Wave:
         gConfig.RenderWholeSong = false;
         this->ui->checkRenderWhole->setEnabled(false);
         this->ui->checkRenderWhole->setChecked(false);

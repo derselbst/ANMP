@@ -6,10 +6,7 @@
 
 #include <cstdint>
 
-extern "C"
-{
-    #include "AudioDriver.h"
-}
+#include "AudioDriver.h"
 
 // includes all headers with no corresponding cpp file
 
@@ -27,12 +24,12 @@ typedef int64_t frame_t;
 
 // TODO: as of 2015-08-01 only Forward is used
 // thus either implement the rest or remove me
-typedef enum LoopType
+enum class LoopType_t : uint8_t
 {
     Forward,
     Backward,
     Alternating
-} LoopType_t;
+};
 
 
 typedef struct loop
@@ -49,7 +46,7 @@ typedef struct loop
     uint32_t count = 0;
 
     // as of 2015-08-01 never evaluated
-    LoopType_t type = LoopType::Forward;
+    LoopType_t type = LoopType_t::Forward;
 
     friend bool operator < (struct loop const& lhs, struct loop const& rhs)
     {
@@ -67,7 +64,7 @@ typedef struct loop
 } loop_t;
 
 
-typedef enum SampleFormat
+enum class SampleFormat_t : uint8_t
 {
     unknown,
     uint8,
@@ -76,6 +73,6 @@ typedef enum SampleFormat
     int32,
     float32,
     float64,
-} SampleFormat_t;
+};
 
 #endif

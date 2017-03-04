@@ -35,7 +35,7 @@ void LibGMEWrapper::printWarning( Music_Emu* emu )
     const char* warning = gme_warning( emu );
     if ( warning )
     {
-        CLOG(LogLevel::WARNING, warning);
+        CLOG(LogLevel_t::Warning, warning);
     }
 }
 
@@ -69,11 +69,11 @@ void LibGMEWrapper::open()
     
     if(gConfig.gmeMultiChannel && !multiChannelSupport)
     {
-        CLOG(LogLevel::WARNING, "though requested, gme does not support multichannel rendering for file '" << this->Filename << "'");
+        CLOG(LogLevel_t::Warning, "though requested, gme does not support multichannel rendering for file '" << this->Filename << "'");
     }
     if(multiChannelSupport)
     {
-        CLOG(LogLevel::INFO, "multichannel rendering activated for file '" << this->Filename << "'");
+        CLOG(LogLevel_t::Info, "multichannel rendering activated for file '" << this->Filename << "'");
     }
 #endif
 

@@ -63,7 +63,7 @@ Player::Player (Player&& other)
 
 Player::~Player ()
 {
-    CLOG(LogLevel::DEBUG, "destroy player " << hex << this);
+    CLOG(LogLevel_t::Debug, "destroy player " << hex << this);
     this->pause();
 
     delete this->audioDriver;
@@ -90,25 +90,25 @@ void Player::_initAudio()
     switch(gConfig.audioDriver)
     {
 #ifdef USE_ALSA
-    case ALSA:
+    case AudioDriver_t::Alsa:
         this->audioDriver = new ALSAOutput();
         break;
 #endif
 #ifdef USE_EBUR128
-    case ebur128:
+    case AudioDriver_t::Ebur128:
         this->audioDriver = new ebur128Output(this);
         break;
 #endif
 #ifdef USE_JACK
-    case JACK:
+    case AudioDriver_t::Jack:
         this->audioDriver = new JackOutput();
         break;
 #endif
-    case WAVE:
+    case AudioDriver_t::Wave:
         this->audioDriver = new WaveOutput(this);
         break;
 #ifdef USE_PORTAUDIO
-    case PORTAUDIO:
+    case AudioDriver_t::Portaudio:
         this->audioDriver = new PortAudioOutput();
         break;
 #endif
@@ -479,11 +479,11 @@ again:
 
         if(framesWritten != framesToPush
 #ifdef USE_JACK
-            && gConfig.audioDriver != JACK /*very spammy for jack*/
+            && gConfig.audioDriver != AudioDriver_t::Jack /*very spammy for jack*/
 #endif      
         )
         {
-            CLOG(LogLevel::INFO, "failed playing the rendered pcm chunk\nframes written: " << framesWritten << "\nframes pushed: " << framesToPush);
+            CLOG(LogLevel_t::Info, "failed playing the rendered pcm chunk\nframes written: " << framesWritten << "\nframes pushed: " << framesToPush);
         }
 
         // update the playhead

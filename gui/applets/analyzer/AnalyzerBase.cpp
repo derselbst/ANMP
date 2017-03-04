@@ -134,19 +134,19 @@ void AnalyzerBase::processData( const Song* s, frame_t playhead )
   }
 
     QVector<float> scope(m_fht->size());
-    if(s->Format.SampleFormat == int16)
+    if(s->Format.SampleFormat == SampleFormat_t::int16)
     {
         int16_t* pcmBuf = static_cast<int16_t*>(s->data) + playhead * s->Format.Channels;
 
         PREPARE_SCOPE(pcmBuf);
     }
-    else if(s->Format.SampleFormat == int32)
+    else if(s->Format.SampleFormat == SampleFormat_t::int32)
     {
         int32_t* pcmBuf = static_cast<int32_t*>(s->data) + playhead * s->Format.Channels;
 
         PREPARE_SCOPE(pcmBuf);
     }
-    else if(s->Format.SampleFormat == float32)
+    else if(s->Format.SampleFormat == SampleFormat_t::float32)
     {
         float* pcmBuf = static_cast<float*>(s->data) + playhead * s->Format.Channels;
         

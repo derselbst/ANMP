@@ -72,7 +72,7 @@ void AopsfWrapper::open()
     }
     else
     {
-        CLOG(LogLevel::DEBUG, "'" << this->Filename << "' seems to be a PSF" << this->psfVersion);
+        CLOG(LogLevel_t::Debug, "'" << this->Filename << "' seems to be a PSF" << this->psfVersion);
     }
     
     this->psfHandle = reinterpret_cast<PSX_STATE*>(new unsigned char[psx_get_state_size(this->psfVersion)]);
@@ -238,7 +238,7 @@ long AopsfWrapper::stdio_ftell( void * f )
 
 void AopsfWrapper::console_log(void * context, const char * message)
 {
-    CLOG(LogLevel::DEBUG, message);
+    CLOG(LogLevel_t::Debug, message);
 }
 
 int AopsfWrapper::psf_loader(void * context, const uint8_t * exe, size_t exe_size, const uint8_t * reserved, size_t reserved_size)
@@ -332,18 +332,18 @@ int AopsfWrapper::psf_info(void * context, const char * name, const char * value
         }
         catch(const invalid_argument& e)
         {
-            CLOG(LogLevel::INFO, "psx_set_refresh failed: " << e.what() << " in file '" << infoContext->Filename << "'");
+            CLOG(LogLevel_t::Info, "psx_set_refresh failed: " << e.what() << " in file '" << infoContext->Filename << "'");
         }
     }
     
     else if (iEquals(name, "utf8"))
     {
-        CLOG(LogLevel::INFO, "psf utf8 file found: '" << infoContext->Filename << "'");
+        CLOG(LogLevel_t::Info, "psf utf8 file found: '" << infoContext->Filename << "'");
     }
     
     else
     {
-        CLOG(LogLevel::WARNING, "found unknown tag '" << name << "' value '" << value << "' in file '" << infoContext->Filename << "'");
+        CLOG(LogLevel_t::Warning, "found unknown tag '" << name << "' value '" << value << "' in file '" << infoContext->Filename << "'");
     }
 
     return 0;

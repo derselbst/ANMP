@@ -122,13 +122,13 @@ void ebur128Output::close()
         float gainCorrection = overallSamplePeak;
         if(gainCorrection <= 0.0)
         {
-            CLOG(LogLevel::ERROR, "ignoring gainCorrection == " << gainCorrection);
+            CLOG(LogLevel_t::Error, "ignoring gainCorrection == " << gainCorrection);
         }
         else
         {
             if(gainCorrection > 1.0)
             {
-                CLOG(LogLevel::INFO, mybasename(this->currentSong->Filename) << " gainCorrection == " << gainCorrection);
+                CLOG(LogLevel_t::Info, mybasename(this->currentSong->Filename) << " gainCorrection == " << gainCorrection);
             }
         
             // write the collected loudness info

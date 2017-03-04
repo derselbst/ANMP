@@ -53,16 +53,16 @@ void PortAudioOutput::init(SongFormat format, bool realtime)
 
     switch(format.SampleFormat)
     {
-    case float32:
+    case SampleFormat_t::float32:
         paSampleFmt = paFloat32;
         break;
-    case int16:
+    case SampleFormat_t::int16:
         paSampleFmt =  paInt16;
         break;
-    case int32:
+    case SampleFormat_t::int32:
         paSampleFmt =  paInt32;
         break;
-    case unknown:
+    case SampleFormat_t::unknown:
         THROW_RUNTIME_ERROR("Sample Format not set");
 
     default:

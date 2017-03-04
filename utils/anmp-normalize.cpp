@@ -20,13 +20,13 @@ void onSongChanged(void* pthis)
 {
   Song* s = static_cast<Playlist*>(pthis)->current();
   
-  CLOG(LogLevel::INFO, "Now handling: " << s->Filename);
+  CLOG(LogLevel_t::Info, "Now handling: " << s->Filename);
 }
 
 
 int main(int argc, char* argv[])
 {
-    gConfig.audioDriver = ebur128;
+    gConfig.audioDriver = AudioDriver_t::Ebur128;
     gConfig.useLoopInfo = false;
     gConfig.RenderWholeSong = false;
     gConfig.useAudioNormalization = false;

@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     {
         w.hide();
 
-        CLOG(LogLevel::FATAL, "Terminated after throwing logic_error: " << e.what());
+        CLOG(LogLevel_t::Fatal, "Terminated after throwing logic_error: " << e.what());
 
         QMessageBox msgBox;
         msgBox.setText("You've discovered a bug in some logic implementation. Please let us know the details below.");
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     {
         w.hide();
 
-        CLOG(LogLevel::FATAL, "Terminated after throwing runtime_error: " << e.what());
+        CLOG(LogLevel_t::Fatal, "Terminated after throwing runtime_error: " << e.what());
 
         QMessageBox msgBox;
         msgBox.setText("An unhandled runtime error occurred, probably a bug. Please let us know the details below.");
@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     {
         w.hide();
 
-        CLOG(LogLevel::FATAL, "Terminated after throwing this: " << e.what());
+        CLOG(LogLevel_t::Fatal, "Terminated after throwing this: " << e.what());
 
         QMessageBox msgBox;
         msgBox.setText("Some kind of exception occurred, likely a bug. Please let us know the details below.");
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     {
         w.hide();
 
-        CLOG(LogLevel::FATAL, "Terminated after throwing ???");
+        CLOG(LogLevel_t::Fatal, "Terminated after throwing ???");
 
         QMessageBox msgBox;
         msgBox.setText("An unknown error occurred. If you can reproduce this, please let us know.");

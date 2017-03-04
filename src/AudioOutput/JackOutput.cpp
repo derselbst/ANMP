@@ -59,12 +59,12 @@ void JackOutput::open()
 
         if (status & JackServerStarted)
         {
-            CLOG(LogLevel::INFO, "JACK server started");
+            CLOG(LogLevel_t::Info, "JACK server started");
         }
         if (status & JackNameNotUnique)
         {
             this->ClientName = jack_get_client_name(this->handle);
-            CLOG(LogLevel::WARNING, "unique name " << this->ClientName << " assigned");
+            CLOG(LogLevel_t::Warning, "unique name " << this->ClientName << " assigned");
         }
 
         jack_set_process_callback(this->handle, JackOutput::processCallback, this);
@@ -225,13 +225,13 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
         int err = src_process (this->srcState, &this->srcData);
         if(err != 0 )
         {
-            CLOG(LogLevel::ERROR, "libsamplerate failed processing (" << src_strerror(err) <<")");
+            CLOG(LogLevel_t::Error, "libsamplerate failed processing (" << src_strerror(err) <<")");
         }
         else
         {
             if(this->srcData.output_frames_gen < this->srcData.output_frames)
             {
-                CLOG(LogLevel::WARNING, "jacks callback buffer has not been filled completely" << endl <<
+                CLOG(LogLevel_t::Warning, "jacks callback buffer has not been filled completely" << endl <<
                      "input_frames: " << this->srcData.input_frames << "\toutput_frames: " << this->srcData.output_frames << endl <<
                      "input_frames_used: " << this->srcData.input_frames_used << "\toutput_frames_gen: " << this->srcData.output_frames_gen);
 
@@ -286,7 +286,7 @@ void JackOutput::connectPorts()
 
     if(physicalPlaybackPorts==nullptr)
     {
-        CLOG(LogLevel::ERROR, "no physical playback ports available");
+        CLOG(LogLevel_t::Error, "no physical playback ports available");
         return;
     }
 
@@ -294,7 +294,7 @@ void JackOutput::connectPorts()
     {
         if (jack_connect(this->handle, jack_port_name(this->playbackPorts[i]), physicalPlaybackPorts[i]))
         {
-            CLOG(LogLevel::INFO, "cannot connect to port \"" << physicalPlaybackPorts[i] << "\"");
+            CLOG(LogLevel_t::Info, "cannot connect to port \"" << physicalPlaybackPorts[i] << "\"");
         }
     }
 
@@ -365,7 +365,7 @@ int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
     // if buffer not consumed, print a warning and discard samples, who cares...
     if(pthis->interleavedProcessedBuffer.ready)
     {
-        CLOG(LogLevel::WARNING, "JackBufSize changed, but buffer has not been consumed yet, discarding pending samples");
+        CLOG(LogLevel_t::Warning, "JackBufSize changed, but buffer has not been consumed yet, discarding pending samples");
     }
 
     delete[] pthis->interleavedProcessedBuffer.buf;

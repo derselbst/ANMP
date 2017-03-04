@@ -38,12 +38,12 @@ void Config::Load() noexcept
         }
         catch(...)
         {
-            CLOG(LogLevel::ERROR, "Something went wrong when reading settings (might contain garbage?)");
+            CLOG(LogLevel_t::Error, "Something went wrong when reading settings (might contain garbage?)");
         }
     }
     else
     {
-        CLOG(LogLevel::INFO, "No user settings file does exist");
+        CLOG(LogLevel_t::Info, "No user settings file does exist");
     }
 }
 
@@ -75,6 +75,6 @@ void Config::Save() noexcept
     }
     catch(...)
     {
-        CLOG(LogLevel::ERROR, "Something went wrong when writing settings (no permission?)");
+        CLOG(LogLevel_t::Error, "Something went wrong when writing settings (no permission?)");
     }
 }

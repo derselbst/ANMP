@@ -1,28 +1,42 @@
 
 #pragma once
 
-typedef enum AudioDriver
+
+#ifdef __cplusplus
+extern "C"
 {
-    BEGIN,
-    WAVE = BEGIN,
+#endif
+
+enum
+#ifdef __cplusplus
+class // c99 doesnt support scoped enums, fallback to unscoped ones
+#endif
+AudioDriver_t
+{
+    BEGIN = 0,
+    Wave = BEGIN,
 
 #ifdef USE_ALSA
-    ALSA,
+    Alsa,
 #endif
 
 #ifdef USE_JACK
-    JACK,
+    Jack,
 #endif
 
 #ifdef USE_PORTAUDIO
-    PORTAUDIO,
+    Portaudio,
 #endif
 
 #ifdef USE_EBUR128
-    ebur128,
+    Ebur128,
 #endif
 
     END,
-} AudioDriver_t;
+};
 
 extern const char* AudioDriverName[];
+
+#ifdef __cplusplus
+}
+#endif

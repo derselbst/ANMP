@@ -17,7 +17,7 @@ void onSongChanged(void* pthis)
 {
   Song* s = static_cast<Playlist*>(pthis)->current();
   
-  CLOG(LogLevel::INFO, "Now handling: " << s->Filename);
+  CLOG(LogLevel_t::Info, "Now handling: " << s->Filename);
 }
 
 static const struct option long_options[] =
@@ -41,7 +41,7 @@ void usage(char* prog)
 
 int main(int argc, char* argv[])
 {
-    gConfig.audioDriver = WAVE;
+    gConfig.audioDriver = AudioDriver_t::Wave;
     gConfig.useLoopInfo = false;
     gConfig.RenderWholeSong = false;
     gConfig.useAudioNormalization = true;

@@ -97,22 +97,22 @@ int main(int argc, char** argv)
                 
                 switch (song->Format.SampleFormat)
                 {
-                case float32:
+                case SampleFormat_t::float32:
                 {
                     match = evaluate<float>(song, left, right, delta, epsilon);
                     break;
                 }
-                case int16:
+                case SampleFormat_t::int16:
                 {
                     match = evaluate<int16_t>(song, left, right, delta, epsilon);
                     break;
                 }
-                case int32:
+                case SampleFormat_t::int32:
                 {
                     match = evaluate<int32_t>(song, left, right, delta, epsilon);
                     break;
                 }
-                case unknown:
+                case SampleFormat_t::unknown:
                     throw invalid_argument("pcmFormat mustnt be unknown");
                     break;
 

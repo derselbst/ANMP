@@ -23,7 +23,7 @@ void PlaylistFactory::tryWith(Song* (&pcm), const string& filePath, Nullable<siz
         }
         catch(exception& e)
         {
-            CLOG(LogLevel::ERROR, e.what());
+            CLOG(LogLevel_t::Error, e.what());
             pcm->close();
             delete pcm;
             pcm=nullptr;

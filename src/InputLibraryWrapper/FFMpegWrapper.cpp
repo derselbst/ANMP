@@ -174,7 +174,7 @@ int FFMpegWrapper::decode_packet(int16_t* (&pcm), int& framesToDo, int& got_fram
         int ret = avcodec_decode_audio4(this->handle->streams[this->audioStreamID]->codec, frame, &got_frame, &pkt);
         if (ret < 0)
         {
-            CLOG(LogLevel::ERROR, "Failed decoding audio frame");
+            CLOG(LogLevel_t::Error, "Failed decoding audio frame");
         }
 
         /* Some audio decoders decode only part of the packet, and have to be
@@ -197,7 +197,7 @@ int FFMpegWrapper::decode_packet(int16_t* (&pcm), int& framesToDo, int& got_fram
 
             if(framesToDo < 0)
             {
-                CLOG(LogLevel::ERROR, "THIS SHOULD NEVER HAPPEN! bufferoverrun ffmpegwrapper")
+                CLOG(LogLevel_t::Error, "THIS SHOULD NEVER HAPPEN! bufferoverrun ffmpegwrapper")
             }
 
             this->framesAlreadyRendered += framesToConvert;
@@ -265,12 +265,12 @@ void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
         {
             if (ret == AVERROR_EOF || avio_feof(this->handle->pb))
             {
-                CLOG(LogLevel::DEBUG, "AVERROR_EOF");
+                CLOG(LogLevel_t::Debug, "AVERROR_EOF");
                 break;
             }
             if (this->handle->pb!=nullptr && this->handle->pb->error)
             {
-                CLOG(LogLevel::DEBUG, "pb error: " << this->handle->pb->error);
+                CLOG(LogLevel_t::Debug, "pb error: " << this->handle->pb->error);
                 break;
             }
         }

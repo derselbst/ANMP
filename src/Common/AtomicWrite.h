@@ -7,12 +7,19 @@
 #define INFUNCTION string(__PRETTY_FUNCTION__)+": "
 #define LOG_MSG(MSG) stringstream logmsg; logmsg << INFUNCTION << MSG
 #define CLOG(LEVEL,MSG) {LOG_MSG(MSG); AtomicWrite::getSingleton().write(LEVEL, logmsg.str());}
-#define LOG(MSG) CLOG(LogLevel::INFO, MSG)
+#define LOG(MSG) CLOG(LogLevel_t::Info, MSG)
 
 #define THROW_RUNTIME_ERROR(MSG) {LOG_MSG(MSG);throw runtime_error(logmsg.str());}
 
 
-enum LogLevel {DEBUG, INFO, WARNING, ERROR, FATAL};
+enum class LogLevel_t : uint8_t
+{
+    Debug,
+    Info,
+    Warning,
+    Error,
+    Fatal
+};
 
 class AtomicWrite
 {
@@ -21,7 +28,7 @@ public:
     static AtomicWrite& getSingleton();
 
     void write(std::string s, std::ostream& o=std::cout);
-    void write(enum LogLevel, std::string s, std::ostream& o=std::cout);
+    void write(LogLevel_t, std::string s, std::ostream& o=std::cout);
 
 private:
     std::mutex mtx;

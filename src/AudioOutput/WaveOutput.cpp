@@ -106,20 +106,20 @@ public:
 
         switch (s->Format.SampleFormat)
         {
-        case float32:
+            case SampleFormat_t::float32:
             this->FormatType = FMT_IEEE_FLOAT;
             this->BitsPerSample = 32;
             break;
-        case int16:
+        case SampleFormat_t::int16:
             this->FormatType = FMT_PCM;
             this->BitsPerSample = 16;
             break;
-        case int32:
+        case SampleFormat_t::int32:
             this->FormatType = FMT_PCM;
             this->BitsPerSample = 32;
             break;
 
-        case unknown:
+        case SampleFormat_t::unknown:
             throw invalid_argument("pcmFormat mustnt be unknown");
             break;
 

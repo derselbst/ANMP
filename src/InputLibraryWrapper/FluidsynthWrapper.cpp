@@ -58,7 +58,7 @@ void FluidsynthWrapper::scheduleTrackLoop(unsigned int time, fluid_event_t* e, f
     // seek back to where the loop started
     if(smf_seek_to_seconds(pthis->smf, loopInfo->start.Value) != 0)
     {
-        CLOG(LogLevel::ERROR, "unable to seek to "<< loopInfo->start.Value << " seconds.");
+        CLOG(LogLevel_t::Error, "unable to seek to "<< loopInfo->start.Value << " seconds.");
         return;
     }
 
@@ -83,7 +83,7 @@ void FluidsynthWrapper::scheduleTrackLoop(unsigned int time, fluid_event_t* e, f
                     int ret = pthis->scheduleNextCallback(event, time-static_cast<unsigned int>(loopInfo->start.Value*1000), loopInfo);
                     if(ret != FLUID_OK)
                     {
-                        CLOG(LogLevel::ERROR, "fluidsynth was unable to queue midi event");
+                        CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
                     }
                     break;
                 }
@@ -272,7 +272,7 @@ void FluidsynthWrapper::open ()
 
         if (!smf_event_is_valid(event))
         {
-            CLOG(LogLevel::WARNING, "invalid midi event found, ignoring:" << FluidsynthWrapper::SmfEventToString(event));
+            CLOG(LogLevel_t::Warning, "invalid midi event found, ignoring:" << FluidsynthWrapper::SmfEventToString(event));
             continue;
         }
 
@@ -332,8 +332,8 @@ void FluidsynthWrapper::feedToFluidSeq(smf_event_t * event, fluid_event_t* fluid
         break;
 
     case 0xA0:
-        CLOG(LogLevel::DEBUG, "Aftertouch, channel " << chan << ", note " << static_cast<int>(event->midi_buffer[1]) << ", pressure " << static_cast<int>(event->midi_buffer[2]));
-        CLOG(LogLevel::ERROR, "Fluidsynth does not support key specific pressure (aftertouch); discarding event");
+        CLOG(LogLevel_t::Debug, "Aftertouch, channel " << chan << ", note " << static_cast<int>(event->midi_buffer[1]) << ", pressure " << static_cast<int>(event->midi_buffer[2]));
+        CLOG(LogLevel_t::Error, "Fluidsynth does not support key specific pressure (aftertouch); discarding event");
         return;
         break;
 
@@ -370,7 +370,7 @@ void FluidsynthWrapper::feedToFluidSeq(smf_event_t * event, fluid_event_t* fluid
             unsigned int loopId = event->midi_buffer[2];
             if(loops.size() <= loopId)
             {
-                CLOG(LogLevel::ERROR, "Received loop end, but there was no corresponding loop start");
+                CLOG(LogLevel_t::Error, "Received loop end, but there was no corresponding loop start");
 
                 // ...well, cant do anything here
                 return;
@@ -393,18 +393,18 @@ void FluidsynthWrapper::feedToFluidSeq(smf_event_t * event, fluid_event_t* fluid
             fluid_event_control_change(fluidEvt, chan, event->midi_buffer[1], event->midi_buffer[2]);
         }
 
-        CLOG(LogLevel::DEBUG, "Controller, channel " << chan << ", controller " << static_cast<int>(event->midi_buffer[1]) << ", value " << static_cast<int>(event->midi_buffer[2]));
+        CLOG(LogLevel_t::Debug, "Controller, channel " << chan << ", controller " << static_cast<int>(event->midi_buffer[1]) << ", value " << static_cast<int>(event->midi_buffer[2]));
     }
     break;
 
     case 0xC0:
         fluid_event_program_change(fluidEvt, chan, event->midi_buffer[1]);
-        CLOG(LogLevel::DEBUG, "ProgChange, channel " << chan << ", program " << static_cast<int>(event->midi_buffer[1]));
+        CLOG(LogLevel_t::Debug, "ProgChange, channel " << chan << ", program " << static_cast<int>(event->midi_buffer[1]));
         break;
 
     case 0xD0:
         fluid_event_channel_pressure(fluidEvt, chan, event->midi_buffer[1]);
-        CLOG(LogLevel::DEBUG, "Channel Pressure, channel " << chan << ", pressure " << static_cast<int>(event->midi_buffer[1]));
+        CLOG(LogLevel_t::Debug, "Channel Pressure, channel " << chan << ", pressure " << static_cast<int>(event->midi_buffer[1]));
         break;
 
     case 0xE0:
@@ -414,7 +414,7 @@ void FluidsynthWrapper::feedToFluidSeq(smf_event_t * event, fluid_event_t* fluid
         pitch |= event->midi_buffer[1];
 
         fluid_event_pitch_bend(fluidEvt, chan, pitch);
-        CLOG(LogLevel::DEBUG, "Pitch Wheel, channel " << chan << ", value " << pitch);
+        CLOG(LogLevel_t::Debug, "Pitch Wheel, channel " << chan << ", value " << pitch);
     }
     break;
 
@@ -427,7 +427,7 @@ void FluidsynthWrapper::feedToFluidSeq(smf_event_t * event, fluid_event_t* fluid
 CHECK_RETURN_VALUE:
     if(ret != FLUID_OK)
     {
-        CLOG(LogLevel::ERROR, "fluidsynth was unable to queue midi event");
+        CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
     }
 }
 

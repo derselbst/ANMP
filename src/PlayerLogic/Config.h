@@ -45,7 +45,7 @@ public:
     
     // indicates the default audio driver to use
     // you have to call Player::initAudio() for changes to take effect
-    AudioDriver_t audioDriver = AudioDriver_t::ALSA;
+    AudioDriver_t audioDriver = AudioDriver_t::Alsa;
 
     // in synchronous part of Song::fillBuffer(): prepare as many samples as needed to have enough for
     // PreRenderTime of playing back duration, before asynchronously filling up the rest of PCM buffer
