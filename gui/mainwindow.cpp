@@ -27,12 +27,36 @@ MainWindow::MainWindow(QWidget *parent) :
     this->ui->setupUi(this);
     this->ui->seekBar->SetMainWindow(this);
 
+    connect(this->ui->playButton,       &QPushButton::toggled, this, &MainWindow::tooglePlayPause);
+    connect(this->ui->stopButton,       &QPushButton::clicked, this, &MainWindow::stop);
+
+    connect(this->ui->forwardButton,    &QPushButton::clicked, this, &MainWindow::seekForward);
+    connect(this->ui->backwardButton,   &QPushButton::clicked, this, &MainWindow::seekBackward);
+    connect(this->ui->fforwardButton,   &QPushButton::clicked, this, &MainWindow::fastSeekForward);
+    connect(this->ui->fbackwardButton,  &QPushButton::clicked, this, &MainWindow::fastSeekBackward);
+
+    connect(this->ui->nextButton,       &QPushButton::clicked, this, &MainWindow::next);
+    connect(this->ui->previousButton,   &QPushButton::clicked, this, &MainWindow::previous);
+
+    connect(this->ui->actionPlay,       &QAction::triggered, this, &MainWindow::play);
+    connect(this->ui->actionPause,      &QAction::triggered, this, &MainWindow::pause);
+    connect(this->ui->actionStop,       &QAction::triggered, this, &MainWindow::stop);
+
+    connect(this->ui->actionNext,       &QAction::triggered, this, &MainWindow::next);
+    connect(this->ui->actionPrevious,   &QAction::triggered, this, &MainWindow::previous);
+
+    connect(this->ui->actionReinitAudioDriver, &QAction::triggered, this, &MainWindow::reinitAudio);
+
+    connect(this->ui->actionAbout_Qt,   &QAction::triggered, this, &MainWindow::aboutQt);
+    connect(this->ui->actionAbout_ANMP, &QAction::triggered, this, &MainWindow::aboutAnmp);
+
+
     this->setWindowState(Qt::WindowMaximized);
 
     // set callbacks
-    this->player->onPlayheadChanged += make_pair(this, &MainWindow::callbackSeek);
+    this->player->onPlayheadChanged    += make_pair(this, &MainWindow::callbackSeek);
     this->player->onCurrentSongChanged += make_pair(this, &MainWindow::callbackCurrentSongChanged);
-    this->player->onIsPlayingChanged += make_pair(this, &MainWindow::callbackIsPlayingChanged);
+    this->player->onIsPlayingChanged   += make_pair(this, &MainWindow::callbackIsPlayingChanged);
 
     this->buildFileBrowser();
     this->buildPlaylistView();
@@ -226,7 +250,7 @@ void MainWindow::showAnalyzer(enum AnalyzerApplet::AnalyzerType type)
 }
 
 
-void MainWindow::tooglePlayPause()
+void MainWindow::tooglePlayPause(bool)
 {
     if(this->player->getIsPlaying())
     {
@@ -238,7 +262,7 @@ void MainWindow::tooglePlayPause()
     }
 }
 
-void MainWindow::tooglePlayPauseFade()
+void MainWindow::tooglePlayPauseFade(bool)
 {
     if(this->player->getIsPlaying())
     {
