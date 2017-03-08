@@ -41,6 +41,7 @@ void usage(char* prog)
 
 int main(int argc, char* argv[])
 {
+    gConfig.Load();
     gConfig.audioDriver = AudioDriver_t::Wave;
     gConfig.useLoopInfo = false;
     gConfig.RenderWholeSong = false;
@@ -90,13 +91,21 @@ int main(int argc, char* argv[])
     
     for(int i=optind; i<argc; i++)
     {
-        for (directory_entry dirEntry : recursive_directory_iterator(argv[i]))
+        if(is_directory(argv[i]))
         {
-            if(is_regular_file(dirEntry.status()))
+            for (directory_entry dirEntry : recursive_directory_iterator(argv[i]))
             {
-                PlaylistFactory::addSong(plist[curThread], dirEntry.path());
-                curThread = (curThread+1) % Threads;
+                if(is_regular_file(dirEntry.status()))
+                {
+                    PlaylistFactory::addSong(plist[curThread], dirEntry.path());
+                    curThread = (curThread+1) % Threads;
+                }
             }
+        }
+        else if(is_regular_file(argv[i]))
+        {
+            PlaylistFactory::addSong(plist[curThread], absolute(argv[i]));
+            curThread = (curThread+1) % Threads;
         }
     }
 
