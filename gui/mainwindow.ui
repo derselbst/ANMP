@@ -578,7 +578,7 @@ border-radius: 4px;
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Settings</string>
+    <string>&amp;Settings</string>
    </property>
   </action>
   <action name="actionShuffle_Playst">

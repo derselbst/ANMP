@@ -103,6 +103,7 @@ void MainWindow::createShortcuts()
 
     playShortcut = new SHORTCUT(QKeySequence(Qt::Key_F4));
     connect(playShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPause);
+    this->ui->playButton->setToolTip(this->ui->playButton->toolTip() + " [F4]");
 
     QShortcut *pauseFadeShortcut = new SHORTCUT(QKeySequence(Qt::SHIFT + Qt::Key_F4));
     connect(pauseFadeShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPauseFade);
@@ -112,6 +113,7 @@ void MainWindow::createShortcuts()
 
     QShortcut *stopShortcut = new SHORTCUT(QKeySequence(Qt::Key_F5));
     connect(stopShortcut, &QShortcut::activated, this, &MainWindow::stop);
+    this->ui->stopButton->setToolTip(this->ui->stopButton->toolTip() + " [F5]");
 
     // CHANGE CURRENT SONG SHORTS
     QShortcut *nextShortcut = new SHORTCUT(QKeySequence(Qt::Key_MediaNext));
@@ -119,12 +121,14 @@ void MainWindow::createShortcuts()
 
     nextShortcut = new SHORTCUT(QKeySequence(Qt::Key_F8));
     connect(nextShortcut, &QShortcut::activated, this, &MainWindow::next);
+    this->ui->nextButton->setToolTip(this->ui->nextButton->toolTip() + " [F8]");
 
     QShortcut *prevShortcut = new SHORTCUT(QKeySequence(Qt::Key_MediaPrevious));
     connect(prevShortcut, &QShortcut::activated, this, &MainWindow::previous);
 
     prevShortcut = new SHORTCUT(QKeySequence(Qt::Key_F1));
     connect(prevShortcut, &QShortcut::activated, this, &MainWindow::previous);
+    this->ui->previousButton->setToolTip(this->ui->previousButton->toolTip() + " [F1]");
 
     // SEEK SHORTCUTS
     QShortcut *seekForward = new SHORTCUT(QKeySequence(Qt::Key_Right));
@@ -132,24 +136,31 @@ void MainWindow::createShortcuts()
 
     seekForward = new SHORTCUT(QKeySequence(Qt::Key_F6));
     connect(seekForward, &QShortcut::activated, this, &MainWindow::seekForward);
+    this->ui->forwardButton->setToolTip(this->ui->forwardButton->toolTip() + " [F6]");
 
     QShortcut *seekBackward = new SHORTCUT(QKeySequence(Qt::Key_Left));
     connect(seekBackward, &QShortcut::activated, this, &MainWindow::seekBackward);
 
     seekBackward = new SHORTCUT(QKeySequence(Qt::Key_F3));
     connect(seekBackward, &QShortcut::activated, this, &MainWindow::seekBackward);
+    this->ui->backwardButton->setToolTip(this->ui->backwardButton->toolTip() + " [F3]");
 
     QShortcut *fastSeekForward = new SHORTCUT(QKeySequence(Qt::ALT + Qt::Key_Right));
     connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::fastSeekForward);
 
     fastSeekForward = new SHORTCUT(QKeySequence(Qt::Key_F7));
     connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::fastSeekForward);
+    this->ui->fforwardButton->setToolTip(this->ui->fforwardButton->toolTip() + " [F7]");
 
     QShortcut *fastSeekBackward = new SHORTCUT(QKeySequence(Qt::ALT + Qt::Key_Left));
     connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::fastSeekBackward);
 
     fastSeekBackward = new SHORTCUT(QKeySequence(Qt::Key_F2));
     connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::fastSeekBackward);
+    this->ui->fbackwardButton->setToolTip(this->ui->fbackwardButton->toolTip() + " [F2]");
+
+    QShortcut *settings = new SHORTCUT(QKeySequence(Qt::Key_F12));
+    connect(settings, &QShortcut::activated, this, [this]{this->settingsView->show();});
 
 #undef SHORTCUT
 }

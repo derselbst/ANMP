@@ -4,15 +4,13 @@
 #include <anmp.hpp>
 
 #include <QFileDialog>
+#include <QShowEvent>
 
 ConfigDialog::ConfigDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::ConfigDialog)
 {
     this->ui->setupUi(this);
-
-    this->newConfig = gConfig;
-    this->fillProperties();
 
     connect(this->ui->buttonBox, &QDialogButtonBox::clicked, this, &ConfigDialog::buttonBoxClicked);
 }
@@ -30,8 +28,8 @@ void ConfigDialog::fillProperties()
     {
      this->ui->comboBoxAudioDriver->insertItem(i, AudioDriverName[i]);
     }
-    this->ui->comboBoxAudioDriver->setCurrentIndex(static_cast<int>(this->newConfig.audioDriver));
     this->ui->comboBoxAudioDriver->blockSignals(oldState);
+    this->ui->comboBoxAudioDriver->setCurrentIndex(static_cast<int>(this->newConfig.audioDriver));
 
     this->ui->spinPreRenderTime->setValue(this->newConfig.PreRenderTime);
     this->ui->checkAudioNorm->setChecked(this->newConfig.useAudioNormalization);
@@ -49,8 +47,6 @@ void ConfigDialog::fillProperties()
     this->ui->checkGmeAccurate->setChecked(this->newConfig.gmeAccurateEmulation);
     this->ui->checkGmeForever->setChecked(this->newConfig.gmePlayForever);
 
-    this->ui->checkChorus->setChecked(this->newConfig.FluidsynthEnableChorus);
-
     this->ui->spinFluidSampleRate->setValue(this->newConfig.FluidsynthSampleRate);
     this->ui->checkMultiChannel->setChecked(this->newConfig.FluidsynthMultiChannel);
     this->ui->defaultSF2Path->setText(QString::fromStdString(this->newConfig.FluidsynthDefaultSoundfont));
@@ -61,6 +57,40 @@ void ConfigDialog::fillProperties()
     this->ui->spinWidth->setValue(this->newConfig.FluidsynthWidth);
     this->ui->spinLevel->setValue(this->newConfig.FluidsynthLevel);
     this->ui->checkChorus->setChecked(this->newConfig.FluidsynthEnableChorus);
+    this->ui->checkChorus->setChecked(this->newConfig.FluidsynthEnableChorus);
+}
+
+
+void ConfigDialog::showEvent(QShowEvent* event)
+{
+    // only do this if the dialog wasnt shown before, i.e. ignore minimize
+    if(!this->isShown)
+    {
+        this->newConfig = gConfig;
+        this->fillProperties();
+    }
+
+    this->isShown = true;
+    this->QDialog::showEvent(event);
+}
+
+void ConfigDialog::closeEvent(QCloseEvent* event)
+{
+    this->isShown = false;
+    this->QDialog::closeEvent(event);
+
+}
+
+void ConfigDialog::accept()
+{
+    this->isShown = false;
+    this->QDialog::accept();
+}
+
+void ConfigDialog::done(int r)
+{
+    this->isShown = false;
+    this->QDialog::done(r);
 }
 
 void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
@@ -91,21 +121,36 @@ void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
     {
 #ifdef USE_EBUR128
     case AudioDriver_t::Ebur128:
-        this->newConfig.useAudioNormalization = false;
         this->ui->checkAudioNorm->setEnabled(false);
         this->ui->checkAudioNorm->setChecked(false);
-        [[fallthrough]];
-#endif
-    case AudioDriver_t::Wave:
-        this->newConfig.RenderWholeSong = false;
+
+        this->ui->checkLoopInfo->setEnabled(false);
+        this->ui->checkLoopInfo->setChecked(false);
+
         this->ui->checkRenderWhole->setEnabled(false);
         this->ui->checkRenderWhole->setChecked(false);
         break;
+#endif
+    case AudioDriver_t::Wave:
+        this->ui->checkRenderWhole->setEnabled(false);
+        this->ui->checkRenderWhole->setChecked(false);
+
+        this->ui->checkAudioNorm->setEnabled(false);
+        this->ui->checkAudioNorm->setChecked(false);
+
+        this->ui->checkLoopInfo->setEnabled(true);
+        this->ui->checkLoopInfo->setChecked(this->newConfig.useLoopInfo);
+        break;
 
     default:
-        this->ui->checkRenderWhole->setEnabled(true);;
-        this->ui->checkRenderWhole->setChecked(true);
+        this->ui->checkRenderWhole->setEnabled(true);
+        this->ui->checkRenderWhole->setChecked(this->newConfig.RenderWholeSong);
+
         this->ui->checkAudioNorm->setEnabled(true);
+        this->ui->checkAudioNorm->setChecked(this->newConfig.useAudioNormalization);
+
+        this->ui->checkLoopInfo->setEnabled(true);
+        this->ui->checkLoopInfo->setChecked(this->newConfig.useLoopInfo);
         break;
     }
 }

@@ -6,6 +6,7 @@
 #include <anmp.hpp>
 
 class QAbstractButton;
+class QShowEvent;
 class Config;
 
 namespace Ui
@@ -25,6 +26,10 @@ public:
     // once the dialog gets accepted: holds the old settings from gConfig
     Config newConfig;
 
+protected:
+    void showEvent(QShowEvent* event) override;
+    void closeEvent(QCloseEvent* event) override;
+
 private slots:
 
     void on_comboBoxAudioDriver_currentIndexChanged(int index);
@@ -33,8 +38,13 @@ private slots:
 
     void buttonBoxClicked(QAbstractButton* btn);
 
+    void accept() override;
+    void done(int r) override;
+
 private:
-    Ui::ConfigDialog *ui;
+    // whether this dialog is currently shown
+    bool isShown = false;
+    Ui::ConfigDialog *ui = nullptr;
     void fillProperties();
 };
 
