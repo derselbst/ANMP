@@ -311,27 +311,28 @@ void MainWindow::aboutQt()
 
 void MainWindow::aboutAnmp()
 {
-    // Stuff the about box text...
-    QString text = "<p>\n";
-    text += "<b>" ANMP_TITLE " - "  ANMP_SUBTITLE  "</b><br />\n";
-    text += "<br />\n";
-    text += "Version: " ANMP_VERSION "<br />\n";
-    text += "Build: ";
-    text += ::GetCompilerUsed();
-    text += " ";
-    text += ::GetCompilerVersionUsed();
-    text += "<br />\n";
-
+    // build up the huge constexpr about anmp string
+    static constexpr char text[] = "<p>\n"
+    "<b>" ANMP_TITLE " - "  ANMP_SUBTITLE  "</b><br />\n"
+    "<br />\n"
+    "Version: " ANMP_VERSION "<br />\n"
+    "Build: "
+    ANMP_COMPILER_USED
+    " "
+    ANMP_COMPILER_VERSION_USED
+    "<br />\n"
+    "<br />\n"
+    "InputLibrary support status:"
+    "<br />\n"
 
 #define SUPPORT_MSG(NAME, SUP, COLOR) \
-        text += "<font color=\"" COLOR "\">";\
-        text += NAME " support " SUP;\
-        text += "<br />";\
-        text += "</font>";
+        "<font color=\"" COLOR "\">"\
+        NAME " support " SUP\
+        "<br />"\
+        "</font>"
 
 #define SUPPORT_YES(NAME) SUPPORT_MSG(NAME, "enabled", "green")
 #define SUPPORT_NO(NAME)  SUPPORT_MSG(NAME, "disabled", "red")
-
 
     #ifdef USE_LIBSND
         SUPPORT_YES("libsndfile")
@@ -387,17 +388,67 @@ void MainWindow::aboutAnmp()
         SUPPORT_NO("Fluidsynth")
     #endif
 
-    text += "<br />\n";
-    text += "<br />\n";
-    text += "Website: <a href=\"" ANMP_WEBSITE "\">" ANMP_WEBSITE "</a><br />\n";
-    text += "<br />\n";
-    text += "<small>";
-    text += "&copy;" ANMP_COPYRIGHT "<br />\n";
-    text += "<br />\n";
-    text += tr("This program is free software; you can redistribute it and/or modify it") + "<br />\n";
-    text += tr("under the terms of the GNU General Public License version 2 or later.");
-    text += "</small>";
-    text += "</p>\n";
+    "<br />\n"
+    "AudioDriver support status:"
+    "<br />\n"
+
+    #ifdef USE_ALSA
+        SUPPORT_YES("ALSA")
+    #else
+        SUPPORT_NO("ALSA")
+    #endif
+
+    #ifdef USE_JACK
+        SUPPORT_YES("Jack")
+    #else
+        SUPPORT_NO("Jack")
+    #endif
+
+    #ifdef USE_PORTAUDIO
+        SUPPORT_YES("PortAudio")
+    #else
+        SUPPORT_NO("PortAudio")
+    #endif
+
+    #ifdef USE_EBUR128
+        SUPPORT_YES("Audio Normalization")
+    #else
+        SUPPORT_NO("Audio Normalization")
+    #endif
+
+    "<br />\n"
+    "Miscellaneous status:"
+    "<br />\n"
+
+    #ifdef USE_CUE
+        SUPPORT_YES("Cue Sheet")
+    #else
+        SUPPORT_NO("Cue Sheet")
+    #endif
+
+    #ifdef USE_GUI
+        SUPPORT_YES("Qt5 Gui")
+    #else
+        SUPPORT_NO("Qt5 Gui")
+    #endif
+
+    #ifdef USE_VISUALIZER
+        SUPPORT_YES("Audio Visualizer")
+    #else
+        SUPPORT_NO("Audio Visualizer")
+    #endif
+
+    "<br />\n"
+    "<br />\n"
+    "Website: <a href=\"" ANMP_WEBSITE "\">" ANMP_WEBSITE "</a><br />\n"
+    "<br />\n"
+    "<small>"
+    "&copy;" ANMP_COPYRIGHT "<br />\n"
+    "<br />\n"
+    "This program is free software; you can redistribute it and/or modify it" "<br />\n"
+    "under the terms of the GNU General Public License version 2."
+    "</small>"
+    "</p>\n";
 
     QMessageBox::about(this, "About ANMP", text);
 
