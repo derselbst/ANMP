@@ -127,14 +127,6 @@ void MainWindow::on_actionAdd_Songs_triggered()
     progress.setValue(fileNames.count());
 }
 
-
-void MainWindow::clearPlaylist()
-{
-    this->stop();
-    this->player->setCurrentSong(nullptr);
-    this->playlistModel->clear();
-}
-
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
 {
     if(!index.isValid())
@@ -145,7 +137,7 @@ void MainWindow::on_treeView_clicked(const QModelIndex &index)
     ui->listView->setRootIndex(filesModel->setRootPath(sPath));
 }
 
-
+// if a song gets double clicked in playlist view, play it back
 void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 {
     if(!index.isValid())
@@ -159,6 +151,7 @@ void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
 
 }
 
+// if a selected song gets activated (press enter) in playlist view, play it back
 void MainWindow::on_tableView_activated(const QModelIndex &index)
 {
     if(!index.isValid())
@@ -169,18 +162,6 @@ void MainWindow::on_tableView_activated(const QModelIndex &index)
     Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
     this->player->setCurrentSong(songToPlay);
     this->play();
-}
-
-
-void MainWindow::on_seekBar_sliderMoved(int position)
-{
-    this->player->seekTo(position);
-}
-
-
-void MainWindow::on_actionAdd_Playback_Stop_triggered()
-{
-    this->playlistModel->add(nullptr);
 }
 
 void MainWindow::on_actionFileBrowser_triggered(bool checked)
@@ -205,7 +186,7 @@ void MainWindow::settingsDialogAccepted()
     }
 }
 
-void MainWindow::on_actionShuffle_Playst_triggered()
+void MainWindow::shufflePlaylist()
 {
     QItemSelection indexList = this->ui->tableView->selectionModel()->selection();
 
@@ -229,6 +210,13 @@ void MainWindow::on_actionShuffle_Playst_triggered()
             }
         }
     }
+}
+
+void MainWindow::clearPlaylist()
+{
+    this->stop();
+    this->player->setCurrentSong(nullptr);
+    this->playlistModel->clear();
 }
 
 

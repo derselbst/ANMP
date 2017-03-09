@@ -25,7 +25,6 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     // init UI
     this->ui->setupUi(this);
-    this->ui->seekBar->SetMainWindow(this);
 
     connect(this->ui->playButton,       &QPushButton::toggled, this, [this](bool){this->MainWindow::tooglePlayPause();});
     connect(this->ui->stopButton,       &QPushButton::clicked, this, &MainWindow::stop);
@@ -47,7 +46,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(this->ui->actionReinitAudioDriver, &QAction::triggered, this, &MainWindow::reinitAudioDriver);
 
-
+    connect(this->ui->actionAdd_Playback_Stop, &QAction::triggered, this, [this]{this->playlistModel->add(nullptr);});
+    connect(this->ui->actionShuffle_Playst, &QAction::triggered, this, &MainWindow::shufflePlaylist);
     connect(this->ui->actionClear_Playlist, &QAction::triggered, this, &MainWindow::clearPlaylist);
 
     connect(this->ui->actionAbout_Qt,   &QAction::triggered, this, &MainWindow::aboutQt);
@@ -59,6 +59,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(this->ui->actionSettings,   &QAction::triggered, this, [this]{this->settingsView->show();});
     connect(this->settingsView,         &ConfigDialog::accepted, this, &MainWindow::settingsDialogAccepted);
+
+    connect(this->ui->seekBar,          &PlayheadSlider::sliderMoved, this, [this](int position){this->player->seekTo(position);});
 
     this->setWindowState(Qt::WindowMaximized);
 
@@ -83,8 +85,7 @@ MainWindow::~MainWindow()
 #ifdef USE_VISUALIZER
     delete this->analyzerWindow;
 #endif
-    
-    this->ui->seekBar->SetMainWindow(nullptr);
+
     delete this->ui;
     delete this->player;
     delete this->playlistModel;
@@ -251,7 +252,6 @@ void MainWindow::resizeEvent(QResizeEvent* event)
         this->ui->listView->show();
         this->ui->treeView->show();
     }
-
 
     QMainWindow::resizeEvent(event);
 }

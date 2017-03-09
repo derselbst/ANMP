@@ -83,12 +83,13 @@ protected slots:
     void slotCurrentSongChanged();
 
     void on_actionAdd_Songs_triggered();
+
+    void shufflePlaylist();
     void clearPlaylist();
 
     void on_treeView_clicked(const QModelIndex &index);
     void on_tableView_doubleClicked(const QModelIndex &index);
     void on_tableView_activated(const QModelIndex &index);
-    void on_seekBar_sliderMoved(int position);
 
 
    //void addFiles(const QStringList&);
@@ -109,11 +110,9 @@ protected slots:
     void aboutQt();
     void aboutAnmp();
 
-    void on_actionAdd_Playback_Stop_triggered();
     void on_actionFileBrowser_triggered(bool checked);
 
     void settingsDialogAccepted();
-    void on_actionShuffle_Playst_triggered();
 };
 
 #endif // MAINWINDOW_H

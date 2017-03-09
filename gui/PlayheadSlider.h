@@ -2,9 +2,6 @@
 #pragma once
 
 #include <QSlider>
-#include <mutex>
-
-class MainWindow;
 
 class PlayheadSlider : public QSlider
 {
@@ -12,15 +9,9 @@ class PlayheadSlider : public QSlider
 
 public:
     PlayheadSlider( QWidget* parent );
-    
-    void SetMainWindow(MainWindow* wnd);
+
     void SilentReset();
     
 protected:
     void mousePressEvent(QMouseEvent * event) override;
-    
-private:
-    mutable std::mutex mtx;
-    MainWindow* mainWnd = nullptr;
-    
 };
