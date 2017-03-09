@@ -42,3 +42,11 @@ void PlayheadSlider::mousePressEvent(QMouseEvent * event)
     
     QSlider::mousePressEvent(event);
 }
+
+void PlayheadSlider::SilentReset()
+{
+    bool oldState = this->blockSignals(true);
+    this->setSliderPosition(0);
+    this->setMaximum(0);
+    this->blockSignals(oldState);
+}

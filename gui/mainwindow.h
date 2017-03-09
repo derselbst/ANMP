@@ -6,6 +6,7 @@
 
 #include <anmp.hpp>
 #include "PlaylistModel.h"
+#include "configdialog.h"
 
 #include <QMainWindow>
 #include <QStringList>
@@ -46,11 +47,9 @@ private:
     const float SeekFast = 0.1;
 
     Ui::MainWindow *ui = nullptr;
-#ifdef USE_VISUALIZER
     AnalyzerApplet * analyzerWindow = nullptr;
-#endif
     
-    ConfigDialog * settingsView = nullptr;
+    ConfigDialog* settingsView = new ConfigDialog(this);
 
     PlaylistModel* playlistModel = new PlaylistModel(this);
     Player* player = new Player(this->playlistModel);
@@ -58,18 +57,24 @@ private:
     QFileSystemModel *drivesModel = new QFileSystemModel(this);
     QFileSystemModel *filesModel = new QFileSystemModel(this);
 
+    future<void> taskFading;
+    future<void> taskAddSongs;
+
     void buildPlaylistView();
     void buildFileBrowser();
     void createShortcuts();
 
     void relativeSeek(int ms);
+    void enableSeekButtons(bool isEnabled);
     
-#ifndef USE_VISUALIZER
+#ifdef USE_VISUALIZER
+    void showAnalyzer(enum AnalyzerApplet::AnalyzerType type);
+#else
     void showNoVisualizer();
 #endif
 
 
-private slots:
+protected slots:
     friend class PlaylistModel;
     friend class PlayheadSlider;
 
@@ -78,18 +83,19 @@ private slots:
     void slotCurrentSongChanged();
 
     void on_actionAdd_Songs_triggered();
-    void on_actionClear_Playlist_triggered();
+    void clearPlaylist();
+
     void on_treeView_clicked(const QModelIndex &index);
     void on_tableView_doubleClicked(const QModelIndex &index);
     void on_tableView_activated(const QModelIndex &index);
     void on_seekBar_sliderMoved(int position);
 
 
-    void addFiles(const QStringList&);
+   //void addFiles(const QStringList&);
     void play();
     void pause();
-    void tooglePlayPause(bool);
-    void tooglePlayPauseFade(bool);
+    void tooglePlayPause();
+    void tooglePlayPauseFade();
     void stop();
     void stopFade();
     void previous();
@@ -100,14 +106,13 @@ private slots:
     void fastSeekBackward();
     void reinitAudioDriver();
 
-    void showAnalyzer(enum AnalyzerApplet::AnalyzerType type);
-
-    void on_actionBlocky_triggered();
-    void on_actionASCII_triggered();
+    void aboutQt();
+    void aboutAnmp();
 
     void on_actionAdd_Playback_Stop_triggered();
     void on_actionFileBrowser_triggered(bool checked);
-    void on_actionSettings_triggered();
+
+    void settingsDialogAccepted();
     void on_actionShuffle_Playst_triggered();
 };
 

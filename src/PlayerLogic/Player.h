@@ -64,7 +64,12 @@ public:
     /**
      * @return true, if currently playing back, else false
      */
-    bool getIsPlaying();
+    bool IsPlaying();
+    
+    /**
+     * @return true, if seeking withing the currently played song is possible
+     */
+    bool IsSeekingPossible();
 
     /**
      * plays the next song from the playlist, same behaviour as this->setCurrentSong()

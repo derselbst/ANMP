@@ -27,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->ui->setupUi(this);
     this->ui->seekBar->SetMainWindow(this);
 
-    connect(this->ui->playButton,       &QPushButton::toggled, this, &MainWindow::tooglePlayPause);
+    connect(this->ui->playButton,       &QPushButton::toggled, this, [this](bool){this->MainWindow::tooglePlayPause();});
     connect(this->ui->stopButton,       &QPushButton::clicked, this, &MainWindow::stop);
 
     connect(this->ui->forwardButton,    &QPushButton::clicked, this, &MainWindow::seekForward);
@@ -45,11 +45,20 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->actionNext,       &QAction::triggered, this, &MainWindow::next);
     connect(this->ui->actionPrevious,   &QAction::triggered, this, &MainWindow::previous);
 
-    connect(this->ui->actionReinitAudioDriver, &QAction::triggered, this, &MainWindow::reinitAudio);
+    connect(this->ui->actionReinitAudioDriver, &QAction::triggered, this, &MainWindow::reinitAudioDriver);
+
+
+    connect(this->ui->actionClear_Playlist, &QAction::triggered, this, &MainWindow::clearPlaylist);
 
     connect(this->ui->actionAbout_Qt,   &QAction::triggered, this, &MainWindow::aboutQt);
     connect(this->ui->actionAbout_ANMP, &QAction::triggered, this, &MainWindow::aboutAnmp);
 
+    connect(this->ui->actionASCII,      &QAction::triggered, this, [this]{this->showAnalyzer(AnalyzerApplet::AnalyzerType::Ascii);});
+    connect(this->ui->actionBlocky,     &QAction::triggered, this, [this]{this->showAnalyzer(AnalyzerApplet::AnalyzerType::Block);});
+
+
+    connect(this->ui->actionSettings,   &QAction::triggered, this, [this]{this->settingsView->show();});
+    connect(this->settingsView,         &ConfigDialog::accepted, this, &MainWindow::settingsDialogAccepted);
 
     this->setWindowState(Qt::WindowMaximized);
 
@@ -106,16 +115,16 @@ void MainWindow::createShortcuts()
 
     // CHANGE CURRENT SONG SHORTS
     QShortcut *nextShortcut = new SHORTCUT(QKeySequence(Qt::Key_MediaNext));
-    connect(nextShortcut, &QShortcut::activated, this, &MainWindow::on_actionNext_Song_triggered);
+    connect(nextShortcut, &QShortcut::activated, this, &MainWindow::next);
 
     nextShortcut = new SHORTCUT(QKeySequence(Qt::Key_F8));
-    connect(nextShortcut, &QShortcut::activated, this, &MainWindow::on_actionNext_Song_triggered);
+    connect(nextShortcut, &QShortcut::activated, this, &MainWindow::next);
 
     QShortcut *prevShortcut = new SHORTCUT(QKeySequence(Qt::Key_MediaPrevious));
-    connect(prevShortcut, &QShortcut::activated, this, &MainWindow::on_actionPrevious_Song_triggered);
+    connect(prevShortcut, &QShortcut::activated, this, &MainWindow::previous);
 
     prevShortcut = new SHORTCUT(QKeySequence(Qt::Key_F1));
-    connect(prevShortcut, &QShortcut::activated, this, &MainWindow::on_actionPrevious_Song_triggered);
+    connect(prevShortcut, &QShortcut::activated, this, &MainWindow::previous);
 
     // SEEK SHORTCUTS
     QShortcut *seekForward = new SHORTCUT(QKeySequence(Qt::Key_Right));
@@ -249,10 +258,20 @@ void MainWindow::showAnalyzer(enum AnalyzerApplet::AnalyzerType type)
 #endif
 }
 
-
-void MainWindow::tooglePlayPause(bool)
+#ifndef USE_VISUALIZER
+void MainWindow::showNoVisualizer()
 {
-    if(this->player->getIsPlaying())
+    QMessageBox msgBox;
+    msgBox.setText("Unsupported");
+    msgBox.setIcon(QMessageBox::Information);
+    msgBox.setDetailedText("ANMP was built without Qt5OpenGL. No visualizers available.");
+    msgBox.exec();
+}
+#endif
+
+void MainWindow::tooglePlayPause()
+{
+    if(this->player->IsPlaying())
     {
         this->pause();
     }
@@ -262,60 +281,14 @@ void MainWindow::tooglePlayPause(bool)
     }
 }
 
-void MainWindow::tooglePlayPauseFade(bool)
+void MainWindow::tooglePlayPauseFade()
 {
-    if(this->player->getIsPlaying())
+    if(this->player->IsPlaying())
     {
         this->player->fadeout(gConfig.fadeTimePause);
         this->pause();
     }
     else
-    {
-        this->play();
-    }
-}
-
-void MainWindow::play()
-{
-    this->player->play();
-}
-
-void MainWindow::pause()
-{
-    this->player->pause();
-}
-
-void MainWindow::stopFade()
-{
-    this->player->fadeout(gConfig.fadeTimeStop);
-    this->stop();
-}
-
-void MainWindow::stop()
-{
-    this->player->stop();
-
-    // dont call the slot directly, a call might still be pending, making a direct call here useless
-    QMetaObject::invokeMethod( this, "slotSeek", Qt::QueuedConnection, Q_ARG(long long, 0 ) );
-}
-
-void MainWindow::next()
-{
-    bool oldState = this->player->getIsPlaying();
-    this->stop();
-    this->player->next();
-    if(oldState)
-    {
-        this->play();
-    }
-}
-
-void MainWindow::previous()
-{
-    bool oldState = this->player->getIsPlaying();
-    this->stop();
-    this->player->previous();
-    if(oldState)
     {
         this->play();
     }
@@ -341,23 +314,11 @@ void MainWindow::relativeSeek(int relpos)
     this->player->seekTo(pos);
 }
 
-void MainWindow::seekForward()
-{
-    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekNormal), gConfig.FramesToRender));
-}
 
-void MainWindow::seekBackward()
+void MainWindow::enableSeekButtons(bool isEnabled)
 {
-    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekNormal), gConfig.FramesToRender));
+    this->ui->forwardButton->setEnabled(isEnabled);
+    this->ui->fforwardButton->setEnabled(isEnabled);
+    this->ui->backwardButton->setEnabled(isEnabled);
+    this->ui->fbackwardButton->setEnabled(isEnabled);
 }
-
-void MainWindow::fastSeekForward()
-{
-    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekFast), gConfig.FramesToRender));
-}
-
-void MainWindow::fastSeekBackward()
-{
-    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekFast), gConfig.FramesToRender));
-}
-

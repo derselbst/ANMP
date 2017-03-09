@@ -11,42 +11,10 @@ ConfigDialog::ConfigDialog(QWidget *parent) :
 {
     this->ui->setupUi(this);
 
-    bool oldState = this->ui->comboBoxAudioDriver->blockSignals(true);
-    for(int i=static_cast<int>(AudioDriver_t::BEGIN); i<static_cast<int>(AudioDriver_t::END); i++)
-    {
-        this->ui->comboBoxAudioDriver->insertItem(i, AudioDriverName[i]);
-    }
-    this->ui->comboBoxAudioDriver->setCurrentIndex(static_cast<int>(gConfig.audioDriver));
-    this->ui->comboBoxAudioDriver->blockSignals(oldState);
+    this->newConfig = gConfig;
+    this->fillProperties();
 
-    this->ui->spinPreRenderTime->setValue(gConfig.PreRenderTime);
-    this->ui->checkAudioNorm->setChecked(gConfig.useAudioNormalization);
-    this->ui->checkRenderWhole->setChecked(gConfig.RenderWholeSong);
-
-    this->ui->checkLoopInfo->setChecked(gConfig.useLoopInfo);
-    this->ui->spinFadePause->setValue(gConfig.fadeTimePause);
-    this->ui->spinFadeStop->setValue(gConfig.fadeTimeStop);
-    this->ui->spinLoopCount->setValue(gConfig.overridingGlobalLoopCount);
-
-    this->ui->checkUsfHle->setChecked(gConfig.useHle);
-
-    this->ui->spinGmeSampleRate->setValue(gConfig.gmeSampleRate);
-    this->ui->spinGmeSfx->setValue(gConfig.gmeEchoDepth);
-    this->ui->checkGmeAccurate->setChecked(gConfig.gmeAccurateEmulation);
-    this->ui->checkGmeForever->setChecked(gConfig.gmePlayForever);
-
-    this->ui->checkChorus->setChecked(gConfig.FluidsynthEnableChorus);
-
-    this->ui->spinFluidSampleRate->setValue(gConfig.FluidsynthSampleRate);
-    this->ui->checkMultiChannel->setChecked(gConfig.FluidsynthMultiChannel);
-    this->ui->defaultSF2Path->setText(QString::fromStdString(gConfig.FluidsynthDefaultSoundfont));
-    this->ui->checkForceDefaultSf->setChecked(gConfig.FluidsynthForceDefaultSoundfont);
-    this->ui->checkReverb->setChecked(gConfig.FluidsynthEnableReverb);
-    this->ui->spinRoomSize->setValue(gConfig.FluidsynthRoomSize);
-    this->ui->spinDamping->setValue(gConfig.FluidsynthDamping);
-    this->ui->spinWidth->setValue(gConfig.FluidsynthWidth);
-    this->ui->spinLevel->setValue(gConfig.FluidsynthLevel);
-    this->ui->checkChorus->setChecked(gConfig.FluidsynthEnableChorus);
+    connect(this->ui->buttonBox, &QDialogButtonBox::clicked, this, &ConfigDialog::buttonBoxClicked);
 }
 
 ConfigDialog::~ConfigDialog()
@@ -54,20 +22,61 @@ ConfigDialog::~ConfigDialog()
     delete ui;
 }
 
+void ConfigDialog::fillProperties()
+{
+    bool oldState = this->ui->comboBoxAudioDriver->blockSignals(true);
+    this->ui->comboBoxAudioDriver->clear();
+    for(int i=static_cast<int>(AudioDriver_t::BEGIN); i<static_cast<int>(AudioDriver_t::END); i++)
+    {
+     this->ui->comboBoxAudioDriver->insertItem(i, AudioDriverName[i]);
+    }
+    this->ui->comboBoxAudioDriver->setCurrentIndex(static_cast<int>(this->newConfig.audioDriver));
+    this->ui->comboBoxAudioDriver->blockSignals(oldState);
+
+    this->ui->spinPreRenderTime->setValue(this->newConfig.PreRenderTime);
+    this->ui->checkAudioNorm->setChecked(this->newConfig.useAudioNormalization);
+    this->ui->checkRenderWhole->setChecked(this->newConfig.RenderWholeSong);
+
+    this->ui->checkLoopInfo->setChecked(this->newConfig.useLoopInfo);
+    this->ui->spinFadePause->setValue(this->newConfig.fadeTimePause);
+    this->ui->spinFadeStop->setValue(this->newConfig.fadeTimeStop);
+    this->ui->spinLoopCount->setValue(this->newConfig.overridingGlobalLoopCount);
+
+    this->ui->checkUsfHle->setChecked(this->newConfig.useHle);
+
+    this->ui->spinGmeSampleRate->setValue(this->newConfig.gmeSampleRate);
+    this->ui->spinGmeSfx->setValue(this->newConfig.gmeEchoDepth);
+    this->ui->checkGmeAccurate->setChecked(this->newConfig.gmeAccurateEmulation);
+    this->ui->checkGmeForever->setChecked(this->newConfig.gmePlayForever);
+
+    this->ui->checkChorus->setChecked(this->newConfig.FluidsynthEnableChorus);
+
+    this->ui->spinFluidSampleRate->setValue(this->newConfig.FluidsynthSampleRate);
+    this->ui->checkMultiChannel->setChecked(this->newConfig.FluidsynthMultiChannel);
+    this->ui->defaultSF2Path->setText(QString::fromStdString(this->newConfig.FluidsynthDefaultSoundfont));
+    this->ui->checkForceDefaultSf->setChecked(this->newConfig.FluidsynthForceDefaultSoundfont);
+    this->ui->checkReverb->setChecked(this->newConfig.FluidsynthEnableReverb);
+    this->ui->spinRoomSize->setValue(this->newConfig.FluidsynthRoomSize);
+    this->ui->spinDamping->setValue(this->newConfig.FluidsynthDamping);
+    this->ui->spinWidth->setValue(this->newConfig.FluidsynthWidth);
+    this->ui->spinLevel->setValue(this->newConfig.FluidsynthLevel);
+    this->ui->checkChorus->setChecked(this->newConfig.FluidsynthEnableChorus);
+}
+
 void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
 {
-    gConfig.audioDriver = static_cast<AudioDriver_t>(index);
+    this->newConfig.audioDriver = static_cast<AudioDriver_t>(index);
     /** in case we ever use bitmasks for audioDriver
 
-        if(gConfig.audioDriver & (AudioDriver_t::Wave | AudioDriver_t::Ebur128))
+        if(this->newConfig.audioDriver & (AudioDriver_t::Wave | AudioDriver_t::Ebur128))
         {
-            gConfig.RenderWholeSong = false;
+            this->newConfig.RenderWholeSong = false;
             this->ui->checkRenderWhole->setEnabled(false);
             this->ui->checkRenderWhole->setChecked(false);
 
-            if(gConfig.audioDriver & AudioDriver_t::Ebur128)
+            if(this->newConfig.audioDriver & AudioDriver_t::Ebur128)
             {
-                gConfig.useAudioNormalization = false;
+                this->newConfig.useAudioNormalization = false;
                 this->ui->checkAudioNorm->setEnabled(false);
                 this->ui->checkAudioNorm->setChecked(false);
             }
@@ -78,23 +87,24 @@ void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
             this->ui->checkAudioNorm->setEnabled(true);
         }*/
 
-    switch(gConfig.audioDriver)
+    switch(this->newConfig.audioDriver)
     {
 #ifdef USE_EBUR128
     case AudioDriver_t::Ebur128:
-        gConfig.useAudioNormalization = false;
+        this->newConfig.useAudioNormalization = false;
         this->ui->checkAudioNorm->setEnabled(false);
         this->ui->checkAudioNorm->setChecked(false);
         [[fallthrough]];
 #endif
     case AudioDriver_t::Wave:
-        gConfig.RenderWholeSong = false;
+        this->newConfig.RenderWholeSong = false;
         this->ui->checkRenderWhole->setEnabled(false);
         this->ui->checkRenderWhole->setChecked(false);
         break;
 
     default:
-        this->ui->checkRenderWhole->setEnabled(true);
+        this->ui->checkRenderWhole->setEnabled(true);;
+        this->ui->checkRenderWhole->setChecked(true);
         this->ui->checkAudioNorm->setEnabled(true);
         break;
     }
@@ -102,7 +112,7 @@ void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
 
 void ConfigDialog::on_browseSF2_clicked()
 {
-    string dir = ::mydirname(gConfig.FluidsynthDefaultSoundfont);
+    string dir = ::mydirname(this->newConfig.FluidsynthDefaultSoundfont);
 
     QString selFilter = "SoundFont (*.sf2)";
     QString sf2 = QFileDialog::getOpenFileName(this, "Select Soundfont", QString::fromStdString(dir), "SoundFont (*.sf2);;All files (*.*)", &selFilter);
@@ -110,33 +120,55 @@ void ConfigDialog::on_browseSF2_clicked()
     this->ui->defaultSF2Path->setText(sf2);
 }
 
-void ConfigDialog::on_buttonBox_accepted()
+void ConfigDialog::buttonBoxClicked(QAbstractButton* btn)
 {
-    gConfig.RenderWholeSong = this->ui->checkRenderWhole->isChecked();
-    gConfig.useAudioNormalization = this->ui->checkAudioNorm->isChecked();
-    gConfig.PreRenderTime = static_cast<unsigned int>(this->ui->spinPreRenderTime->value());
+    QDialogButtonBox::StandardButton stdbtn = this->ui->buttonBox->standardButton(btn);
 
-    gConfig.useLoopInfo = this->ui->checkLoopInfo->isChecked();
-    gConfig.overridingGlobalLoopCount = this->ui->spinLoopCount->value();
-    gConfig.fadeTimeStop = this->ui->spinFadeStop->value();
-    gConfig.fadeTimePause = this->ui->spinFadePause->value();
+    if(stdbtn == QDialogButtonBox::Cancel)
+    {
+        return;
+    }
 
-    gConfig.useHle = this->ui->checkUsfHle->isChecked();
+    if(stdbtn == QDialogButtonBox::RestoreDefaults)
+    {
+        this->newConfig = Config();
+        this->fillProperties();
+        return;
+    }
 
-    gConfig.gmeEchoDepth = static_cast<float>(this->ui->spinGmeSfx->value());
-    gConfig.gmeSampleRate = static_cast<unsigned int>(this->ui->spinGmeSampleRate->value());
-    gConfig.gmeAccurateEmulation = this->ui->checkGmeAccurate->isChecked();
-    gConfig.gmePlayForever = this->ui->checkGmeForever->isChecked();
+    if(stdbtn == QDialogButtonBox::Save || stdbtn == QDialogButtonBox::Ok)
+    {
+        this->newConfig.RenderWholeSong = this->ui->checkRenderWhole->isChecked();
+        this->newConfig.useAudioNormalization = this->ui->checkAudioNorm->isChecked();
+        this->newConfig.PreRenderTime = static_cast<unsigned int>(this->ui->spinPreRenderTime->value());
 
-    gConfig.FluidsynthSampleRate = static_cast<unsigned int>(this->ui->spinFluidSampleRate->value());
-    gConfig.FluidsynthMultiChannel = this->ui->checkMultiChannel->isChecked();
-    gConfig.FluidsynthDefaultSoundfont = this->ui->defaultSF2Path->text().toUtf8().constData();
-    gConfig.FluidsynthForceDefaultSoundfont = this->ui->checkForceDefaultSf->isChecked();
-    gConfig.FluidsynthEnableReverb = this->ui->checkReverb->isChecked();
-    gConfig.FluidsynthRoomSize = this->ui->spinRoomSize->value();
-    gConfig.FluidsynthDamping = this->ui->spinDamping->value();
-    gConfig.FluidsynthWidth = this->ui->spinWidth->value();
-    gConfig.FluidsynthLevel = this->ui->spinLevel->value();
-    gConfig.FluidsynthEnableChorus = this->ui->checkChorus->isChecked();
+        this->newConfig.useLoopInfo = this->ui->checkLoopInfo->isChecked();
+        this->newConfig.overridingGlobalLoopCount = this->ui->spinLoopCount->value();
+        this->newConfig.fadeTimeStop = this->ui->spinFadeStop->value();
+        this->newConfig.fadeTimePause = this->ui->spinFadePause->value();
 
+        this->newConfig.useHle = this->ui->checkUsfHle->isChecked();
+
+        this->newConfig.gmeEchoDepth = static_cast<float>(this->ui->spinGmeSfx->value());
+        this->newConfig.gmeSampleRate = static_cast<unsigned int>(this->ui->spinGmeSampleRate->value());
+        this->newConfig.gmeAccurateEmulation = this->ui->checkGmeAccurate->isChecked();
+        this->newConfig.gmePlayForever = this->ui->checkGmeForever->isChecked();
+
+        this->newConfig.FluidsynthSampleRate = static_cast<unsigned int>(this->ui->spinFluidSampleRate->value());
+        this->newConfig.FluidsynthMultiChannel = this->ui->checkMultiChannel->isChecked();
+        this->newConfig.FluidsynthDefaultSoundfont = this->ui->defaultSF2Path->text().toUtf8().constData();
+        this->newConfig.FluidsynthForceDefaultSoundfont = this->ui->checkForceDefaultSf->isChecked();
+        this->newConfig.FluidsynthEnableReverb = this->ui->checkReverb->isChecked();
+        this->newConfig.FluidsynthRoomSize = this->ui->spinRoomSize->value();
+        this->newConfig.FluidsynthDamping = this->ui->spinDamping->value();
+        this->newConfig.FluidsynthWidth = this->ui->spinWidth->value();
+        this->newConfig.FluidsynthLevel = this->ui->spinLevel->value();
+        this->newConfig.FluidsynthEnableChorus = this->ui->checkChorus->isChecked();
+
+        std::swap(gConfig, this->newConfig);
+        if(stdbtn == QDialogButtonBox::Save)
+        {
+            gConfig.Save();
+        }
+    }
 }

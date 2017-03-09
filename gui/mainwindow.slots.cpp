@@ -75,17 +75,14 @@ void MainWindow::slotSeek(long long pos)
 
 void MainWindow::slotCurrentSongChanged()
 {
-    QSlider* playheadSlider = this->ui->seekBar;
+    PlayheadSlider* playheadSlider = this->ui->seekBar;
 
     const Song* s = this->player->getCurrentSong();
     if(s==nullptr)
     {
         this->setWindowTitle("ANMP");
 
-        bool oldState = playheadSlider->blockSignals(true);
-        playheadSlider->setSliderPosition(0);
-        playheadSlider->setMaximum(0);
-        playheadSlider->blockSignals(oldState);
+        playheadSlider->SilentReset();
     }
     else
     {
@@ -100,6 +97,8 @@ void MainWindow::slotCurrentSongChanged()
             this->setWindowTitle(interpret + " - " + title  + " :: ANMP");
         }
         playheadSlider->setMaximum(s->getFrames());
+
+        this->enableSeekButtons(this->player->IsSeekingPossible());
     }
 }
 
@@ -128,32 +127,8 @@ void MainWindow::on_actionAdd_Songs_triggered()
     progress.setValue(fileNames.count());
 }
 
-void MainWindow::on_actionPlay_triggered()
-{
-    this->play();
-}
 
-void MainWindow::on_actionStop_triggered()
-{
-    this->stop();
-}
-
-void MainWindow::on_actionPause_triggered()
-{
-    this->pause();
-}
-
-void MainWindow::on_actionNext_Song_triggered()
-{
-    this->next();
-}
-
-void MainWindow::on_actionPrevious_Song_triggered()
-{
-    this->previous();
-}
-
-void MainWindow::on_actionClear_Playlist_triggered()
+void MainWindow::clearPlaylist()
 {
     this->stop();
     this->player->setCurrentSong(nullptr);
@@ -196,60 +171,12 @@ void MainWindow::on_tableView_activated(const QModelIndex &index)
     this->play();
 }
 
-void MainWindow::on_playButton_toggled(bool)
-{
-    this->tooglePlayPause();
-}
-
-void MainWindow::on_stopButton_clicked()
-{
-    this->stop();
-}
 
 void MainWindow::on_seekBar_sliderMoved(int position)
 {
     this->player->seekTo(position);
 }
 
-void MainWindow::on_actionBlocky_triggered()
-{
-    this->showAnalyzer(AnalyzerApplet::AnalyzerType::Block);
-}
-
-void MainWindow::on_actionASCII_triggered()
-{
-    this->showAnalyzer(AnalyzerApplet::AnalyzerType::Ascii);
-}
-
-void MainWindow::on_forwardButton_clicked()
-{
-    this->seekForward();
-}
-
-void MainWindow::on_fforwardButton_clicked()
-{
-    this->fastSeekForward();
-}
-
-void MainWindow::on_nextButton_clicked()
-{
-    this->next();
-}
-
-void MainWindow::on_previousButton_clicked()
-{
-    this->previous();
-}
-
-void MainWindow::on_fbackwardButton_clicked()
-{
-    this->fastSeekBackward();
-}
-
-void MainWindow::on_backwardButton_clicked()
-{
-    this->seekBackward();
-}
 
 void MainWindow::on_actionAdd_Playback_Stop_triggered()
 {
@@ -270,28 +197,12 @@ void MainWindow::on_actionFileBrowser_triggered(bool checked)
     }
 }
 
-void MainWindow::on_actionSettings_triggered()
+void MainWindow::settingsDialogAccepted()
 {
-    if(this->settingsView == nullptr)
+    if(this->settingsView->newConfig.audioDriver != gConfig.audioDriver)
     {
-        this->settingsView = new ConfigDialog(this);
+        this->reinitAudioDriver();
     }
-
-    AudioDriver_t oldDriver = gConfig.audioDriver;
-
-    int ret = this->settingsView->exec();
-
-    if(ret == QDialog::Accepted)
-    {
-        if(oldDriver != gConfig.audioDriver)
-        {
-            this->player->initAudio();
-        }
-        gConfig.Save();
-    }
-
-    delete this->settingsView;
-    this->settingsView = nullptr;
 }
 
 void MainWindow::on_actionShuffle_Playst_triggered()
@@ -320,18 +231,177 @@ void MainWindow::on_actionShuffle_Playst_triggered()
     }
 }
 
-void MainWindow::on_actionReinit_AudioDriver_triggered()
+
+void MainWindow::play()
+{
+    this->player->play();
+}
+
+void MainWindow::pause()
+{
+    this->player->pause();
+}
+
+void MainWindow::stopFade()
+{
+    this->player->fadeout(gConfig.fadeTimeStop);
+    this->stop();
+}
+
+void MainWindow::stop()
+{
+    this->player->stop();
+
+    // dont call the slot directly, a call might still be pending, making a direct call here useless
+    QMetaObject::invokeMethod( this, "slotSeek", Qt::QueuedConnection, Q_ARG(long long, 0 ) );
+}
+
+void MainWindow::next()
+{
+    bool oldState = this->player->IsPlaying();
+    this->stop();
+    this->player->next();
+    if(oldState)
+    {
+        this->play();
+    }
+}
+
+void MainWindow::previous()
+{
+    bool oldState = this->player->IsPlaying();
+    this->stop();
+    this->player->previous();
+    if(oldState)
+    {
+        this->play();
+    }
+}
+
+void MainWindow::reinitAudioDriver()
 {
     this->player->initAudio();
 }
 
-#ifndef USE_VISUALIZER
-void MainWindow::showNoVisualizer()
+void MainWindow::seekForward()
 {
-    QMessageBox msgBox;
-    msgBox.setText("Unsupported");
-    msgBox.setIcon(QMessageBox::Information);
-    msgBox.setDetailedText("ANMP was built without Qt5OpenGL. No visualizers available.");
-    msgBox.exec();
+    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekNormal), gConfig.FramesToRender));
 }
-#endif
+
+void MainWindow::seekBackward()
+{
+    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekNormal), gConfig.FramesToRender));
+}
+
+void MainWindow::fastSeekForward()
+{
+    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekFast), gConfig.FramesToRender));
+}
+
+void MainWindow::fastSeekBackward()
+{
+    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekFast), gConfig.FramesToRender));
+}
+
+
+void MainWindow::aboutQt()
+{
+    QMessageBox::aboutQt(this, "About Qt");
+}
+
+void MainWindow::aboutAnmp()
+{
+    // Stuff the about box text...
+    QString text = "<p>\n";
+    text += "<b>" ANMP_TITLE " - "  ANMP_SUBTITLE  "</b><br />\n";
+    text += "<br />\n";
+    text += "Version: " ANMP_VERSION "<br />\n";
+    text += "Build: ";
+    text += ::GetCompilerUsed();
+    text += " ";
+    text += ::GetCompilerVersionUsed();
+    text += "<br />\n";
+
+
+#define SUPPORT_MSG(NAME, SUP, COLOR) \
+        text += "<font color=\"" COLOR "\">";\
+        text += NAME " support " SUP;\
+        text += "<br />";\
+        text += "</font>";
+
+#define SUPPORT_YES(NAME) SUPPORT_MSG(NAME, "enabled", "green")
+#define SUPPORT_NO(NAME)  SUPPORT_MSG(NAME, "disabled", "red")
+
+
+    #ifdef USE_LIBSND
+        SUPPORT_YES("libsndfile")
+    #else
+        SUPPORT_NO("libsndfile")
+    #endif
+
+    #ifdef USE_LAZYUSF
+        SUPPORT_YES("lazyusf")
+    #else
+        SUPPORT_NO("lazyusf")
+    #endif
+
+    #ifdef USE_AOPSF
+        SUPPORT_YES("aopsf")
+    #else
+        SUPPORT_NO("aopsf")
+    #endif
+
+    #ifdef USE_LIBMAD
+        SUPPORT_YES("MAD")
+    #else
+        SUPPORT_NO("MAD")
+    #endif
+
+    #ifdef USE_LIBGME
+        SUPPORT_YES("Game-Music-Emu")
+    #else
+        SUPPORT_NO("Game-Music-Emu")
+    #endif
+
+    #ifdef USE_MODPLUG
+        SUPPORT_YES("ModPlug")
+    #else
+        SUPPORT_NO("ModPlug")
+    #endif
+
+    #ifdef USE_VGMSTREAM
+        SUPPORT_YES("VGMStream")
+    #else
+        SUPPORT_NO("VGMStream")
+    #endif
+
+    #ifdef USE_FFMPEG
+        SUPPORT_YES("FFMpeg")
+    #else
+        SUPPORT_NO("FFMpeg")
+    #endif
+
+    #ifdef USE_FLUIDSYNTH
+        SUPPORT_YES("Fluidsynth")
+    #else
+        SUPPORT_NO("Fluidsynth")
+    #endif
+
+    text += "<br />\n";
+    text += "<br />\n";
+    text += "Website: <a href=\"" ANMP_WEBSITE "\">" ANMP_WEBSITE "</a><br />\n";
+    text += "<br />\n";
+    text += "<small>";
+    text += "&copy;" ANMP_COPYRIGHT "<br />\n";
+    text += "<br />\n";
+    text += tr("This program is free software; you can redistribute it and/or modify it") + "<br />\n";
+    text += tr("under the terms of the GNU General Public License version 2 or later.");
+    text += "</small>";
+    text += "</p>\n";
+
+    QMessageBox::about(this, "About ANMP", text);
+
+#undef SUPPORT_YES
+#undef SUPPORT_NO
+#undef SUPPORT_MSG
+}

@@ -14,6 +14,7 @@ public:
     PlayheadSlider( QWidget* parent );
     
     void SetMainWindow(MainWindow* wnd);
+    void SilentReset();
     
 protected:
     void mousePressEvent(QMouseEvent * event) override;

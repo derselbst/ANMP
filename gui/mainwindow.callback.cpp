@@ -1,6 +1,5 @@
 /**
- * this file provides callback functions for anmp's internal player. By that it gets enabled to communicate
- * back to the qt gui.
+ * this file provides callback functions for anmp's internal player. By that it gets enabled to communicate back to the qt gui.
  */
 
 
