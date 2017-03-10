@@ -106,6 +106,8 @@ protected slots:
     void aboutQt();
     void aboutAnmp();
 
+    void updateStatusBar(QString file, int, int);
+
     void on_actionFileBrowser_triggered(bool checked);
 
     void settingsDialogAccepted();

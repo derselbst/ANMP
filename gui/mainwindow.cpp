@@ -67,6 +67,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(this->ui->seekBar,          &PlayheadSlider::sliderMoved, this, [this](int position){this->player->seekTo(position);});
 
+    connect(this->playlistModel, &PlaylistModel::SongAdded, this, &MainWindow::updateStatusBar);
+
 
     this->setWindowState(Qt::WindowMaximized);
 

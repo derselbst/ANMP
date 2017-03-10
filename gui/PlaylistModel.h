@@ -59,6 +59,9 @@ public:
     void asyncAdd(const QStringList& files);
     void asyncAdd(const QList<QUrl>& files);
 
+signals:
+    void SongAdded(QString file, int cur, int total);
+
 private:
     struct
     {

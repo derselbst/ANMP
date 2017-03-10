@@ -377,6 +377,7 @@ void PlaylistModel::asyncAdd(const QList<QUrl>& files)
 
 void PlaylistModel::workerLoop()
 {
+    int i=0;
     std::unique_lock<mutex> lck(this->songsToAdd.mtx);
     this->songsToAdd.processed = false;
 
@@ -385,6 +386,7 @@ void PlaylistModel::workerLoop()
         // grep the file at the very front and pop it from queue
         const string s = std::move(this->songsToAdd.queue[0]);
         this->songsToAdd.queue.pop_front();
+        const int total = this->songsToAdd.queue.size();
 
         this->songsToAdd.ready = false;
         // release the lock to do the time intensive work
@@ -392,6 +394,8 @@ void PlaylistModel::workerLoop()
         // notify waiting threads, so they can continue filling the queue
         this->songsToAdd.cv.notify_all();
 
+        i++;
+        emit this->SongAdded(QString::fromStdString(s), i, i+total);
         PlaylistFactory::addSong(*this, s);
 
         lck.lock();

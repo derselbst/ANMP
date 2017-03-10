@@ -288,6 +288,25 @@ void MainWindow::fastSeekBackward()
 }
 
 
+void MainWindow::updateStatusBar(QString file, int cur, int total)
+{
+    QString text = "Adding file (";
+    text += QString::number(cur);
+    text += " / ";
+    text += QString::number(total);
+    text += ") ";
+    text += file;
+
+    if(cur == total)
+    {
+        this->ui->statusbar->showMessage(text, 3000);
+    }
+    else
+    {
+        this->ui->statusbar->showMessage(text);
+    }
+}
+
 void MainWindow::aboutQt()
 {
     QMessageBox::aboutQt(this, "About Qt");
