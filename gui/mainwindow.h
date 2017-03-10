@@ -82,8 +82,6 @@ protected slots:
     void slotSeek(long long);
     void slotCurrentSongChanged();
 
-    void on_actionAdd_Songs_triggered();
-
     void shufflePlaylist();
     void clearPlaylist();
 

@@ -12,6 +12,7 @@
 
 #include <QShortcut>
 #include <QResizeEvent>
+#include <QFileDialog>
 
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
@@ -37,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->nextButton,       &QPushButton::clicked, this, &MainWindow::next);
     connect(this->ui->previousButton,   &QPushButton::clicked, this, &MainWindow::previous);
 
+
     connect(this->ui->actionPlay,       &QAction::triggered, this, &MainWindow::play);
     connect(this->ui->actionPause,      &QAction::triggered, this, &MainWindow::pause);
     connect(this->ui->actionStop,       &QAction::triggered, this, &MainWindow::stop);
@@ -46,25 +48,29 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(this->ui->actionReinitAudioDriver, &QAction::triggered, this, &MainWindow::reinitAudioDriver);
 
-    connect(this->ui->actionAdd_Playback_Stop, &QAction::triggered, this, [this]{this->playlistModel->add(nullptr);});
-    connect(this->ui->actionShuffle_Playst, &QAction::triggered, this, &MainWindow::shufflePlaylist);
-    connect(this->ui->actionClear_Playlist, &QAction::triggered, this, &MainWindow::clearPlaylist);
 
-    connect(this->ui->actionAbout_Qt,   &QAction::triggered, this, &MainWindow::aboutQt);
-    connect(this->ui->actionAbout_ANMP, &QAction::triggered, this, &MainWindow::aboutAnmp);
+    connect(this->ui->actionAdd_Songs,        &QAction::triggered, this, [this]{this->playlistModel->asyncAdd(QFileDialog::getOpenFileNames(this, "Open Audio Files", QString(), ""));});
+    connect(this->ui->actionAdd_Playback_Stop,&QAction::triggered, this, [this]{this->playlistModel->add(nullptr);});
+    connect(this->ui->actionShuffle_Playst,   &QAction::triggered, this, &MainWindow::shufflePlaylist);
+    connect(this->ui->actionClear_Playlist,   &QAction::triggered, this, &MainWindow::clearPlaylist);
 
     connect(this->ui->actionASCII,      &QAction::triggered, this, [this]{this->showAnalyzer(AnalyzerApplet::AnalyzerType::Ascii);});
     connect(this->ui->actionBlocky,     &QAction::triggered, this, [this]{this->showAnalyzer(AnalyzerApplet::AnalyzerType::Block);});
 
-
     connect(this->ui->actionSettings,   &QAction::triggered, this, [this]{this->settingsView->show();});
     connect(this->settingsView,         &ConfigDialog::accepted, this, &MainWindow::settingsDialogAccepted);
 
+
+    connect(this->ui->actionAbout_Qt,   &QAction::triggered, this, &MainWindow::aboutQt);
+    connect(this->ui->actionAbout_ANMP, &QAction::triggered, this, &MainWindow::aboutAnmp);
+
+
     connect(this->ui->seekBar,          &PlayheadSlider::sliderMoved, this, [this](int position){this->player->seekTo(position);});
+
 
     this->setWindowState(Qt::WindowMaximized);
 
-    // set callbacks
+    // set callbacks for the underlying player
     this->player->onPlayheadChanged    += make_pair(this, &MainWindow::callbackSeek);
     this->player->onCurrentSongChanged += make_pair(this, &MainWindow::callbackCurrentSongChanged);
     this->player->onIsPlayingChanged   += make_pair(this, &MainWindow::callbackIsPlayingChanged);

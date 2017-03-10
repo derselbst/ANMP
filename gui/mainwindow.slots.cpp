@@ -14,8 +14,6 @@
 
 #include <anmp.hpp>
 
-#include <QFileDialog>
-#include <QProgressDialog>
 #include <QMessageBox>
 
 
@@ -103,12 +101,7 @@ void MainWindow::slotCurrentSongChanged()
 }
 
 
-void MainWindow::on_actionAdd_Songs_triggered()
-{
-    const QString dir;
-    const QStringList fileNames = QFileDialog::getOpenFileNames(this, "Open Audio Files", dir, "");//Wave Files (*.wav);;Text Files (*.txt)
 
-    this->playlistModel->asyncAdd(fileNames);
 
 /*
     QProgressDialog progress("Adding files...", "Abort", 0, fileNames.count(), this);
@@ -128,7 +121,7 @@ void MainWindow::on_actionAdd_Songs_triggered()
     }
 
     progress.setValue(fileNames.count());*/
-}
+
 
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
 {
