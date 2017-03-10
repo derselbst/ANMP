@@ -1,20 +1,10 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-
 #include "applets/analyzer/AnalyzerApplet.h"
 
-#include <anmp.hpp>
-#include "PlaylistModel.h"
-#include "configdialog.h"
-
 #include <QMainWindow>
-#include <QStringList>
-#include <QStandardItemModel>
-#include <QAbstractItemView>
-#include <QFileSystemModel>
-
-class AnalyzerApplet;
+#include <QString>
 
 namespace Ui
 {
@@ -22,7 +12,10 @@ class MainWindow;
 }
 
 class ConfigDialog;
-
+class AnalyzerApplet;
+class QFileSystemModel;
+class PlaylistModel;
+class Player;
 
 class MainWindow : public QMainWindow
 {
@@ -47,18 +40,14 @@ private:
     const float SeekFast = 0.1;
 
     Ui::MainWindow *ui = nullptr;
+
+    QFileSystemModel *drivesModel = nullptr;
+    QFileSystemModel *filesModel = nullptr;
+    PlaylistModel* playlistModel = nullptr;
+    Player* player = nullptr;
+
     AnalyzerApplet * analyzerWindow = nullptr;
-    
-    ConfigDialog* settingsView = new ConfigDialog(this);
-
-    PlaylistModel* playlistModel = new PlaylistModel(this);
-    Player* player = new Player(this->playlistModel);
-
-    QFileSystemModel *drivesModel = new QFileSystemModel(this);
-    QFileSystemModel *filesModel = new QFileSystemModel(this);
-
-    future<void> taskFading;
-    future<void> taskAddSongs;
+    ConfigDialog* settingsView = nullptr;
 
     void buildPlaylistView();
     void buildFileBrowser();

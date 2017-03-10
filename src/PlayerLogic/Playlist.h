@@ -44,6 +44,7 @@ protected:
     SongQueue_t queue;
     SongQueue_t::size_type currentSong = 0;
 
+    // synchronize concurrent access made by playback thread and qt's gui thread
     mutable recursive_mutex mtx;
 };
 

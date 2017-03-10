@@ -2,11 +2,11 @@
 #define CONFIGDIALOG_H
 
 #include <QDialog>
-#include <QDialogButtonBox>
 #include <anmp.hpp>
 
 class QAbstractButton;
 class QShowEvent;
+class QCloseEvent;
 class Config;
 
 namespace Ui

@@ -3,6 +3,7 @@
 
 #include <QTableView>
 
+class QKeyEvent;
 
 class PlaylistView : public QTableView
 {

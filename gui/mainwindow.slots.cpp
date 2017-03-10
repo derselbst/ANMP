@@ -11,10 +11,12 @@
 #include "ui_mainwindow.h"
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
+#include "PlaylistModel.h"
 
 #include <anmp.hpp>
 
 #include <QMessageBox>
+#include <QFileSystemModel>
 
 
 void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, QString msg)
@@ -99,29 +101,6 @@ void MainWindow::slotCurrentSongChanged()
         this->enableSeekButtons(this->player->IsSeekingPossible());
     }
 }
-
-
-
-
-/*
-    QProgressDialog progress("Adding files...", "Abort", 0, fileNames.count(), this);
-    progress.setWindowModality(Qt::WindowModal);
-    progress.show();
-    QApplication::processEvents(QEventLoop::ExcludeSocketNotifiers);
-    for(int i=0; !progress.wasCanceled() && i<fileNames.count(); i++)
-    {
-        // only redraw progress dialog on every tenth song
-        if(i%(static_cast<int>(fileNames.count()*0.1)+1)==0)
-        {
-            progress.setValue(i);
-            QApplication::processEvents(QEventLoop::ExcludeSocketNotifiers);
-        }
-
-        PlaylistFactory::addSong(*this->playlistModel, fileNames.at(i).toUtf8().constData());
-    }
-
-    progress.setValue(fileNames.count());*/
-
 
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
 {
@@ -269,22 +248,22 @@ void MainWindow::reinitAudioDriver()
 
 void MainWindow::seekForward()
 {
-    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekNormal), gConfig.FramesToRender));
+    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekNormal), gConfig.FramesToRender));
 }
 
 void MainWindow::seekBackward()
 {
-    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekNormal), gConfig.FramesToRender));
+    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekNormal), gConfig.FramesToRender));
 }
 
 void MainWindow::fastSeekForward()
 {
-    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekFast), gConfig.FramesToRender));
+    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekFast), gConfig.FramesToRender));
 }
 
 void MainWindow::fastSeekBackward()
 {
-    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * SeekFast), gConfig.FramesToRender));
+    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekFast), gConfig.FramesToRender));
 }
 
 

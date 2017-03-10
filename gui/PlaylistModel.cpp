@@ -2,7 +2,6 @@
 #include <anmp.hpp>
 
 #include "PlaylistModel.h"
-#include "mainwindow.h"
 
 #include <QBrush>
 #include <QMimeData>
@@ -180,12 +179,7 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
     // stop playback if the currently playing song is about to be removed
     if(p != nullptr && row <= this->currentSong && this->currentSong <= row+count-1)
     {
-        MainWindow* wnd = dynamic_cast<MainWindow*>(p);
-        if(wnd != nullptr)
-        {
-            wnd->stop();
-            wnd->player->setCurrentSong(nullptr);
-        }
+        emit this->UnloadCurrentSong();
     }
 
     lock_guard<recursive_mutex> lck(this->mtx);

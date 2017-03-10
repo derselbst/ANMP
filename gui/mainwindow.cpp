@@ -7,9 +7,11 @@
 #include "PlayheadSlider.h"
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
+#include "PlaylistModel.h"
 
 #include <anmp.hpp>
 
+#include <QFileSystemModel>
 #include <QShortcut>
 #include <QResizeEvent>
 #include <QFileDialog>
@@ -22,7 +24,13 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    drivesModel(new QFileSystemModel(this)),
+    filesModel(new QFileSystemModel(this)),
+    playlistModel(new PlaylistModel(this)),
+    player(new Player(this->playlistModel)),
+    analyzerWindow(new AnalyzerApplet(this->player, this)),
+    settingsView(new ConfigDialog(this))
 {
     // init UI
     this->ui->setupUi(this);
@@ -68,6 +76,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->seekBar,          &PlayheadSlider::sliderMoved, this, [this](int position){this->player->seekTo(position);});
 
     connect(this->playlistModel, &PlaylistModel::SongAdded, this, &MainWindow::updateStatusBar);
+    connect(this->playlistModel, &PlaylistModel::UnloadCurrentSong, this, [this]{this->player->stop(); this->player->setCurrentSong(nullptr);});
 
 
     this->setWindowState(Qt::WindowMaximized);
@@ -267,8 +276,6 @@ void MainWindow::resizeEvent(QResizeEvent* event)
 void MainWindow::showAnalyzer(enum AnalyzerApplet::AnalyzerType type)
 {
 #ifdef USE_VISUALIZER
-    delete this->analyzerWindow;
-    this->analyzerWindow = new AnalyzerApplet(this->player, this);
     this->analyzerWindow->setAnalyzer(type);
     this->analyzerWindow->startGraphics();
     this->analyzerWindow->show();

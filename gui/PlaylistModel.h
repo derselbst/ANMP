@@ -62,6 +62,9 @@ public:
 signals:
     void SongAdded(QString file, int cur, int total);
 
+    // emitted, if the song currently played back gets deleted
+    void UnloadCurrentSong();
+
 private:
     struct
     {

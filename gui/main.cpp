@@ -1,6 +1,5 @@
 #include "mainwindow.h"
-#include "AtomicWrite.h"
-#include "Config.h"
+#include "anmp.hpp"
 
 #include <QApplication>
 #include <QMessageBox>

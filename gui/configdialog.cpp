@@ -4,6 +4,7 @@
 #include <anmp.hpp>
 
 #include <QFileDialog>
+#include <QDialogButtonBox>
 #include <QShowEvent>
 
 ConfigDialog::ConfigDialog(QWidget *parent) :

@@ -78,7 +78,7 @@ void AnalyzerApplet::setAnalyzer(AnalyzerType type )
     switch(type)
     {
     default:
-    /* fall through */
+    [[fallthrough]];
     case Block:
         this->analyzerWidget = new BlockAnalyzer(this);
         this->setWindowTitle("Block Analyzer");
