@@ -91,8 +91,6 @@ protected slots:
     void on_tableView_doubleClicked(const QModelIndex &index);
     void on_tableView_activated(const QModelIndex &index);
 
-
-   //void addFiles(const QStringList&);
     void play();
     void pause();
     void tooglePlayPause();
