@@ -234,6 +234,7 @@ if(ENABLE_FLUIDSYNTH)
   
   if(LIBSMF_FOUND AND FLUIDSYNTH_FOUND)
                 add_definitions(-DUSE_FLUIDSYNTH)
+                add_definitions(-DUSE_SMF)
                 if(DEFINED FLUIDSYNTH_DEFAULT_SF2)
                     add_definitions(-DFLUIDSYNTH_DEFAULT_SF2="${FLUIDSYNTH_DEFAULT_SF2}")
                 endif()
@@ -250,6 +251,7 @@ if(ENABLE_FLUIDSYNTH)
                 MY_PRINT(LIBSMF)
                 
                 set(USE_FLUIDSYNTH TRUE)
+                set(USE_SMF TRUE)
   endif(LIBSMF_FOUND AND FLUIDSYNTH_FOUND)
   
   summary_add("fluidsynth support" USE_FLUIDSYNTH)

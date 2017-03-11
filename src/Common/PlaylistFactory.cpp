@@ -37,8 +37,8 @@
 #include "FFMpegWrapper.h"
 #endif
 
-#ifdef USE_FLUIDSYNTH
-#include "FluidsynthWrapper.h"
+#ifdef USE_SMF
+#include "MidiWrapper.h"
 #endif
 
 #include "Common.h"
@@ -199,7 +199,7 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
 #ifdef USE_FLUIDSYNTH
     else if (iEquals(ext, "mid") || iEquals(ext, "midi"))
     {
-        PlaylistFactory::tryWith<FluidsynthWrapper>(pcm, filePath, offset, len);
+        PlaylistFactory::tryWith<MidiWrapper>(pcm, filePath, offset, len);
     }
 #endif
 

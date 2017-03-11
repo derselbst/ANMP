@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "StandardWrapper.h"
+#include "MidiWrapper.h"
 
 #include <fluidsynth.h>
 
@@ -14,81 +14,47 @@
   */
 
 
-class FluidsynthWrapper : public StandardWrapper<float>
+class FluidsynthWrapper
 {
 public:
-    FluidsynthWrapper(string filename);
-    FluidsynthWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
-
-
+    FluidsynthWrapper();
+    ~FluidsynthWrapper();
+    
     // forbid copying
     FluidsynthWrapper(FluidsynthWrapper const&) = delete;
     FluidsynthWrapper& operator=(FluidsynthWrapper const&) = delete;
+    
+    static FluidsynthWrapper& Singleton();
+    static void seqCallback(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data);
 
-    virtual ~FluidsynthWrapper ();
+    
+    void Init(MidiWrapper&);
+    // returns the samplerate that will be synthesized at
+    int  GetSampleRate();
+    // returns the number of audio channels, that will be rendered to
+    int  GetChannels();
 
-    // interface methods declaration
+    void AddEvent(smf_event_t* event, double offset=0.0);
+    void ScheduleLoop(MidiLoopInfo* info);
+    void FinishSong(int millisec);
+    
+    void ReloadConfig();
 
-    void open () override;
-
-    void close () noexcept override;
-
-    void fillBuffer () override;
-
-    frame_t getFrames () const override;
-
-    void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
-
-    vector<loop_t> getLoopArray () const noexcept override;
+    void Render(float* bufferToFill, frame_t framesToRender);
 
 private:
-    smf_t* smf = nullptr;
     fluid_settings_t* settings = nullptr;
     fluid_synth_t* synth = nullptr;
     fluid_sequencer_t* sequencer = nullptr;
+    
+    fluid_event_t* synthEvent = nullptr;
+    fluid_event_t* callbackEvent = nullptr;
 
-    short synthSeqId, mySeqID;
+    short synthId;
+    Nullable<short> myselfID;
 
-
-    struct MidiLoopInfo
-    {
-        // the track this loop is valid for
-        // same as event->track_number, i.e. one based
-        int trackId;
-        
-        // unique id of this midi event given by libsmf
-        int eventId;
-        
-        // the channel this loop is valid for
-        // same as event->channel
-        uint8_t channel;
-        
-        // unique id of this loop, as specified by value of MIDI CC102 and CC103
-        uint8_t loopId;
-        
-        // time indexes in seconds
-        Nullable<double> start;
-        Nullable<double> stop;
-        
-        // how often this loop is repeated, 0 for infinite loops
-        // specified by MIDI CC104
-        uint8_t count = 0;
-    };
-
-    // first dimension: no. of the midi track
-    // second dim: midi channel
-    // third dim: id of the loop within that track
-    vector< vector< vector<MidiLoopInfo> > > trackLoops;
-
-
-    static string SmfEventToString(smf_event_t* event);
-    static void scheduleTrackLoop(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data);
-
-    void initAttr();
     void setupSettings();
-    void setupSynth();
-    void setupSeq();
+    void setupSynth(MidiWrapper&);
+    void setupSeq(MidiWrapper&);
 
-    int scheduleNextCallback(smf_event_t* event, unsigned int time, void* data);
-    void feedToFluidSeq(smf_event_t * event, fluid_event_t* fluidEvt, double offset);
 };

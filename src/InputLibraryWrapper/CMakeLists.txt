@@ -37,6 +37,10 @@ if(USE_FFMPEG)
     set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} FFMpegWrapper.cpp)
 endif(USE_FFMPEG)
 
+if(USE_SMF)
+    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} MidiWrapper.cpp)
+endif(USE_SMF)
+
 if(USE_FLUIDSYNTH)
     set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} FluidsynthWrapper.cpp)
 endif(USE_FLUIDSYNTH)
