@@ -22,12 +22,19 @@ PlaylistModel::~PlaylistModel()
 {
     this->songsToAdd.shutDown=true;
 
-    CLOG(LogLevel_t::Info, "Waiting for song adder thread to finish...");
-    std::future_status status = this->songAdderWorker.wait_for(std::chrono::seconds(15));
-    if (status == std::future_status::timeout)
+    try
     {
-        CLOG(LogLevel_t::Fatal, "song adder thread not responding, probably got stuck. Aborting.");
-        std::terminate();
+        CLOG(LogLevel_t::Info, "Waiting for song adder thread to finish...");
+        std::future_status status = this->songAdderWorker.wait_for(std::chrono::seconds(15));
+        if (status == std::future_status::timeout)
+        {
+            CLOG(LogLevel_t::Fatal, "song adder thread not responding, probably got stuck. Aborting.");
+            std::terminate();
+        }
+    }
+    catch(const std::future_error& e)
+    {
+        // probably no future associated, that's fine here
     }
 }
 

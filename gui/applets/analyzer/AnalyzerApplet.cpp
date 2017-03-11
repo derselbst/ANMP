@@ -47,7 +47,11 @@ void AnalyzerApplet::startGraphics()
 void AnalyzerApplet::stopGraphics()
 {
     this->player->onPlayheadChanged -= this;
-    this->analyzerWidget->disconnectSignals();
+
+    if(this->analyzerWidget != nullptr)
+    {
+        this->analyzerWidget->disconnectSignals();
+    }
 }
 
 void AnalyzerApplet::newGeometry()
