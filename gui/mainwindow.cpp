@@ -9,6 +9,9 @@
 #include "configdialog.h"
 #include "PlaylistModel.h"
 
+#include "anmp_dbus_adaptor.h"
+#include "anmp_dbus_interface.h"
+
 #include <anmp.hpp>
 
 #include <QFileSystemModel>
@@ -32,6 +35,21 @@ MainWindow::MainWindow(QWidget *parent) :
     analyzerWindow(new AnalyzerApplet(this->player, this)),
     settingsView(new ConfigDialog(this))
 {
+    
+    // add our D-Bus interface and connect to D-Bus
+    new AnmpAdaptor(this);
+    QDBusConnection::sessionBus().registerObject("/ANMP", this);
+
+    org::anmp *iface;
+    iface = new org::anmp(QString("org.anmp"), QString(), QDBusConnection::sessionBus(), this);
+    //connect(iface, SIGNAL(message(QString,QString)), this, SLOT(messageSlot(QString,QString)));
+    QDBusConnection::sessionBus().connect(QString("org.anmp"), QString(), "org.anmp", "TooglePlayPause", this, SLOT(tooglePlayPause()));
+//     connect(iface, &org::anmp::TooglePlayPause, this, &MainWindow::tooglePlayPause);
+
+    
+    
+    
+    
     // init UI
     this->ui->setupUi(this);
 

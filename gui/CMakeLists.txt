@@ -24,7 +24,15 @@ if(USE_GUI)
         PlaylistModel.cpp
         PlaylistView.cpp
         PlayheadSlider.cpp
+        org.anmp.xml
+        anmp_dbus_adaptor.cpp
+        anmp_dbus_interface.cpp
     )
+
+
+    qt5_add_dbus_interface(mainwindow.h org.anmp.xml OPTIONS -A)
+    qt5_add_dbus_adaptor(org.anmp.xml ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml mainwindow.h MainWindow)
+    qt5_wrap_cpp(anmp_moc mainwindow.h)
 
     qt5_wrap_ui(UI_HEADERS
         mainwindow.ui

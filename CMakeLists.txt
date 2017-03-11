@@ -301,6 +301,9 @@ if(ENABLE_GUI)
 
     find_package(Qt5Widgets)
     HANDLE_FOUND(Qt5Widgets)
+    
+    find_package(Qt5DBus)
+    HANDLE_FOUND(Qt5DBus)
    
     if(${Qt5Widgets_FOUND})
         set(USE_GUI TRUE)

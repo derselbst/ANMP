@@ -3,12 +3,19 @@
 
 #include <QApplication>
 #include <QMessageBox>
+#include <QtDBus>
 
 int main(int argc, char *argv[])
 {
     gConfig.Load();
     
     QApplication a(argc, argv);
+    
+    if (!QDBusConnection::sessionBus().isConnected())
+    {
+        CLOG(LogLevel_t::Warning, "Cannot connect to the D-Bus session bus.\n""Please check your system settings and try again.\n");
+    }
+    
     MainWindow w;
     w.show();
 
