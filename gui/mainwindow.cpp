@@ -18,6 +18,7 @@
 #include <QShortcut>
 #include <QResizeEvent>
 #include <QFileDialog>
+#include <QMessageBox>
 
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
@@ -92,6 +93,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     connect(this->ui->seekBar,          &PlayheadSlider::sliderMoved, this, [this](int position){this->player->seekTo(position);});
+
+
+    connect(this->ui->tableView, &PlaylistView::activated,     this, &MainWindow::selectSong);
+    connect(this->ui->tableView, &PlaylistView::doubleClicked, this, &MainWindow::selectSong);
 
     connect(this->playlistModel, &PlaylistModel::SongAdded, this, &MainWindow::updateStatusBar);
     connect(this->playlistModel, &PlaylistModel::UnloadCurrentSong, this, [this]{this->player->stop(); this->player->setCurrentSong(nullptr);});
@@ -365,4 +370,13 @@ void MainWindow::enableSeekButtons(bool isEnabled)
     this->ui->fforwardButton->setEnabled(isEnabled);
     this->ui->backwardButton->setEnabled(isEnabled);
     this->ui->fbackwardButton->setEnabled(isEnabled);
+}
+
+void MainWindow::showError(const QString& detail, const QString& general)
+{
+    QMessageBox msgBox;
+    msgBox.setText(general);
+    msgBox.setIcon(QMessageBox::Critical);
+    msgBox.setDetailedText(detail);
+    msgBox.exec();
 }

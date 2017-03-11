@@ -18,7 +18,6 @@
 #include <QMessageBox>
 #include <QFileSystemModel>
 
-
 void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, QString msg)
 {
     QPushButton* playbtn = this->ui->playButton;
@@ -37,12 +36,8 @@ void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, QString msg)
     if(hasMsg)
     {
         this->slotSeek(0);
-        
-        QMessageBox msgBox;
-        msgBox.setText("The Playback unexpectedly stopped.");
-        msgBox.setIcon(QMessageBox::Critical);
-        msgBox.setDetailedText(msg);
-        msgBox.exec();
+
+        this->showError(msg, "The Playback unexpectedly stop");
     }
 }
 
@@ -112,31 +107,26 @@ void MainWindow::on_treeView_clicked(const QModelIndex &index)
     ui->listView->setRootIndex(filesModel->setRootPath(sPath));
 }
 
-// if a song gets double clicked in playlist view, play it back
-void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
+
+// if a selected song gets double clicked activated (press enter) in playlist view, play it back
+void MainWindow::selectSong(const QModelIndex &index)
 {
     if(!index.isValid())
     {
         return;
     }
-    this->stop();
-    Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
-    this->player->setCurrentSong(songToPlay);
-    this->play();
 
-}
-
-// if a selected song gets activated (press enter) in playlist view, play it back
-void MainWindow::on_tableView_activated(const QModelIndex &index)
-{
-    if(!index.isValid())
+    try
     {
-        return;
+        this->stop();
+        Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
+        this->player->setCurrentSong(songToPlay);
+        this->play();
     }
-    this->stop();
-    Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
-    this->player->setCurrentSong(songToPlay);
-    this->play();
+    catch(const exception& e)
+    {
+        this->showError(e.what());
+    }
 }
 
 void MainWindow::on_actionFileBrowser_triggered(bool checked)
@@ -189,9 +179,16 @@ void MainWindow::shufflePlaylist()
 
 void MainWindow::clearPlaylist()
 {
-    this->stop();
-    this->player->setCurrentSong(nullptr);
-    this->playlistModel->clear();
+    try
+    {
+        this->stop();
+        this->player->setCurrentSong(nullptr);
+        this->playlistModel->clear();
+    }
+    catch(const exception& e)
+    {
+        this->showError(e.what(), "Clearing the Playlist failed");
+    }
 }
 
 
@@ -221,29 +218,50 @@ void MainWindow::stop()
 
 void MainWindow::next()
 {
-    bool oldState = this->player->IsPlaying();
-    this->stop();
-    this->player->next();
-    if(oldState)
+    try
     {
-        this->play();
+        bool oldState = this->player->IsPlaying();
+        this->stop();
+        this->player->next();
+        if(oldState)
+        {
+            this->play();
+        }
+    }
+    catch(const exception& e)
+    {
+        this->showError(e.what(), "Failed to play the next Song");
     }
 }
 
 void MainWindow::previous()
 {
-    bool oldState = this->player->IsPlaying();
-    this->stop();
-    this->player->previous();
-    if(oldState)
+    try
     {
-        this->play();
+        bool oldState = this->player->IsPlaying();
+        this->stop();
+        this->player->previous();
+        if(oldState)
+        {
+            this->play();
+        }
+    }
+    catch(const exception& e)
+    {
+        this->showError(e.what(), "Failed to play the previous Song");
     }
 }
 
 void MainWindow::reinitAudioDriver()
 {
-    this->player->initAudio();
+    try
+    {
+        this->player->initAudio();
+    }
+    catch(const exception& e)
+    {
+        this->showError(e.what(), "Unable to initialize the audio driver");
+    }
 }
 
 void MainWindow::seekForward()
@@ -438,3 +456,4 @@ void MainWindow::aboutAnmp()
 #undef SUPPORT_NO
 #undef SUPPORT_MSG
 }
+

@@ -62,6 +62,8 @@ private:
     void showNoVisualizer();
 #endif
 
+    void showError(const QString& msg, const QString& gen="An Error occurred");
+
 
 protected slots:
     friend class PlaylistModel;
@@ -75,8 +77,7 @@ protected slots:
     void clearPlaylist();
 
     void on_treeView_clicked(const QModelIndex &index);
-    void on_tableView_doubleClicked(const QModelIndex &index);
-    void on_tableView_activated(const QModelIndex &index);
+    void selectSong(const QModelIndex &index);
 
     void play();
     void pause();
