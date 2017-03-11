@@ -116,6 +116,9 @@ public:
 
     // no. of the MIDI CC that indicates the stop of a looped section
     uint8_t MidiControllerLoopStop = 103;
+    
+    // no. of the MIDI CC that indicates the loop count of looped sections
+    uint8_t MidiControllerLoopCount = 104;
 
     //**********************************
     //   FLUIDSYNTH-SPECIFIC SECTION   *
@@ -196,6 +199,9 @@ public:
     {
         switch(version)
         {
+            case 3: // added MidiControllerLoopCount
+                archive( CEREAL_NVP(this->MidiControllerLoopCount) );
+                [[fallthrough]];
             case 2: // only added modplug variables and gmeMultiChannel, rest is the same as in version 1
                 archive( CEREAL_NVP(this->gmeMultiChannel) );
                 
@@ -251,7 +257,7 @@ public:
     }
 };
 
-CEREAL_CLASS_VERSION( Config, 2 )
+CEREAL_CLASS_VERSION( Config, 3 )
 
 // global var holding the singleton Config instance
 // just a nice little shortcut, so one doesnt always have to write Config::Singleton()
