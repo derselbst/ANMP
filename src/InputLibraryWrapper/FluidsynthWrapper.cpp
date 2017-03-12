@@ -198,14 +198,14 @@ void FluidsynthWrapper::Init(MidiWrapper& caller)
     fluid_event_set_dest(this->callbackEvent, this->myselfID.Value);
 }
 
-int FluidsynthWrapper::GetChannels()
+unsigned int FluidsynthWrapper::GetChannels()
 {
     int stereoChannels;
     fluid_settings_getint(this->settings, "synth.audio-channels", &stereoChannels);
     return stereoChannels*2;
 }
 
-int FluidsynthWrapper::GetSampleRate()
+unsigned int FluidsynthWrapper::GetSampleRate()
 {
     return this->cachedSampleRate;
 }
@@ -285,13 +285,9 @@ void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo* loopInfo)
     
     callbackdate += static_cast<unsigned int>((loopInfo->stop.Value - loopInfo->start.Value) * 1000); // postpone the callback date by the duration of this midi track loop
     
-    int ret=FLUID_OK;
-    // the end of this looped sequence shall not be beyond the end of the song
     fluid_event_timer(this->callbackEvent, loopInfo);
 
-    ret = fluid_sequencer_send_at(this->sequencer, this->callbackEvent, callbackdate, true);
-
-    
+    int ret = fluid_sequencer_send_at(this->sequencer, this->callbackEvent, callbackdate, true);
     if(ret != FLUID_OK)
     {
         CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");

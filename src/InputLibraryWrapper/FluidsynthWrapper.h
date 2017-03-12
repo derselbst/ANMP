@@ -29,11 +29,13 @@ public:
 
     
     void Init(MidiWrapper&);
+    
     // returns the samplerate that will be synthesized at
-    int  GetSampleRate();
+    unsigned int  GetSampleRate();
+    
     // returns the number of audio channels, that will be rendered to
-    int  GetChannels();
-
+    unsigned int  GetChannels();
+    
     void AddEvent(smf_event_t* event, double offset=0.0);
     void ScheduleLoop(MidiLoopInfo* info);
     void FinishSong(int millisec);
@@ -55,7 +57,7 @@ private:
     
     // fluidsynth's synth has no samplerate getter, so cache it here
     unsigned int cachedSampleRate = 0;
-
+    
     void setupSettings();
     void setupSynth(MidiWrapper&);
     void setupSeq(MidiWrapper&);
