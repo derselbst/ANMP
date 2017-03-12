@@ -76,7 +76,7 @@ void MidiWrapper::FluidSeqCallback(unsigned int time, fluid_event_t* e, fluid_se
                 // is that our corresponding loop stop?
                 if(IsLoopStop(event) && (event->midi_buffer[2] == loopInfo->loopId))
                 {
-                    pthis->synth->ScheduleLoop(loopInfo);
+                    pthis->synth->ScheduleLoop(loopInfo, pthis->fileLen.Value);
                     break;
                 }
                 else if(IsLoopStart(event))
@@ -128,14 +128,13 @@ void MidiWrapper::open ()
         THROW_RUNTIME_ERROR("Something is wrong with that midi, loading failed");
     }
 
-    double playtime = smf_get_length_seconds(this->smf);
-    if(playtime<0.0)
+//     if(!this->fileLen.hasValue)
     {
-        THROW_RUNTIME_ERROR("How can playtime be negative?!?");
-    }
-
-    if(!this->fileLen.hasValue)
-    {
+        double playtime = smf_get_length_seconds(this->smf);
+        if(playtime<0.0)
+        {
+            THROW_RUNTIME_ERROR("How can playtime be negative?!?");
+        }
         this->fileLen = static_cast<size_t>(playtime * 1000);
     }
     
@@ -229,7 +228,7 @@ void MidiWrapper::parseEvents()
                     info.stop = event->time_seconds;
                 }
 
-                this->synth->ScheduleLoop(&info);
+                this->synth->ScheduleLoop(&info, this->fileLen.Value);
             }
         }
 

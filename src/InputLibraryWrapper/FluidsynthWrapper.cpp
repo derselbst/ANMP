@@ -14,6 +14,11 @@
 #define IsLoopStart(e) (e->midi_buffer[1] == gConfig.MidiControllerLoopStart)
 #define IsLoopStop(e) (e->midi_buffer[1] == gConfig.MidiControllerLoopStop)
 
+FluidsynthWrapper& FluidsynthWrapper::Singleton()
+{
+    static FluidsynthWrapper instance;
+    return instance;
+}
 
 FluidsynthWrapper::FluidsynthWrapper()
 {}
@@ -246,29 +251,33 @@ void FluidsynthWrapper::AddEvent(smf_event_t * event, double offset)
 
     ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, static_cast<unsigned int>((event->time_seconds-offset)*1000) + fluid_sequencer_get_tick(this->sequencer), true);
 
-CHECK_RETURN_VALUE:
     if(ret != FLUID_OK)
     {
         CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
     }
 }
 
-void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo* loopInfo)
+void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo* loopInfo, size_t endOfSongMs)
 {
     unsigned int callbackdate = fluid_sequencer_get_tick(this->sequencer); // now
     
-    callbackdate += static_cast<unsigned int>((loopInfo->stop.Value - loopInfo->start.Value) * 1000); // postpone the callback data by the duration of this midi track loop
+    callbackdate += static_cast<unsigned int>((loopInfo->stop.Value - loopInfo->start.Value) * 1000); // postpone the callback date by the duration of this midi track loop
     
     int ret=FLUID_OK;
     // the end of this looped sequence shall not be beyond the end of the song
-    if(callbackdate < this->fileLen.Value)
+    if(callbackdate < endOfSongMs)
     {
         fluid_event_timer(this->callbackEvent, loopInfo);
 
         ret = fluid_sequencer_send_at(this->sequencer, this->callbackEvent, callbackdate, true);
     }
+    
+    if(ret != FLUID_OK)
+    {
+        CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
+    }
 
-    return ret;
+    return;
 }
 
 void FluidsynthWrapper::FinishSong(int millisec)
@@ -286,7 +295,7 @@ void FluidsynthWrapper::Render(float* bufferToFill, frame_t framesToRender)
     
     // fluid_synth_process renders planar audio, i.e. each midi channel gets render to its own buffer, rather than having one buffer and interleaving PCM
     float** temp_buf = new float*[channels];
-    for(unsigned int i = 0; i< channels; i++)
+    for(int i = 0; i< channels; i++)
     {
         temp_buf[i] = new float[framesToRender];
     }
@@ -294,14 +303,14 @@ void FluidsynthWrapper::Render(float* bufferToFill, frame_t framesToRender)
     fluid_synth_process(this->synth, framesToRender, 0, nullptr, channels, temp_buf);
     for(int frame=0; frame<framesToRender; frame++)
     {
-        for(unsigned int c=0; c<channels; c++)
+        for(int c=0; c<channels; c++)
         {
             // frame by frame write planar audio to interleaved buffer
             bufferToFill[frame * channels + c] = temp_buf[c][frame];
         }
     }
     
-    for(unsigned int i=0; i < channels; i++)
+    for(int i=0; i < channels; i++)
     {
         delete[] temp_buf[i];
     }
