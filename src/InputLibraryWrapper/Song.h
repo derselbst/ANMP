@@ -166,7 +166,7 @@ public:
     /**
      * gets the number of audio frames that are necessary to play the whole song once without respecting any loops!
      * 
-     * those frames dont necessarily have to be in the pcm buffer all at one time
+     * it determines the size of the pcm buffer (this->data), however those frames dont necessarily have to be in the pcm buffer all at one time
      *
      * this method mustn't return zero!
      *

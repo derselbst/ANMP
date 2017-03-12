@@ -52,6 +52,9 @@ private:
 
     short synthId;
     Nullable<short> myselfID;
+    
+    // fluidsynth's synth has no samplerate getter, so cache it here
+    unsigned int cachedSampleRate = 0;
 
     void setupSettings();
     void setupSynth(MidiWrapper&);

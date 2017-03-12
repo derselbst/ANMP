@@ -10,9 +10,6 @@
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
 
-#define IsControlChange(e) ((e->midi_buffer[0] & 0xF0) == 0xB0)
-#define IsLoopStart(e) (e->midi_buffer[1] == gConfig.MidiControllerLoopStart)
-#define IsLoopStop(e) (e->midi_buffer[1] == gConfig.MidiControllerLoopStop)
 
 FluidsynthWrapper& FluidsynthWrapper::Singleton()
 {
@@ -61,6 +58,10 @@ void FluidsynthWrapper::setupSeq(MidiWrapper& midi)
     if(this->sequencer == nullptr) // only create the sequencer once
     {
         this->sequencer = new_fluid_sequencer2(false /*i.e. use sample timer*/);
+        if (this->sequencer == nullptr)
+        {
+            THROW_RUNTIME_ERROR("Failed to create the sequencer");
+        }
 
         // register synth as first destination
         this->synthId = fluid_sequencer_register_fluidsynth(this->sequencer, this->synth);
@@ -88,8 +89,18 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
         // retrieve this after the synth has been inited (just for sure)
         fluid_settings_getint(this->settings, "audio.period-size", &gConfig.FluidsynthPeriodSize);
     }
+    fluid_synth_bank_select(this->synth, 9, 0); // try to force drum channel to bank 0
+    
+    // reverb and chrous settings might have changed
+    fluid_synth_set_reverb_on(this->synth, gConfig.FluidsynthEnableReverb);
     fluid_synth_set_reverb(this->synth, gConfig.FluidsynthRoomSize, gConfig.FluidsynthDamping, gConfig.FluidsynthWidth, gConfig.FluidsynthLevel);
-    fluid_synth_bank_select(this->synth, 9, 0);
+    
+    fluid_synth_set_chorus_on(this->synth, gConfig.FluidsynthEnableChorus);
+    
+    // then update samplerate
+    fluid_synth_set_sample_rate(this->synth, gConfig.FluidsynthSampleRate);
+    this->cachedSampleRate = gConfig.FluidsynthSampleRate;
+    
 
     // find a soundfont
     Nullable<string> soundfont;
@@ -131,9 +142,6 @@ void FluidsynthWrapper::setupSettings()
             THROW_RUNTIME_ERROR("Failed to create the settings");
         }
 
-        fluid_settings_setstr(this->settings, "synth.reverb.active", gConfig.FluidsynthEnableReverb ? "yes" : "no");
-        fluid_settings_setstr(this->settings, "synth.chorus.active", gConfig.FluidsynthEnableChorus ? "yes" : "no");
-
         fluid_settings_setint(this->settings, "synth.min-note-length", 1);
         // only in mma mode, bank high and bank low controllers are handled as specified by MIDI standard
         fluid_settings_setstr(this->settings, "synth.midi-bank-select", "mma");
@@ -144,9 +152,7 @@ void FluidsynthWrapper::setupSettings()
         fluid_settings_setint(this->settings, "synth.threadsafe-api", 0);
     }
     
-    // then update no. of channels and samplerate
-    fluid_settings_setnum(this->settings, "synth.sample-rate", gConfig.FluidsynthSampleRate);
-    int stereoChannels = gConfig.FluidsynthMultiChannel ? NChannels : 1;
+    int stereoChannels = gConfig.FluidsynthMultiChannel ? NMidiChannels : 1;
     fluid_settings_setint(this->settings, "synth.audio-groups",    stereoChannels);
     fluid_settings_setint(this->settings, "synth.audio-channels",  stereoChannels);
 }
@@ -154,8 +160,26 @@ void FluidsynthWrapper::setupSettings()
 void FluidsynthWrapper::Init(MidiWrapper& caller)
 {
     this->setupSettings();
+    
+    // sadly, fluidsynth's API doesnt provide any way to change the number of audio channels once the synth has been allocated
+    // thus, in such a case we have to destory the synth 
+    int audioChans = gConfig.FluidsynthMultiChannel ? NMidiChannels : 1;
+    audioChans *= 2;
+    if(this->GetChannels() != audioChans)
+    {
+        if(this->synth != nullptr)
+        {
+            delete_fluid_synth(this->synth);
+            this->synth = nullptr;
+        }
+    }
     this->setupSynth(caller);
     this->setupSeq(caller);
+    
+    // remove all events from the sequencer's queue
+    fluid_sequencer_remove_events(this->sequencer, -1, -1, -1);
+    // press the big red panic/reset button
+    fluid_synth_system_reset(this->synth);
     
     if(this->synthEvent == nullptr)
     {
@@ -182,10 +206,7 @@ int FluidsynthWrapper::GetChannels()
 
 int FluidsynthWrapper::GetSampleRate()
 {
-    double srate;
-    fluid_settings_getnum(this->settings, "synth.sample-rate", &srate);
-    
-    return static_cast<int>(srate);
+    return this->cachedSampleRate;
 }
 
 
@@ -282,7 +303,7 @@ void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo* loopInfo, size_t endOfSongMs)
 
 void FluidsynthWrapper::FinishSong(int millisec)
 {
-    for(int i=0; i<NChannels; i++)
+    for(int i=0; i<NMidiChannels; i++)
     {
         fluid_event_all_notes_off(this->synthEvent, i);
         fluid_sequencer_send_at(this->sequencer, this->synthEvent, millisec, true);

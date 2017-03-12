@@ -141,11 +141,13 @@ void MidiWrapper::open ()
     this->trackLoops.resize(this->smf->number_of_tracks);
     for(unsigned int i = 0; i<this->trackLoops.size(); i++)
     {
-        this->trackLoops[i].resize(NChannels);
+        this->trackLoops[i].resize(NMidiChannels);
     }
     
     
     this->synth->Init(*this);
+    this->parseEvents();
+    
     this->Format.Channels = this->synth->GetChannels();
     int srate = this->synth->GetSampleRate();
     if(this->Format.SampleRate != srate)
@@ -155,12 +157,11 @@ void MidiWrapper::open ()
         // so we have to build up the loop tree again
         this->buildLoopTree();
     }
-    this->parseEvents();
 }
 
 void MidiWrapper::parseEvents()
 {
-    int lastestLoopCount[NChannels] = {};
+    int lastestLoopCount[NMidiChannels] = {};
     smf_event_t *event;
     while((event = smf_get_next_event(this->smf)) != nullptr)
     {
@@ -255,17 +256,23 @@ void MidiWrapper::close() noexcept
 }
 
 void MidiWrapper::fillBuffer()
-{    
+{
+//     if(this->data==nullptr)
+//     {
+//         // if this is the first call, add the midi events to the sequencer
+//         this->parseEvents();
+//     }
+    
     StandardWrapper::fillBuffer(this);
 }
 
 frame_t MidiWrapper::getFrames () const
 {
     size_t len = this->fileLen.Value;
-    if(gConfig.FluidsynthEnableReverb)
-    {
-        len += (gConfig.FluidsynthRoomSize*10.0 * gConfig.FluidsynthLevel * 1000) / 2;
-    }
+//     if(gConfig.FluidsynthEnableReverb)
+//     {
+//         len += (gConfig.FluidsynthRoomSize*10.0 * gConfig.FluidsynthLevel * 1000) / 2;
+//     }
     
     return msToFrames(len, this->Format.SampleRate);
 }
@@ -328,6 +335,6 @@ vector<loop_t> MidiWrapper::getLoopArray () const noexcept
 #define FramesToRender FluidsynthPeriodSize
 void MidiWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
-    STANDARDWRAPPER_RENDER(float, this->synth->Render(pcm, framesToRender))
+    STANDARDWRAPPER_RENDER(float, this->synth->Render(pcm, framesToDoNow))
 }
 #undef FramesToRender
