@@ -126,15 +126,22 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
         THROW_RUNTIME_ERROR("Cant synthesize this MIDI, soundfont not found: \"" << soundfont.Value << "\"");
     }
 
-    /* Load the soundfont */
-    if (!fluid_is_soundfont(soundfont.Value.c_str()))
+    if(this->cachedSf2 != soundfont.Value)
     {
-        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (weak test): \"" << soundfont.Value << "\"");
-    }
+        /* Load the soundfont */
+        if (!fluid_is_soundfont(soundfont.Value.c_str()))
+        {
+            THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (weak test): \"" << soundfont.Value << "\"");
+        }
+        
+        fluid_synth_sfunload(this->synth, this->cachedSf2Id, true);
 
-    if (fluid_synth_sfload(this->synth, soundfont.Value.c_str(), true) == -1)
-    {
-        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (strong test): \"" << soundfont.Value << "\"");
+        if ((this->cachedSf2Id = fluid_synth_sfload(this->synth, soundfont.Value.c_str(), true)) == -1)
+        {
+            THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (strong test): \"" << soundfont.Value << "\"");
+        }
+        
+        this->cachedSf2 = soundfont.Value;
     }
 }
 
