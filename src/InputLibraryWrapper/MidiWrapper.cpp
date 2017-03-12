@@ -71,12 +71,12 @@ void MidiWrapper::FluidSeqCallback(unsigned int time, fluid_event_t* e, fluid_se
         if(event->track_number == loopInfo->trackId && (event->midi_buffer[0] & 0x0F) == loopInfo->channel)
         {
             // events shall not be looped beyond the end of the song
-            if(time + event->time_seconds*1000 < pthis->fileLen.Value)
+//             if(time + event->time_seconds*1000 < pthis->fileLen.Value)
             {
                 // is that our corresponding loop stop?
                 if(IsLoopStop(event) && (event->midi_buffer[2] == loopInfo->loopId))
                 {
-                    pthis->synth->ScheduleLoop(loopInfo, pthis->fileLen.Value);
+                    pthis->synth->ScheduleLoop(loopInfo);
                     break;
                 }
                 else if(IsLoopStart(event))
@@ -229,7 +229,7 @@ void MidiWrapper::parseEvents()
                     info.stop = event->time_seconds;
                 }
 
-                this->synth->ScheduleLoop(&info, this->fileLen.Value);
+                this->synth->ScheduleLoop(&info);
             }
         }
 

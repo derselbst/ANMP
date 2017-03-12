@@ -74,6 +74,9 @@ void FluidsynthWrapper::setupSeq(MidiWrapper& midi)
     }
     // register myself as second destination
     this->myselfID = fluid_sequencer_register_client(this->sequencer, "schedule_loop_callback", &MidiWrapper::FluidSeqCallback, &midi);
+    
+    // remove all events from the sequencer's queue
+    fluid_sequencer_remove_events(this->sequencer, -1, -1, -1);
 }
 
 void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
@@ -89,6 +92,9 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
         // retrieve this after the synth has been inited (just for sure)
         fluid_settings_getint(this->settings, "audio.period-size", &gConfig.FluidsynthPeriodSize);
     }
+    
+    // press the big red panic/reset button
+    fluid_synth_system_reset(this->synth);
     fluid_synth_bank_select(this->synth, 9, 0); // try to force drum channel to bank 0
     
     // reverb and chrous settings might have changed
@@ -175,11 +181,6 @@ void FluidsynthWrapper::Init(MidiWrapper& caller)
     }
     this->setupSynth(caller);
     this->setupSeq(caller);
-    
-    // remove all events from the sequencer's queue
-    fluid_sequencer_remove_events(this->sequencer, -1, -1, -1);
-    // press the big red panic/reset button
-    fluid_synth_system_reset(this->synth);
     
     if(this->synthEvent == nullptr)
     {
@@ -270,7 +271,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t * event, double offset)
         return;
     }
 
-    ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, static_cast<unsigned int>((event->time_seconds-offset)*1000) + fluid_sequencer_get_tick(this->sequencer), true);
+    ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, static_cast<unsigned int>((event->time_seconds - offset)*1000) + fluid_sequencer_get_tick(this->sequencer), true);
 
     if(ret != FLUID_OK)
     {
@@ -278,7 +279,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t * event, double offset)
     }
 }
 
-void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo* loopInfo, size_t endOfSongMs)
+void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo* loopInfo)
 {
     unsigned int callbackdate = fluid_sequencer_get_tick(this->sequencer); // now
     
@@ -286,12 +287,10 @@ void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo* loopInfo, size_t endOfSongMs)
     
     int ret=FLUID_OK;
     // the end of this looped sequence shall not be beyond the end of the song
-    if(callbackdate < endOfSongMs)
-    {
-        fluid_event_timer(this->callbackEvent, loopInfo);
+    fluid_event_timer(this->callbackEvent, loopInfo);
 
-        ret = fluid_sequencer_send_at(this->sequencer, this->callbackEvent, callbackdate, true);
-    }
+    ret = fluid_sequencer_send_at(this->sequencer, this->callbackEvent, callbackdate, true);
+
     
     if(ret != FLUID_OK)
     {
@@ -306,7 +305,7 @@ void FluidsynthWrapper::FinishSong(int millisec)
     for(int i=0; i<NMidiChannels; i++)
     {
         fluid_event_all_notes_off(this->synthEvent, i);
-        fluid_sequencer_send_at(this->sequencer, this->synthEvent, millisec, true);
+        fluid_sequencer_send_at(this->sequencer, this->synthEvent, fluid_sequencer_get_tick(this->sequencer) + millisec, true);
     }
 }
     

@@ -35,7 +35,7 @@ public:
     int  GetChannels();
 
     void AddEvent(smf_event_t* event, double offset=0.0);
-    void ScheduleLoop(MidiLoopInfo* info, size_t);
+    void ScheduleLoop(MidiLoopInfo* info);
     void FinishSong(int millisec);
     
     void ReloadConfig();
