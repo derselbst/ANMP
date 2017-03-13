@@ -14,6 +14,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 
 if(USE_GUI)
+
     set(GUI_SRCS
         configdialog.cpp
         main.cpp
@@ -24,15 +25,16 @@ if(USE_GUI)
         PlaylistModel.cpp
         PlaylistView.cpp
         PlayheadSlider.cpp
-        org.anmp.xml
-        anmp_dbus_adaptor.cpp
-        anmp_dbus_interface.cpp
+#         ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml # cause this xml to be a dependency and thus force it to get generated
+    )
+    
+    qt5_generate_dbus_interface(
+        mainwindow.h # from that header
+        org.anmp.xml # generate the dbus interface to that xml
+        OPTIONS -M # exporting public slots only
     )
 
-
-    qt5_add_dbus_interface(mainwindow.h org.anmp.xml OPTIONS -A)
-    qt5_add_dbus_adaptor(org.anmp.xml ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml mainwindow.h MainWindow)
-    qt5_wrap_cpp(anmp_moc mainwindow.h)
+    qt5_add_dbus_adaptor(GUI_SRCS ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml mainwindow.h MainWindow mainwindowadaptor MainWindowAdaptor)
 
     qt5_wrap_ui(UI_HEADERS
         mainwindow.ui
@@ -59,4 +61,5 @@ if(USE_GUI)
     )
     
     install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
+#     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml DESTINATION ${DBUS_INTERFACES_INSTALL_DIR})
 endif(USE_GUI)

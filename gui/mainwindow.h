@@ -20,6 +20,7 @@ class Player;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+    Q_CLASSINFO("D-Bus Interface", "org.anmp.player")
 
 public:
     explicit MainWindow(QWidget *parent = 0);
@@ -64,7 +65,20 @@ private:
 
     void showError(const QString& msg, const QString& gen="An Error occurred");
 
-
+public slots:
+    void play();
+    void pause();
+    void tooglePlayPause();
+    void tooglePlayPauseFade();
+    void stop();
+    void stopFade();
+    void previous();
+    void next();
+    void seekForward();
+    void seekBackward();
+    void fastSeekForward();
+    void fastSeekBackward();
+    
 protected slots:
     friend class PlaylistModel;
     friend class PlayheadSlider;
@@ -79,18 +93,6 @@ protected slots:
     void on_treeView_clicked(const QModelIndex &index);
     void selectSong(const QModelIndex &index);
 
-    void play();
-    void pause();
-    void tooglePlayPause();
-    void tooglePlayPauseFade();
-    void stop();
-    void stopFade();
-    void previous();
-    void next();
-    void seekForward();
-    void seekBackward();
-    void fastSeekForward();
-    void fastSeekBackward();
     void reinitAudioDriver();
 
     void aboutQt();
