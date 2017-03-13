@@ -36,6 +36,9 @@ public:
     // returns the number of audio channels, that will be rendered to
     unsigned int  GetChannels();
     
+    // returns the tick count the sequencer had during a call to this.Init()
+    unsigned int GetInitTick();
+    
     void AddEvent(smf_event_t* event, double offset=0.0);
     void ScheduleLoop(MidiLoopInfo* info);
     void FinishSong(int millisec);
@@ -57,6 +60,8 @@ private:
     
     // fluidsynth's synth has no samplerate getter, so cache it here
     unsigned int cachedSampleRate = 0;
+    
+    unsigned int initTick = 0;
     
     string cachedSf2;
     int cachedSf2Id = -1;

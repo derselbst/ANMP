@@ -188,6 +188,7 @@ void FluidsynthWrapper::Init(MidiWrapper& caller)
     }
     this->setupSynth(caller);
     this->setupSeq(caller);
+    this->initTick = fluid_sequencer_get_tick(this->sequencer);
     
     if(this->synthEvent == nullptr)
     {
@@ -217,6 +218,10 @@ unsigned int FluidsynthWrapper::GetSampleRate()
     return this->cachedSampleRate;
 }
 
+unsigned int FluidsynthWrapper::GetInitTick()
+{
+    return this->initTick;
+}
 
 void FluidsynthWrapper::AddEvent(smf_event_t * event, double offset)
 {

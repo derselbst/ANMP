@@ -63,6 +63,10 @@ void MidiWrapper::FluidSeqCallback(unsigned int time, fluid_event_t* e, fluid_se
         return;
     }
 
+    // the sequencer's tick is not necessarily resetted when playing the next midi file, however, we need his tick to perform that check down there
+    // thus, set it relative to the beginning of the current midi
+    time -= pthis->synth->GetInitTick();
+    
     smf_event_t* event;
     // read in every single event following the position we currently are
     while((event = smf_get_next_event(pthis->smf)) != nullptr)
@@ -71,13 +75,21 @@ void MidiWrapper::FluidSeqCallback(unsigned int time, fluid_event_t* e, fluid_se
         if(event->track_number == loopInfo->trackId && (event->midi_buffer[0] & 0x0F) == loopInfo->channel)
         {
             // events shall not be looped beyond the end of the song
-//             if(time + event->time_seconds*1000 < pthis->fileLen.Value)
+            if(time + event->time_seconds*1000 < pthis->fileLen.Value)
             {
-                // is that our corresponding loop stop?
-                if(IsLoopStop(event) && (event->midi_buffer[2] == loopInfo->loopId))
+                if(IsLoopStop(event))
                 {
-                    pthis->synth->ScheduleLoop(loopInfo);
-                    break;
+                    // is that our corresponding loop stop?
+                    if(event->midi_buffer[2] == loopInfo->loopId)
+                    {
+                        pthis->synth->ScheduleLoop(loopInfo);
+                        break;
+                    }
+                    else
+                    {
+                        // dont pass loop events to the synth
+                        continue;
+                    }
                 }
                 else if(IsLoopStart(event))
                 {
