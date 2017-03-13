@@ -85,7 +85,7 @@ void MidiWrapper::FluidSeqCallback(unsigned int time, fluid_event_t* e, fluid_se
                 }
                 else
                 {
-                    pthis->synth->AddEvent(event, loopInfo->start.Value);
+                    pthis->synth->AddEvent(event);
                 }
             }
         }
