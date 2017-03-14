@@ -65,6 +65,9 @@ void TestMethod(TestSong<T>& songUnderTest)
         songUnderTest.fillBuffer();
         TEST_ASSERT(songUnderTest.data != nullptr);
         
+        songUnderTest.fillBuffer(); // fill it again
+        TEST_ASSERT(songUnderTest.data != nullptr);
+                
         unsigned int nItems = c * songUnderTest.getFrames();
         TEST_ASSERT_EQ(songUnderTest.count, nItems);
         
@@ -141,6 +144,21 @@ int main()
       TestSong<int16_t> testint16(1024);
       testint16.Format.SampleFormat = SampleFormat_t::int16;
       testint16.Format.SampleRate = 11025;
+      TestMethod<int16_t>(testint16);
+    }
+    catch(const AssertionException& e)
+    {
+      cerr << "testing int16 failed" << endl;
+      cerr << e.what() << endl;
+      failed |= true;
+    }
+    
+    try
+    {
+      TestSong<int16_t> testint16(gConfig.FramesToRender);
+      testint16.Format.SampleFormat = SampleFormat_t::int16;
+      testint16.Format.SampleRate = 11025;
+      testint16.Format.Channels = 1;
       TestMethod<int16_t>(testint16);
     }
     catch(const AssertionException& e)
