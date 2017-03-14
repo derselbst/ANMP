@@ -31,7 +31,9 @@ MainWindow::MainWindow(QWidget *parent) :
     filesModel(new QFileSystemModel(this)),
     playlistModel(new PlaylistModel(this)),
     player(new Player(this->playlistModel)),
+#ifdef USE_VISUALIZER
     analyzerWindow(new AnalyzerApplet(this->player, this)),
+#endif
     settingsView(new ConfigDialog(this))
 {
 /*    
