@@ -3,14 +3,12 @@
  */
 
 #include "mainwindow.h"
+#include "mainwindowadaptor.h"
 #include "ui_mainwindow.h"
 #include "PlayheadSlider.h"
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
 #include "PlaylistModel.h"
-
-#include "anmp_dbus_adaptor.h"
-#include "anmp_dbus_interface.h"
 
 #include <anmp.hpp>
 
@@ -36,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent) :
     analyzerWindow(new AnalyzerApplet(this->player, this)),
     settingsView(new ConfigDialog(this))
 {
-    
+/*    
     // add our D-Bus interface and connect to D-Bus
     new AnmpAdaptor(this);
     QDBusConnection::sessionBus().registerObject("/ANMP", this);
@@ -45,33 +43,35 @@ MainWindow::MainWindow(QWidget *parent) :
     iface = new org::anmp(QString("org.anmp"), QString(), QDBusConnection::sessionBus(), this);
     //connect(iface, SIGNAL(message(QString,QString)), this, SLOT(messageSlot(QString,QString)));
     QDBusConnection::sessionBus().connect(QString("org.anmp"), QString(), "org.anmp", "TooglePlayPause", this, SLOT(tooglePlayPause()));
-//     connect(iface, &org::anmp::TooglePlayPause, this, &MainWindow::tooglePlayPause);
+//     connect(iface, &org::anmp::TooglePlayPause, this, &MainWindow::TogglePlayPause);*/
 
-    
-    
-    
+    new MainWindowAdaptor(this);
+    QDBusConnection dbus = QDBusConnection::sessionBus();
+    dbus.registerObject("/MainWindow", this);
+    dbus.registerService("org.anmp.player");
+
     
     // init UI
     this->ui->setupUi(this);
 
-    connect(this->ui->playButton,       &QPushButton::toggled, this, [this](bool){this->MainWindow::tooglePlayPause();});
-    connect(this->ui->stopButton,       &QPushButton::clicked, this, &MainWindow::stop);
+    connect(this->ui->playButton,       &QPushButton::toggled, this, [this](bool){this->MainWindow::TogglePlayPause();});
+    connect(this->ui->stopButton,       &QPushButton::clicked, this, &MainWindow::Stop);
 
-    connect(this->ui->forwardButton,    &QPushButton::clicked, this, &MainWindow::seekForward);
-    connect(this->ui->backwardButton,   &QPushButton::clicked, this, &MainWindow::seekBackward);
-    connect(this->ui->fforwardButton,   &QPushButton::clicked, this, &MainWindow::fastSeekForward);
-    connect(this->ui->fbackwardButton,  &QPushButton::clicked, this, &MainWindow::fastSeekBackward);
+    connect(this->ui->forwardButton,    &QPushButton::clicked, this, &MainWindow::SeekForward);
+    connect(this->ui->backwardButton,   &QPushButton::clicked, this, &MainWindow::SeekBackward);
+    connect(this->ui->fforwardButton,   &QPushButton::clicked, this, &MainWindow::FastSeekForward);
+    connect(this->ui->fbackwardButton,  &QPushButton::clicked, this, &MainWindow::FastSeekBackward);
 
-    connect(this->ui->nextButton,       &QPushButton::clicked, this, &MainWindow::next);
-    connect(this->ui->previousButton,   &QPushButton::clicked, this, &MainWindow::previous);
+    connect(this->ui->nextButton,       &QPushButton::clicked, this, &MainWindow::Next);
+    connect(this->ui->previousButton,   &QPushButton::clicked, this, &MainWindow::Previous);
 
 
-    connect(this->ui->actionPlay,       &QAction::triggered, this, &MainWindow::play);
-    connect(this->ui->actionPause,      &QAction::triggered, this, &MainWindow::pause);
-    connect(this->ui->actionStop,       &QAction::triggered, this, &MainWindow::stop);
+    connect(this->ui->actionPlay,       &QAction::triggered, this, &MainWindow::Play);
+    connect(this->ui->actionPause,      &QAction::triggered, this, &MainWindow::Pause);
+    connect(this->ui->actionStop,       &QAction::triggered, this, &MainWindow::Stop);
 
-    connect(this->ui->actionNext,       &QAction::triggered, this, &MainWindow::next);
-    connect(this->ui->actionPrevious,   &QAction::triggered, this, &MainWindow::previous);
+    connect(this->ui->actionNext,       &QAction::triggered, this, &MainWindow::Next);
+    connect(this->ui->actionPrevious,   &QAction::triggered, this, &MainWindow::Previous);
 
     connect(this->ui->actionReinitAudioDriver, &QAction::triggered, this, &MainWindow::reinitAudioDriver);
 
@@ -137,67 +137,67 @@ void MainWindow::createShortcuts()
 
     // PLAY PAUSE STOP SHORTS
     QShortcut *playShortcut = new SHORTCUT(QKeySequence(Qt::Key_MediaPlay));
-    connect(playShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPause);
+    connect(playShortcut, &QShortcut::activated, this, &MainWindow::TogglePlayPause);
 
     playShortcut = new SHORTCUT(QKeySequence(Qt::Key_Space));
-    connect(playShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPause);
+    connect(playShortcut, &QShortcut::activated, this, &MainWindow::TogglePlayPause);
 
     playShortcut = new SHORTCUT(QKeySequence(Qt::Key_F4));
-    connect(playShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPause);
+    connect(playShortcut, &QShortcut::activated, this, &MainWindow::TogglePlayPause);
     this->ui->playButton->setToolTip(this->ui->playButton->toolTip() + " [F4]");
 
     QShortcut *pauseFadeShortcut = new SHORTCUT(QKeySequence(Qt::SHIFT + Qt::Key_F4));
-    connect(pauseFadeShortcut, &QShortcut::activated, this, &MainWindow::tooglePlayPauseFade);
+    connect(pauseFadeShortcut, &QShortcut::activated, this, &MainWindow::TogglePlayPauseFade);
 
     QShortcut *stopFadeShortcut = new SHORTCUT(QKeySequence(Qt::SHIFT + Qt::Key_F5));
-    connect(stopFadeShortcut, &QShortcut::activated, this, &MainWindow::stopFade);
+    connect(stopFadeShortcut, &QShortcut::activated, this, &MainWindow::StopFade);
 
     QShortcut *stopShortcut = new SHORTCUT(QKeySequence(Qt::Key_F5));
-    connect(stopShortcut, &QShortcut::activated, this, &MainWindow::stop);
+    connect(stopShortcut, &QShortcut::activated, this, &MainWindow::Stop);
     this->ui->stopButton->setToolTip(this->ui->stopButton->toolTip() + " [F5]");
 
     // CHANGE CURRENT SONG SHORTS
     QShortcut *nextShortcut = new SHORTCUT(QKeySequence(Qt::Key_MediaNext));
-    connect(nextShortcut, &QShortcut::activated, this, &MainWindow::next);
+    connect(nextShortcut, &QShortcut::activated, this, &MainWindow::Next);
 
     nextShortcut = new SHORTCUT(QKeySequence(Qt::Key_F8));
-    connect(nextShortcut, &QShortcut::activated, this, &MainWindow::next);
+    connect(nextShortcut, &QShortcut::activated, this, &MainWindow::Next);
     this->ui->nextButton->setToolTip(this->ui->nextButton->toolTip() + " [F8]");
 
     QShortcut *prevShortcut = new SHORTCUT(QKeySequence(Qt::Key_MediaPrevious));
-    connect(prevShortcut, &QShortcut::activated, this, &MainWindow::previous);
+    connect(prevShortcut, &QShortcut::activated, this, &MainWindow::Previous);
 
     prevShortcut = new SHORTCUT(QKeySequence(Qt::Key_F1));
-    connect(prevShortcut, &QShortcut::activated, this, &MainWindow::previous);
+    connect(prevShortcut, &QShortcut::activated, this, &MainWindow::Previous);
     this->ui->previousButton->setToolTip(this->ui->previousButton->toolTip() + " [F1]");
 
     // SEEK SHORTCUTS
     QShortcut *seekForward = new SHORTCUT(QKeySequence(Qt::Key_Right));
-    connect(seekForward, &QShortcut::activated, this, &MainWindow::seekForward);
+    connect(seekForward, &QShortcut::activated, this, &MainWindow::SeekForward);
 
     seekForward = new SHORTCUT(QKeySequence(Qt::Key_F6));
-    connect(seekForward, &QShortcut::activated, this, &MainWindow::seekForward);
+    connect(seekForward, &QShortcut::activated, this, &MainWindow::SeekForward);
     this->ui->forwardButton->setToolTip(this->ui->forwardButton->toolTip() + " [F6]");
 
     QShortcut *seekBackward = new SHORTCUT(QKeySequence(Qt::Key_Left));
-    connect(seekBackward, &QShortcut::activated, this, &MainWindow::seekBackward);
+    connect(seekBackward, &QShortcut::activated, this, &MainWindow::SeekBackward);
 
     seekBackward = new SHORTCUT(QKeySequence(Qt::Key_F3));
-    connect(seekBackward, &QShortcut::activated, this, &MainWindow::seekBackward);
+    connect(seekBackward, &QShortcut::activated, this, &MainWindow::SeekBackward);
     this->ui->backwardButton->setToolTip(this->ui->backwardButton->toolTip() + " [F3]");
 
     QShortcut *fastSeekForward = new SHORTCUT(QKeySequence(Qt::ALT + Qt::Key_Right));
-    connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::fastSeekForward);
+    connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::FastSeekForward);
 
     fastSeekForward = new SHORTCUT(QKeySequence(Qt::Key_F7));
-    connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::fastSeekForward);
+    connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::FastSeekForward);
     this->ui->fforwardButton->setToolTip(this->ui->fforwardButton->toolTip() + " [F7]");
 
     QShortcut *fastSeekBackward = new SHORTCUT(QKeySequence(Qt::ALT + Qt::Key_Left));
-    connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::fastSeekBackward);
+    connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::FastSeekBackward);
 
     fastSeekBackward = new SHORTCUT(QKeySequence(Qt::Key_F2));
-    connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::fastSeekBackward);
+    connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::FastSeekBackward);
     this->ui->fbackwardButton->setToolTip(this->ui->fbackwardButton->toolTip() + " [F2]");
 
     QShortcut *settings = new SHORTCUT(QKeySequence(Qt::Key_F12));
@@ -317,31 +317,6 @@ void MainWindow::showNoVisualizer()
     msgBox.exec();
 }
 #endif
-
-void MainWindow::tooglePlayPause()
-{
-    if(this->player->IsPlaying())
-    {
-        this->pause();
-    }
-    else
-    {
-        this->play();
-    }
-}
-
-void MainWindow::tooglePlayPauseFade()
-{
-    if(this->player->IsPlaying())
-    {
-        this->player->fadeout(gConfig.fadeTimePause);
-        this->pause();
-    }
-    else
-    {
-        this->play();
-    }
-}
 
 void MainWindow::relativeSeek(int relpos)
 {

@@ -118,10 +118,10 @@ void MainWindow::selectSong(const QModelIndex &index)
 
     try
     {
-        this->stop();
+        this->Stop();
         Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
         this->player->setCurrentSong(songToPlay);
-        this->play();
+        this->Play();
     }
     catch(const exception& e)
     {
@@ -181,7 +181,7 @@ void MainWindow::clearPlaylist()
 {
     try
     {
-        this->stop();
+        this->Stop();
         this->player->setCurrentSong(nullptr);
         this->playlistModel->clear();
     }
@@ -191,24 +191,48 @@ void MainWindow::clearPlaylist()
     }
 }
 
+void MainWindow::TogglePlayPause()
+{
+    if(this->player->IsPlaying())
+    {
+        this->Pause();
+    }
+    else
+    {
+        this->Play();
+    }
+}
 
-void MainWindow::play()
+void MainWindow::TogglePlayPauseFade()
+{
+    if(this->player->IsPlaying())
+    {
+        this->player->fadeout(gConfig.fadeTimePause);
+        this->Pause();
+    }
+    else
+    {
+        this->Play();
+    }
+}
+
+void MainWindow::Play()
 {
     this->player->play();
 }
 
-void MainWindow::pause()
+void MainWindow::Pause()
 {
     this->player->pause();
 }
 
-void MainWindow::stopFade()
+void MainWindow::StopFade()
 {
     this->player->fadeout(gConfig.fadeTimeStop);
-    this->stop();
+    this->Stop();
 }
 
-void MainWindow::stop()
+void MainWindow::Stop()
 {
     this->player->stop();
 
@@ -216,16 +240,16 @@ void MainWindow::stop()
     QMetaObject::invokeMethod( this, "slotSeek", Qt::QueuedConnection, Q_ARG(long long, 0 ) );
 }
 
-void MainWindow::next()
+void MainWindow::Next()
 {
     try
     {
         bool oldState = this->player->IsPlaying();
-        this->stop();
+        this->Stop();
         this->player->next();
         if(oldState)
         {
-            this->play();
+            this->Play();
         }
     }
     catch(const exception& e)
@@ -234,16 +258,16 @@ void MainWindow::next()
     }
 }
 
-void MainWindow::previous()
+void MainWindow::Previous()
 {
     try
     {
         bool oldState = this->player->IsPlaying();
-        this->stop();
+        this->Stop();
         this->player->previous();
         if(oldState)
         {
-            this->play();
+            this->Play();
         }
     }
     catch(const exception& e)
@@ -264,22 +288,22 @@ void MainWindow::reinitAudioDriver()
     }
 }
 
-void MainWindow::seekForward()
+void MainWindow::SeekForward()
 {
     this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekNormal), gConfig.FramesToRender));
 }
 
-void MainWindow::seekBackward()
+void MainWindow::SeekBackward()
 {
     this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekNormal), gConfig.FramesToRender));
 }
 
-void MainWindow::fastSeekForward()
+void MainWindow::FastSeekForward()
 {
     this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekFast), gConfig.FramesToRender));
 }
 
-void MainWindow::fastSeekBackward()
+void MainWindow::FastSeekBackward()
 {
     this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekFast), gConfig.FramesToRender));
 }

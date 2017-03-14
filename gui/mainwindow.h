@@ -66,18 +66,18 @@ private:
     void showError(const QString& msg, const QString& gen="An Error occurred");
 
 public slots:
-    void play();
-    void pause();
-    void tooglePlayPause();
-    void tooglePlayPauseFade();
-    void stop();
-    void stopFade();
-    void previous();
-    void next();
-    void seekForward();
-    void seekBackward();
-    void fastSeekForward();
-    void fastSeekBackward();
+    void Play();
+    void Pause();
+    void TogglePlayPause();
+    void TogglePlayPauseFade();
+    void Stop();
+    void StopFade();
+    void Previous();
+    void Next();
+    void SeekForward();
+    void SeekBackward();
+    void FastSeekForward();
+    void FastSeekBackward();
     
 protected slots:
     friend class PlaylistModel;
