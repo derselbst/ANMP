@@ -57,9 +57,8 @@ private:
     void relativeSeek(int ms);
     void enableSeekButtons(bool isEnabled);
     
-#ifdef USE_VISUALIZER
     void showAnalyzer(enum AnalyzerApplet::AnalyzerType type);
-#else
+#ifndef USE_VISUALIZER
     void showNoVisualizer();
 #endif
 
