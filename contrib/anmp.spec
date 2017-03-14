@@ -82,6 +82,7 @@ BuildRequires: libebur128-devel
 
 
 BuildRequires: pkgconfig(Qt5Widgets)
+BuildRequires: pkgconfig(Qt5DBus)
 BuildRequires: pkgconfig(Qt5OpenGL)
 
 
