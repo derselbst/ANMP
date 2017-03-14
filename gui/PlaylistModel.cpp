@@ -1,9 +1,7 @@
-#include "PlaylistModel.h"
 
-#include "Song.h"
-#include "Common.h"
-#include "PlaylistFactory.h"
-#include "mainwindow.h"
+#include <anmp.hpp>
+
+#include "PlaylistModel.h"
 
 #include <QBrush>
 #include <QMimeData>
@@ -13,12 +11,32 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
+#include <thread>
 
 PlaylistModel::PlaylistModel(QObject *parent)
     : QAbstractTableModel(parent)
 {
 }
 
+PlaylistModel::~PlaylistModel()
+{
+    this->songsToAdd.shutDown=true;
+
+    try
+    {
+        CLOG(LogLevel_t::Info, "Waiting for song adder thread to finish...");
+        std::future_status status = this->songAdderWorker.wait_for(std::chrono::seconds(15));
+        if (status == std::future_status::timeout)
+        {
+            CLOG(LogLevel_t::Fatal, "song adder thread not responding, probably got stuck. Aborting.");
+            std::terminate();
+        }
+    }
+    catch(const std::future_error& e)
+    {
+        // probably no future associated, that's fine here
+    }
+}
 
 int PlaylistModel::rowCount(const QModelIndex & /* parent */) const
 {
@@ -26,11 +44,11 @@ int PlaylistModel::rowCount(const QModelIndex & /* parent */) const
 
     return this->queue.size();
 }
+
 int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
 {
     return 5;
 }
-
 
 QVariant PlaylistModel::data(const QModelIndex &index, int role) const
 {
@@ -168,12 +186,7 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
     // stop playback if the currently playing song is about to be removed
     if(p != nullptr && row <= this->currentSong && this->currentSong <= row+count-1)
     {
-        MainWindow* wnd = dynamic_cast<MainWindow*>(p);
-        if(wnd != nullptr)
-        {
-            wnd->stop();
-            wnd->player->setCurrentSong(nullptr);
-        }
+        emit this->UnloadCurrentSong();
     }
 
     lock_guard<recursive_mutex> lck(this->mtx);
@@ -319,29 +332,81 @@ bool PlaylistModel::dropMimeData(const QMimeData *data, Qt::DropAction action, i
 
 
     QList<QUrl> urls = data->urls();
-
-    MainWindow* wnd = dynamic_cast<MainWindow*>(this->QObject::parent());
-
-    QProgressDialog progress("Adding files...", "Abort", 0, urls.count(), wnd);
-    progress.setWindowModality(Qt::WindowModal);
-    progress.show();
-    QApplication::processEvents(QEventLoop::ExcludeSocketNotifiers);
-
-    for(int i=0; !progress.wasCanceled() && i<urls.count(); i++)
-    {
-        // ten redrawings
-        if(i%(static_cast<int>(urls.count()*0.1)+1)==0)
-        {
-            progress.setValue(i);
-            QApplication::processEvents(QEventLoop::ExcludeSocketNotifiers);
-        }
-
-        PlaylistFactory::addSong(*this, urls.at(i).toLocalFile().toStdString());
-        beginRow++;
-    }
+    this->asyncAdd(urls);
 
     return true;
 }
+
+void PlaylistModel::asyncAdd(const QStringList& files)
+{
+    std::unique_lock<mutex> lck(this->songsToAdd.mtx);
+    this->songsToAdd.cv.wait(lck, [this]{return !this->songsToAdd.ready;});
+
+    for(int i=0; i<files.count() && !this->songsToAdd.shutDown; i++)
+    {
+        this->songsToAdd.queue.push_back(files.at(i).toUtf8().constData());
+    }
+    this->songsToAdd.ready = true;
+
+    if(this->songsToAdd.processed && !this->songsToAdd.shutDown)
+    {
+        this->songAdderWorker = std::async(launch::async, &PlaylistModel::workerLoop, this);
+    }
+    lck.unlock();
+    this->songsToAdd.cv.notify_all();
+}
+
+void PlaylistModel::asyncAdd(const QList<QUrl>& files)
+{
+    std::unique_lock<mutex> lck(this->songsToAdd.mtx);
+    this->songsToAdd.cv.wait(lck, [this]{return !this->songsToAdd.ready;});
+
+    for(int i=0; i<files.count() && !this->songsToAdd.shutDown; i++)
+    {
+        this->songsToAdd.queue.push_back(files.at(i).toLocalFile().toStdString());
+    }
+    this->songsToAdd.ready = true;
+
+    if(this->songsToAdd.processed && !this->songsToAdd.shutDown)
+    {
+        this->songAdderWorker = std::async(launch::async, &PlaylistModel::workerLoop, this);
+    }
+    lck.unlock();
+    this->songsToAdd.cv.notify_one();
+}
+
+
+void PlaylistModel::workerLoop()
+{
+    int i=0;
+    std::unique_lock<mutex> lck(this->songsToAdd.mtx);
+    this->songsToAdd.processed = false;
+
+    while(!this->songsToAdd.queue.empty() && !this->songsToAdd.shutDown)
+    {
+        // grep the file at the very front and pop it from queue
+        const string s = std::move(this->songsToAdd.queue[0]);
+        this->songsToAdd.queue.pop_front();
+        const int total = this->songsToAdd.queue.size();
+
+        this->songsToAdd.ready = false;
+        // release the lock to do the time intensive work
+        lck.unlock();
+        // notify waiting threads, so they can continue filling the queue
+        this->songsToAdd.cv.notify_all();
+
+        i++;
+        emit this->SongAdded(QString::fromStdString(s), i, i+total);
+        PlaylistFactory::addSong(*this, s);
+
+        lck.lock();
+        this->songsToAdd.ready = true;
+    }
+
+    this->songsToAdd.processed = true;
+    this->songsToAdd.ready = false;
+}
+
 
 void PlaylistModel::add(Song* s)
 {

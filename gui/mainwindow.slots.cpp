@@ -11,13 +11,12 @@
 #include "ui_mainwindow.h"
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
+#include "PlaylistModel.h"
 
 #include <anmp.hpp>
 
-#include <QFileDialog>
-#include <QProgressDialog>
 #include <QMessageBox>
-
+#include <QFileSystemModel>
 
 void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, QString msg)
 {
@@ -37,12 +36,8 @@ void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, QString msg)
     if(hasMsg)
     {
         this->slotSeek(0);
-        
-        QMessageBox msgBox;
-        msgBox.setText("The Playback unexpectedly stopped.");
-        msgBox.setIcon(QMessageBox::Critical);
-        msgBox.setDetailedText(msg);
-        msgBox.exec();
+
+        this->showError(msg, "The Playback unexpectedly stop");
     }
 }
 
@@ -75,17 +70,14 @@ void MainWindow::slotSeek(long long pos)
 
 void MainWindow::slotCurrentSongChanged()
 {
-    QSlider* playheadSlider = this->ui->seekBar;
+    PlayheadSlider* playheadSlider = this->ui->seekBar;
 
     const Song* s = this->player->getCurrentSong();
     if(s==nullptr)
     {
         this->setWindowTitle("ANMP");
 
-        bool oldState = playheadSlider->blockSignals(true);
-        playheadSlider->setSliderPosition(0);
-        playheadSlider->setMaximum(0);
-        playheadSlider->blockSignals(oldState);
+        playheadSlider->SilentReset();
     }
     else
     {
@@ -100,64 +92,9 @@ void MainWindow::slotCurrentSongChanged()
             this->setWindowTitle(interpret + " - " + title  + " :: ANMP");
         }
         playheadSlider->setMaximum(s->getFrames());
+
+        this->enableSeekButtons(this->player->IsSeekingPossible());
     }
-}
-
-
-void MainWindow::on_actionAdd_Songs_triggered()
-{
-    const QString dir;
-    const QStringList fileNames = QFileDialog::getOpenFileNames(this, "Open Audio Files", dir, "");//Wave Files (*.wav);;Text Files (*.txt)
-
-    QProgressDialog progress("Adding files...", "Abort", 0, fileNames.count(), this);
-    progress.setWindowModality(Qt::WindowModal);
-    progress.show();
-    QApplication::processEvents(QEventLoop::ExcludeSocketNotifiers);
-    for(int i=0; !progress.wasCanceled() && i<fileNames.count(); i++)
-    {
-        // only redraw progress dialog on every tenth song
-        if(i%(static_cast<int>(fileNames.count()*0.1)+1)==0)
-        {
-            progress.setValue(i);
-            QApplication::processEvents(QEventLoop::ExcludeSocketNotifiers);
-        }
-
-        PlaylistFactory::addSong(*this->playlistModel, fileNames.at(i).toUtf8().constData());
-    }
-
-    progress.setValue(fileNames.count());
-}
-
-void MainWindow::on_actionPlay_triggered()
-{
-    this->play();
-}
-
-void MainWindow::on_actionStop_triggered()
-{
-    this->stop();
-}
-
-void MainWindow::on_actionPause_triggered()
-{
-    this->pause();
-}
-
-void MainWindow::on_actionNext_Song_triggered()
-{
-    this->next();
-}
-
-void MainWindow::on_actionPrevious_Song_triggered()
-{
-    this->previous();
-}
-
-void MainWindow::on_actionClear_Playlist_triggered()
-{
-    this->stop();
-    this->player->setCurrentSong(nullptr);
-    this->playlistModel->clear();
 }
 
 void MainWindow::on_treeView_clicked(const QModelIndex &index)
@@ -171,89 +108,25 @@ void MainWindow::on_treeView_clicked(const QModelIndex &index)
 }
 
 
-void MainWindow::on_tableView_doubleClicked(const QModelIndex &index)
+// if a selected song gets double clicked activated (press enter) in playlist view, play it back
+void MainWindow::selectSong(const QModelIndex &index)
 {
     if(!index.isValid())
     {
         return;
     }
-    this->stop();
-    Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
-    this->player->setCurrentSong(songToPlay);
-    this->play();
 
-}
-
-void MainWindow::on_tableView_activated(const QModelIndex &index)
-{
-    if(!index.isValid())
+    try
     {
-        return;
+        this->Stop();
+        Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
+        this->player->setCurrentSong(songToPlay);
+        this->Play();
     }
-    this->stop();
-    Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
-    this->player->setCurrentSong(songToPlay);
-    this->play();
-}
-
-void MainWindow::on_playButton_toggled(bool)
-{
-    this->tooglePlayPause();
-}
-
-void MainWindow::on_stopButton_clicked()
-{
-    this->stop();
-}
-
-void MainWindow::on_seekBar_sliderMoved(int position)
-{
-    this->player->seekTo(position);
-}
-
-void MainWindow::on_actionBlocky_triggered()
-{
-    this->showAnalyzer(AnalyzerApplet::AnalyzerType::Block);
-}
-
-void MainWindow::on_actionASCII_triggered()
-{
-    this->showAnalyzer(AnalyzerApplet::AnalyzerType::Ascii);
-}
-
-void MainWindow::on_forwardButton_clicked()
-{
-    this->seekForward();
-}
-
-void MainWindow::on_fforwardButton_clicked()
-{
-    this->fastSeekForward();
-}
-
-void MainWindow::on_nextButton_clicked()
-{
-    this->next();
-}
-
-void MainWindow::on_previousButton_clicked()
-{
-    this->previous();
-}
-
-void MainWindow::on_fbackwardButton_clicked()
-{
-    this->fastSeekBackward();
-}
-
-void MainWindow::on_backwardButton_clicked()
-{
-    this->seekBackward();
-}
-
-void MainWindow::on_actionAdd_Playback_Stop_triggered()
-{
-    this->playlistModel->add(nullptr);
+    catch(const exception& e)
+    {
+        this->showError(e.what());
+    }
 }
 
 void MainWindow::on_actionFileBrowser_triggered(bool checked)
@@ -270,31 +143,15 @@ void MainWindow::on_actionFileBrowser_triggered(bool checked)
     }
 }
 
-void MainWindow::on_actionSettings_triggered()
+void MainWindow::settingsDialogAccepted()
 {
-    if(this->settingsView == nullptr)
+    if(this->settingsView->newConfig.audioDriver != gConfig.audioDriver)
     {
-        this->settingsView = new ConfigDialog(this);
+        this->reinitAudioDriver();
     }
-
-    AudioDriver_t oldDriver = gConfig.audioDriver;
-
-    int ret = this->settingsView->exec();
-
-    if(ret == QDialog::Accepted)
-    {
-        if(oldDriver != gConfig.audioDriver)
-        {
-            this->player->initAudio();
-        }
-        gConfig.Save();
-    }
-
-    delete this->settingsView;
-    this->settingsView = nullptr;
 }
 
-void MainWindow::on_actionShuffle_Playst_triggered()
+void MainWindow::shufflePlaylist()
 {
     QItemSelection indexList = this->ui->tableView->selectionModel()->selection();
 
@@ -320,18 +177,307 @@ void MainWindow::on_actionShuffle_Playst_triggered()
     }
 }
 
-void MainWindow::on_actionReinit_AudioDriver_triggered()
+void MainWindow::clearPlaylist()
 {
-    this->player->initAudio();
+    try
+    {
+        this->Stop();
+        this->player->setCurrentSong(nullptr);
+        this->playlistModel->clear();
+    }
+    catch(const exception& e)
+    {
+        this->showError(e.what(), "Clearing the Playlist failed");
+    }
 }
 
-#ifndef USE_VISUALIZER
-void MainWindow::showNoVisualizer()
+void MainWindow::TogglePlayPause()
 {
-    QMessageBox msgBox;
-    msgBox.setText("Unsupported");
-    msgBox.setIcon(QMessageBox::Information);
-    msgBox.setDetailedText("ANMP was built without Qt5OpenGL. No visualizers available.");
-    msgBox.exec();
+    if(this->player->IsPlaying())
+    {
+        this->Pause();
+    }
+    else
+    {
+        this->Play();
+    }
 }
-#endif
+
+void MainWindow::TogglePlayPauseFade()
+{
+    if(this->player->IsPlaying())
+    {
+        this->player->fadeout(gConfig.fadeTimePause);
+        this->Pause();
+    }
+    else
+    {
+        this->Play();
+    }
+}
+
+void MainWindow::Play()
+{
+    this->player->play();
+}
+
+void MainWindow::Pause()
+{
+    this->player->pause();
+}
+
+void MainWindow::StopFade()
+{
+    this->player->fadeout(gConfig.fadeTimeStop);
+    this->Stop();
+}
+
+void MainWindow::Stop()
+{
+    this->player->stop();
+
+    // dont call the slot directly, a call might still be pending, making a direct call here useless
+    QMetaObject::invokeMethod( this, "slotSeek", Qt::QueuedConnection, Q_ARG(long long, 0 ) );
+}
+
+void MainWindow::Next()
+{
+    try
+    {
+        bool oldState = this->player->IsPlaying();
+        this->Stop();
+        this->player->next();
+        if(oldState)
+        {
+            this->Play();
+        }
+    }
+    catch(const exception& e)
+    {
+        this->showError(e.what(), "Failed to play the next Song");
+    }
+}
+
+void MainWindow::Previous()
+{
+    try
+    {
+        bool oldState = this->player->IsPlaying();
+        this->Stop();
+        this->player->previous();
+        if(oldState)
+        {
+            this->Play();
+        }
+    }
+    catch(const exception& e)
+    {
+        this->showError(e.what(), "Failed to play the previous Song");
+    }
+}
+
+void MainWindow::reinitAudioDriver()
+{
+    try
+    {
+        this->player->initAudio();
+    }
+    catch(const exception& e)
+    {
+        this->showError(e.what(), "Unable to initialize the audio driver");
+    }
+}
+
+void MainWindow::SeekForward()
+{
+    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekNormal), gConfig.FramesToRender));
+}
+
+void MainWindow::SeekBackward()
+{
+    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekNormal), gConfig.FramesToRender));
+}
+
+void MainWindow::FastSeekForward()
+{
+    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekFast), gConfig.FramesToRender));
+}
+
+void MainWindow::FastSeekBackward()
+{
+    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekFast), gConfig.FramesToRender));
+}
+
+
+void MainWindow::updateStatusBar(QString file, int cur, int total)
+{
+    QString text = "Adding file (";
+    text += QString::number(cur);
+    text += " / ";
+    text += QString::number(total);
+    text += ") ";
+    text += file;
+
+    if(cur == total)
+    {
+        this->ui->statusbar->showMessage(text, 3000);
+    }
+    else
+    {
+        this->ui->statusbar->showMessage(text);
+    }
+}
+
+void MainWindow::aboutQt()
+{
+    QMessageBox::aboutQt(this, "About Qt");
+}
+
+void MainWindow::aboutAnmp()
+{
+    // build up the huge constexpr about anmp string
+    static constexpr char text[] = "<p>\n"
+    "<b>" ANMP_TITLE " - "  ANMP_SUBTITLE  "</b><br />\n"
+    "<br />\n"
+    "Version: " ANMP_VERSION "<br />\n"
+    "Build: "
+    ANMP_COMPILER_USED
+    " "
+    ANMP_COMPILER_VERSION_USED
+    "<br />\n"
+    "<br />\n"
+    "InputLibrary support status:"
+    "<br />\n"
+
+#define SUPPORT_MSG(NAME, SUP, COLOR) \
+        "<font color=\"" COLOR "\">"\
+        NAME " support " SUP\
+        "<br />"\
+        "</font>"
+
+#define SUPPORT_YES(NAME) SUPPORT_MSG(NAME, "enabled", "green")
+#define SUPPORT_NO(NAME)  SUPPORT_MSG(NAME, "disabled", "red")
+
+    #ifdef USE_LIBSND
+        SUPPORT_YES("libsndfile")
+    #else
+        SUPPORT_NO("libsndfile")
+    #endif
+
+    #ifdef USE_LAZYUSF
+        SUPPORT_YES("lazyusf")
+    #else
+        SUPPORT_NO("lazyusf")
+    #endif
+
+    #ifdef USE_AOPSF
+        SUPPORT_YES("aopsf")
+    #else
+        SUPPORT_NO("aopsf")
+    #endif
+
+    #ifdef USE_LIBMAD
+        SUPPORT_YES("MAD")
+    #else
+        SUPPORT_NO("MAD")
+    #endif
+
+    #ifdef USE_LIBGME
+        SUPPORT_YES("Game-Music-Emu")
+    #else
+        SUPPORT_NO("Game-Music-Emu")
+    #endif
+
+    #ifdef USE_MODPLUG
+        SUPPORT_YES("ModPlug")
+    #else
+        SUPPORT_NO("ModPlug")
+    #endif
+
+    #ifdef USE_VGMSTREAM
+        SUPPORT_YES("VGMStream")
+    #else
+        SUPPORT_NO("VGMStream")
+    #endif
+
+    #ifdef USE_FFMPEG
+        SUPPORT_YES("FFMpeg")
+    #else
+        SUPPORT_NO("FFMpeg")
+    #endif
+
+    #ifdef USE_FLUIDSYNTH
+        SUPPORT_YES("Fluidsynth")
+    #else
+        SUPPORT_NO("Fluidsynth")
+    #endif
+
+    "<br />\n"
+    "AudioDriver support status:"
+    "<br />\n"
+
+    #ifdef USE_ALSA
+        SUPPORT_YES("ALSA")
+    #else
+        SUPPORT_NO("ALSA")
+    #endif
+
+    #ifdef USE_JACK
+        SUPPORT_YES("Jack")
+    #else
+        SUPPORT_NO("Jack")
+    #endif
+
+    #ifdef USE_PORTAUDIO
+        SUPPORT_YES("PortAudio")
+    #else
+        SUPPORT_NO("PortAudio")
+    #endif
+
+    #ifdef USE_EBUR128
+        SUPPORT_YES("Audio Normalization")
+    #else
+        SUPPORT_NO("Audio Normalization")
+    #endif
+
+    "<br />\n"
+    "Miscellaneous status:"
+    "<br />\n"
+
+    #ifdef USE_CUE
+        SUPPORT_YES("Cue Sheet")
+    #else
+        SUPPORT_NO("Cue Sheet")
+    #endif
+
+    #ifdef USE_GUI
+        SUPPORT_YES("Qt5 Gui")
+    #else
+        SUPPORT_NO("Qt5 Gui")
+    #endif
+
+    #ifdef USE_VISUALIZER
+        SUPPORT_YES("Audio Visualizer")
+    #else
+        SUPPORT_NO("Audio Visualizer")
+    #endif
+
+    "<br />\n"
+    "<br />\n"
+    "Website: <a href=\"" ANMP_WEBSITE "\">" ANMP_WEBSITE "</a><br />\n"
+    "<br />\n"
+    "<small>"
+    "&copy;" ANMP_COPYRIGHT "<br />\n"
+    "<br />\n"
+    "This program is free software; you can redistribute it and/or modify it" "<br />\n"
+    "under the terms of the GNU General Public License version 2."
+    "</small>"
+    "</p>\n";
+
+    QMessageBox::about(this, "About ANMP", text);
+
+#undef SUPPORT_YES
+#undef SUPPORT_NO
+#undef SUPPORT_MSG
+}
+

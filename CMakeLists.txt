@@ -303,8 +303,11 @@ if(ENABLE_GUI)
 
     find_package(Qt5Widgets)
     HANDLE_FOUND(Qt5Widgets)
+    
+    find_package(Qt5DBus)
+    HANDLE_FOUND(Qt5DBus)
    
-    if(${Qt5Widgets_FOUND})
+    if(${Qt5Widgets_FOUND} AND ${Qt5DBus_FOUND})
         set(USE_GUI TRUE)
         add_definitions(-DUSE_GUI)
         
@@ -313,7 +316,7 @@ if(ENABLE_GUI)
         
         MY_PRINT(QT5CORE)
 
-    endif(${Qt5Widgets_FOUND})
+    endif(${Qt5Widgets_FOUND} AND ${Qt5DBus_FOUND})
     
     summary_add("QT GUI support" USE_GUI)
 endif(ENABLE_GUI)

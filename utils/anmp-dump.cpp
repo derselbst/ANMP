@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
     
     for(int i=0;i<Threads; ++i)
     {
-        while(players[i].getIsPlaying())
+        while(players[i].IsPlaying())
         {
             this_thread::sleep_for(chrono::seconds(1));
         }

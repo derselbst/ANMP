@@ -7,8 +7,8 @@
 
 // definitions go here
 constexpr frame_t Config::FramesToRender;
-constexpr const char* Config::UserDir;
-constexpr const char* Config::UserFile;
+constexpr const char Config::UserDir[];
+constexpr const char Config::UserFile[];
 
 Config& gConfig = gConfig.Singleton();
 

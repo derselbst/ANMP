@@ -5,6 +5,10 @@
 #include <QAbstractTableModel>
 #include <QColor>
 
+#include <mutex>
+#include <condition_variable>
+#include <future>
+
 #include "Playlist.h"
 
 class Song;
@@ -16,6 +20,7 @@ class PlaylistModel : public QAbstractTableModel, public Playlist
 
 public:
     PlaylistModel(QObject *parent = 0);
+    ~PlaylistModel() override;
 
     // *** MODEL READ SUPPORT ***
     int rowCount(const QModelIndex &parent) const override;
@@ -49,12 +54,45 @@ public:
 
     void shuffle(unsigned int, unsigned int) override;
 
-    /*
-        Song* getSong(unsigned int id) override;
 
-        Song* current () override;*/
+
+    void asyncAdd(const QStringList& files);
+    void asyncAdd(const QList<QUrl>& files);
+
+signals:
+    void SongAdded(QString file, int cur, int total);
+
+    // emitted, if the song currently played back gets deleted
+    void UnloadCurrentSong();
 
 private:
+    struct
+    {
+        // a queue to be filled with filepaths for songs that shall be added
+        std::deque<string> queue;
+
+        // mutex for that queue
+        mutable mutex mtx;
+
+        // cond var for synchronizing the worker thread and queue filler threads
+        std::condition_variable cv;
+
+        // predicate variable for cv used by the queue filler threads
+        // true: the worker thread is currently owner of the mutex, i.e. it's messing around the the queue
+        // false: not owner of mtx, i.e. other threads can fill the queue as soon as they get notified via the condition variable
+        bool ready = false;
+
+        // true: the whole queue has been process, i.e. no worker thread is currently running
+        // false: worker thread is running and queue contains data to be processed
+        bool processed = true;
+
+        // if the application is supposed to be shut down
+        bool shutDown = false;
+    } songsToAdd;
+
+    void workerLoop();
+    std::future<void> songAdderWorker;
+
     QColor calculateRowColor(int row) const;
 
 };
