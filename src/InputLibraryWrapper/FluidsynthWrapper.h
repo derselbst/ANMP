@@ -24,17 +24,18 @@ public:
     FluidsynthWrapper(FluidsynthWrapper const&) = delete;
     FluidsynthWrapper& operator=(FluidsynthWrapper const&) = delete;
     
-    static FluidsynthWrapper& Singleton();
     static void seqCallback(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data);
 
     
-    void Init(MidiWrapper&);
+    void ShallowInit();
+    void DeepInit(MidiWrapper&);
+    void Unload();
     
     // returns the samplerate that will be synthesized at
-    unsigned int  GetSampleRate();
+    unsigned int GetSampleRate();
     
     // returns the number of audio channels, that will be rendered to
-    unsigned int  GetChannels();
+    unsigned int GetChannels();
     
     // returns the tick count the sequencer had during a call to this.Init()
     unsigned int GetInitTick();
@@ -43,8 +44,6 @@ public:
     void ScheduleLoop(MidiLoopInfo* info);
     void FinishSong(int millisec);
     
-    void ReloadConfig();
-
     void Render(float* bufferToFill, frame_t framesToRender);
 
 private:
@@ -61,8 +60,9 @@ private:
     // fluidsynth's synth has no samplerate getter, so cache it here
     unsigned int cachedSampleRate = 0;
     
+    // tick count of the sequencer when this->Init() was called
     unsigned int initTick = 0;
-    
+
     string cachedSf2;
     int cachedSf2Id = -1;
     
@@ -70,4 +70,6 @@ private:
     void setupSynth(MidiWrapper&);
     void setupSeq(MidiWrapper&);
 
+    void deleteSynth();
+    void deleteSeq();
 };

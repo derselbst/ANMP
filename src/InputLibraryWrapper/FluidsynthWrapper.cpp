@@ -10,13 +10,6 @@
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
 
-
-FluidsynthWrapper& FluidsynthWrapper::Singleton()
-{
-    static FluidsynthWrapper instance;
-    return instance;
-}
-
 FluidsynthWrapper::FluidsynthWrapper()
 {}
 
@@ -34,17 +27,8 @@ FluidsynthWrapper::~FluidsynthWrapper ()
         this->synthEvent = nullptr;
     }
     
-    if(this->sequencer != nullptr)
-    {
-        delete_fluid_sequencer(this->sequencer);
-        this->sequencer = nullptr;
-    }
-    
-    if(this->synth != nullptr)
-    {
-        delete_fluid_synth(this->synth);
-        this->synth = nullptr;
-    }
+    this->deleteSeq();
+    this->deleteSynth();
     
     if(this->settings != nullptr)
     {
@@ -62,7 +46,7 @@ void FluidsynthWrapper::setupSeq(MidiWrapper& midi)
         {
             THROW_RUNTIME_ERROR("Failed to create the sequencer");
         }
-
+    
         // register synth as first destination
         this->synthId = fluid_sequencer_register_fluidsynth(this->sequencer, this->synth);
     }
@@ -77,6 +61,15 @@ void FluidsynthWrapper::setupSeq(MidiWrapper& midi)
     
     // remove all events from the sequencer's queue
     fluid_sequencer_remove_events(this->sequencer, -1, -1, -1);
+}
+
+void FluidsynthWrapper::deleteSeq()
+{
+    if(this->sequencer != nullptr)
+    {
+        delete_fluid_sequencer(this->sequencer);
+        this->sequencer = nullptr;
+    }
 }
 
 void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
@@ -106,7 +99,6 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     // then update samplerate
     fluid_synth_set_sample_rate(this->synth, gConfig.FluidsynthSampleRate);
     this->cachedSampleRate = gConfig.FluidsynthSampleRate;
-    
 
     // find a soundfont
     Nullable<string> soundfont;
@@ -125,23 +117,16 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     {
         THROW_RUNTIME_ERROR("Cant synthesize this MIDI, soundfont not found: \"" << soundfont.Value << "\"");
     }
+    
+    this->cachedSf2 = soundfont.Value;
+}
 
-    if(this->cachedSf2 != soundfont.Value)
+void FluidsynthWrapper::deleteSynth()
+{
+    if(this->synth != nullptr)
     {
-        /* Load the soundfont */
-        if (!fluid_is_soundfont(soundfont.Value.c_str()))
-        {
-            THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (weak test): \"" << soundfont.Value << "\"");
-        }
-        
-        fluid_synth_sfunload(this->synth, this->cachedSf2Id, true);
-
-        if ((this->cachedSf2Id = fluid_synth_sfload(this->synth, soundfont.Value.c_str(), true)) == -1)
-        {
-            THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (strong test): \"" << soundfont.Value << "\"");
-        }
-        
-        this->cachedSf2 = soundfont.Value;
+        delete_fluid_synth(this->synth);
+        this->synth = nullptr;
     }
 }
 
@@ -170,22 +155,14 @@ void FluidsynthWrapper::setupSettings()
     fluid_settings_setint(this->settings, "synth.audio-channels",  stereoChannels);
 }
 
-void FluidsynthWrapper::Init(MidiWrapper& caller)
+void FluidsynthWrapper::ShallowInit()
 {
     this->setupSettings();
-    
-    // sadly, fluidsynth's API doesnt provide any way to change the number of audio channels once the synth has been allocated
-    // thus, in such a case we have to destory the synth 
-    unsigned int audioChans = gConfig.FluidsynthMultiChannel ? NMidiChannels : 1;
-    audioChans *= 2;
-    if(this->GetChannels() != audioChans)
-    {
-        if(this->synth != nullptr)
-        {
-            delete_fluid_synth(this->synth);
-            this->synth = nullptr;
-        }
-    }
+    this->cachedSampleRate = gConfig.FluidsynthSampleRate;
+}
+
+void FluidsynthWrapper::DeepInit(MidiWrapper& caller)
+{
     this->setupSynth(caller);
     this->setupSeq(caller);
     this->initTick = fluid_sequencer_get_tick(this->sequencer);
@@ -202,8 +179,27 @@ void FluidsynthWrapper::Init(MidiWrapper& caller)
         this->callbackEvent = new_fluid_event();
         fluid_event_set_source(this->callbackEvent, -1);
     }
-    // destination may have changed, refresh it
-    fluid_event_set_dest(this->callbackEvent, this->myselfID.Value);
+    
+    /* Load the soundfont */
+    if (!fluid_is_soundfont(this->cachedSf2.c_str()))
+    {
+        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (weak test): \"" << this->cachedSf2 << "\"");
+    }
+    
+    if ((this->cachedSf2Id = fluid_synth_sfload(this->synth, this->cachedSf2.c_str(), true)) == -1)
+    {
+        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (strong test): \"" << this->cachedSf2 << "\"");
+    }
+}
+
+void FluidsynthWrapper::Unload()
+{
+    // soundfonts take up huge amount of memory, free it
+    fluid_synth_sfunload(this->synth, this->cachedSf2Id, true);
+    
+    this->deleteSeq();
+    // the synth uses pthread_key_create, which quickly runs out of keys when not cleaning up
+    this->deleteSynth();
 }
 
 unsigned int FluidsynthWrapper::GetChannels()
@@ -249,7 +245,6 @@ void FluidsynthWrapper::AddEvent(smf_event_t * event, double offset)
 //         if(IsLoopStart(event) || IsLoopStop(event))
 //         {
 //             // loops are handled within MidiWrapper, we dont even receive them here
-//             return;
 //         }
         // just a usual control change
         fluid_event_control_change(this->synthEvent, chan, event->midi_buffer[1], event->midi_buffer[2]);

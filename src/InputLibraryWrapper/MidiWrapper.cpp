@@ -116,13 +116,15 @@ MidiWrapper::MidiWrapper(string filename, Nullable<size_t> fileOffset, Nullable<
 void MidiWrapper::initAttr()
 {
     this->Format.SampleFormat = SampleFormat_t::float32;
-    this->synth = &FluidsynthWrapper::Singleton();
 }
 
 MidiWrapper::~MidiWrapper ()
 {
     this->releaseBuffer();
     this->close();
+    
+    delete this->synth;
+    this->synth = nullptr;
 }
 
 
@@ -149,15 +151,17 @@ void MidiWrapper::open ()
         this->fileLen = static_cast<size_t>(playtime * 1000);
     }
     
+    this->trackLoops.clear();
     this->trackLoops.resize(this->smf->number_of_tracks);
     for(unsigned int i = 0; i<this->trackLoops.size(); i++)
     {
+        this->trackLoops[i].clear();
         this->trackLoops[i].resize(NMidiChannels);
     }
     
     
-    this->synth->Init(*this);
-    this->parseEvents();
+    this->synth = new FluidsynthWrapper();
+    this->synth->ShallowInit();
     
     this->Format.Channels = this->synth->GetChannels();
     unsigned int srate = this->synth->GetSampleRate();
@@ -259,6 +263,13 @@ void MidiWrapper::parseEvents()
 
 void MidiWrapper::close() noexcept
 {
+    if(this->synth != nullptr)
+    {
+        this->synth->Unload();
+//         delete this->synth;
+//         this->synth = nullptr;
+    }
+    
     if(this->smf != nullptr)
     {
         smf_delete(this->smf);
@@ -268,11 +279,13 @@ void MidiWrapper::close() noexcept
 
 void MidiWrapper::fillBuffer()
 {
-//     if(this->data==nullptr)
-//     {
-//         // if this is the first call, add the midi events to the sequencer
-//         this->parseEvents();
-//     }
+    if(this->data==nullptr)
+    {
+        this->synth->DeepInit(*this);
+        // if this is the first call, add the midi events to the sequencer
+        this->parseEvents();
+        this->buildLoopTree();
+    }
     
     StandardWrapper::fillBuffer(this);
 }
@@ -280,6 +293,7 @@ void MidiWrapper::fillBuffer()
 frame_t MidiWrapper::getFrames () const
 {
     size_t len = this->fileLen.Value;
+    len += 3000;
 //     if(gConfig.FluidsynthEnableReverb)
 //     {
 //         len += (gConfig.FluidsynthRoomSize*10.0 * gConfig.FluidsynthLevel * 1000) / 2;
