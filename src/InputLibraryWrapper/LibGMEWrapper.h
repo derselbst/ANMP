@@ -43,9 +43,6 @@ public:
     void buildMetadata() noexcept override;
 
 private:
-    // length in ms to fade
-    unsigned long fade_ms = 0;
-
     Music_Emu * handle = nullptr;
     gme_info_t* info = nullptr;
 

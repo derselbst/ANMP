@@ -160,7 +160,7 @@ void MidiWrapper::open ()
     this->parseEvents();
     
     this->Format.Channels = this->synth->GetChannels();
-    int srate = this->synth->GetSampleRate();
+    unsigned int srate = this->synth->GetSampleRate();
     if(this->Format.SampleRate != srate)
     {
         // the sample rate may have changed, if requested by user
