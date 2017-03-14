@@ -121,13 +121,7 @@ MainWindow::~MainWindow()
     this->player->onPlayheadChanged -= this;
     this->player->onCurrentSongChanged -= this;
     this->player->onIsPlayingChanged -= this;
-
-    delete this->settingsView;
     
-#ifdef USE_VISUALIZER
-    delete this->analyzerWindow;
-#endif
-
     delete this->ui;
     delete this->player;
     delete this->playlistModel;
