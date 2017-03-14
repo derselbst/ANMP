@@ -47,7 +47,11 @@ void AnalyzerApplet::startGraphics()
 void AnalyzerApplet::stopGraphics()
 {
     this->player->onPlayheadChanged -= this;
-    this->analyzerWidget->disconnectSignals();
+
+    if(this->analyzerWidget != nullptr)
+    {
+        this->analyzerWidget->disconnectSignals();
+    }
 }
 
 void AnalyzerApplet::newGeometry()
@@ -78,7 +82,7 @@ void AnalyzerApplet::setAnalyzer(AnalyzerType type )
     switch(type)
     {
     default:
-    /* fall through */
+    [[fallthrough]];
     case Block:
         this->analyzerWidget = new BlockAnalyzer(this);
         this->setWindowTitle("Block Analyzer");

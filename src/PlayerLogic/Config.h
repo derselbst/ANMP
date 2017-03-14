@@ -18,26 +18,18 @@
 
 class Config
 {
-    // Constructors/Destructors
-    //
-  
-    Config();
-    
-    // no copy
-    Config(const Config&) = delete;
-    // no assign
-    Config& operator=(const Config&) = delete;
-
 public:
+    Config();
 
+    // returns ANMP's currently active configuration
     static Config& Singleton();
     
     //**********************************
     //     GLOBAL INTERNAL SECTION     *
     //**********************************
     
-    static constexpr const char* UserDir = ".anmp";
-    static constexpr const char* UserFile = "config.json";
+    static constexpr const char UserDir[] = ".anmp";
+    static constexpr const char UserFile[] = "config.json";
 
     // number of frames that are pushed to audioDriver during each run AND minimum no. of frames
     // that have to be prepared (i.e. rendered) by a single call to Song::fillBuffer()

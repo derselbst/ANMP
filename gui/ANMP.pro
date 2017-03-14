@@ -27,10 +27,13 @@ SOURCES += main.cpp\
         PlaylistModel.cpp \
         PlayheadSlider.cpp\
         configdialog.cpp \
-    applets/analyzer/AnalyzerApplet.cpp overlaycontrol.cpp
+    applets/analyzer/AnalyzerApplet.cpp overlaycontrol.cpp \
+    mainwindow.callback.cpp \
+    mainwindow.slots.cpp
 
 HEADERS  += mainwindow.h PlaylistView.h PlaylistModel.h configdialog.h \
-    applets/analyzer/AnalyzerApplet.h overlaycontrol.h
+    applets/analyzer/AnalyzerApplet.h overlaycontrol.h \
+    PlayheadSlider.h
 
 FORMS    += mainwindow.ui configdialog.ui \
     applets/analyzer/AnalyzerApplet.ui overlaycontrol.ui

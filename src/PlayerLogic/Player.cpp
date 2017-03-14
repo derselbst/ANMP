@@ -34,7 +34,6 @@
 
 // TODO: make this nicer
 #define FramesToItems(x) ((x)*this->currentSong->Format.Channels)
-#define SEEK_POSSIBLE (this->currentSong==nullptr ? false : this->currentSong->count==FramesToItems(this->currentSong->getFrames()))
 #define USERS_ARE_STUPID if(this->audioDriver==nullptr || this->playlist==nullptr || this->currentSong==nullptr){throw NotInitializedException();}
 // Constructors/Destructors
 //
@@ -71,7 +70,7 @@ Player::~Player ()
 
 void Player::initAudio()
 {
-    bool oldState = this->getIsPlaying();
+    bool oldState = this->IsPlaying();
     this->pause();
     this->_initAudio();
 
@@ -126,14 +125,19 @@ void Player::_initAudio()
     }
 }
 
-bool Player::getIsPlaying()
+bool Player::IsPlaying()
 {
     return this->isPlaying;
 }
 
+bool Player::IsSeekingPossible()
+{
+    return (this->currentSong==nullptr ? false : this->currentSong->count==FramesToItems(this->currentSong->getFrames()));
+}
+
 void Player::play ()
 {
-    if (this->isPlaying)
+    if (this->IsPlaying())
     {
         return;
     }
@@ -171,7 +175,7 @@ const Song* Player::getCurrentSong ()
 
 void Player::setCurrentSong (Song* song)
 {
-    if(this->isPlaying)
+    if(this->IsPlaying())
     {
         throw runtime_error("Player: Cannot set song while still playing back.");
     }
@@ -312,7 +316,7 @@ void Player::fadeout (unsigned int fadeTime, int8_t fadeType)
 
 void Player::seekTo (frame_t frame)
 {
-    if(SEEK_POSSIBLE)
+    if(this->IsSeekingPossible())
     {
         this->_seekTo(frame);
     }
@@ -325,7 +329,7 @@ void Player::_seekTo (frame_t frame)
         // negative frame not allowed for playhead, silently set it to 0
         frame = 0;
     }
-    else if(this->currentSong == nullptr || frame >= this->currentSong->getFrames())
+    else if(this->currentSong != nullptr && frame >= this->currentSong->getFrames())
     {
         return;
     }
@@ -364,9 +368,9 @@ void Player::playLoop (core::tree<loop_t>& loop)
     // sub-loops that need to be played
     core::tree<loop_t>* subloop;
 
-    while(this->isPlaying && // are we still playing?
+    while(this->IsPlaying() && // are we still playing?
             gConfig.useLoopInfo && // user wishes to use available loop info
-            SEEK_POSSIBLE && // we loop by setting the playhead, if this is not possible, since we dont hold the whole pcm, no loops are available
+            this->IsSeekingPossible() && // we loop by setting the playhead, if this is not possible, since we dont hold the whole pcm, no loops are available
             ((subloop = this->getNextLoop(loop)) != nullptr)) // are there subloops left that need to be played?
     {
 
@@ -383,7 +387,7 @@ void Player::playLoop (core::tree<loop_t>& loop)
         uint32_t mycount = gConfig.overridingGlobalLoopCount!=-1 ? gConfig.overridingGlobalLoopCount : (*(*subloop)).count;
         bool forever = mycount==0;
         mycount += 1; // +1 because the subloop we are just going to play, should be played one additional time by the parent of subloop (i.e. the loop we are currently in)
-        while(this->isPlaying && (forever || mycount-- != 0u))
+        while(this->IsPlaying() && (forever || mycount-- != 0u))
         {
             // if we play this loop multiple time, make sure we start at the beginning again
             this->_seekTo((*(*subloop)).start);
@@ -406,7 +410,7 @@ void Player::playFrames (frame_t startFrame, frame_t stopFrame)
 
     // the user may request to seek while we are playing, thus check whether playhead is
     // still in range
-    while(this->isPlaying && this->playhead>=startFrame && this->playhead<stopFrame)
+    while(this->IsPlaying() && this->playhead>=startFrame && this->playhead<stopFrame)
     {
         if(this->currentSong->getFrames()==0)
         {
@@ -442,7 +446,7 @@ void Player::playFrames (frame_t framesToPlay)
 // thus do it by handing in small buffers within the buffer ;)
 
     // check if we seeked during playback or pcm size is zero
-    while(this->isPlaying && // has smb. stopped playback?
+    while(this->IsPlaying() && // has smb. stopped playback?
             framesToPlay>0 && // are there any frames left to play?
             bufSize!=0 && // are there any samples in pcm buffer?
             memorizedPlayhead==this->playhead // make sure noone seeked while playing
@@ -466,7 +470,7 @@ again:
         //
         // thus the case when audioDriver.write() was only able to partly play the provided pcm chunk, cannot be recovered
         // but we can try it again whenever audioDriver failed at all (i.e. returned 0)
-        if(this->isPlaying && framesWritten==0)
+        if(this->IsPlaying() && framesWritten==0)
         {
             // something went terribly wrong, wait some time, so the cpu doesnt get too busy
             this_thread::sleep_for(chrono::milliseconds(1));
@@ -502,11 +506,11 @@ again:
 void Player::playInternal ()
 {
     Nullable<string> exceptionMsg = Nullable<string>();
-    this->onIsPlayingChanged.Fire(this->isPlaying, exceptionMsg);
+    this->onIsPlayingChanged.Fire(this->IsPlaying(), exceptionMsg);
 
     try
     {
-        while(this->isPlaying)
+        while(this->IsPlaying())
         {
             this->audioDriver->start();
             core::tree<loop_t>& loops = this->currentSong->loopTree;
@@ -515,7 +519,7 @@ void Player::playInternal ()
 
             // ok, for some reason we left playLoop, if this was due to we shall stop playing
             // leave this loop immediately, else play next song
-            if(!this->isPlaying)
+            if(!this->IsPlaying())
             {
                 break;
             }
@@ -529,6 +533,6 @@ void Player::playInternal ()
         exceptionMsg = e.what();
     }
 
-    this->onIsPlayingChanged.Fire(this->isPlaying, exceptionMsg);
+    this->onIsPlayingChanged.Fire(this->IsPlaying(), exceptionMsg);
 }
 
