@@ -176,7 +176,7 @@ void FluidsynthWrapper::Init(MidiWrapper& caller)
     
     // sadly, fluidsynth's API doesnt provide any way to change the number of audio channels once the synth has been allocated
     // thus, in such a case we have to destory the synth 
-    int audioChans = gConfig.FluidsynthMultiChannel ? NMidiChannels : 1;
+    unsigned int audioChans = gConfig.FluidsynthMultiChannel ? NMidiChannels : 1;
     audioChans *= 2;
     if(this->GetChannels() != audioChans)
     {
