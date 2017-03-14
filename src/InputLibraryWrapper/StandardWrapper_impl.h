@@ -90,17 +90,17 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
 
         this->render(this->data, gConfig.FramesToRender);
     }
-    else if(this->count == gConfig.FramesToRender * this->Format.Channels)
+    else if(this->count == this->getFrames() * this->Format.Channels)
+    {
+        // Song::data already filled up with all the audiofile's PCM, nothing to do here ;)
+        return;
+    }
+    else // only small buffer allocated, i.e. this->count == gConfig.FramesToRender * this->Format.Channels
     {
         WAIT(this->futureFillBuffer);
 
         // data is the consumed pcm buffer, preRenderBuf holds fresh pcm
         std::swap(this->data, this->preRenderBuf);
-    }
-    else /*i.e. this->count == this->getFrames() * this->Format.Channels*/
-    {
-        // Song::data already filled up with all the audiofile's PCM, nothing to do here ;)
-        return;
     }
 
     this->futureFillBuffer = async(launch::async, &WRAPPERCLASS::render, context/*==this*/, context->preRenderBuf, gConfig.FramesToRender);
