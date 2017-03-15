@@ -66,7 +66,7 @@ private:
     } jack_buffer_t;
 
     SRC_DATA srcData;
-    mutable std::mutex mtx;
+    mutable std::recursive_mutex mtx;
     //*** Begin: mutex-protected vars ***//
     jack_buffer_t interleavedProcessedBuffer;
     jack_nframes_t jackBufSize = 0;

@@ -72,9 +72,6 @@ void JackOutput::open()
         jack_on_shutdown(this->handle, JackOutput::onJackShutdown, this);
         jack_set_buffer_size_callback(this->handle, JackOutput::onJackBufSizeChanged, this);
 
-        // initially assign the buffer size
-        JackOutput::onJackBufSizeChanged(jack_get_buffer_size(this->handle), this);
-
         // initially assign the sample rate
         JackOutput::onJackSampleRateChanged(jack_get_sample_rate(this->handle), this);
     }
@@ -90,68 +87,68 @@ void JackOutput::init(SongFormat format, bool realtime)
     // shortcut
     decltype(format.Channels)& channels = format.Channels;
     
-    // first reset and init resampler
+    // avoid jack thread Interference
+    lock_guard<recursive_mutex> lck(this->mtx);
     
-    if(this->srcState != nullptr)
+    // channel count differ?
+    if(this->currentFormat.Channels != channels)
     {
-        this->srcState = src_delete(this->srcState);
-    }
-    int error;
-    this->srcState = src_new(SRC_SINC_BEST_QUALITY, channels, &error);
-    if(this->srcState == nullptr)
-    {
-        THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) <<")");
-    }
-    
-    if(this->currentFormat == format)
-    {
-        // noting more to do
-        return;
-    }
-    
-//     this->stop();
-
-    // register "channels" number of input ports
-
-    if(this->playbackPorts.size() < channels)
-    {
-        char portName[3+1];
-        for(unsigned int i=this->playbackPorts.size(); i<channels && i <= 99; i++)
+        // channel count changed, buffer need to be realloced
+        JackOutput::onJackBufSizeChanged(jack_get_buffer_size(this->handle), this);
+        
+        // register "channels" number of input ports
+        if(this->playbackPorts.size() < channels)
         {
-            snprintf(portName, 3+1, "%.2d", i);
-
-            // we provide an output port (from the view of jack), i.e. a capture port, i.e. a readable port
-            jack_port_t* out_port = jack_port_register (this->handle, portName, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
-
-            if (out_port == nullptr)
+            char portName[3+1];
+            for(unsigned int i=this->playbackPorts.size(); i<channels && i <= 99; i++)
             {
-                // TODO: throw or just break??
-                THROW_RUNTIME_ERROR("no more JACK ports available");
-            }
+                snprintf(portName, 3+1, "%.2d", i);
 
-            this->playbackPorts.push_back(out_port);
+                // we provide an output port (from the view of jack), i.e. a capture port, i.e. a readable port
+                jack_port_t* out_port = jack_port_register (this->handle, portName, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+
+                if (out_port == nullptr)
+                {
+                    // TODO: throw or just break??
+                    THROW_RUNTIME_ERROR("no more JACK ports available");
+                }
+
+                this->playbackPorts.push_back(out_port);
+            }
+        }
+        else if(this->playbackPorts.size() > channels)
+        {
+            // 2016-08-06: dont deregister port!
+            /*          // assumption that (this->currentFormat.Channels == this->playbackPorts.size()) may not always be correct
+                for(int i=this->playbackPorts.size()-1; i>=channels; i--)
+                {
+                    int err = jack_port_unregister (this->handle, this->playbackPorts[i]);
+                    if (err != 0)
+                    {
+                        // ?? what to do ??
+                    }
+
+                    this->playbackPorts.pop_back();
+                }*/
+        }
+        else
+        {
+            // this->playbackPorts.size() == channels, nothing to do here
+        }
+        
+        // we have to delete the resampler in order to refresh channel count
+        if(this->srcState != nullptr)
+        {
+            this->srcState = src_delete(this->srcState);
+        }
+        int error;
+        this->srcState = src_new(SRC_SINC_BEST_QUALITY, channels, &error);
+        if(this->srcState == nullptr)
+        {
+            THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) <<")");
         }
     }
-    else if(this->playbackPorts.size() > channels)
-    {
-        // 2016-08-06: dont deregister port!
-        /*          // assumption that (this->currentFormat.Channels == this->playbackPorts.size()) may not always be correct
-          	  for(int i=this->playbackPorts.size()-1; i>=channels; i--)
-        	  {
-        	    int err = jack_port_unregister (this->handle, this->playbackPorts[i]);
-        	    if (err != 0)
-        	    {
-        	    	// ?? what to do ??
-        	    }
-
-        	    this->playbackPorts.pop_back();
-        	  }*/
-    }
-    else
-    {
-        // this->playbackPorts.size() == channels, nothing to do here
-    }
-
+    
     // WOW, WE MADE IT TIL HERE, so update channelcount, srate and sformat
     this->currentFormat = format;
 }
@@ -217,7 +214,7 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
     this->srcData.end_of_input = 0;
 
     {
-        lock_guard<mutex> lock(this->mtx);
+        lock_guard<recursive_mutex> lock(this->mtx);
         this->srcData.data_out = this->interleavedProcessedBuffer.buf;
         this->srcData.data_out += this->srcData.output_frames_gen * this->currentFormat.Channels;
 
@@ -331,6 +328,13 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
     {
         goto fail;
     }
+    
+    if(nframes != pthis->jackBufSize)
+    {
+        CLOG(LogLevel_t::Error, "expected JackBufSize of " << pthis->jackBufSize << ", got " << nframes);
+        goto fail;
+    }
+    
     if(!pthis->mtx.try_lock())
     {
         // this is strange, the buffer has been marked as ready, however, there seems to be a pending lock
@@ -340,11 +344,20 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
     for(unsigned int i=0; i<pthis->playbackPorts.size(); i++)
     {
         jack_default_audio_sample_t* out = static_cast<jack_default_audio_sample_t*>(jack_port_get_buffer(pthis->playbackPorts[i], nframes));
-
-        for(unsigned int myIdx=i, jackIdx=0; jackIdx<nframes; myIdx+=pthis->currentFormat.Channels, jackIdx++)
+        
+        // there might be more ports than currently channels
+        if(i<pthis->currentFormat.Channels)
         {
-            out[jackIdx] = pthis->interleavedProcessedBuffer.buf[myIdx];
-            pthis->interleavedProcessedBuffer.buf[myIdx] = 0;
+            for(unsigned int myIdx=i, jackIdx=0; jackIdx<nframes; myIdx+=pthis->currentFormat.Channels, jackIdx++)
+            {
+                out[jackIdx] = pthis->interleavedProcessedBuffer.buf[myIdx];
+                pthis->interleavedProcessedBuffer.buf[myIdx] = 0; // zero the consumed buffer
+            }       
+        }
+        else
+        {
+            // mute that port
+            memset(out, 0, nframes*sizeof(jack_default_audio_sample_t));
         }
     }
     pthis->interleavedProcessedBuffer.ready = false;
@@ -366,7 +379,7 @@ fail:
 int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
 {
     JackOutput *const pthis = static_cast<JackOutput*const>(arg);
-    lock_guard<mutex> lock(pthis->mtx);
+    lock_guard<recursive_mutex> lock(pthis->mtx);
 
     pthis->jackBufSize = nframes;
 
