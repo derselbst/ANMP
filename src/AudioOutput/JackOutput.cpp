@@ -154,7 +154,7 @@ void JackOutput::init(SongFormat format, bool realtime)
     }
     else
     {
-        // zero out any buffer in resampler, to avoid hearable cracks
+        // zero out any buffer in resampler, to avoid hearable cracks, when switching from one song to another
         src_reset(this->srcState);
     }
     
@@ -320,13 +320,20 @@ void JackOutput::start()
     {
         THROW_RUNTIME_ERROR("cannot activate client")
     }
-
+    
+    lock_guard<recursive_mutex> lck(this->mtx);
+    // avoid playing any outdated garbage
+    this->interleavedProcessedBuffer.ready = false;
+    // zero out any buffer in resampler, to avoid hearable cracks, when pausing and restarting playback
+    src_reset(this->srcState);
+    
     this->connectPorts();
 }
 
 void JackOutput::stop()
 {
-    jack_deactivate(this->handle);
+// we should deactivate the client here, but if we do, any other jack client recording our output will get in trouble
+//     jack_deactivate(this->handle);
 }
 
 int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
