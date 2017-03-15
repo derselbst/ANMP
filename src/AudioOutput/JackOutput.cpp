@@ -152,6 +152,11 @@ void JackOutput::init(SongFormat format, bool realtime)
             THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) <<")");
         }
     }
+    else
+    {
+        // zero out any buffer in resampler, to avoid hearable cracks
+        src_reset(this->srcState);
+    }
     
     // WOW, WE MADE IT TIL HERE, so update channelcount, srate and sformat
     this->currentFormat = format;
