@@ -123,6 +123,8 @@ MainWindow::~MainWindow()
     this->player->onIsPlayingChanged -= this;
     
     delete this->ui;
+    // manually delete analyzer before deleting player, since analzyer holds this.player
+    delete this->analyzerWindow;
     delete this->player;
     delete this->playlistModel;
 }
