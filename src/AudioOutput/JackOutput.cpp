@@ -142,7 +142,11 @@ void JackOutput::init(SongFormat format, bool realtime)
             this->srcState = src_delete(this->srcState);
         }
         int error;
-        this->srcState = src_new(SRC_SINC_BEST_QUALITY, channels, &error);
+        // SRC_SINC_BEST_QUALITY is too slow, causing jack process thread to discard samples, resulting in hearable artifacts
+        // SRC_LINEAR has high frequency audible garbage
+        // SRC_ZERO_ORDER_HOLD is even worse than LINEAR
+        // SRC_SINC_MEDIUM_QUALITY might still be too slow when using jack with very low latency having a bit of CPU load
+        this->srcState = src_new(SRC_SINC_FASTEST, channels, &error);
         if(this->srcState == nullptr)
         {
             THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) <<")");
@@ -326,6 +330,7 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
 
     if (!pthis->interleavedProcessedBuffer.ready)
     {
+        CLOG(LogLevel_t::Warning, "buffer was not ready for jack, discarding");
         goto fail;
     }
     
