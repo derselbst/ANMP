@@ -139,7 +139,7 @@ void JackOutput::init(SongFormat format, bool realtime)
         this->srcState = src_delete(this->srcState);
     }
     int error;
-    this->srcState = src_new(SRC_LINEAR, channels, &error);
+    this->srcState = src_new(SRC_SINC_BEST_QUALITY, channels, &error);
     if(this->srcState == nullptr)
     {
         THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) <<")");
