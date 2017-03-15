@@ -353,7 +353,7 @@ void PlaylistModel::asyncAdd(const QStringList& files)
         this->songAdderWorker = std::async(launch::async, &PlaylistModel::workerLoop, this);
     }
     lck.unlock();
-    this->songsToAdd.cv.notify_all();
+    this->songsToAdd.cv.notify_one();
 }
 
 void PlaylistModel::asyncAdd(const QList<QUrl>& files)
@@ -395,9 +395,20 @@ void PlaylistModel::workerLoop()
         // notify waiting threads, so they can continue filling the queue
         this->songsToAdd.cv.notify_all();
 
+        auto start = std::chrono::high_resolution_clock::now();
         i++;
         emit this->SongAdded(QString::fromStdString(s), i, i+total);
         PlaylistFactory::addSong(*this, s);
+        auto end = std::chrono::high_resolution_clock::now();
+
+        // if we add songs too fast we keep locking this->mtx (via this->add(Song*)) and thus potentially blocking the UI thread
+        std::chrono::milliseconds wait = std::chrono::milliseconds(10);
+        std::chrono::milliseconds past = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        wait -= past;
+        if(wait > std::chrono::milliseconds(0))
+        {
+            std::this_thread::sleep_for(wait);
+        }
 
         lck.lock();
         this->songsToAdd.ready = true;
