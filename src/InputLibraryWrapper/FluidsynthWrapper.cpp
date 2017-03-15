@@ -179,6 +179,8 @@ void FluidsynthWrapper::DeepInit(MidiWrapper& caller)
         this->callbackEvent = new_fluid_event();
         fluid_event_set_source(this->callbackEvent, -1);
     }
+    // destination may have changed, refresh it
+    fluid_event_set_dest(this->callbackEvent, this->myselfID.Value);
     
     /* Load the soundfont */
     if (!fluid_is_soundfont(this->cachedSf2.c_str()))
