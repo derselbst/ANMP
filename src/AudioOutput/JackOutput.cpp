@@ -77,22 +77,41 @@ void JackOutput::open()
 
         // initially assign the sample rate
         JackOutput::onJackSampleRateChanged(jack_get_sample_rate(this->handle), this);
-
     }
 }
 
 void JackOutput::init(SongFormat format, bool realtime)
 {
-    if(this->currentFormat == format || !format.IsValid())
+    if(!format.IsValid())
     {
         return;
     }
     
-    this->stop();
+    // shortcut
+    decltype(format.Channels)& channels = format.Channels;
+    
+    // first reset and init resampler
+    
+    if(this->srcState != nullptr)
+    {
+        this->srcState = src_delete(this->srcState);
+    }
+    int error;
+    this->srcState = src_new(SRC_SINC_BEST_QUALITY, channels, &error);
+    if(this->srcState == nullptr)
+    {
+        THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) <<")");
+    }
+    
+    if(this->currentFormat == format)
+    {
+        // noting more to do
+        return;
+    }
+    
+//     this->stop();
 
     // register "channels" number of input ports
-
-    decltype(format.Channels)& channels = format.Channels;
 
     if(this->playbackPorts.size() < channels)
     {
@@ -131,18 +150,6 @@ void JackOutput::init(SongFormat format, bool realtime)
     else
     {
         // this->playbackPorts.size() == channels, nothing to do here
-    }
-
-
-    if(this->srcState != nullptr)
-    {
-        this->srcState = src_delete(this->srcState);
-    }
-    int error;
-    this->srcState = src_new(SRC_SINC_BEST_QUALITY, channels, &error);
-    if(this->srcState == nullptr)
-    {
-        THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) <<")");
     }
 
     // WOW, WE MADE IT TIL HERE, so update channelcount, srate and sformat
@@ -313,7 +320,7 @@ void JackOutput::start()
 
 void JackOutput::stop()
 {
-    // nothing ;)
+    jack_deactivate(this->handle);
 }
 
 int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
@@ -326,7 +333,7 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
     }
     if(!pthis->mtx.try_lock())
     {
-        // this is strange, the buffer has been marked as ready, however, there seem to be a pending lock
+        // this is strange, the buffer has been marked as ready, however, there seems to be a pending lock
         goto fail;
     }
 
@@ -337,6 +344,7 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
         for(unsigned int myIdx=i, jackIdx=0; jackIdx<nframes; myIdx+=pthis->currentFormat.Channels, jackIdx++)
         {
             out[jackIdx] = pthis->interleavedProcessedBuffer.buf[myIdx];
+            pthis->interleavedProcessedBuffer.buf[myIdx] = 0;
         }
     }
     pthis->interleavedProcessedBuffer.ready = false;
@@ -370,6 +378,7 @@ int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
 
     delete[] pthis->interleavedProcessedBuffer.buf;
     pthis->interleavedProcessedBuffer.buf = new (nothrow) jack_default_audio_sample_t[pthis->jackBufSize * pthis->currentFormat.Channels];
+    pthis->interleavedProcessedBuffer.ready = false;
 
     // TODO check if alloc successfull
 

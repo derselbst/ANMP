@@ -56,8 +56,13 @@ private:
 
     typedef struct
     {
-        jack_default_audio_sample_t* buf = nullptr; // length of this buffer determined by jackBufSize
-        bool ready = false;
+        // buffer where to store the pcm to be played by jack
+        // length of this buffer determined by this->jackBufSize
+        jack_default_audio_sample_t* buf = nullptr;
+        
+        // false: buffer has been consumed by jack and needs to be refilled
+        // true: buffer is filled
+        bool ready = false; 
     } jack_buffer_t;
 
     SRC_DATA srcData;
