@@ -94,9 +94,6 @@ void JackOutput::init(SongFormat format, bool realtime)
     // channel count differ?
     if(this->currentFormat.Channels != channels)
     {
-        // channel count changed, buffer need to be realloced
-        JackOutput::onJackBufSizeChanged(jack_get_buffer_size(this->handle), this);
-        
         // register "channels" number of input ports
         if(this->playbackPorts.size() < channels)
         {
@@ -154,15 +151,22 @@ void JackOutput::init(SongFormat format, bool realtime)
         {
             THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) <<")");
         }
+        
+        // update the current channel format before allocating new jack buffer (next line)
+        this->currentFormat = format;
+        
+        // channel count changed, buffer needs to be realloced
+        JackOutput::onJackBufSizeChanged(jack_get_buffer_size(this->handle), this);
+        
     }
     else
     {
         // zero out any buffer in resampler, to avoid hearable cracks, when switching from one song to another
         src_reset(this->srcState);
+        
+        // dont forget to update channelcount, srate and sformat
+        this->currentFormat = format;
     }
-    
-    // WOW, WE MADE IT TIL HERE, so update channelcount, srate and sformat
-    this->currentFormat = format;
 }
 
 void JackOutput::close()
