@@ -113,8 +113,6 @@ void JackOutput::init(SongFormat format, bool realtime)
 
                 this->playbackPorts.push_back(out_port);
             }
-            
-            this->connectPorts();
         }
         else if(this->playbackPorts.size() > channels)
         {
@@ -180,13 +178,14 @@ void JackOutput::close()
 
 int JackOutput::write (const float* buffer, frame_t frames)
 {
-    lock_guard<recursive_mutex> lock(this->mtx);
+//     unique_lock<recursive_mutex> lck(this->mtx);
     
     if(this->interleavedProcessedBuffer.ready)
     {
         // buffer has not been consumed yet
         return 0;
     }
+//     lck.unlock();
 
     const size_t Items = frames*this->currentFormat.Channels;
 
@@ -253,7 +252,7 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
     {
         if(this->srcData.output_frames_gen < this->srcData.output_frames)
         {
-            CLOG(LogLevel_t::Warning, "jacks callback buffer has not been filled completely" << endl <<
+            CLOG(LogLevel_t::Info, "jacks callback buffer has not been filled completely" << endl <<
                     "input_frames: " << this->srcData.input_frames << "\toutput_frames: " << this->srcData.output_frames << endl <<
                     "input_frames_used: " << this->srcData.input_frames_used << "\toutput_frames_gen: " << this->srcData.output_frames_gen);
 
@@ -271,13 +270,14 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
 
 template<typename T> int JackOutput::write (const T* buffer, frame_t frames)
 {
-    lock_guard<recursive_mutex> lock(this->mtx);
+//     unique_lock<recursive_mutex> lck(this->mtx);
     
     if(this->interleavedProcessedBuffer.ready)
     {
         // buffer has not been consumed yet
         return 0;
     }
+//     lck.unlock();
 
     const size_t Items = frames*this->currentFormat.Channels;
 
@@ -330,18 +330,17 @@ void JackOutput::start()
     {
         THROW_RUNTIME_ERROR("cannot activate client")
     }
+    this->connectPorts();
     
     lock_guard<recursive_mutex> lck(this->mtx);
+    
+    this->interleavedProcessedBuffer.isRunning = true;
     
     // avoid playing any outdated garbage
     this->interleavedProcessedBuffer.ready = false;
     
-    this->interleavedProcessedBuffer.isRunning = true;
-    
     // zero out any buffer in resampler, to avoid hearable cracks, when pausing and restarting playback
     src_reset(this->srcState);
-    
-    this->connectPorts();
 }
 
 void JackOutput::stop()
@@ -349,36 +348,43 @@ void JackOutput::stop()
 // we should deactivate the client here, but if we do, any other jack client recording our output will get in trouble
 //     jack_deactivate(this->handle);
     
+    lock_guard<recursive_mutex> lck(this->mtx);
     this->interleavedProcessedBuffer.isRunning = false;
 }
 
 int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
 {
     JackOutput *const pthis = static_cast<JackOutput*const>(arg);
-
     
-    if(!pthis->mtx.try_lock())
-    {
-        goto fail;
-    }
+    // doc says: "return 0 on success, nonzero otherwise"
+    // however if we return non zero, jack just silently deactivates us, so we have no other chance than always return 0 here
+    int ret = 0;
     
     if(!pthis->interleavedProcessedBuffer.isRunning)
     {
-    pthis->mtx.unlock();
+//         ret = 0; // no error
         goto fail;
     }
     
     if (!pthis->interleavedProcessedBuffer.ready)
     {
-    pthis->mtx.unlock();
         CLOG(LogLevel_t::Warning, "buffer was not ready for jack, discarding");
+        
+//         ret = -1;
         goto fail;
     }
     
     if(nframes != pthis->jackBufSize)
     {
-    pthis->mtx.unlock();
         CLOG(LogLevel_t::Error, "expected JackBufSize of " << pthis->jackBufSize << ", got " << nframes);
+        
+//         ret = -1;
+        goto fail;
+    }
+        
+    if(!pthis->mtx.try_lock())
+    {
+//         ret = -1;
         goto fail;
     }
 
@@ -404,7 +410,7 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
     pthis->interleavedProcessedBuffer.ready = false;
 
     pthis->mtx.unlock();
-    return 0;
+    return ret;
 
 fail:
     for(unsigned int i=0; i<pthis->playbackPorts.size(); i++)
@@ -413,7 +419,7 @@ fail:
 
         memset(out, 0, nframes*sizeof(jack_default_audio_sample_t));
     }
-    return 0;
+    return ret;
 }
 
 // we can do non-realtime safe stuff here :D
