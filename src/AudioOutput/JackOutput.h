@@ -62,7 +62,9 @@ private:
         
         // false: buffer has been consumed by jack and needs to be refilled
         // true: buffer is filled
-        bool ready = false; 
+        bool ready = false;
+        
+        bool isRunning = false;
     } jack_buffer_t;
 
     SRC_DATA srcData;

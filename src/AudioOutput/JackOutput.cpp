@@ -30,6 +30,7 @@ JackOutput::~JackOutput ()
     }
 
     delete[] this->interleavedProcessedBuffer.buf;
+    this->interleavedProcessedBuffer.buf = nullptr;
 }
 
 //
@@ -115,6 +116,8 @@ void JackOutput::init(SongFormat format, bool realtime)
 
                 this->playbackPorts.push_back(out_port);
             }
+            
+            this->connectPorts();
         }
         else if(this->playbackPorts.size() > channels)
         {
@@ -173,6 +176,8 @@ void JackOutput::close()
 
 int JackOutput::write (const float* buffer, frame_t frames)
 {
+    lock_guard<recursive_mutex> lock(this->mtx);
+    
     if(this->interleavedProcessedBuffer.ready)
     {
         // buffer has not been consumed yet
@@ -216,46 +221,45 @@ template<typename T> void JackOutput::getAmplifiedFloatBuffer(const T* inBuf, fl
 
 int JackOutput::doResampling(const float* inBuf, const size_t Frames)
 {
+    lock_guard<recursive_mutex> lock(this->mtx);
+    
     this->srcData.data_in = /*const_cast<float*>*/(inBuf);
     this->srcData.input_frames = Frames;
 
     // this is not the last buffer passed to src
     this->srcData.end_of_input = 0;
 
+    this->srcData.data_out = this->interleavedProcessedBuffer.buf;
+    this->srcData.data_out += this->srcData.output_frames_gen * this->currentFormat.Channels;
+
+    this->srcData.output_frames = this->jackBufSize - this->srcData.output_frames_gen;
+
+    // just to be sure
+    this->srcData.output_frames_gen = 0;
+
+    // output_sample_rate / input_sample_rate
+    this->srcData.src_ratio = (double)this->jackSampleRate / this->currentFormat.SampleRate;
+
+    int err = src_process (this->srcState, &this->srcData);
+    if(err != 0 )
     {
-        lock_guard<recursive_mutex> lock(this->mtx);
-        this->srcData.data_out = this->interleavedProcessedBuffer.buf;
-        this->srcData.data_out += this->srcData.output_frames_gen * this->currentFormat.Channels;
-
-        this->srcData.output_frames = this->jackBufSize - this->srcData.output_frames_gen;
-
-        // just to be sure
-        this->srcData.output_frames_gen = 0;
-
-        // output_sample_rate / input_sample_rate
-        this->srcData.src_ratio = (double)this->jackSampleRate / this->currentFormat.SampleRate;
-
-        int err = src_process (this->srcState, &this->srcData);
-        if(err != 0 )
+        CLOG(LogLevel_t::Error, "libsamplerate failed processing (" << src_strerror(err) <<")");
+    }
+    else
+    {
+        if(this->srcData.output_frames_gen < this->srcData.output_frames)
         {
-            CLOG(LogLevel_t::Error, "libsamplerate failed processing (" << src_strerror(err) <<")");
-        }
-        else
-        {
-            if(this->srcData.output_frames_gen < this->srcData.output_frames)
-            {
-                CLOG(LogLevel_t::Warning, "jacks callback buffer has not been filled completely" << endl <<
-                     "input_frames: " << this->srcData.input_frames << "\toutput_frames: " << this->srcData.output_frames << endl <<
-                     "input_frames_used: " << this->srcData.input_frames_used << "\toutput_frames_gen: " << this->srcData.output_frames_gen);
+            CLOG(LogLevel_t::Warning, "jacks callback buffer has not been filled completely" << endl <<
+                    "input_frames: " << this->srcData.input_frames << "\toutput_frames: " << this->srcData.output_frames << endl <<
+                    "input_frames_used: " << this->srcData.input_frames_used << "\toutput_frames_gen: " << this->srcData.output_frames_gen);
 
 // 				const size_t diffItems = this->srcData.output_frames - this->srcData.output_frames_gen;
 // 				memset(this->interleavedProcessedBuffer.buf, 0, diffItems * sizeof(jack_default_audio_sample_t));
-            }
-            else
-            {
-                this->srcData.output_frames_gen = 0;
-                this->interleavedProcessedBuffer.ready = true;
-            }
+        }
+        else
+        {
+            this->srcData.output_frames_gen = 0;
+            this->interleavedProcessedBuffer.ready = true;
         }
     }
     return this->srcData.input_frames_used;
@@ -263,6 +267,8 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
 
 template<typename T> int JackOutput::write (const T* buffer, frame_t frames)
 {
+    lock_guard<recursive_mutex> lock(this->mtx);
+    
     if(this->interleavedProcessedBuffer.ready)
     {
         // buffer has not been consumed yet
@@ -322,8 +328,12 @@ void JackOutput::start()
     }
     
     lock_guard<recursive_mutex> lck(this->mtx);
+    
     // avoid playing any outdated garbage
     this->interleavedProcessedBuffer.ready = false;
+    
+    this->interleavedProcessedBuffer.isRunning = true;
+    
     // zero out any buffer in resampler, to avoid hearable cracks, when pausing and restarting playback
     src_reset(this->srcState);
     
@@ -334,27 +344,37 @@ void JackOutput::stop()
 {
 // we should deactivate the client here, but if we do, any other jack client recording our output will get in trouble
 //     jack_deactivate(this->handle);
+    
+    this->interleavedProcessedBuffer.isRunning = false;
 }
 
 int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
 {
     JackOutput *const pthis = static_cast<JackOutput*const>(arg);
 
+    
+    if(!pthis->mtx.try_lock())
+    {
+        goto fail;
+    }
+    
+    if(!pthis->interleavedProcessedBuffer.isRunning)
+    {
+    pthis->mtx.unlock();
+        goto fail;
+    }
+    
     if (!pthis->interleavedProcessedBuffer.ready)
     {
+    pthis->mtx.unlock();
         CLOG(LogLevel_t::Warning, "buffer was not ready for jack, discarding");
         goto fail;
     }
     
     if(nframes != pthis->jackBufSize)
     {
+    pthis->mtx.unlock();
         CLOG(LogLevel_t::Error, "expected JackBufSize of " << pthis->jackBufSize << ", got " << nframes);
-        goto fail;
-    }
-    
-    if(!pthis->mtx.try_lock())
-    {
-        // this is strange, the buffer has been marked as ready, however, there seems to be a pending lock
         goto fail;
     }
 
