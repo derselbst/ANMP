@@ -45,7 +45,12 @@ template<typename SAMPLEFORMAT>
 template<typename WRAPPERCLASS>
 void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
 {
-    if(this->count == 0) // no buffer allocated?
+    if(this->count == this->getFrames() * this->Format.Channels)
+    {
+        // Song::data already filled up with all the audiofile's PCM, nothing to do here (most likely case)
+        return;
+    }
+    else if(this->count == 0) // no buffer allocated?
     {
         if(!this->Format.IsValid())
         {
@@ -55,45 +60,49 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
         // usually this shouldnt block at all, since we only end up here after releaseBuffer() was called
         // and releaseBuffer already waits for the render thread to finish... however it doesnt hurt
         WAIT(this->futureFillBuffer);
-
+        
+        size_t itemsToAlloc = 0;
         if(gConfig.RenderWholeSong)
         {
-            this->count = this->getFrames() * this->Format.Channels;
+            itemsToAlloc = this->getFrames() * this->Format.Channels;
 
             // try to alloc a buffer to hold the whole song's pcm in memory
-            this->data = new (std::nothrow) SAMPLEFORMAT[this->count];
+            this->data = new (std::nothrow) SAMPLEFORMAT[itemsToAlloc];
+            if(this->data != nullptr) // buffer successfully allocated, fill it asynchronously
+            {
+                this->count = itemsToAlloc;
+
+                // (pre-)render the first few milliseconds
+                this->render(this->data, msToFrames(gConfig.PreRenderTime, this->Format.SampleRate));
+
+                // immediatly start filling the rest of the pcm buffer
+                this->futureFillBuffer = async(launch::async, &WRAPPERCLASS::render, context/*==this*/, context->data, 0/*render everything*/);
+
+                // allow the render thread to do his work
+                this_thread::yield();
+
+                return;
+            }
         }
 
-        if(this->data != nullptr)
-        {
-            // buffer successfully allocated, fill it asynchronously
-
-            // (pre-)render the first few milliseconds
-            this->render(this->data, msToFrames(gConfig.PreRenderTime, this->Format.SampleRate));
-
-            // immediatly start filling the rest of the pcm buffer
-            this->futureFillBuffer = async(launch::async, &WRAPPERCLASS::render, context/*==this*/, context->data, 0/*render everything*/);
-
-            // allow the render thread to do his work
-            this_thread::yield();
-
-            return;
-        }
-
-        // well something went wrong during alloc (not enough memory??)
+        // well either we shall not render whole song once or something went wrong during alloc (not enough memory??)
         // so try to alloc at least enough to do double buffering
         // if this fails too, an exception will be thrown
-        this->count = gConfig.FramesToRender * this->Format.Channels;
+        itemsToAlloc = gConfig.FramesToRender * this->Format.Channels;
 
-        this->data = new SAMPLEFORMAT[this->count];
-        this->preRenderBuf = new SAMPLEFORMAT[this->count];
-
+        try
+        {
+            this->data = new SAMPLEFORMAT[itemsToAlloc];
+            this->preRenderBuf = new SAMPLEFORMAT[itemsToAlloc];
+            this->count = itemsToAlloc;
+        }
+        catch(const std::bad_alloc& e)
+        {
+            this->releaseBuffer();
+            throw;
+        }
+        
         this->render(this->data, gConfig.FramesToRender);
-    }
-    else if(this->count == this->getFrames() * this->Format.Channels)
-    {
-        // Song::data already filled up with all the audiofile's PCM, nothing to do here ;)
-        return;
     }
     else // only small buffer allocated, i.e. this->count == gConfig.FramesToRender * this->Format.Channels
     {
