@@ -391,38 +391,39 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
         goto fail;
     }
     
-    const unsigned int nchannels = pthis->currentFormat.Channels;
-    const int portsToFill = min(pthis->playbackPorts.size(), nchannels);
-    
-    jack_default_audio_sample_t* out[portsToFill]; // temporary array that caches the retrieved buffers for jack ports
-    
-    // cache the addresses for jack's ports
-    for(unsigned int i=0; i<portsToFill; i++)
     {
-        out[i] = static_cast<jack_default_audio_sample_t*>(jack_port_get_buffer(pthis->playbackPorts[i], nframes));
-    }
-    
-    // run over our downmixed, processed, interleaved pcm buffer frame by frame
-    for(unsigned int f=0; f<nframes, f++)
-    {
-        // and map each item to its respective jack port
-        for(unsigned int c=0; c<nchannels, c++)
+        const unsigned int nchannels = pthis->currentFormat.Channels;
+        const unsigned int portsToFill = min(pthis->playbackPorts.size(), nchannels);
+
+        jack_default_audio_sample_t* out[portsToFill]; // temporary array that caches the retrieved buffers for jack ports
+
+        // cache the addresses for jack's ports
+        for(unsigned int i=0; i<portsToFill; i++)
         {
-            const unsigned int idx = f*nchannels + c;
-            jack_default_audio_sample_t& item = pthis->interleavedProcessedBuffer.buf[idx];
-            out[c] = item
-            item = 0; // zero the consumed buffer
+            out[i] = static_cast<jack_default_audio_sample_t*>(jack_port_get_buffer(pthis->playbackPorts[i], nframes));
+        }
+
+        // run over our downmixed, processed, interleaved pcm buffer frame by frame
+        for(unsigned int f=0; f<nframes; f++)
+        {
+            // and map each item to its respective jack port
+            for(unsigned int c=0; c<nchannels; c++)
+            {
+                const unsigned int idx = f*nchannels + c;
+                jack_default_audio_sample_t& item = pthis->interleavedProcessedBuffer.buf[idx];
+                out[c][f] = item;
+                item = 0; // zero the consumed buffer
+            }
+        }
+
+        // there might be more ports than currently channels  
+        const int portsLeft = pthis->playbackPorts.size() - portsToFill;
+        for(int i=0; i<portsLeft; i++)
+        {
+            // mute those ports
+            memset(out[i], 0, nframes*sizeof(jack_default_audio_sample_t));
         }
     }
-    
-    // there might be more ports than currently channels  
-    const int portsLeft = pthis->playbackPorts.size() - portsToFill;
-    for(int i=0; i<portsLeft; i++)
-    {
-        // mute those ports
-        memset(out[i], 0, nframes*sizeof(jack_default_audio_sample_t));
-    }
-    
     pthis->interleavedProcessedBuffer.ready = false;
     pthis->mtx.unlock();
     
