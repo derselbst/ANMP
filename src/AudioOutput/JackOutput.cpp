@@ -40,7 +40,6 @@ void JackOutput::open()
 {
     if(this->handle == nullptr)
     {
-
         jack_status_t status;
         jack_options_t options = JackNullOption;
 
@@ -393,7 +392,7 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
     
     {
         const unsigned int nchannels = pthis->currentFormat.Channels;
-        const unsigned int portsToFill = min(pthis->playbackPorts.size(), nchannels);
+        const unsigned int portsToFill = min<unsigned int>(pthis->playbackPorts.size(), nchannels);
 
         jack_default_audio_sample_t* out[portsToFill]; // temporary array that caches the retrieved buffers for jack ports
 
