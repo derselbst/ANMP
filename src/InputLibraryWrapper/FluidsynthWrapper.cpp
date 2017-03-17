@@ -197,7 +197,10 @@ void FluidsynthWrapper::DeepInit(MidiWrapper& caller)
 void FluidsynthWrapper::Unload()
 {
     // soundfonts take up huge amount of memory, free it
-    fluid_synth_sfunload(this->synth, this->cachedSf2Id, true);
+    if(this->synth != nullptr)
+    {
+        fluid_synth_sfunload(this->synth, this->cachedSf2Id, true);
+    }
     
     this->deleteSeq();
     // the synth uses pthread_key_create, which quickly runs out of keys when not cleaning up
