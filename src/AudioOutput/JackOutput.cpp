@@ -315,7 +315,7 @@ void JackOutput::connectPorts()
 
     for(unsigned int i=0; physicalPlaybackPorts[i]!=nullptr && i<this->playbackPorts.size(); i++)
     {
-        if(!jack_port_connected_to(jack_port_name(this->playbackPorts[i]), physicalPlaybackPorts[i]))
+        if(!jack_port_connected_to(this->playbackPorts[i], physicalPlaybackPorts[i]))
         {
             if (jack_connect(this->handle, jack_port_name(this->playbackPorts[i]), physicalPlaybackPorts[i]))
             {
