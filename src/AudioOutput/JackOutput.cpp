@@ -357,6 +357,7 @@ void JackOutput::stop()
 int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
 {
     JackOutput *const pthis = static_cast<JackOutput*const>(arg);
+    const unsigned int nJackPorts = pthis->playbackPorts.size();
     
     // doc says: "return 0 on success, nonzero otherwise"
     // however if we return non zero, jack just silently deactivates us, so we have no other chance than always return 0 here
@@ -392,12 +393,12 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
     
     {
         const unsigned int nchannels = pthis->currentFormat.Channels;
-        const unsigned int portsToFill = min<unsigned int>(pthis->playbackPorts.size(), nchannels);
+        const unsigned int portsToFill = min<unsigned int>(nJackPorts, nchannels);
 
-        jack_default_audio_sample_t* out[portsToFill]; // temporary array that caches the retrieved buffers for jack ports
+        jack_default_audio_sample_t* out[nJackPorts]; // temporary array that caches the retrieved buffers for jack ports
 
         // cache the addresses for jack's ports
-        for(unsigned int i=0; i<portsToFill; i++)
+        for(unsigned int i=0; i<nJackPorts; i++)
         {
             out[i] = static_cast<jack_default_audio_sample_t*>(jack_port_get_buffer(pthis->playbackPorts[i], nframes));
         }
@@ -416,11 +417,12 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
         }
 
         // there might be more ports than currently channels  
-        const int portsLeft = pthis->playbackPorts.size() - portsToFill;
+        const int portsLeft = nJackPorts - portsToFill;
         for(int i=0; i<portsLeft; i++)
         {
+            const int idx = i + (portsToFill-1);
             // mute those ports
-            memset(out[i], 0, nframes*sizeof(jack_default_audio_sample_t));
+            memset(out[idx], 0, nframes*sizeof(jack_default_audio_sample_t));
         }
     }
     pthis->interleavedProcessedBuffer.ready = false;
@@ -429,7 +431,7 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
     return ret;
 
 fail:
-    for(unsigned int i=0; i<pthis->playbackPorts.size(); i++)
+    for(unsigned int i=0; i<nJackPorts; i++)
     {
         jack_default_audio_sample_t* out = static_cast<jack_default_audio_sample_t*>(jack_port_get_buffer(pthis->playbackPorts[i], nframes));
 
