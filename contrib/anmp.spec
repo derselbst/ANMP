@@ -23,11 +23,12 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
 Requires: libanmp%{soname} = %{version}
 
-
+%if 0%{?suse_version}
 %ifarch x86_64
 BuildRequires: clang >= 3.5
 %else
 BuildRequires: gcc-c++ >= 4.8
+%endif
 %endif
 
 
@@ -132,9 +133,11 @@ cd %{builddir}
 
 # clang fails linking the stack guard on ppc64 and has problems with std::atomic on i586
 # but clang is cool, so use it on x86_64, else fallback to gcc
+%if 0%{?suse_version}
 %ifarch x86_64
         export CC=clang
         export CXX=clang++
+%endif
 %endif
 
 cmake .. \
