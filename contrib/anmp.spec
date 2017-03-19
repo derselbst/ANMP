@@ -192,6 +192,13 @@ Additional useful tools for %{name}
 mkdir -p %{builddir}
 cd %{builddir}
 
+# clang fails linking the stack guard on ppc64 and has problems with std::atomic on i586
+# but clang is cool, so use it on x86_64, else fallback to gcc
+%ifarch x86_64
+        export CC=clang
+        export CXX=clang++
+%endif
+
 cmake .. \
         -DFLUIDSYNTH_DEFAULT_SF2=%{_datadir}/%{name}/%{sffile} \
         -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} \
