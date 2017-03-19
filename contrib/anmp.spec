@@ -109,6 +109,7 @@ BuildRequires: libmodplug-devel
 
 %if 0%{with vgmstream}
 BuildRequires: vgmstream-devel
+%endif
 
 %if 0%{with lazyusf}
 BuildRequires: lazyusf2-devel
