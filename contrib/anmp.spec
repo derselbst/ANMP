@@ -1,11 +1,54 @@
+#
+# spec file for package sonic-visualiser
+#
+# Copyright (c) 2016-2017 Tom Mbrt <tom.mbrt@googlemail.com>
+#
+# All modifications and additions to the file contributed by third parties
+# remain the property of their copyright owners, unless otherwise agreed
+# upon. The license for this file, and modifications and additions to the
+# file, is the same license as for the pristine package itself (unless the
+# license for the pristine package is not an Open Source License, in which
+# case the license is the MIT License). An "Open Source License" is a
+# license that conforms to the Open Source Definition (Version 1.9)
+# published by the Open Source Initiative.
 
-# clang <= 3.7 doesnt build with build-id
-%if %{defined fedora}
-%undefine _missing_build_ids_terminate_build
-%endif
+
+# # clang <= 3.7 doesnt build with build-id
+# %if %{defined fedora}
+# %undefine _missing_build_ids_terminate_build
+# %endif
+
 
 %define soname 0
 %define builddir build
+%define sffile OldSeiterPiano.sf2
+
+%bcond_with sndfile
+%bcond_with aopsf
+%bcond_with mad
+%bcond_with gme
+%bcond_with modplug
+%bcond_with vgmstream
+%bcond_with midi
+# SuSE specific:
+# everything newer openSUSE 13.2 or openSUSE Leap
+%if 0%{?suse_version} >= 1320 || 0%{?suse_version} == 1315
+%bcond_with ffmpeg
+%endif
+
+%ifarch x86_64 i586 i686
+%bcond_with lazyusf
+%endif
+
+%bcond_with alsa
+%bcond_with jack
+%bcond_with portaudio
+%bcond_with ebur128
+
+%bcond_with cue
+%bcond_with qt
+%bcond_with visualizer
+
 
 Name: anmp
 Version: 3
@@ -15,21 +58,13 @@ Summary: Another Nameless Music Player
 Url: https://www.github.com/derselbst/ANMP
 Group: Development/Libraries/C and C++
 Source0: anmp-%{version}.tar.bz2
-
-%define sffile OldSeiterPiano.sf2
 Source1: %{sffile}
-
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
 Requires: libanmp%{soname} = %{version}
 
 
-%ifarch x86_64
-BuildRequires: clang >= 3.5
-%else
 BuildRequires: gcc-c++ >= 4.8
-%endif
-
 
 %if 0%{?mageia}
 BuildRequires: cmake >= 1:3.1.0
@@ -37,53 +72,79 @@ BuildRequires: cmake >= 1:3.1.0
 BuildRequires: cmake >= 3.1.0
 %endif
 
-BuildRequires: pkgconfig(fluidsynth)
-BuildRequires: pkgconfig(smf)
-BuildRequires: libcue-devel
-BuildRequires: libgme-devel
-BuildRequires: libmad-devel pkgconfig(id3tag)
-BuildRequires: pkgconfig(sndfile)
-BuildRequires: libmodplug-devel
-BuildRequires: vgmstream-devel
-%ifarch x86_64 i586 i686
-BuildRequires: lazyusf2-devel
-%endif
+# %if 0%{?suse_version} == 1320
+# %ifarch x86_64
+# BuildRequires: clang >= 3.5
+# %endif
+# %endif
 
-# SuSE specific:
-# everything newer openSUSE 13.2 or openSUSE Leap
-%if 0%{?suse_version} >= 1320 || 0%{?suse_version} == 1315
+%if 0%{with ffmpeg}
 BuildRequires: libavcodec-devel
 BuildRequires: libavformat-devel
 BuildRequires: libavutil-devel
 BuildRequires: libswresample-devel
 %endif
 
-# CentOS specific:
-%if %{defined centos_version}
+%if 0%{with midi}
+BuildRequires: pkgconfig(fluidsynth)
+BuildRequires: pkgconfig(smf)
 %endif
 
-# Fedora specific:
-%if %{defined fedora}
+%if 0%{with gme}
+BuildRequires: libgme-devel
 %endif
 
-# Mageia specific:
-%if %{defined mageia}
+%if 0%{with mad}
+BuildRequires: libmad-devel
+BuildRequires: pkgconfig(id3tag)
 %endif
 
-# RedHat specific:
-%if %{defined rhel_version}
+%if 0%{with sndfile}
+BuildRequires: pkgconfig(sndfile)
+%endif
+
+%if 0%{with modplug}
+BuildRequires: libmodplug-devel
+%endif
+
+%if 0%{with vgmstream}
+BuildRequires: vgmstream-devel
+
+%if 0%{with lazyusf}
+BuildRequires: lazyusf2-devel
 %endif
 
 
+%if 0%{with alsa}
 BuildRequires: pkgconfig(alsa)
-BuildRequires: pkgconfig(jack) pkgconfig(samplerate)
+%endif
+
+%if 0%{with jack}
+BuildRequires: pkgconfig(jack)
+BuildRequires: pkgconfig(samplerate)
+%endif
+
+%if 0%{with portaudio}
 BuildRequires: pkgconfig(portaudio-2.0)
+%endif
+
+%if 0%{with ebur128}
 BuildRequires: libebur128-devel
+%endif
 
 
+%if 0%{with qt}
 BuildRequires: pkgconfig(Qt5Widgets)
 BuildRequires: pkgconfig(Qt5DBus)
+%endif
+
+%if 0%{with visualizer}
 BuildRequires: pkgconfig(Qt5OpenGL)
+%endif
+
+%if 0%{with cue}
+BuildRequires: libcue-devel
+%endif
 
 
 %description
