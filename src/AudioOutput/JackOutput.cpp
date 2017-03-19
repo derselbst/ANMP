@@ -420,7 +420,7 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
         const int portsLeft = nJackPorts - portsToFill;
         for(int i=0; i<portsLeft; i++)
         {
-            const int idx = i + (portsToFill-1);
+            const int idx = i + portsToFill;
             // mute those ports
             memset(out[idx], 0, nframes*sizeof(jack_default_audio_sample_t));
         }
