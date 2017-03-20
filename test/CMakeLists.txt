@@ -26,4 +26,4 @@ endif(USE_JACK)
 
 
 # make test only runs tests, but doesnt build them
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}  DEPENDS TestLoudnessFile TestCommon TestConfigSerialization TestStandardWrapper TestJackOutput)
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}  DEPENDS TestLoudnessFile TestCommon TestConfigSerialization TestStandardWrapper)
