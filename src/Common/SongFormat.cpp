@@ -12,6 +12,26 @@ bool operator != (SongFormat const& lhs, SongFormat const& rhs)
     return !(lhs == rhs);
 }
 
+unsigned int SongFormat::Channels()
+{
+    unsigned int sum = 0;
+    for(unsigned int i=0; i<this->Voices; i++)
+    {
+        sum += this->VoiceChannels[i];
+    }
+    return sum;
+}
+
+void SongFormat::SetVoices(unsigned int nVoices)
+{
+    this->VoiceName.resize(nVoices, "");
+    this->VoiceIsMuted.resize(nVoices, false);
+    this->VoiceChannels.resize(nVoices, 0);
+    
+    this->Voices = nVoices;
+}
+
+
 /**
  * returns bitrate in bit/s
  */
