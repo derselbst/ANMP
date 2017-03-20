@@ -18,10 +18,11 @@ ADD_EXECUTABLE(TestStandardWrapper TestStandardWrapper.cpp)
 TARGET_LINK_LIBRARIES(TestStandardWrapper anmp)
 ADD_TEST(NAME TestStandardWrapper COMMAND TestStandardWrapper)
 
-ADD_EXECUTABLE(TestJackOutput TestJackOutput.cpp)
-TARGET_LINK_LIBRARIES(TestJackOutput anmp)
-# ADD_TEST(NAME TestJackOutput COMMAND TestJackOutput)
-
+if(USE_JACK)
+    ADD_EXECUTABLE(TestJackOutput TestJackOutput.cpp)
+    TARGET_LINK_LIBRARIES(TestJackOutput anmp)
+    # ADD_TEST(NAME TestJackOutput COMMAND TestJackOutput)
+endif(USE_JACK)
 
 
 # make test only runs tests, but doesnt build them
