@@ -14,10 +14,7 @@
 
 JackOutput::JackOutput ()
 {
-    this->srcData.data_in = nullptr;
-    this->srcData.data_out = nullptr;
-    this->srcData.input_frames = 0;
-    this->srcData.output_frames = 0;
+    memset(&this->srcData, 0, sizeof(this->srcData));
 }
 
 JackOutput::~JackOutput ()
@@ -227,9 +224,6 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
     
     this->srcData.data_in = /*const_cast<float*>*/(inBuf);
     this->srcData.input_frames = Frames;
-
-    // this is not the last buffer passed to src
-    this->srcData.end_of_input = 0;
 
     this->srcData.data_out = this->interleavedProcessedBuffer.buf;
     this->srcData.data_out += this->srcData.output_frames_gen * this->currentFormat.Channels;
