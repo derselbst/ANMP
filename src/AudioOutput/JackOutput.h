@@ -44,7 +44,7 @@ public:
     void start () override;
     void stop () override;
 
-private:
+protected:
 
     vector<jack_port_t*> playbackPorts;
 
@@ -82,7 +82,7 @@ private:
 
     template<typename T> int write(const T* buffer, frame_t frames);
     template<typename T> void getAmplifiedFloatBuffer(const T* inBuf, float* outBuf, const size_t Items);
-    int doResampling(const float* inBuf, const size_t Frames);
+    virtual int doResampling(const float* inBuf, const size_t Frames);
     void connectPorts();
 };
 
