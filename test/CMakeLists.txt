@@ -20,7 +20,7 @@ ADD_TEST(NAME TestStandardWrapper COMMAND TestStandardWrapper)
 
 ADD_EXECUTABLE(TestJackOutput TestJackOutput.cpp)
 TARGET_LINK_LIBRARIES(TestJackOutput anmp)
-ADD_TEST(NAME TestJackOutput COMMAND TestJackOutput)
+# ADD_TEST(NAME TestJackOutput COMMAND TestJackOutput)
 
 
 
