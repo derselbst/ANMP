@@ -50,3 +50,14 @@ int IAudioOutput::write (const pcm_t* frameBuffer, frame_t frames, int offset)
         break;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
