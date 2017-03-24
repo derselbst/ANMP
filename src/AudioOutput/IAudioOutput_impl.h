@@ -10,8 +10,13 @@ template<typename T> void IAudioOutput::getAmplifiedBuffer(const T* inBuffer, T*
     }
 }
 
+template<typename TOUT>
+using sample_converter_t = TOUT (*)(long double item);
+
+
+
 template<std::int16_t N, typename TIN, typename TOUT=TIN>
-int IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames)
+int IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames, sample_converter_t<TIN, TOUT> convert = [](long double item){ return static_cast<TOUT>(item); })
 {
     const unsigned int nVoices   = this->currentFormat.Voices;
     const unsigned int nChannels = this->currentFormat.Channels();
@@ -67,7 +72,7 @@ int IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames)
                         item = -1.0;
                     }
                     
-                    out = item;
+//                     out = item;
                 }
                 else
                 {
@@ -82,9 +87,11 @@ int IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames)
                     }
                     else
                     {
-                        out = lround(item);
+//                         out = lround(item);
                     }
                 }
+                
+                out = convert(item)
             }
             else
             {
