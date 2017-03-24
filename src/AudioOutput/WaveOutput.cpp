@@ -375,6 +375,21 @@ template<typename T> int WaveOutput::write(const T* buffer, frame_t frames)
     return ret;
 }
 
+int WaveOutput::write (const float* buffer, frame_t frames)
+{    
+    return this->write<float>(buffer, frames);
+}
+
+int WaveOutput::write (const int16_t* buffer, frame_t frames)
+{    
+    return this->write<int16_t>(buffer, frames);
+}
+
+int WaveOutput::write (const int32_t* buffer, frame_t frames)
+{
+    return this->write<int32_t>(buffer, frames);
+}
+
 void WaveOutput::start()
 {
 

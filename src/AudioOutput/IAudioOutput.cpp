@@ -24,21 +24,21 @@ int IAudioOutput::write (const pcm_t* frameBuffer, frame_t frames, int offset)
     {
         const float* buf = static_cast<const float*>(frameBuffer);
         buf += offset;
-        return this->write<float>(buf, frames);
+        return this->write(buf, frames);
         break;
     }
     case SampleFormat_t::int16:
     {
         const int16_t* buf = static_cast<const int16_t*>(frameBuffer);
         buf += offset;
-        return this->write<int16_t>(buf, frames);
+        return this->write(buf, frames);
         break;
     }
     case SampleFormat_t::int32:
     {
         const int32_t* buf = static_cast<const int32_t*>(frameBuffer);
         buf += offset;
-        return this->write<int32_t>(buf, frames);
+        return this->write(buf, frames);
         break;
     }
     case SampleFormat_t::unknown:
@@ -50,3 +50,14 @@ int IAudioOutput::write (const pcm_t* frameBuffer, frame_t frames, int offset)
         break;
     }
 }
+
+
+
+
+
+
+
+
+
+
+

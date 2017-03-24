@@ -31,12 +31,15 @@ public:
 
     void close () override;
 
+    int write (const float* buffer, frame_t frames) override;
+
+    int write (const int16_t* buffer, frame_t frames) override;
+
+    int write (const int32_t* buffer, frame_t frames) override;
+
     void start () override;
     void stop () override;
 
-protected:
-    template<typename T> int write(const T* buffer, frame_t frames) override;
-    
 private:
     // because this.stop() might be called concurrently to this.write()
     mutable recursive_mutex mtx;
