@@ -32,15 +32,12 @@ public:
 
     void close () override;
 
-    int write (const float* buffer, frame_t frames) override;
-
-    int write (const int16_t* buffer, frame_t frames) override;
-
-    int write (const int32_t* buffer, frame_t frames) override;
-
     void start () override;
     void stop () override;
 
+protected:
+    template<typename T> int write(const T* buffer, frame_t frames) override;
+    
 private:
 
     PaStream *handle = nullptr;
@@ -49,7 +46,6 @@ private:
     // this class shall only be usable if no error occurred
     PaError paInitError = ~PaErrorCode::paNoError;
 
-    template<typename T> int write(const T* buffer, frame_t frames);
     void drain ();
     void drop ();
 

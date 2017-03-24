@@ -142,7 +142,12 @@ void ebur128Output::close()
     this->currentSong = nullptr;
 }
 
-int ebur128Output::write (const float* buffer, frame_t frames)
+template<typename T> int ebur128Output::write(const T* buffer, frame_t frames)
+{
+    throw NotImplementedException();
+}
+
+template<> int ebur128Output::write(const float* buffer, frame_t frames)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
     
@@ -161,7 +166,8 @@ int ebur128Output::write (const float* buffer, frame_t frames)
     THROW_RUNTIME_ERROR("ebur128: out of memory or something else");
 }
 
-int ebur128Output::write (const int16_t* buffer, frame_t frames)
+
+template<> int ebur128Output::write(const int16_t* buffer, frame_t frames)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
     
@@ -189,7 +195,7 @@ int ebur128Output::write (const int16_t* buffer, frame_t frames)
     THROW_RUNTIME_ERROR("ebur128: out of memory or something else");
 }
 
-int ebur128Output::write (const int32_t* buffer, frame_t frames)
+template<> int ebur128Output::write(const int32_t* buffer, frame_t frames)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
     
