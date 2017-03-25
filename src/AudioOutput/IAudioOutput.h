@@ -20,7 +20,7 @@ using namespace std;
   *  - private write() methods are specialized by child classes
   *    - there they usually call this->Mix() on the pcm buffer
   *    - Song::data's PCM gets mixed into custom allocated buffers within child classes
-  *    - (for jack, this buffer will get resampled)
+  *    - (for jack, this buffer will get (partly) resampled)
   *    - finally it will be played
   */
 class IAudioOutput
@@ -119,9 +119,9 @@ protected:
     Nullable<uint16_t> outputChannels;
         
     // temporary double mixdown buffer, where all voices get added to
-    std::vector<long double> mixdownBuf;
+    vector<long double> mixdownBuf;
     // how often a voice channel has been added to temp
-    std::vector<uint16_t> channelsMixed;
+    vector<uint16_t> channelsMixed;
 
     // the current volume [0,1.0] to use, i.e. a factor by that the PCM gets amplified.
     // mark this as volatile so the compiler doesnt come up with:
@@ -138,8 +138,8 @@ protected:
 
     template<typename T> void getAmplifiedBuffer(const T* inBuffer, T* outBuffer, unsigned long items);
     
-    template<std::uint16_t N, typename TIN, typename TOUT=TIN>
-    int Mix(const TIN* in, TOUT* out, const frame_t frames, std::function<TOUT(long double)> converter = [](long double item){ return static_cast<TOUT>(item); });
+    template<typename TIN, typename TOUT=TIN>
+    void Mix(const TIN* in, TOUT* out, const frame_t frames);
 
     /**
      * pushes the pcm pointed to by buffer to the underlying audio driver and by that causes it to play

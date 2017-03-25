@@ -2,6 +2,7 @@
 #define IAUDIOOUTPUT_IMPL_H
 
 #include <algorithm>
+#include <cmath> // lround
 
 template<typename T> void IAudioOutput::getAmplifiedBuffer(const T* inBuffer, T* outBuffer, unsigned long items)
 {
@@ -12,7 +13,7 @@ template<typename T> void IAudioOutput::getAmplifiedBuffer(const T* inBuffer, T*
 }
 
 template<typename TIN, typename TOUT>
-int IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames, std::function<TOUT(long double)> converter)
+void IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames/*, function<TOUT(long double)> converter*/)
 {
     const unsigned int nVoices   = this->currentFormat.Voices;
     
@@ -21,7 +22,7 @@ int IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames, std::funct
         Nullable<uint16_t> c = this->GetOutputChannels();
         if(!c.hasValue)
         {
-            throw invalid_argument("IAudioOutput::Mix() may only be called with a previously specified number of output channels")
+            throw invalid_argument("IAudioOutput::Mix() may only be called with a previously specified number of output channels");
         }
         N = c.Value;
     }
@@ -72,26 +73,26 @@ int IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames, std::funct
                         item = -1.0;
                     }
                     
-//                     o = item;
+                    o = item;
                 }
                 else
                 {
                     // clip
-                    if(item > std::numeric_limits<TOUT>::max())
+                    if(item > numeric_limits<TOUT>::max())
                     {
-                        o = std::numeric_limits<TOUT>::max();
+                        o = numeric_limits<TOUT>::max();
                     }
-                    else if(item < std::numeric_limits<TOUT>::min())
+                    else if(item < numeric_limits<TOUT>::min())
                     {
-                        o = std::numeric_limits<TOUT>::min();
+                        o = numeric_limits<TOUT>::min();
                     }
                     else
                     {
-//                         o = lround(item);
+                        o = lround(item);
                     }
                 }
                 
-                o = converter(item);
+//                 o = converter(item);
             }
             else
             {

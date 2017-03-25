@@ -96,7 +96,7 @@ void JackOutput::SetOutputChannels(Nullable<uint16_t> chan)
     {
         // re-register ports
         char portName[3+1];
-        for(unsigned int i=this->playbackPorts.size(); i<chan && i <= 99; i++)
+        for(unsigned int i=this->playbackPorts.size(); i<chan.Value && i <= 99; i++)
         {
             snprintf(portName, 3+1, "%.2d", i);
 
@@ -116,7 +116,7 @@ void JackOutput::SetOutputChannels(Nullable<uint16_t> chan)
     }
     
     // call base method to make sure we allocate temporary mixdown buffer
-    this->IAudioOutput::SetOutputChannels(min<uint16_t>(chan, this->playbackPorts.size()));
+    this->IAudioOutput::SetOutputChannels(min<uint16_t>(chan.Value, this->playbackPorts.size()));
 }
 
 void JackOutput::init(SongFormat format, bool realtime)
@@ -238,15 +238,7 @@ template<typename T> int JackOutput::write (const T* buffer, frame_t frames)
     // converted_to_float_but_not_resampled buffer
     float* tempBuf = new float[Items];
     
-    if(std::is_floating_point<T>())
-    {
-        this->Mix<T, float>(buffer, tempBuf);
-    }
-    else
-    {
-        this->Mix<T, float>(buffer, tempBuf, [](long double item){ return static_cast<T>(lround(item)); });        
-    }
-    
+    this->Mix<T, float>(buffer, tempBuf, frames);
     int framesUsed = this->doResampling(tempBuf, frames);
 
     delete[] tempBuf;
