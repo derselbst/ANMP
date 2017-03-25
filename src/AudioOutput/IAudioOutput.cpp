@@ -5,7 +5,7 @@
 
 IAudioOutput::IAudioOutput()
 {
-    this->SetOutputChannels(2);
+    this->IAudioOutput::SetOutputChannels(2);
 }
 
 IAudioOutput::~IAudioOutput()
