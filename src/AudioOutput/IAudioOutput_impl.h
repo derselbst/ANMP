@@ -1,6 +1,8 @@
 #ifndef IAUDIOOUTPUT_IMPL_H
 #define IAUDIOOUTPUT_IMPL_H
 
+#include <algorithm>
+
 template<typename T> void IAudioOutput::getAmplifiedBuffer(const T* inBuffer, T* outBuffer, unsigned long items)
 {
     for(unsigned long i = 0; i<items; i++)
@@ -9,20 +11,16 @@ template<typename T> void IAudioOutput::getAmplifiedBuffer(const T* inBuffer, T*
     }
 }
 
-template<std::uint16_t N, typename TIN, typename TOUT>
+template<typename TIN, typename TOUT>
 int IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames, std::function<TOUT(long double)> converter)
 {
     const unsigned int nVoices   = this->currentFormat.Voices;
-    
-    // temporary double mixdown buffer, where all voices get added to
-    std::array<long double, N> temp;
-    // how often a voice channel has been added to temp
-    std::array<uint16_t, N> channelsMixed;
+    const uint16_t N = this->GetOutputChannels();
     
     for(unsigned int f=0; f < frames; f++)
     {
-        temp.fill(0.0);
-        channelsMixed.fill(0);
+        std::fill(this->mixdownBuf.begin(), this->mixdownBuf.end(), 0.0);
+        std::fill(this->channelsMixed.begin(), this->channelsMixed.end(), 0);
         
         // walk through all available voices. if not muted, they contribute to the mixed output
         for(unsigned int v=0; v < nVoices; v++)
@@ -33,22 +31,22 @@ int IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames, std::funct
                 const uint16_t channelsToMix = max(vchan, N);
                 for(unsigned int m=0; m < channelsToMix; m++)
                 {
-                    temp[m % N] += in[m % vchan];
-                    channelsMixed[m % N] += 1;
+                    this->mixdownBuf[m % N] += in[m % vchan];
+                    this->channelsMixed[m % N] += 1;
                 }
             }
             
             in += vchan;
         }
         
-        // write the mixed temp buffer to out
+        // write the mixed buffer to out
         for(unsigned int i=0; i<N; i++)
         {
             TOUT& o = out[f*N + i];
-            if(channelsMixed[i] != 0)
+            if(this->channelsMixed[i] != 0)
             {
                 // average the mixed channels;
-                long double item = temp[i] / channelsMixed[i];
+                long double item = this->mixdownBuf[i] / this->channelsMixed[i];
                 
                 // amplify volume
                 item *= this->volume;

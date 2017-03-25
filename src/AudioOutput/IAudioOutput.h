@@ -13,6 +13,15 @@ using namespace std;
   * Abstract base class for all classes that handle audio playback in ANMP
   *
   * need to support a new Audio Playback API? --> derive this class and implement all abstract methods
+  * 
+  * basic data flow of PCM:
+  *  - this->write() public method called with Song::data
+  *  - public write() gives that pointer to private write() methods
+  *  - private write() methods are specialized by child classes
+  *    - there they usually call this->Mix() on the pcm buffer
+  *    - Song::data's PCM gets mixed into custom allocated buffers within child classes
+  *    - (for jack, this buffer will get resampled)
+  *    - finally it will be played
   */
 class IAudioOutput
 {
@@ -74,6 +83,10 @@ public:
      * @param vol volume usually ranged [0.0,1.0]
      */
     virtual void setVolume(float vol);
+    
+    // gets and sets the number of mixdown channels, all non muted voices fo a song get mixed to
+    Nullable<uint16_t> GetOutputChannels();
+    virtual void SetOutputChannels(Nullable<uint16_t>);
 
     /**
      * pushes the pcm pointed to by frameBuffer to the underlying audio driver (or at least schedules it for pushing/playing)
@@ -100,6 +113,15 @@ public:
 
 protected:
     SongFormat currentFormat;
+    
+    // number of audio channels all the different song's voices will be mixed to (by this->Mix())
+    // if it has no value, no mixing takes place
+    Nullable<uint16_t> outputChannels;
+        
+    // temporary double mixdown buffer, where all voices get added to
+    std::vector<long double> mixdownBuf;
+    // how often a voice channel has been added to temp
+    std::vector<uint16_t> channelsMixed;
 
     // the current volume [0,1.0] to use, i.e. a factor by that the PCM gets amplified.
     // mark this as volatile so the compiler doesnt come up with:

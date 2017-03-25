@@ -4,7 +4,9 @@
 
 
 IAudioOutput::IAudioOutput()
-{}
+{
+    this->SetOutputChannels(2);
+}
 
 IAudioOutput::~IAudioOutput()
 {}
@@ -13,6 +15,22 @@ IAudioOutput::~IAudioOutput()
 void IAudioOutput::setVolume(float vol)
 {
     this->volume=vol;
+}
+
+void IAudioOutput::SetOutputChannels(Nullable<uint16_t> chan)
+{
+    if(chan.hasValue)
+    {
+        this->mixdownBuf.resize(chan.Value);
+        this->channelsMixed.resize(chan.Value);
+    }
+    else
+    {
+        this->mixdownBuf.clear();
+        this->channelsMixed.clear();
+    }
+    
+    this->outputChannels = chan;
 }
 
 // takes care of pointer arithmetic
