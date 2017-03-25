@@ -1,7 +1,6 @@
 #ifndef IAUDIOOUTPUT_IMPL_H
 #define IAUDIOOUTPUT_IMPL_H
 
-
 template<typename T> void IAudioOutput::getAmplifiedBuffer(const T* inBuffer, T* outBuffer, unsigned long items)
 {
     for(unsigned long i = 0; i<items; i++)
@@ -10,16 +9,10 @@ template<typename T> void IAudioOutput::getAmplifiedBuffer(const T* inBuffer, T*
     }
 }
 
-template<typename TOUT>
-using sample_converter_t = TOUT (*)(long double item);
-
-
-
-template<std::int16_t N, typename TIN, typename TOUT=TIN>
-int IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames, sample_converter_t<TIN, TOUT> convert = [](long double item){ return static_cast<TOUT>(item); })
+template<std::uint16_t N, typename TIN, typename TOUT>
+int IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames, std::function<TOUT(long double)> converter)
 {
     const unsigned int nVoices   = this->currentFormat.Voices;
-    const unsigned int nChannels = this->currentFormat.Channels();
     
     // temporary double mixdown buffer, where all voices get added to
     std::array<long double, N> temp;
@@ -51,7 +44,7 @@ int IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames, sample_con
         // write the mixed temp buffer to out
         for(unsigned int i=0; i<N; i++)
         {
-            TOUT& out = out[f*N + i];
+            TOUT& o = out[f*N + i];
             if(channelsMixed[i] != 0)
             {
                 // average the mixed channels;
@@ -60,7 +53,7 @@ int IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames, sample_con
                 // amplify volume
                 item *= this->volume;
                 
-                if(std::is_floating_point<TOUT>)
+                if(std::is_floating_point<TOUT>())
                 {
                     // clip
                     if(item > 1.0)
@@ -72,30 +65,30 @@ int IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames, sample_con
                         item = -1.0;
                     }
                     
-//                     out = item;
+//                     o = item;
                 }
                 else
                 {
                     // clip
                     if(item > std::numeric_limits<TOUT>::max())
                     {
-                        out = std::numeric_limits<TOUT>::max();
+                        o = std::numeric_limits<TOUT>::max();
                     }
                     else if(item < std::numeric_limits<TOUT>::min())
                     {
-                        out = std::numeric_limits<TOUT>::min();
+                        o = std::numeric_limits<TOUT>::min();
                     }
                     else
                     {
-//                         out = lround(item);
+//                         o = lround(item);
                     }
                 }
                 
-                out = convert(item)
+                o = converter(item);
             }
             else
             {
-                out = 0;
+                o = 0;
             }
         }
     }

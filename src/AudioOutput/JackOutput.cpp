@@ -82,13 +82,13 @@ void JackOutput::init(SongFormat format, bool realtime)
     }
     
     // shortcut
-    decltype(format.Channels)& channels = format.Channels;
+    const uint32_t channels = format.Channels();
     
     // avoid jack thread Interference
     lock_guard<recursive_mutex> lck(this->mtx);
     
-    // channel count differ?
-    if(this->currentFormat.Channels != channels)
+    // does channel count differ? (due to new song being played)
+    if(this->currentFormat.Channels() != channels)
     {
         // register "channels" number of input ports
         if(this->playbackPorts.size() < channels)
@@ -183,7 +183,7 @@ int JackOutput::write (const float* buffer, frame_t frames)
     }
 //     lck.unlock();
 
-    const size_t Items = frames*this->currentFormat.Channels;
+    const size_t Items = frames*this->currentFormat.Channels();
 
     // converted_to_float_but_not_resampled buffer
     float* tempBuf = new float[Items];
@@ -226,7 +226,7 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
     this->srcData.input_frames = Frames;
 
     this->srcData.data_out = this->interleavedProcessedBuffer.buf;
-    this->srcData.data_out += this->srcData.output_frames_gen * this->currentFormat.Channels;
+    this->srcData.data_out += this->srcData.output_frames_gen * this->currentFormat.Channels();
 
     this->srcData.output_frames = this->jackBufSize - this->srcData.output_frames_gen;
 
@@ -272,7 +272,7 @@ template<typename T> int JackOutput::write (const T* buffer, frame_t frames)
     }
 //     lck.unlock();
 
-    const size_t Items = frames*this->currentFormat.Channels;
+    const size_t Items = frames*this->currentFormat.Channels();
 
     // converted_to_float_but_not_resampled buffer
     float* tempBuf = new float[Items];
@@ -386,7 +386,7 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
     }
     
     {
-        const unsigned int nchannels = pthis->currentFormat.Channels;
+        const unsigned int nchannels = pthis->currentFormat.Channels();
         const unsigned int portsToFill = min<unsigned int>(nJackPorts, nchannels);
 
         jack_default_audio_sample_t* out[nJackPorts]; // temporary array that caches the retrieved buffers for jack ports
@@ -449,7 +449,7 @@ int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
     }
 
     delete[] pthis->interleavedProcessedBuffer.buf;
-    pthis->interleavedProcessedBuffer.buf = new (nothrow) jack_default_audio_sample_t[pthis->jackBufSize * pthis->currentFormat.Channels];
+    pthis->interleavedProcessedBuffer.buf = new (nothrow) jack_default_audio_sample_t[pthis->jackBufSize * pthis->currentFormat.Channels()];
     pthis->interleavedProcessedBuffer.ready = false;
 
     // TODO check if alloc successfull
@@ -467,6 +467,6 @@ int JackOutput::onJackSampleRateChanged(jack_nframes_t nframes, void* arg)
     return 0;
 }
 
-void JackOutput::onJackShutdown(void* arg)
+void JackOutput::onJackShutdown(void*)
 {
 }

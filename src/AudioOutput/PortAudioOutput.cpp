@@ -78,7 +78,7 @@ void PortAudioOutput::init(SongFormat format, bool realtime)
     /* Open an audio I/O stream. */
     err = Pa_OpenDefaultStream( &this->handle,
                                 0,          /* no input channels */
-                                format.Channels,   /* no. of output channels */
+                                format.Channels(),   /* no. of output channels */
                                 paSampleFmt,  /* 32 bit floating point output */
                                 format.SampleRate,
                                 gConfig.FramesToRender,  /* frames per buffer, i.e. the number of sample frames that PortAudio will request from the callback.*/
@@ -135,7 +135,7 @@ template<typename T> int PortAudioOutput::write(const T* buffer, frame_t frames)
         THROW_RUNTIME_ERROR("unable to write pcm since PortAudioOutput::init() has not been called yet or init failed");
     }
 
-    const int items = frames*this->currentFormat.Channels;
+    const int items = frames*this->currentFormat.Channels();
     T* processedBuffer = new T[items];
     this->getAmplifiedBuffer(buffer, processedBuffer, items);
     buffer = processedBuffer;

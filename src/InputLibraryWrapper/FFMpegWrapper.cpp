@@ -89,7 +89,8 @@ void FFMpegWrapper::open ()
         THROW_RUNTIME_ERROR("Could not open decoder.");
     }
 
-    this->Format.Channels = pCodecCtx->channels;
+    this->Format.SetVoices(1);
+    this->Format.VoiceChannels[0] = pCodecCtx->channels;
     this->Format.SampleRate = pCodecCtx->sample_rate;
 
     // we now have to retrieve the playduration of this file
@@ -250,7 +251,7 @@ void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
     // int16 because we told swr to convert everything to int16
     int16_t* pcm = static_cast<int16_t*>(bufferToFill);
-    pcm += this->framesAlreadyRendered * this->Format.Channels;
+    pcm += this->framesAlreadyRendered * this->Format.Channels();
 
 
     while(!this->stopFillBuffer &&

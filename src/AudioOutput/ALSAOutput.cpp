@@ -116,7 +116,7 @@ void ALSAOutput::init(SongFormat format, bool realtime)
         THROW_RUNTIME_ERROR("cannot set sample rate (" << snd_strerror(err) << ")");
     }
 
-    if ((err = snd_pcm_hw_params_set_channels (this->alsa_dev, hw_params, format.Channels)) < 0)
+    if ((err = snd_pcm_hw_params_set_channels (this->alsa_dev, hw_params, format.Channels())) < 0)
     {
         snd_pcm_hw_params_free (hw_params);
         THROW_RUNTIME_ERROR("cannot set channel count (" << snd_strerror(err) << ")");
@@ -235,7 +235,7 @@ int ALSAOutput::write (const int32_t* buffer, frame_t frames)
 
 template<typename T> int ALSAOutput::write(const T* buffer, frame_t frames)
 {
-    const int items = frames*this->currentFormat.Channels;
+    const int items = frames*this->currentFormat.Channels();
     T* processedBuffer = new T[items];
     this->getAmplifiedBuffer<T>(buffer, processedBuffer, items);
     buffer = processedBuffer;
@@ -249,7 +249,7 @@ template<typename T> int ALSAOutput::write(const T* buffer, frame_t frames)
     int total = 0;
     while (total < frames)
     {
-        int retval = snd_pcm_writei(this->alsa_dev, buffer + total * this->currentFormat.Channels, frames - total);
+        int retval = snd_pcm_writei(this->alsa_dev, buffer + total * this->currentFormat.Channels(), frames - total);
 
         if (retval >= 0)
         {

@@ -46,9 +46,9 @@ public:
     void render(pcm_t* bufferToFill, frame_t framesToRender=0) override
     {
         STANDARDWRAPPER_RENDER( FORMAT,
-                                for(unsigned int i=0; i<framesToDoNow * this->Format.Channels; i++)
+                                for(unsigned int i=0; i<framesToDoNow * this->Format.Channels(); i++)
                                 {
-                                    pcm[i] = GEN_FRAMES(FORMAT, framesToDoNow * this->Format.Channels, i);
+                                    pcm[i] = GEN_FRAMES(FORMAT, framesToDoNow * this->Format.Channels(), i);
                                 })
     }
 };
@@ -58,7 +58,8 @@ void TestMethod(TestSong<T>& songUnderTest)
 {
     for(int c=1; c<=6; c++)
     {
-        songUnderTest.Format.Channels = c;
+        songUnderTest.Format.SetVoices(1);
+        songUnderTest.Format.VoiceChannels[0] = c;
 
         songUnderTest.open();
         
@@ -158,7 +159,6 @@ int main()
       TestSong<int16_t> testint16(gConfig.FramesToRender);
       testint16.Format.SampleFormat = SampleFormat_t::int16;
       testint16.Format.SampleRate = 11025;
-      testint16.Format.Channels = 1;
       TestMethod<int16_t>(testint16);
     }
     catch(const AssertionException& e)

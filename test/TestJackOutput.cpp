@@ -19,7 +19,7 @@ class JackUnderTest : public JackOutput
         lock_guard<recursive_mutex> lock(this->mtx);
         
         // no resampling for testing here, just copy        
-        for(unsigned int i=0; i< this->currentFormat.Channels*Frames; i++)
+        for(unsigned int i=0; i< this->currentFormat.Channels()*Frames; i++)
         {
             this->interleavedProcessedBuffer.buf[i] = inBuf[i];
         }
@@ -40,7 +40,8 @@ int main()
         
         SongFormat f;
         f.SampleRate = jack_get_sample_rate(jack.handle);
-        f.Channels = 1;
+        f.SetVoices(1);
+        f.VoiceChannels[0] = 1;
         f.SampleFormat = SampleFormat_t::int16;
         jack.init(f);
         
@@ -64,7 +65,7 @@ int main()
         
         // play a new song
         
-        f.Channels = 1;
+        f.VoiceChannels[0] = 1;
         jack.init(f);
         buf = jack.interleavedProcessedBuffer.buf;
         jack.write(samples+4, 4);
@@ -76,7 +77,7 @@ int main()
         
         
         
-        f.Channels = 2;
+        f.VoiceChannels[0] = 2;
         jack.init(f);
         buf = jack.interleavedProcessedBuffer.buf;
         jack.write(samples, 4);
@@ -94,7 +95,7 @@ int main()
         constexpr int16_t samples2[] = { 50, 50, 55, 55,
                                          60, 60, 65, 65};
         
-        f.Channels = 2;
+        f.VoiceChannels[0] = 2;
         jack.init(f);
         buf = jack.interleavedProcessedBuffer.buf;
         jack.write(samples2, 4);
@@ -110,14 +111,14 @@ int main()
         
         
         // now play a song with many channels
-        f.Channels = 8;
+        f.VoiceChannels[0] = 8;
         jack.init(f);
         buf = jack.interleavedProcessedBuffer.buf;
         for(unsigned int i=0; i<jack.jackBufSize; i++)
         {
             jack.write(samples2, 1);
             // manually advance the buffer, to fill it up correctly
-            jack.interleavedProcessedBuffer.buf += 1*f.Channels;
+            jack.interleavedProcessedBuffer.buf += 1*f.Channels();
         }
         jack.interleavedProcessedBuffer.buf = buf;
         
@@ -132,11 +133,11 @@ int main()
             TEST_ASSERT_EQ(buf[6], samples2[6]/maxval);
             TEST_ASSERT_EQ(buf[7], samples2[7]/maxval);
             
-            buf += 1*f.Channels;
+            buf += 1*f.Channels();
         }
         
         // now replay the stereo song, to make sure buffer got cleared up, reallocated, etc.
-        f.Channels = 2;
+        f.VoiceChannels[0] = 2;
         jack.init(f);
         buf = jack.interleavedProcessedBuffer.buf;
         jack.write(samples, 4);

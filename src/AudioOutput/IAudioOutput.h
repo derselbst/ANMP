@@ -9,6 +9,9 @@
 
 using namespace std;
 
+// template<typename T>
+// using sample_converter_t = T(*)(long double item);
+
 /**
   * Abstract base class for all classes that handle audio playback in ANMP
   *
@@ -115,9 +118,14 @@ protected:
     volatile float volume = 1.0f;
 
     template<typename T> void getAmplifiedBuffer(const T* inBuffer, T* outBuffer, unsigned long items);
+    
+    template<std::uint16_t N, typename TIN, typename TOUT=TIN>
+    int Mix(const TIN* in, TOUT* out, const frame_t frames, std::function<TOUT(long double)> converter = [](long double item){ return static_cast<TOUT>(item); });
 
     /**
      * pushes the pcm pointed to by buffer to the underlying audio driver and by that causes it to play
+     * 
+     * we should use a template method here, but templates cannot be virtual, thus use overloads instead
      *
      * @param  buffer buffer that holds the pcm
      * @param  frames no. of frames to be played from the buffer

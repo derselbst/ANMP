@@ -207,11 +207,16 @@ void FluidsynthWrapper::Unload()
     this->deleteSynth();
 }
 
-unsigned int FluidsynthWrapper::GetChannels()
+unsigned int FluidsynthWrapper::GetChannelsPerVoice()
+{
+    return 2; //stereo
+}
+
+unsigned int FluidsynthWrapper::GetVoices()
 {
     int stereoChannels;
     fluid_settings_getint(this->settings, "synth.audio-channels", &stereoChannels);
-    return stereoChannels*2;
+    return stereoChannels*2 / this->GetChannelsPerVoice();
 }
 
 unsigned int FluidsynthWrapper::GetSampleRate()
@@ -319,7 +324,7 @@ void FluidsynthWrapper::FinishSong(int millisec)
     
 void FluidsynthWrapper::Render(float* bufferToFill, frame_t framesToRender)
 {
-    int channels = this->GetChannels();
+    int channels = this->GetVoices() * this->GetChannelsPerVoice();
     
     // fluid_synth_process renders planar audio, i.e. each midi channel gets render to its own buffer, rather than having one buffer and interleaving PCM
     float** temp_buf = new float*[channels];

@@ -46,7 +46,8 @@ void VGMStreamWrapper::open()
         THROW_RUNTIME_ERROR("failed opening \"" << this->Filename << "\"");
     }
 
-    this->Format.Channels = this->handle->channels;
+    this->Format.SetVoices(1);
+    this->Format.VoiceChannels[0] = this->handle->channels;
     this->Format.SampleRate = this->handle->sample_rate;
 
     // hold a copy
