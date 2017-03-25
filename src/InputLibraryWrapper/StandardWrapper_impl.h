@@ -45,7 +45,7 @@ template<typename SAMPLEFORMAT>
 template<typename WRAPPERCLASS>
 void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
 {
-    if(this->count == this->getFrames() * this->Format.Channels())
+    if(this->count == static_cast<size_t>(this->getFrames()) * this->Format.Channels())
     {
         // Song::data already filled up with all the audiofile's PCM, nothing to do here (most likely case)
         return;

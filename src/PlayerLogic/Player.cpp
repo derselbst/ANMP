@@ -132,7 +132,7 @@ bool Player::IsPlaying()
 
 bool Player::IsSeekingPossible()
 {
-    return (this->currentSong==nullptr ? false : this->currentSong->count==FramesToItems(this->currentSong->getFrames()));
+    return (this->currentSong==nullptr ? false : this->currentSong->count==FramesToItems(static_cast<size_t>(this->currentSong->getFrames())));
 }
 
 void Player::play ()
