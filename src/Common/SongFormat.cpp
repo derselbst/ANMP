@@ -24,9 +24,21 @@ unsigned int SongFormat::Channels() const noexcept
 
 void SongFormat::SetVoices(uint16_t nVoices)
 {
-    this->VoiceName.resize(nVoices, "");
-    this->VoiceIsMuted.resize(nVoices, false);
-    this->VoiceChannels.resize(nVoices, 0);
+    if(nVoices == 0)
+    {
+        this->VoiceName.clear();
+        this->VoiceName.shrink_to_fit();
+        this->VoiceIsMuted.clear();
+        this->VoiceIsMuted.shrink_to_fit();
+        this->VoiceChannels.clear();
+        this->VoiceChannels.shrink_to_fit();
+    }
+    else
+    {
+        this->VoiceName.resize(nVoices, "");
+        this->VoiceIsMuted.resize(nVoices, false);
+        this->VoiceChannels.resize(nVoices, 0);
+    }
     
     this->Voices = nVoices;
 }
