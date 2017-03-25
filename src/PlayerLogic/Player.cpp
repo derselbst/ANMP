@@ -199,50 +199,66 @@ void Player::_setCurrentSong (Song* newSong)
     this->resetPlayhead();
     
     Song* oldSong = this->currentSong;
-    if(newSong == nullptr) // nullptr here means this.stop()
+    try
     {
-        this->_pause();
-    }
-    else if(oldSong == nullptr)
-    {
-        newSong->open();
-        newSong->fillBuffer();
-        this->audioDriver->init(newSong->Format);
-    }
-    else
-    {   
-        if(newSong == oldSong)
+        if(newSong == nullptr) // nullptr here means this.stop()
         {
-            oldSong->releaseBuffer();
-            
-            // hard close and reopen the file, since might have changed
-            oldSong->close();
-            oldSong->open();
-            oldSong->fillBuffer();
+            this->_pause();
         }
-        else
+        else if(oldSong == nullptr)
         {
-            oldSong->releaseBuffer();
             newSong->open();
             newSong->fillBuffer();
-            // DO NOT CLOSE oldSong here!
-            // some audiodrivers (waveoutput) might be doing some calls to the old song which are only valid if the song is still open
+            this->audioDriver->init(newSong->Format);
         }
+        else
+        {   
+            if(newSong == oldSong)
+            {
+                oldSong->releaseBuffer();
+                
+                // hard close and reopen the file, since might have changed
+                oldSong->close();
+                oldSong->open();
+                oldSong->fillBuffer();
+            }
+            else
+            {
+                oldSong->releaseBuffer();
+                newSong->open();
+                newSong->fillBuffer();
+                // DO NOT CLOSE oldSong here!
+                // some audiodrivers (waveoutput) might be doing some calls to the old song which are only valid if the song is still open
+            }
 
-        this->audioDriver->init(newSong->Format);
+            this->audioDriver->init(newSong->Format);
+        }
+        
+        // then update currently played song
+        this->currentSong = newSong;
+
+        // now we are ready to do the callback
+        this->onCurrentSongChanged.Fire();
+        
+        // oldSong needs to stay open until the very end, i.e. after onCurrentSongChanged.Fire() and audioDriver init() are done!
+        if(oldSong != nullptr && oldSong != newSong)
+        {
+            oldSong->releaseBuffer();
+            oldSong->close();
+        }
     }
-    
-    // then update currently played song
-    this->currentSong = newSong;
-
-    // now we are ready to do the callback
-    this->onCurrentSongChanged.Fire();
-    
-    // oldSong needs to stay open until the very end, i.e. after onCurrentSongChanged.Fire() and audioDriver init() are done!
-    if(oldSong != nullptr && oldSong != newSong)
+    catch(const exception& e)
     {
+        // cleanup
+        newSong->releaseBuffer();
+        newSong->close();
+        
         oldSong->releaseBuffer();
         oldSong->close();
+        
+        this->currentSong = nullptr;
+        
+        throw;
     }
 }
 
