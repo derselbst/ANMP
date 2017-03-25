@@ -9,9 +9,6 @@
 
 using namespace std;
 
-// template<typename T>
-// using sample_converter_t = T(*)(long double item);
-
 /**
   * Abstract base class for all classes that handle audio playback in ANMP
   *
