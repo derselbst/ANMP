@@ -27,7 +27,9 @@ void IAudioOutput::SetOutputChannels(Nullable<uint16_t> chan)
     else
     {
         this->mixdownBuf.clear();
+        this->mixdownBuf.shrink_to_fit();
         this->channelsMixed.clear();
+        this->channelsMixed.shrink_to_fit();
     }
     
     this->outputChannels = chan;

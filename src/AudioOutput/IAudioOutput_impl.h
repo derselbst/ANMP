@@ -15,7 +15,16 @@ template<typename TIN, typename TOUT>
 int IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames, std::function<TOUT(long double)> converter)
 {
     const unsigned int nVoices   = this->currentFormat.Voices;
-    const uint16_t N = this->GetOutputChannels();
+    
+    uint16_t N;
+    {
+        Nullable<uint16_t> c = this->GetOutputChannels();
+        if(!c.hasValue)
+        {
+            throw invalid_argument("IAudioOutput::Mix() may only be called with a previously specified number of output channels")
+        }
+        N = c.Value;
+    }
     
     for(unsigned int f=0; f < frames; f++)
     {
