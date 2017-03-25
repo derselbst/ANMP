@@ -43,6 +43,8 @@ public:
 
     void start () override;
     void stop () override;
+    
+    void SetOutputChannels(Nullable<uint16_t>) override;
 
 protected:
 
@@ -81,7 +83,6 @@ protected:
     static int onJackBufSizeChanged(jack_nframes_t nframes, void *arg);
 
     template<typename T> int write(const T* buffer, frame_t frames);
-    template<typename T> void getAmplifiedFloatBuffer(const T* inBuf, float* outBuf, const size_t Items);
     virtual int doResampling(const float* inBuf, const size_t Frames);
     void connectPorts();
 };
