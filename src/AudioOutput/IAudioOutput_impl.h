@@ -15,7 +15,7 @@ template<typename T> void IAudioOutput::getAmplifiedBuffer(const T* inBuffer, T*
 template<typename TIN, typename TOUT>
 void IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames/*, function<TOUT(long double)> converter*/)
 {
-    const unsigned int nVoices   = this->currentFormat.Voices;
+    const unsigned int nVoices = this->currentFormat.Voices;
     
     uint16_t N;
     {
@@ -46,6 +46,7 @@ void IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames/*, functio
                 }
             }
             
+            // advance the pointer to point to next audio frame
             in += vchan;
         }
         
@@ -63,6 +64,12 @@ void IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames/*, functio
                 
                 if(std::is_floating_point<TOUT>())
                 {
+                    // normalize
+                    if(!std::is_floating_point<TIN>())
+                    {
+                        item /= (numeric_limits<TIN>::max()+1.0);
+                    }
+                    
                     // clip
                     if(item > 1.0)
                     {
@@ -91,8 +98,6 @@ void IAudioOutput::Mix(const TIN* in, TOUT* out, const frame_t frames/*, functio
                         o = lround(item);
                     }
                 }
-                
-//                 o = converter(item);
             }
             else
             {
