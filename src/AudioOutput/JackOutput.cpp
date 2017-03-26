@@ -15,8 +15,6 @@
 JackOutput::JackOutput ()
 {
     memset(&this->srcData, 0, sizeof(this->srcData));
-    
-    this->JackOutput::SetOutputChannels(2);
 }
 
 JackOutput::~JackOutput ()
@@ -73,11 +71,12 @@ void JackOutput::open()
 
         // initially assign the sample rate
         JackOutput::onJackSampleRateChanged(jack_get_sample_rate(this->handle), this);
+        
+        // initially create jack ports
+        this->JackOutput::SetOutputChannels(2);
     }
 }
 
-
-// will be called by JackOutput's ctor
 void JackOutput::SetOutputChannels(Nullable<uint16_t> chan)
 {
     // deregister all ports
@@ -113,6 +112,30 @@ void JackOutput::SetOutputChannels(Nullable<uint16_t> chan)
         }
         
         this->connectPorts();
+        
+        // we have to delete the resampler in order to refresh channel count
+        if(this->srcState != nullptr)
+        {
+            this->srcState = src_delete(this->srcState);
+        }
+        int error;
+        // SRC_SINC_BEST_QUALITY is too slow, causing jack process thread to discard samples, resulting in hearable artifacts
+        // SRC_LINEAR has high frequency audible garbage
+        // SRC_ZERO_ORDER_HOLD is even worse than LINEAR
+        // SRC_SINC_MEDIUM_QUALITY might still be too slow when using jack with very low latency having a bit of CPU load
+        this->srcState = src_new(SRC_SINC_FASTEST, chan.Value, &error);
+        if(this->srcState == nullptr)
+        {
+            THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) <<")");
+        }
+        
+        // channel count changed, buffer needs to be realloced
+        if(JackOutput::onJackBufSizeChanged(jack_get_buffer_size(this->handle), this) != 0)
+        {
+            // invalidate the current format
+            this->currentFormat.SetVoices(0);
+            THROW_RUNTIME_ERROR("unable to onJackBufSizeChanged()");
+        }
     }
     
     // call base method to make sure we allocate temporary mixdown buffer
@@ -131,45 +154,12 @@ void JackOutput::init(SongFormat format, bool realtime)
     
     // avoid jack thread Interference
     lock_guard<recursive_mutex> lck(this->mtx);
+
+    // zero out any buffer in resampler, to avoid hearable cracks, when switching from one song to another
+    src_reset(this->srcState);
     
-    // does channel count differ? (due to new song being played)
-    if(this->currentFormat.Channels() != channels)
-    {
-        // we have to delete the resampler in order to refresh channel count
-        if(this->srcState != nullptr)
-        {
-            this->srcState = src_delete(this->srcState);
-        }
-        int error;
-        // SRC_SINC_BEST_QUALITY is too slow, causing jack process thread to discard samples, resulting in hearable artifacts
-        // SRC_LINEAR has high frequency audible garbage
-        // SRC_ZERO_ORDER_HOLD is even worse than LINEAR
-        // SRC_SINC_MEDIUM_QUALITY might still be too slow when using jack with very low latency having a bit of CPU load
-        this->srcState = src_new(SRC_SINC_FASTEST, channels, &error);
-        if(this->srcState == nullptr)
-        {
-            THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) <<")");
-        }
-        
-        // update the current channel format before allocating new jack buffer (next line)
-        this->currentFormat = format;
-        
-        // channel count changed, buffer needs to be realloced
-        if(JackOutput::onJackBufSizeChanged(jack_get_buffer_size(this->handle), this) != 0)
-        {
-            // invalidate the current format
-            this->currentFormat.SetVoices(0);
-            THROW_RUNTIME_ERROR("unable to onJackBufSizeChanged()");
-        }
-    }
-    else
-    {
-        // zero out any buffer in resampler, to avoid hearable cracks, when switching from one song to another
-        src_reset(this->srcState);
-        
-        // dont forget to update channelcount, srate and sformat
-        this->currentFormat = format;
-    }
+    // dont forget to update channelcount, srate and sformat
+    this->currentFormat = format;
 }
 
 void JackOutput::close()
@@ -190,7 +180,7 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
     this->srcData.input_frames = Frames;
 
     this->srcData.data_out = this->interleavedProcessedBuffer.buf;
-    this->srcData.data_out += this->srcData.output_frames_gen * this->currentFormat.Channels();
+    this->srcData.data_out += this->srcData.output_frames_gen * this->GetOutputChannels().Value;
 
     this->srcData.output_frames = this->jackBufSize - this->srcData.output_frames_gen;
 
@@ -233,7 +223,7 @@ template<typename T> int JackOutput::write (const T* buffer, frame_t frames)
         return 0;
     }
 
-    const size_t Items = frames*this->currentFormat.Channels();
+    const size_t Items = frames*this->GetOutputChannels().Value;
 
     // converted_to_float_but_not_resampled buffer
     float* tempBuf = new float[Items];
@@ -351,7 +341,7 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
     }
     
     {
-        const unsigned int nchannels = pthis->currentFormat.Channels();
+        const unsigned int nchannels = pthis->GetOutputChannels().Value;
         const unsigned int portsToFill = min<unsigned int>(nJackPorts, nchannels);
 
         jack_default_audio_sample_t* out[nJackPorts]; // temporary array that caches the retrieved buffers for jack ports
@@ -414,7 +404,7 @@ int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
     }
 
     delete[] pthis->interleavedProcessedBuffer.buf;
-    pthis->interleavedProcessedBuffer.buf = new (nothrow) jack_default_audio_sample_t[pthis->jackBufSize * pthis->currentFormat.Channels()];
+    pthis->interleavedProcessedBuffer.buf = new (nothrow) jack_default_audio_sample_t[pthis->jackBufSize * pthis->GetOutputChannels().Value];
     pthis->interleavedProcessedBuffer.ready = false;
 
     if(pthis->interleavedProcessedBuffer.buf == nullptr)
