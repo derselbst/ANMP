@@ -2,6 +2,7 @@
 
 #include "CommonExceptions.h"
 #include "AtomicWrite.h"
+#include "Config.h"
 
 #include <iostream>
 #include <string>
@@ -144,7 +145,7 @@ void ALSAOutput::_init(SongFormat format, bool realtime)
     }
     else
     {
-        alsa_period_size = 1024;
+        alsa_period_size = gConfig.FramesToRender;
         alsa_buffer_frames = 4 * alsa_period_size;
     }
 
