@@ -84,8 +84,9 @@ public:
      */
     virtual void setVolume(float vol);
     
-    // gets and sets the number of mixdown channels, all non muted voices fo a song get mixed to
+    // gets and sets the number of mixdown channels, all non muted voices of a song get mixed to
     Nullable<uint16_t> GetOutputChannels();
+    // only call this when playback is paused, i.e. no call to this->write() is pending
     virtual void SetOutputChannels(Nullable<uint16_t>);
 
     /**
@@ -117,11 +118,6 @@ protected:
     // number of audio channels all the different song's voices will be mixed to (by this->Mix())
     // if it has no value, no mixing takes place
     Nullable<uint16_t> outputChannels;
-        
-    // temporary double mixdown buffer, where all voices get added to
-    vector<long double> mixdownBuf;
-    // how often a voice channel has been added to temp
-    vector<uint16_t> channelsMixed;
 
     // the current volume [0,1.0] to use, i.e. a factor by that the PCM gets amplified.
     // mark this as volatile so the compiler doesnt come up with:
@@ -159,6 +155,15 @@ protected:
     virtual int write (const int16_t* buffer, frame_t frames) = 0;
     virtual int write (const int32_t* buffer, frame_t frames) = 0;
 
+private:
+    // these two vectors are only used within this->Mix()
+    // place them here rather inside Mix() to avoid memory alloc on every Mix() call
+    // they have a length of this->GetOutputChannels(), and get resized in this->SetOutputChannels() if necessary
+    //
+    // temporary double mixdown buffer, where all voices get added to
+    vector<long double> mixdownBuf;
+    // how often a voice channel has been added to temp
+    vector<uint16_t> channelsMixed;
 };
 
 #endif // IAUDIOOUTPUT_H
