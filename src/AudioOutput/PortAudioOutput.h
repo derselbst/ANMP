@@ -41,6 +41,8 @@ public:
     void start () override;
     void stop () override;
 
+    void SetOutputChannels(Nullable<uint16_t>) override;
+    
 private:
 
     PaStream *handle = nullptr;
@@ -50,6 +52,7 @@ private:
     PaError paInitError = ~PaErrorCode::paNoError;
 
     template<typename T> int write(const T* buffer, frame_t frames);
+    void _init (SongFormat format, bool realtime = false);
     void drain ();
     void drop ();
 
