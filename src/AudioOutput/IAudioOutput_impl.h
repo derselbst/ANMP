@@ -13,7 +13,13 @@ void IAudioOutput::Mix(const TIN *restrict in, TOUT *restrict out, const frame_t
     // IAudioOutput::Mix() may only be called with a previously specified number of output channels
     // just silently assume that this happened
     const uint16_t N = this->GetOutputChannels().Value;
-    
+
+    // we need to be fast, C99's VLAs are fast, use them
+    // stack overflow should be unlikely, since N usually 2, at most 6, I hope...
+#if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
+    long double temp[N];
+#else
+    #warning "Neither clang or GCC compiler, fearing to use C99 VLA, falling back to std::vector"
     // temporary mixdown buffer where all the voices get added to
     // we cant use "out" directly, this might overflow and would prevent proper clipping a few lines later
     vector<long double> mixdownBuf;
@@ -21,6 +27,7 @@ void IAudioOutput::Mix(const TIN *restrict in, TOUT *restrict out, const frame_t
     mixdownBuf.reserve(N);
     // and then access the data via the pointer, not via vector::operator[], else index out of bounds assertion for MSVC
     long double* temp = mixdownBuf.data();
+#endif
     
     for(unsigned int f=0; f < frames; f++)
     {

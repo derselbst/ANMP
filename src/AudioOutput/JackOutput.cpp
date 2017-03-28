@@ -1,4 +1,5 @@
 #include "JackOutput.h"
+#include "IAudioOutput_impl.h"
 
 #include "CommonExceptions.h"
 #include "AtomicWrite.h"
@@ -222,17 +223,10 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
 
 template<typename T> int JackOutput::write (const T* buffer, frame_t frames)
 {
-//     if(this->interleavedProcessedBuffer.ready)
-//     {
-//         // buffer has not been consumed yet
-//         return 0;
-//     }
-
     // converted_to_float_but_not_resampled buffer
     float* tempBuf = new float[frames*this->GetOutputChannels().Value];
     
     this->Mix<T, float>(buffer, tempBuf, frames);
-    
     
     unique_lock<mutex> lck(this->mtx);
     

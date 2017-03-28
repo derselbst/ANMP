@@ -1,5 +1,4 @@
-#ifndef IAUDIOOUTPUT_H
-#define IAUDIOOUTPUT_H
+#pragma once
 
 #include "types.h"
 #include "SongFormat.h"
@@ -143,8 +142,3 @@ protected:
     virtual int write (const int16_t* buffer, frame_t frames) = 0;
     virtual int write (const int32_t* buffer, frame_t frames) = 0;
 };
-
-#endif // IAUDIOOUTPUT_H
-
-#include "IAudioOutput_impl.h"
-

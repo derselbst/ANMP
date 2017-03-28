@@ -1,4 +1,5 @@
 #include "PortAudioOutput.h"
+#include "IAudioOutput_impl.h"
 
 #include "CommonExceptions.h"
 #include "AtomicWrite.h"
