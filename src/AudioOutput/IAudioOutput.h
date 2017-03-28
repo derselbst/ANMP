@@ -120,17 +120,7 @@ protected:
     Nullable<uint16_t> outputChannels;
 
     // the current volume [0,1.0] to use, i.e. a factor by that the PCM gets amplified.
-    // mark this as volatile so the compiler doesnt come up with:
-    // "oh, this member isnt modified in the current scope. lets put it to a register, while using this var inside a loop again and again."
-    // volatile here hopefully forces that each read actually happens through memory (I dont worry too much about hardware caching here)
-    // NOTE: I dont need thread safety for this variable and I know that volatile doesnt do anything for that either. its just because
-    // one thread will always read from this var (which happens in this->write(T*, frame_t)) and another thread occasionally comes along and alters
-    // this var (inside this->setVolume())
-    // the worst things that can happen here are dirty reads, as far as I see; and who cares?
-    // however, Im not absolutely sure if volatile if really required here
-    //
-    // update 2016-11-22: actually this is necessary, since it prohibits the optimizer to vectorize any loop where this var is used
-    volatile float volume = 1.0f;
+    float volume = 1.0f;
 
     template<typename T> void getAmplifiedBuffer(const T* inBuffer, T* outBuffer, unsigned long items);
     

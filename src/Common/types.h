@@ -15,6 +15,8 @@
 #include "Nullable.h"
 #include "tree.h"
 
+#define restrict __restrict__
+
 // type used for all pcm buffers
 // only IAudioOutput needs to know the specific type, determined by SampleFormat_t
 typedef void pcm_t;
