@@ -153,7 +153,7 @@ void JackOutput::init(SongFormat format, bool realtime)
     const uint32_t channels = format.Channels();
     
     // avoid jack thread Interference
-    lock_guard<recursive_mutex> lck(this->mtx);
+    lock_guard<mutex> lck(this->mtx);
 
     // zero out any buffer in resampler, to avoid hearable cracks, when switching from one song to another
     src_reset(this->srcState);
@@ -174,8 +174,11 @@ void JackOutput::close()
 
 int JackOutput::doResampling(const float* inBuf, const size_t Frames)
 {
-    lock_guard<recursive_mutex> lock(this->mtx);
-    
+    if(!this->interleavedProcessedBuffer.isRunning)
+    {
+        return 0;
+    }
+        
     this->srcData.data_in = /*const_cast<float*>*/(inBuf);
     this->srcData.input_frames = Frames;
 
@@ -210,6 +213,8 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
         {
             this->srcData.output_frames_gen = 0;
             this->interleavedProcessedBuffer.ready = true;
+            // notify jacks process thread. in fact doesnt do anything, because jacks process thread doesnt this->cv.wait()
+            this->cv.notify_one();
         }
     }
     return this->srcData.input_frames_used;
@@ -217,19 +222,32 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
 
 template<typename T> int JackOutput::write (const T* buffer, frame_t frames)
 {
-    if(this->interleavedProcessedBuffer.ready)
-    {
-        // buffer has not been consumed yet
-        return 0;
-    }
-
-    const size_t Items = frames*this->GetOutputChannels().Value;
+//     if(this->interleavedProcessedBuffer.ready)
+//     {
+//         // buffer has not been consumed yet
+//         return 0;
+//     }
 
     // converted_to_float_but_not_resampled buffer
-    float* tempBuf = new float[Items];
+    float* tempBuf = new float[frames*this->GetOutputChannels().Value];
     
     this->Mix<T, float>(buffer, tempBuf, frames);
-    int framesUsed = this->doResampling(tempBuf, frames);
+    
+    
+    unique_lock<mutex> lck(this->mtx);
+    
+    int framesUsed=0;
+    int framesUsedNow;
+    do
+    {
+        // wait until jacks buffer has been consumed
+        this->cv.wait(lck, [this]{ return !this->interleavedProcessedBuffer.ready || !this->interleavedProcessedBuffer.isRunning; });
+        framesUsedNow = this->doResampling(tempBuf+framesUsed, frames);
+        frames -= framesUsedNow;
+        framesUsed += framesUsedNow;
+        
+    } while(frames > 0 && framesUsedNow > 0);
+    
 
     delete[] tempBuf;
     return framesUsed;
@@ -283,15 +301,20 @@ void JackOutput::start()
         THROW_RUNTIME_ERROR("cannot activate client")
     }
     
-    lock_guard<recursive_mutex> lck(this->mtx);
+    {
+        lock_guard<mutex> lck(this->mtx);
+        
+        // zero out any buffer in resampler, to avoid hearable cracks, when pausing and restarting playback
+        src_reset(this->srcState);
+        
+        this->interleavedProcessedBuffer.isRunning = true;
+        
+        // avoid playing any outdated garbage
+        this->interleavedProcessedBuffer.ready = false;
+    }
     
-    this->interleavedProcessedBuffer.isRunning = true;
-    
-    // avoid playing any outdated garbage
-    this->interleavedProcessedBuffer.ready = false;
-    
-    // zero out any buffer in resampler, to avoid hearable cracks, when pausing and restarting playback
-    src_reset(this->srcState);
+    // noone should be waiting within this->write(), just to be sure
+    this->cv.notify_all();
 }
 
 void JackOutput::stop()
@@ -299,8 +322,10 @@ void JackOutput::stop()
 // we should deactivate the client here, but if we do, any other jack client recording our output will get in trouble
 //     jack_deactivate(this->handle);
     
-    lock_guard<recursive_mutex> lck(this->mtx);
+    unique_lock<mutex> lck(this->mtx);
     this->interleavedProcessedBuffer.isRunning = false;
+    lck.unlock();
+    this->cv.notify_all();
 }
 
 int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
@@ -336,6 +361,7 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
         
     if(!pthis->mtx.try_lock())
     {
+        CLOG(LogLevel_t::Warning, "acquiring lock failed, discarding");
 //         ret = -1;
         goto fail;
     }
@@ -376,6 +402,7 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
     }
     pthis->interleavedProcessedBuffer.ready = false;
     pthis->mtx.unlock();
+    pthis->cv.notify_all();
     
     return ret;
 
@@ -393,7 +420,7 @@ fail:
 int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
 {
     JackOutput *const pthis = static_cast<JackOutput*const>(arg);
-    lock_guard<recursive_mutex> lock(pthis->mtx);
+    unique_lock<mutex> lck(pthis->mtx);
 
     pthis->jackBufSize = nframes;
 
@@ -413,6 +440,9 @@ int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
         pthis->interleavedProcessedBuffer.isRunning = false;
         return -1;
     }
+    
+    lck.unlock();
+    pthis->cv.notify_all();
 
     return 0;
 }

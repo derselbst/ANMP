@@ -4,6 +4,7 @@
 #include "IAudioOutput.h"
 
 #include <mutex>
+#include <condition_variable>
 #include <vector>
 #include <jack/jack.h>
 #include <samplerate.h>
@@ -70,7 +71,8 @@ protected:
     } jack_buffer_t;
 
     SRC_DATA srcData;
-    mutable std::recursive_mutex mtx;
+    std::condition_variable cv;
+    mutable std::mutex mtx;
     //*** Begin: mutex-protected vars ***//
     jack_buffer_t interleavedProcessedBuffer;
     jack_nframes_t jackBufSize = 0;

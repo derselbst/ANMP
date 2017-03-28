@@ -16,7 +16,7 @@ class JackUnderTest : public JackOutput
     
     int doResampling(const float* inBuf, const size_t Frames) override
     {
-        lock_guard<recursive_mutex> lock(this->mtx);
+        lock_guard<mutex> lock(this->mtx);
         
         // no resampling for testing here, just copy        
         for(unsigned int i=0; i< this->currentFormat.Channels()*Frames; i++)
