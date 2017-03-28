@@ -4,13 +4,6 @@
 #include <algorithm>
 #include <cmath> // lround
 
-template<typename T> void IAudioOutput::getAmplifiedBuffer(const T* inBuffer, T* outBuffer, unsigned long items)
-{
-    for(unsigned long i = 0; i<items; i++)
-    {
-        outBuffer[i] = inBuffer[i] * this->volume;
-    }
-}
 
 template<typename TIN, typename TOUT>
 void IAudioOutput::Mix(const TIN *restrict in, TOUT *restrict out, const frame_t frames/*, function<TOUT(long double)> converter*/)
@@ -19,7 +12,7 @@ void IAudioOutput::Mix(const TIN *restrict in, TOUT *restrict out, const frame_t
     
     // IAudioOutput::Mix() may only be called with a previously specified number of output channels
     // just silently assume that this happened
-    uint16_t N = this->GetOutputChannels().Value;
+    const uint16_t N = this->GetOutputChannels().Value;
     
     for(unsigned int f=0; f < frames; f++)
     {

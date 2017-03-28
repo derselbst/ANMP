@@ -121,8 +121,6 @@ protected:
 
     // the current volume [0,1.0] to use, i.e. a factor by that the PCM gets amplified.
     float volume = 1.0f;
-
-    template<typename T> void getAmplifiedBuffer(const T* inBuffer, T* outBuffer, unsigned long items);
     
     template<typename TIN, typename TOUT=TIN>
     void Mix(const TIN* in, TOUT* out, const frame_t frames);
@@ -144,16 +142,6 @@ protected:
     virtual int write (const float* buffer, frame_t frames) = 0;
     virtual int write (const int16_t* buffer, frame_t frames) = 0;
     virtual int write (const int32_t* buffer, frame_t frames) = 0;
-
-private:
-    // these two vectors are only used within this->Mix()
-    // place them here rather inside Mix() to avoid memory alloc on every Mix() call
-    // they have a length of this->GetOutputChannels(), and get resized in this->SetOutputChannels() if necessary
-    //
-    // temporary double mixdown buffer, where all voices get added to
-    vector<long double> mixdownBuf;
-    // how often a voice channel has been added to temp
-    vector<uint16_t> channelsMixed;
 };
 
 #endif // IAUDIOOUTPUT_H

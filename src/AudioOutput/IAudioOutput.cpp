@@ -24,19 +24,6 @@ Nullable<uint16_t> IAudioOutput::GetOutputChannels()
 
 void IAudioOutput::SetOutputChannels(Nullable<uint16_t> chan)
 {
-    if(chan.hasValue)
-    {
-        this->mixdownBuf.resize(chan.Value);
-        this->channelsMixed.resize(chan.Value);
-    }
-    else
-    {
-        this->mixdownBuf.clear();
-        this->mixdownBuf.shrink_to_fit();
-        this->channelsMixed.clear();
-        this->channelsMixed.shrink_to_fit();
-    }
-    
     this->outputChannels = chan;
 }
 
