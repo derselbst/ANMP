@@ -27,10 +27,18 @@ void IAudioOutput::SetOutputChannels(Nullable<uint16_t> chan)
     this->outputChannels = chan;
 }
 
+void IAudioOutput::stop()
+{
+    // because: playback gets stopped, currentSong gets deleted, new song gets allocated at that memory that has just been freed
+    // some child classes compare cached format (this->currentFormat) to newSong.Format, if they equal they avoid unecessary init to increase performance
+    // to avoid potential access via dangling, set it to null when not playing
+    this->currentFormat = nullptr;
+}
+
 // takes care of pointer arithmetic
 int IAudioOutput::write (const pcm_t* frameBuffer, frame_t frames, int offset)
 {
-    switch (this->currentFormat.SampleFormat)
+    switch (this->currentFormat->SampleFormat)
     {
     case SampleFormat_t::float32:
     {

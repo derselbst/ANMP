@@ -46,9 +46,9 @@ void ebur128Output::open()
     }
 }
 
-void ebur128Output::init(SongFormat format, bool)
+void ebur128Output::init(SongFormat* format, bool)
 {
-    if(!format.IsValid())
+    if(!format->IsValid())
     {
         return;
     }
@@ -67,8 +67,8 @@ void ebur128Output::onCurrentSongChanged(void* context)
         
         if(newSong != nullptr)
         {
-            const uint32_t chan = pthis->currentFormat.Channels();
-            pthis->handle = ebur128_init(chan, pthis->currentFormat.SampleRate, EBUR128_MODE_TRUE_PEAK);
+            const uint32_t chan = pthis->currentFormat->Channels();
+            pthis->handle = ebur128_init(chan, pthis->currentFormat->SampleRate, EBUR128_MODE_TRUE_PEAK);
             if(pthis->handle == nullptr)
             {
                 THROW_RUNTIME_ERROR("ebur128_init failed")
@@ -226,5 +226,6 @@ void ebur128Output::start()
 void ebur128Output::stop()
 {
     this->close();
+    this->IAudioOutput::stop();
 }
 

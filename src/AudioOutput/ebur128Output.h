@@ -27,7 +27,7 @@ public:
 
     void open () override;
 
-    void init (SongFormat format, bool realtime = false) override;
+    void init (SongFormat* format, bool realtime = false) override;
 
     void close () override;
 

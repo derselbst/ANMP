@@ -134,7 +134,7 @@ void JackOutput::SetOutputChannels(Nullable<uint16_t> chan)
         if(JackOutput::onJackBufSizeChanged(jack_get_buffer_size(this->handle), this) != 0)
         {
             // invalidate the current format
-            this->currentFormat.SetVoices(0);
+            this->currentFormat = nullptr;
             THROW_RUNTIME_ERROR("unable to onJackBufSizeChanged()");
         }
     }
@@ -143,22 +143,21 @@ void JackOutput::SetOutputChannels(Nullable<uint16_t> chan)
     this->IAudioOutput::SetOutputChannels(min<uint16_t>(chan.Value, this->playbackPorts.size()));
 }
 
-void JackOutput::init(SongFormat format, bool realtime)
+void JackOutput::init(SongFormat* format, bool realtime)
 {
-    if(!format.IsValid())
+    if((this->currentFormat!=nullptr && *this->currentFormat == *format) || !format->IsValid())
     {
-        return;
+        // nothing
     }
-    
-    // shortcut
-    const uint32_t channels = format.Channels();
-    
-    // avoid jack thread Interference
-    lock_guard<mutex> lck(this->mtx);
+    else
+    {
+        // avoid jack thread Interference
+        lock_guard<mutex> lck(this->mtx);
 
-    // zero out any buffer in resampler, to avoid hearable cracks, when switching from one song to another
-    src_reset(this->srcState);
-    
+        // zero out any buffer in resampler, to avoid hearable cracks, when switching from one song to another
+        src_reset(this->srcState);
+    }
+
     // dont forget to update channelcount, srate and sformat
     this->currentFormat = format;
 }
@@ -192,7 +191,7 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
     this->srcData.output_frames_gen = 0;
 
     // output_sample_rate / input_sample_rate
-    this->srcData.src_ratio = (double)this->jackSampleRate / this->currentFormat.SampleRate;
+    this->srcData.src_ratio = (double)this->jackSampleRate / this->currentFormat->SampleRate;
 
     int err = src_process (this->srcState, &this->srcData);
     if(err != 0 )
@@ -317,7 +316,10 @@ void JackOutput::stop()
 //     jack_deactivate(this->handle);
     
     unique_lock<mutex> lck(this->mtx);
+    
     this->interleavedProcessedBuffer.isRunning = false;
+    this->IAudioOutput::stop();
+    
     lck.unlock();
     this->cv.notify_all();
 }

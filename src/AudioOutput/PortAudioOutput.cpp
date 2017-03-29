@@ -46,17 +46,22 @@ void PortAudioOutput::SetOutputChannels(Nullable<uint16_t> chan)
     this->_init(this->currentFormat);
 }
 
-void PortAudioOutput::init(SongFormat format, bool realtime)
+void PortAudioOutput::init(SongFormat* format, bool realtime)
 {
-    if(this->currentFormat == format || !format.IsValid())
+    if((this->currentFormat!=nullptr && *this->currentFormat == *format) || !format->IsValid())
     {
-        return;
+        // nothing
     }
-    
-    this->_init(format, realtime);
+    else
+    {
+        this->_init(format, realtime);
+    }
+
+    // made it till here, update channelcount, srate and sformat
+    this->currentFormat = format;
 }
 
-void PortAudioOutput::_init(SongFormat format, bool realtime)
+void PortAudioOutput::_init(SongFormat* format, bool realtime)
 {
     if (this->paInitError != PaErrorCode::paNoError)
     {
@@ -65,7 +70,7 @@ void PortAudioOutput::_init(SongFormat format, bool realtime)
 
     PaSampleFormat paSampleFmt;
 
-    switch(format.SampleFormat)
+    switch(format->SampleFormat)
     {
     case SampleFormat_t::float32:
         paSampleFmt = paFloat32;
@@ -94,7 +99,7 @@ void PortAudioOutput::_init(SongFormat format, bool realtime)
                                 0,          /* no input channels */
                                 this->GetOutputChannels().Value,   /* no. of output channels */
                                 paSampleFmt,  /* 32 bit floating point output */
-                                format.SampleRate,
+                                format->SampleRate,
                                 gConfig.FramesToRender,  /* frames per buffer, i.e. the number of sample frames that PortAudio will request from the callback.*/
                                 nullptr, /* this is my callback function */
                                 this ); /* This is a pointer that will be passed to my callback */
@@ -190,5 +195,6 @@ void PortAudioOutput::stop()
             THROW_RUNTIME_ERROR("unable to stop pcm (" << Pa_GetErrorText(err) << ")");
         }
     }
+    this->IAudioOutput::stop();
 }
 
