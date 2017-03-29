@@ -33,9 +33,9 @@ struct SongFormat
     
     vector<string> VoiceName;
     
-    vector<bool> VoiceIsMuted;
+    mutable vector<bool> VoiceIsMuted;
     
-    vector<uint16_t> VoiceChannels;
+    mutable vector<uint16_t> VoiceChannels;
 
     void SetVoices(uint16_t nVoices);
 
