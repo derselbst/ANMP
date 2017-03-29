@@ -50,8 +50,9 @@ if(USE_GUI)
     if(USE_VISUALIZER)
         # name of libraries that will be build in the applets subdir
         SET(LIBANAL analyzer)
+        SET(LIBMIX mix)
         add_subdirectory(applets)
-        target_link_libraries(${PROJECT_NAME} ${LIBANAL})
+        target_link_libraries(${PROJECT_NAME} ${LIBANAL} ${LIBMIX})
     endif(USE_VISUALIZER)
     
     

@@ -8,6 +8,7 @@
 #include "PlayheadSlider.h"
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
+#include "applets/channel/channelconfig.h"
 #include "PlaylistModel.h"
 
 #include <anmp.hpp>
@@ -55,6 +56,7 @@ MainWindow::MainWindow(QWidget *parent) :
     
     // init UI
     this->ui->setupUi(this);
+    this->ui->mixLayout->addWidget(new ChannelConfig(this->player, this));
 
     connect(this->ui->playButton,       &QPushButton::toggled, this, [this](bool){this->MainWindow::TogglePlayPause();});
     connect(this->ui->stopButton,       &QPushButton::clicked, this, &MainWindow::Stop);
