@@ -35,9 +35,14 @@ void SongFormat::SetVoices(uint16_t nVoices)
     }
     else
     {
-        this->VoiceName.resize(nVoices, "");
+        this->VoiceName.resize(nVoices);
         this->VoiceIsMuted.resize(nVoices, false);
         this->VoiceChannels.resize(nVoices, 0);
+    }
+    
+    for(uint16_t i=0; i<nVoices; i++)
+    {
+        this->VoiceName[i] = "Voice " + to_string(i);
     }
     
     this->Voices = nVoices;
