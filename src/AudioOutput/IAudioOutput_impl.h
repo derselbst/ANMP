@@ -8,7 +8,7 @@
 template<typename TIN, typename TOUT>
 void IAudioOutput::Mix(const TIN *restrict in, TOUT *restrict out, const frame_t frames)
 {
-    const unsigned int nVoices = this->currentFormat->Voices;
+    const unsigned int nVoices = this->currentFormat.Voices;
     
     // IAudioOutput::Mix() may only be called with a previously specified number of output channels
     // just silently assume that this happened
@@ -40,8 +40,8 @@ void IAudioOutput::Mix(const TIN *restrict in, TOUT *restrict out, const frame_t
         // walk through all available voices. if not muted, they contribute to the mixed output
         for(unsigned int v=0; v < nVoices; v++)
         {
-            const uint16_t vchan = this->currentFormat->VoiceChannels[v];
-            if(!this->currentFormat->VoiceIsMuted[v])
+            const uint16_t vchan = this->currentFormat.VoiceChannels[v];
+            if(!this->currentFormat.VoiceIsMuted[v])
             {
                 const uint16_t channelsToMix = max(vchan, N);
                 for(unsigned int m=0; m < channelsToMix; m++)

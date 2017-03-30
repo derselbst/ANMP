@@ -54,7 +54,7 @@ public:
      *
      * when finishing the call to this->init() the PCM stream shall be in state "stopped"
      */
-    virtual void init (SongFormat* format, bool realtime=false) = 0;
+    virtual void init (SongFormat format, bool realtime=false) = 0;
 
     /**
      * Starts the PCM stream.
@@ -68,7 +68,7 @@ public:
      *
      * If the stream is already stopped, no error shall be risen.
      */
-    virtual void stop ();
+    virtual void stop () = 0;
 
     /**
      * closes the device, frees all ressources allocated by this->open()
@@ -112,7 +112,7 @@ public:
 
 
 protected:
-    SongFormat* currentFormat = nullptr;
+    SongFormat currentFormat;
     
     // number of audio channels all the different song's voices will be mixed to (by this->Mix())
     // if it has no value, no mixing takes place

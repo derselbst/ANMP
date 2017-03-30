@@ -55,22 +55,17 @@ void ALSAOutput::SetOutputChannels(Nullable<uint16_t> chan)
     this->_init(this->currentFormat);
 }
 
-void ALSAOutput::init(SongFormat* format, bool realtime)
+void ALSAOutput::init(SongFormat format, bool realtime)
 {
-    if((this->currentFormat!=nullptr && *this->currentFormat == *format) || !format->IsValid())
+    if(this->currentFormat == format || !format.IsValid())
     {
-        // nothing
+        return;
     }
-    else
-    {
-        this->_init(format, realtime);
-    }
-
-    // made it till here, update channelcount, srate and sformat
-    this->currentFormat = format;
+    
+    this->_init(format, realtime);
 }
 
-void ALSAOutput::_init(SongFormat* format, bool realtime)
+void ALSAOutput::_init(SongFormat format, bool realtime)
 {
     // changing hw settings can only safely be done when pcm is not running
     // therefore stop the pcm and drain all pending frames
@@ -106,7 +101,7 @@ void ALSAOutput::_init(SongFormat* format, bool realtime)
     /***************
      * INTERESTING *
      **************/
-    switch(format->SampleFormat)
+    switch(format.SampleFormat)
     {
     case SampleFormat_t::float32:
         err = snd_pcm_hw_params_set_format (this->alsa_dev, hw_params, SND_PCM_FORMAT_FLOAT);
@@ -130,7 +125,7 @@ void ALSAOutput::_init(SongFormat* format, bool realtime)
         THROW_RUNTIME_ERROR("cannot set sample format (" << snd_strerror(err) << ")");
     }
 
-    if ((err = snd_pcm_hw_params_set_rate_near (this->alsa_dev, hw_params, &format->SampleRate, 0)) < 0)
+    if ((err = snd_pcm_hw_params_set_rate_near (this->alsa_dev, hw_params, &format.SampleRate, 0)) < 0)
     {
         snd_pcm_hw_params_free (hw_params);
         THROW_RUNTIME_ERROR("cannot set sample rate (" << snd_strerror(err) << ")");
@@ -214,6 +209,9 @@ void ALSAOutput::_init(SongFormat* format, bool realtime)
     }
 
     snd_pcm_sw_params_free (sw_params);
+
+    // WOW, WE MADE IT TIL HERE, so update channelcount, srate and sformat
+    this->currentFormat = format;
 }
 
 void ALSAOutput::drain()
@@ -266,7 +264,7 @@ template<typename T> int ALSAOutput::write(const T* buffer, frame_t frames)
     int total = 0;
     while (total < frames)
     {
-        int retval = snd_pcm_writei(this->alsa_dev, buffer + total * this->currentFormat->Channels(), frames - total);
+        int retval = snd_pcm_writei(this->alsa_dev, buffer + total * this->currentFormat.Channels(), frames - total);
 
         if (retval >= 0)
         {
@@ -342,6 +340,5 @@ void ALSAOutput::start()
 void ALSAOutput::stop()
 {
     this->drop();
-    this->IAudioOutput::stop();
 }
 

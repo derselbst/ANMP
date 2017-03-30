@@ -290,9 +290,9 @@ void WaveOutput::open()
     }
 }
 
-void WaveOutput::init(SongFormat* format, bool)
+void WaveOutput::init(SongFormat format, bool)
 {
-    if(!format->IsValid())
+    if(!format.IsValid())
     {
         return;
     }
@@ -361,8 +361,8 @@ template<typename T> int WaveOutput::write(const T* buffer, frame_t frames)
     
     if(this->handle!=nullptr)
     {
-        ret = fwrite(buffer, sizeof(T), frames * this->currentFormat->Channels(), this->handle);
-        ret /= this->currentFormat->Channels();
+        ret = fwrite(buffer, sizeof(T), frames * this->currentFormat.Channels(), this->handle);
+        ret /= this->currentFormat.Channels();
         
         if(ret != frames)
         {
@@ -398,6 +398,5 @@ void WaveOutput::start()
 void WaveOutput::stop()
 {
     this->close();
-    this->IAudioOutput::stop();
 }
 

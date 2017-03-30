@@ -121,7 +121,7 @@ void Player::_initAudio()
 
     if(this->currentSong!=nullptr)
     {
-        this->audioDriver->init(&this->currentSong->Format);
+        this->audioDriver->init(this->currentSong->Format);
     }
 }
 
@@ -209,7 +209,7 @@ void Player::_setCurrentSong (Song* newSong)
         {
             newSong->open();
             newSong->fillBuffer();
-            this->audioDriver->init(&newSong->Format);
+            this->audioDriver->init(newSong->Format);
         }
         else
         {   
@@ -231,7 +231,7 @@ void Player::_setCurrentSong (Song* newSong)
                 // some audiodrivers (waveoutput) might be doing some calls to the old song which are only valid if the song is still open
             }
 
-            this->audioDriver->init(&newSong->Format);
+            this->audioDriver->init(newSong->Format);
         }
         
         // then update currently played song

@@ -19,7 +19,7 @@ class JackUnderTest : public JackOutput
         lock_guard<mutex> lock(this->mtx);
         
         // no resampling for testing here, just copy        
-        for(unsigned int i=0; i< this->currentFormat->Channels()*Frames; i++)
+        for(unsigned int i=0; i< this->currentFormat.Channels()*Frames; i++)
         {
             this->interleavedProcessedBuffer.buf[i] = inBuf[i];
         }
@@ -43,7 +43,7 @@ int main()
         f.SetVoices(1);
         f.VoiceChannels[0] = 1;
         f.SampleFormat = SampleFormat_t::int16;
-        jack.init(&f);
+        jack.init(f);
         
         
         // "start playback"
@@ -66,7 +66,7 @@ int main()
         // play a new song
         
         f.VoiceChannels[0] = 1;
-        jack.init(&f);
+        jack.init(f);
         buf = jack.interleavedProcessedBuffer.buf;
         jack.write(samples+4, 4);
         
@@ -78,7 +78,7 @@ int main()
         
         
         f.VoiceChannels[0] = 2;
-        jack.init(&f);
+        jack.init(f);
         buf = jack.interleavedProcessedBuffer.buf;
         jack.write(samples, 4);
         
@@ -96,7 +96,7 @@ int main()
                                          60, 60, 65, 65};
         
         f.VoiceChannels[0] = 2;
-        jack.init(&f);
+        jack.init(f);
         buf = jack.interleavedProcessedBuffer.buf;
         jack.write(samples2, 4);
         
@@ -112,7 +112,7 @@ int main()
         
         // now play a song with many channels
         f.VoiceChannels[0] = 8;
-        jack.init(&f);
+        jack.init(f);
         buf = jack.interleavedProcessedBuffer.buf;
         for(unsigned int i=0; i<jack.jackBufSize; i++)
         {
@@ -138,7 +138,7 @@ int main()
         
         // now replay the stereo song, to make sure buffer got cleared up, reallocated, etc.
         f.VoiceChannels[0] = 2;
-        jack.init(&f);
+        jack.init(f);
         buf = jack.interleavedProcessedBuffer.buf;
         jack.write(samples, 4);
         
