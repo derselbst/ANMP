@@ -7,14 +7,18 @@
     <x>0</x>
     <y>0</y>
     <width>658</width>
-    <height>112</height>
+    <height>114</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>DockWidget</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
-   <layout class="QHBoxLayout" name="voiceList"/>
+   <layout class="QHBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="voiceList" />
+    </item>
+   </layout>
   </widget>
  </widget>
  <resources/>
