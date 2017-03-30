@@ -56,7 +56,7 @@ void ChannelConfig::onSongChanged()
         QPushButton* btn = new QPushButton(QString::fromStdString(this->currentFormat->VoiceName[i]), this);
         btn->setCheckable(true);
         btn->setChecked(!this->currentFormat->VoiceIsMuted[i]);
-        btn->setStyleSheet("QPushButton:checked { background-color: green; } QPushButton { background-color: red; }");
+        btn->setStyleSheet("QPushButton:checked { background-color: lime; } QPushButton { background-color: red; }");
 
         connect(btn, &QPushButton::toggled, this,
                 [this, i](bool isChecked)
