@@ -81,7 +81,7 @@ public:
      * sets the playback volume
      * @param vol volume usually ranged [0.0,1.0]
      */
-    virtual void setVolume(float vol);
+    void setVolume(float vol);
     
     // gets and sets the number of mixdown channels, all non muted voices of a song get mixed to
     Nullable<uint16_t> GetOutputChannels();
@@ -111,7 +111,7 @@ public:
      *
      * @warning you can return a number smaller "frames" (but greater 0), however this case cannot always be recovered. you should better return 0 and play nothing, if you face such a problem.
      */
-    virtual int write (const pcm_t* frameBuffer, frame_t frames, int offset);
+    int write (const pcm_t* frameBuffer, frame_t frames, int offset);
 
 
 protected:
