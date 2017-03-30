@@ -61,7 +61,7 @@ void ChannelConfig::onSongChanged()
         connect(btn, &QPushButton::toggled, this,
                 [this, i](bool isChecked)
                 {
-                    this->currentFormat->VoiceIsMuted[i] = !isChecked;
+                    this->player->Mute(i, !isChecked);
                 });
 
         this->ui->voiceList->addWidget(btn);

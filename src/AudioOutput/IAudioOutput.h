@@ -87,6 +87,9 @@ public:
     Nullable<uint16_t> GetOutputChannels();
     // only call this when playback is paused, i.e. no call to this->write() is pending
     virtual void SetOutputChannels(Nullable<uint16_t>);
+    
+    void SetVoiceConfig(decltype(SongFormat::Voices) voices, decltype(SongFormat::VoiceChannels)& voiceChannels);
+    void SetMuteMask(decltype(SongFormat::VoiceIsMuted)& mask);
 
     /**
      * pushes the pcm pointed to by frameBuffer to the underlying audio driver (or at least schedules it for pushing/playing)

@@ -108,6 +108,7 @@ public:
      */
     void seekTo (frame_t frame);
 
+    void Mute(int i, bool);
     
     Event<bool, Nullable<string>> onIsPlayingChanged;
     Event<frame_t> onPlayheadChanged;

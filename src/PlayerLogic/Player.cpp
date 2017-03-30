@@ -330,6 +330,11 @@ void Player::fadeout (unsigned int fadeTime, int8_t fadeType)
     }
 }
 
+void Player::Mute(int i, bool isMuted)
+{
+    this->currentSong->Format.VoiceIsMuted[i] = isMuted;
+}
+
 void Player::seekTo (frame_t frame)
 {
     if(this->IsSeekingPossible())
@@ -477,6 +482,9 @@ void Player::playFrames (frame_t framesToPlay)
 
         // PLAY!
 again:
+//         this->audioDriver->SetVoiceConfig(this->currentSong->Format.Voices, this->currentSong->Format.VoiceChannels);
+        this->audioDriver->SetMuteMask(this->currentSong->Format.VoiceIsMuted);
+        
         framesWritten = this->audioDriver->write(this->currentSong->data, framesToPush, itemOffset);
         // before we go on rendering the next pcm chunk, make sure we really played the current one.
         //
