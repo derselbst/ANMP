@@ -150,9 +150,6 @@ void JackOutput::init(SongFormat format, bool realtime)
         return;
     }
     
-    // shortcut
-    const uint32_t channels = format.Channels();
-    
     // avoid jack thread Interference
     lock_guard<mutex> lck(this->mtx);
 
