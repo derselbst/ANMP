@@ -250,11 +250,17 @@ void Player::_setCurrentSong (Song* newSong)
     catch(const exception& e)
     {
         // cleanup
-        newSong->releaseBuffer();
-        newSong->close();
+        if(newSong != nullptr)
+        {
+            newSong->releaseBuffer();
+            newSong->close();
+        }
         
-        oldSong->releaseBuffer();
-        oldSong->close();
+        if(oldSong != nullptr)
+        {
+            oldSong->releaseBuffer();
+            oldSong->close();
+        }
         
         this->currentSong = nullptr;
         
