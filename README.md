@@ -55,7 +55,7 @@ See [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%
 #### For audio playback: at least one of the following audio I/O libraries
 (if none of them, only WAVE files can be written)
 * ALSA (audio playback on Linux only)
-* [Jack](http://jackaudio.org/) (low latency audio playback; also requires [libsamplearate](http://www.mega-nerd.com/SRC/))
+* [Jack](http://jackaudio.org/) (low latency audio playback; also requires [libsamplearate](http://www.mega-nerd.com/SRC/) >= 0.1.9)
 * [PortAudio](http://www.portaudio.com/) (for crossplatform audio playback support)
 
 ### Optional
