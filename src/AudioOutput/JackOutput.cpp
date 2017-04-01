@@ -257,6 +257,8 @@ template<typename T> int JackOutput::write (const T* buffer, frame_t frames)
         
     } while(frames > 0 && framesUsedNow > 0);
     
+    // unlock before delete[]
+    lck.unlock();
 
     delete[] tempBuf;
     return framesUsed;
