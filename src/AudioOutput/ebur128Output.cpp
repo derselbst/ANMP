@@ -63,7 +63,7 @@ void ebur128Output::onCurrentSongChanged(void* context)
         
         if(newSong != nullptr)
         {
-            if(!pthis->currentFormat.isValid())
+            if(!pthis->currentFormat.IsValid())
             {
                 CLOG(LogLevel_t::Warning, "attempting to use invalid SongFormat");
             }

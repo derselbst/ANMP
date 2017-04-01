@@ -357,7 +357,7 @@ template<typename T> int WaveOutput::write(const T* buffer, frame_t frames)
     
     if(this->handle!=nullptr)
     {
-        if(!pthis->currentFormat.isValid())
+        if(!this->currentFormat.IsValid())
         {
             CLOG(LogLevel_t::Warning, "attempting to use invalid SongFormat");
         }
