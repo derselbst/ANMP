@@ -59,6 +59,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->ui->setupUi(this);
     this->ui->mixLayout->addWidget(this->channelView);
 
+    // connect main buttons
     connect(this->ui->playButton,       &QPushButton::toggled, this, [this](bool){this->MainWindow::TogglePlayPause();});
     connect(this->ui->stopButton,       &QPushButton::clicked, this, &MainWindow::Stop);
 
@@ -71,6 +72,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->previousButton,   &QPushButton::clicked, this, &MainWindow::Previous);
 
 
+    // connect menu actions
     connect(this->ui->actionPlay,       &QAction::triggered, this, &MainWindow::Play);
     connect(this->ui->actionPause,      &QAction::triggered, this, &MainWindow::Pause);
     connect(this->ui->actionStop,       &QAction::triggered, this, &MainWindow::Stop);
