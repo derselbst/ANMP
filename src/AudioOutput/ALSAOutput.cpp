@@ -52,17 +52,28 @@ void ALSAOutput::SetOutputChannels(Nullable<uint16_t> chan)
 {
     this->IAudioOutput::SetOutputChannels(chan);
     
-    this->_init(this->currentFormat);
+    // force reinit
+    if(this->currentFormat.IsValid() && chan.hasValue)
+    {
+        this->_init(this->currentFormat);
+    }
 }
 
 void ALSAOutput::init(SongFormat format, bool realtime)
 {
-    if(this->currentFormat == format || !format.IsValid())
+    if(format.IsValid())
     {
-        return;
+        if(this->currentFormat == format)
+        {
+            // nothing
+        }
+        else
+        {
+            this->_init(format, realtime);
+        }
     }
     
-    this->_init(format, realtime);
+    this->currentFormat = format;
 }
 
 void ALSAOutput::_init(SongFormat format, bool realtime)
@@ -209,9 +220,6 @@ void ALSAOutput::_init(SongFormat format, bool realtime)
     }
 
     snd_pcm_sw_params_free (sw_params);
-
-    // WOW, WE MADE IT TIL HERE, so update channelcount, srate and sformat
-    this->currentFormat = format;
 }
 
 void ALSAOutput::drain()

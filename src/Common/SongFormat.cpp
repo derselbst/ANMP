@@ -1,5 +1,6 @@
 #include "SongFormat.h"
 
+// extensively used by IAudioOutput childs
 bool operator == (SongFormat const& lhs, SongFormat const& rhs)
 {
     return lhs.SampleRate  == rhs.SampleRate   &&

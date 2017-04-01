@@ -292,10 +292,6 @@ void WaveOutput::open()
 
 void WaveOutput::init(SongFormat format, bool)
 {
-    if(!format.IsValid())
-    {
-        return;
-    }
     this->currentFormat = format;
 }
 
@@ -361,8 +357,14 @@ template<typename T> int WaveOutput::write(const T* buffer, frame_t frames)
     
     if(this->handle!=nullptr)
     {
-        ret = fwrite(buffer, sizeof(T), frames * this->currentFormat.Channels(), this->handle);
-        ret /= this->currentFormat.Channels();
+        if(!pthis->currentFormat.isValid())
+        {
+            CLOG(LogLevel_t::Warning, "attempting to use invalid SongFormat");
+        }
+        
+        uint32_t chan = this->currentFormat.Channels();
+        ret = fwrite(buffer, sizeof(T), frames * chan, this->handle);
+        ret /= chan;
         
         if(ret != frames)
         {

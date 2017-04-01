@@ -150,17 +150,22 @@ void JackOutput::SetOutputChannels(Nullable<uint16_t> chan)
 }
 
 void JackOutput::init(SongFormat format, bool realtime)
-{
-    if(!format.IsValid())
+{   
+    if(format.IsValid())
     {
-        return;
-    }
-    
-    // avoid jack thread Interference
-    lock_guard<mutex> lck(this->mtx);
+        if(this->currentFormat == format)
+        {
+            // nothing
+        }
+        else
+        {
+            // avoid jack thread Interference
+            lock_guard<mutex> lck(this->mtx);
 
-    // zero out any buffer in resampler, to avoid hearable cracks, when switching from one song to another
-    src_reset(this->srcState);
+            // zero out any buffer in resampler, to avoid hearable cracks, when switching from one song to another
+            src_reset(this->srcState);
+        }
+    }
     
     // dont forget to update channelcount, srate and sformat
     this->currentFormat = format;
@@ -182,7 +187,11 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
     {
         return 0;
     }
-        
+    if(!this->currentFormat.IsValid())
+    {
+        THROW_RUNTIME_ERROR("SongFormat not valid")
+    }
+    
     this->srcData.data_in = /*const_cast<float*>*/(inBuf);
     this->srcData.input_frames = Frames;
 

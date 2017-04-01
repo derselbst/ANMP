@@ -48,10 +48,6 @@ void ebur128Output::open()
 
 void ebur128Output::init(SongFormat format, bool)
 {
-    if(!format.IsValid())
-    {
-        return;
-    }
     this->currentFormat = format;
 }
 
@@ -67,6 +63,11 @@ void ebur128Output::onCurrentSongChanged(void* context)
         
         if(newSong != nullptr)
         {
+            if(!pthis->currentFormat.isValid())
+            {
+                CLOG(LogLevel_t::Warning, "attempting to use invalid SongFormat");
+            }
+            
             const uint32_t chan = pthis->currentFormat.Channels();
             pthis->handle = ebur128_init(chan, pthis->currentFormat.SampleRate, EBUR128_MODE_TRUE_PEAK);
             if(pthis->handle == nullptr)
