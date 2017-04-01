@@ -111,9 +111,7 @@ void JackOutput::SetOutputChannels(Nullable<uint16_t> chan)
 
             this->playbackPorts.push_back(out_port);
         }
-        
-        this->connectPorts();
-        
+                
         // we have to delete the resampler in order to refresh channel count
         if(this->srcState != nullptr)
         {
@@ -137,6 +135,14 @@ void JackOutput::SetOutputChannels(Nullable<uint16_t> chan)
             this->currentFormat.SetVoices(0);
             THROW_RUNTIME_ERROR("unable to onJackBufSizeChanged()");
         }
+
+        // start the process thread, no error if it is already started
+        if (jack_activate(this->handle))
+        {
+            THROW_RUNTIME_ERROR("cannot activate client")
+        }
+        
+        this->connectPorts();
     }
     
     // call base method to make sure we allocate temporary mixdown buffer
@@ -287,11 +293,6 @@ void JackOutput::connectPorts()
 
 void JackOutput::start()
 {
-    if (jack_activate(this->handle))
-    {
-        THROW_RUNTIME_ERROR("cannot activate client")
-    }
-    
     {
         lock_guard<mutex> lck(this->mtx);
         
