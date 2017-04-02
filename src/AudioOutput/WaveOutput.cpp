@@ -101,7 +101,7 @@ public:
     
     WaveHeader(const Song* s, const int framesWritten)
     {
-        this->Channels = s->Format.Channels;
+        this->Channels = s->Format.Channels();
         this->SampleRate = s->Format.SampleRate;
 
         switch (s->Format.SampleFormat)
@@ -130,7 +130,7 @@ public:
 
         /// calculations following
 
-        this->DataSize = framesWritten * s->Format.Channels * (this->BitsPerSample/8);
+        this->DataSize = framesWritten * this->Channels * (this->BitsPerSample/8);
         this->BlockAlign = this->BitsPerSample * this->Channels / 8;
         this->BytesPerSecond = this->SampleRate * this->BlockAlign;
         this->SamplePeriod = (1.0/this->SampleRate)/(1e-9);
@@ -290,12 +290,8 @@ void WaveOutput::open()
     }
 }
 
-void WaveOutput::init(SongFormat format, bool)
+void WaveOutput::init(SongFormat& format, bool)
 {
-    if(!format.IsValid())
-    {
-        return;
-    }
     this->currentFormat = format;
 }
 
@@ -361,8 +357,14 @@ template<typename T> int WaveOutput::write(const T* buffer, frame_t frames)
     
     if(this->handle!=nullptr)
     {
-        ret = fwrite(buffer, sizeof(T), frames * this->currentFormat.Channels, this->handle);
-        ret /= this->currentFormat.Channels;
+        if(!this->currentFormat.IsValid())
+        {
+            CLOG(LogLevel_t::Warning, "attempting to use invalid SongFormat");
+        }
+        
+        uint32_t chan = this->currentFormat.Channels();
+        ret = fwrite(buffer, sizeof(T), frames * chan, this->handle);
+        ret /= chan;
         
         if(ret != frames)
         {

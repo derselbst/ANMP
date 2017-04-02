@@ -46,25 +46,28 @@ void LibGMEWrapper::open()
         return;
     }
 
-#if GME_VERSION > 0x000601
-    gme_err_t msg = gme_open_file(this->Filename.c_str(), &this->handle, gConfig.gmeSampleRate, gConfig.gmeMultiChannel);
-#else
     gme_err_t msg = gme_open_file(this->Filename.c_str(), &this->handle, gConfig.gmeSampleRate);
-#endif
 
     if(msg)
     {
         THROW_RUNTIME_ERROR("libgme failed on file \"" << this->Filename << ")\"" << " with message " << msg);
     }
 
-    this->Format.Channels = 2;
+    this->Format.SetVoices(1);
+    this->Format.VoiceChannels[0] = 2;
+    
 #if GME_VERSION > 0x000601
     bool multiChannelSupport = gme_multi_channel(this->handle);
     
     // there will always be at least a stereo channel, if this will be real stereo sound or only mono depends on the game
     if(multiChannelSupport)
     {
-        this->Format.Channels = 2*8;
+        this->Format.SetVoices(8);
+        // each of the eight voices will be rendered to a stereo channel
+        for(unsigned int i = 0; i < this->Format.VoiceChannels.size(); i++)
+        {
+            this->Format.VoiceChannels[i] = 2;
+        }
     }
     
     if(gConfig.gmeMultiChannel && !multiChannelSupport)
@@ -162,7 +165,7 @@ void LibGMEWrapper::fillBuffer()
 
 void LibGMEWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
-    STANDARDWRAPPER_RENDER(int16_t, gme_play(this->handle, framesToDoNow * this->Format.Channels, pcm))
+    STANDARDWRAPPER_RENDER(int16_t, gme_play(this->handle, framesToDoNow * Channels, pcm))
 }
 
 frame_t LibGMEWrapper::getFrames () const

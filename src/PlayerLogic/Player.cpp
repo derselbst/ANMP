@@ -33,7 +33,7 @@
 #include <cmath>
 
 // TODO: make this nicer
-#define FramesToItems(x) ((x)*this->currentSong->Format.Channels)
+#define FramesToItems(x) ((x)*this->currentSong->Format.Channels())
 #define USERS_ARE_STUPID if(this->audioDriver==nullptr || this->playlist==nullptr || this->currentSong==nullptr){throw NotInitializedException();}
 // Constructors/Destructors
 //
@@ -132,7 +132,7 @@ bool Player::IsPlaying()
 
 bool Player::IsSeekingPossible()
 {
-    return (this->currentSong==nullptr ? false : this->currentSong->count==FramesToItems(this->currentSong->getFrames()));
+    return (this->currentSong==nullptr ? false : this->currentSong->count==FramesToItems(static_cast<size_t>(this->currentSong->getFrames())));
 }
 
 void Player::play ()
@@ -199,50 +199,72 @@ void Player::_setCurrentSong (Song* newSong)
     this->resetPlayhead();
     
     Song* oldSong = this->currentSong;
-    if(newSong == nullptr) // nullptr here means this.stop()
+    try
     {
-        this->_pause();
-    }
-    else if(oldSong == nullptr)
-    {
-        newSong->open();
-        newSong->fillBuffer();
-        this->audioDriver->init(newSong->Format);
-    }
-    else
-    {   
-        if(newSong == oldSong)
+        if(newSong == nullptr) // nullptr here means this.stop()
         {
-            oldSong->releaseBuffer();
-            
-            // hard close and reopen the file, since might have changed
-            oldSong->close();
-            oldSong->open();
-            oldSong->fillBuffer();
+            this->_pause();
         }
-        else
+        else if(oldSong == nullptr)
         {
-            oldSong->releaseBuffer();
             newSong->open();
             newSong->fillBuffer();
-            // DO NOT CLOSE oldSong here!
-            // some audiodrivers (waveoutput) might be doing some calls to the old song which are only valid if the song is still open
+            this->audioDriver->init(newSong->Format);
         }
+        else
+        {   
+            if(newSong == oldSong)
+            {
+                oldSong->releaseBuffer();
+                
+                // hard close and reopen the file, since might have changed
+                oldSong->close();
+                oldSong->open();
+                oldSong->fillBuffer();
+            }
+            else
+            {
+                oldSong->releaseBuffer();
+                newSong->open();
+                newSong->fillBuffer();
+                // DO NOT CLOSE oldSong here!
+                // some audiodrivers (waveoutput) might be doing some calls to the old song which are only valid if the song is still open
+            }
 
-        this->audioDriver->init(newSong->Format);
+            this->audioDriver->init(newSong->Format);
+        }
+        
+        // then update currently played song
+        this->currentSong = newSong;
+
+        // now we are ready to do the callback
+        this->onCurrentSongChanged.Fire();
+        
+        // oldSong needs to stay open until the very end, i.e. after onCurrentSongChanged.Fire() and audioDriver init() are done!
+        if(oldSong != nullptr && oldSong != newSong)
+        {
+            oldSong->releaseBuffer();
+            oldSong->close();
+        }
     }
-    
-    // then update currently played song
-    this->currentSong = newSong;
-
-    // now we are ready to do the callback
-    this->onCurrentSongChanged.Fire();
-    
-    // oldSong needs to stay open until the very end, i.e. after onCurrentSongChanged.Fire() and audioDriver init() are done!
-    if(oldSong != nullptr && oldSong != newSong)
+    catch(const exception& e)
     {
-        oldSong->releaseBuffer();
-        oldSong->close();
+        // cleanup
+        if(newSong != nullptr)
+        {
+            newSong->releaseBuffer();
+            newSong->close();
+        }
+        
+        if(oldSong != nullptr)
+        {
+            oldSong->releaseBuffer();
+            oldSong->close();
+        }
+        
+        this->currentSong = nullptr;
+        
+        throw;
     }
 }
 
@@ -312,6 +334,11 @@ void Player::fadeout (unsigned int fadeTime, int8_t fadeType)
         this->audioDriver->setVolume(volToPush);
         this_thread::sleep_for(chrono::milliseconds(1));
     }
+}
+
+void Player::Mute(int i, bool isMuted)
+{
+    this->currentSong->Format.VoiceIsMuted[i] = isMuted;
 }
 
 void Player::seekTo (frame_t frame)
@@ -461,6 +488,9 @@ void Player::playFrames (frame_t framesToPlay)
 
         // PLAY!
 again:
+//         this->audioDriver->SetVoiceConfig(this->currentSong->Format.Voices, this->currentSong->Format.VoiceChannels);
+        this->audioDriver->SetMuteMask(this->currentSong->Format.VoiceIsMuted);
+        
         framesWritten = this->audioDriver->write(this->currentSong->data, framesToPush, itemOffset);
         // before we go on rendering the next pcm chunk, make sure we really played the current one.
         //

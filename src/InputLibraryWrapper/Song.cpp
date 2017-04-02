@@ -26,7 +26,7 @@ Song::Song(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLe
   */
 bool Song::isPlayable () noexcept
 {
-    return this->Format.Channels <= 6 && this->Format.Channels > 0;
+    return this->Format.Channels() <= 6 && this->Format.Channels() > 0;
 }
 
 

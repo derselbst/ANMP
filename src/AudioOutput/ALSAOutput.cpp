@@ -1,7 +1,9 @@
 #include "ALSAOutput.h"
+#include "IAudioOutput_impl.h"
 
 #include "CommonExceptions.h"
 #include "AtomicWrite.h"
+#include "Config.h"
 
 #include <iostream>
 #include <string>
@@ -45,13 +47,37 @@ void ALSAOutput::open()
     }
 } /* alsa_open */
 
-void ALSAOutput::init(SongFormat format, bool realtime)
+
+void ALSAOutput::SetOutputChannels(Nullable<uint16_t> chan)
 {
-    if(this->currentFormat == format || !format.IsValid())
+    this->IAudioOutput::SetOutputChannels(chan);
+    
+    // force reinit
+    if(this->currentFormat.IsValid() && chan.hasValue)
     {
-        return;
+        this->_init(this->currentFormat);
+    }
+}
+
+void ALSAOutput::init(SongFormat& format, bool realtime)
+{
+    if(format.IsValid())
+    {
+        if(this->currentFormat == format)
+        {
+            // nothing
+        }
+        else
+        {
+            this->_init(format, realtime);
+        }
     }
     
+    this->currentFormat = format;
+}
+
+void ALSAOutput::_init(SongFormat& format, bool realtime)
+{
     // changing hw settings can only safely be done when pcm is not running
     // therefore stop the pcm and drain all pending frames
     // DO NOT drop pending frames, due to latency some frames might still be played,
@@ -98,7 +124,7 @@ void ALSAOutput::init(SongFormat format, bool realtime)
         err = snd_pcm_hw_params_set_format (this->alsa_dev, hw_params, SND_PCM_FORMAT_S32);
         break;
     case SampleFormat_t::unknown:
-        THROW_RUNTIME_ERROR("ALSAOutput::init(): Sample Format not set");
+        THROW_RUNTIME_ERROR("Sample Format not set");
 
     default:
         throw NotImplementedException();
@@ -116,7 +142,7 @@ void ALSAOutput::init(SongFormat format, bool realtime)
         THROW_RUNTIME_ERROR("cannot set sample rate (" << snd_strerror(err) << ")");
     }
 
-    if ((err = snd_pcm_hw_params_set_channels (this->alsa_dev, hw_params, format.Channels)) < 0)
+    if ((err = snd_pcm_hw_params_set_channels (this->alsa_dev, hw_params, this->GetOutputChannels().Value)) < 0)
     {
         snd_pcm_hw_params_free (hw_params);
         THROW_RUNTIME_ERROR("cannot set channel count (" << snd_strerror(err) << ")");
@@ -131,7 +157,7 @@ void ALSAOutput::init(SongFormat format, bool realtime)
     }
     else
     {
-        alsa_period_size = 1024;
+        alsa_period_size = gConfig.FramesToRender;
         alsa_buffer_frames = 4 * alsa_period_size;
     }
 
@@ -194,9 +220,6 @@ void ALSAOutput::init(SongFormat format, bool realtime)
     }
 
     snd_pcm_sw_params_free (sw_params);
-
-    // WOW, WE MADE IT TIL HERE, so update channelcount, srate and sformat
-    this->currentFormat = format;
 }
 
 void ALSAOutput::drain()
@@ -235,9 +258,9 @@ int ALSAOutput::write (const int32_t* buffer, frame_t frames)
 
 template<typename T> int ALSAOutput::write(const T* buffer, frame_t frames)
 {
-    const int items = frames*this->currentFormat.Channels;
+    const int items = frames*this->GetOutputChannels().Value;
     T* processedBuffer = new T[items];
-    this->getAmplifiedBuffer<T>(buffer, processedBuffer, items);
+    this->Mix<T, T>(buffer, processedBuffer, frames);
     buffer = processedBuffer;
 
 
@@ -249,7 +272,7 @@ template<typename T> int ALSAOutput::write(const T* buffer, frame_t frames)
     int total = 0;
     while (total < frames)
     {
-        int retval = snd_pcm_writei(this->alsa_dev, buffer + total * this->currentFormat.Channels, frames - total);
+        int retval = snd_pcm_writei(this->alsa_dev, buffer + total * this->currentFormat.Channels(), frames - total);
 
         if (retval >= 0)
         {

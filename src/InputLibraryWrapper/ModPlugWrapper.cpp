@@ -76,7 +76,8 @@ void ModPlugWrapper::open ()
         ModPlugWrapper::settings.mFlags |= MODPLUG_ENABLE_SURROUND;
     }
     
-    ModPlugWrapper::settings.mChannels = this->Format.Channels = 2;
+    this->Format.SetVoices(1);
+    ModPlugWrapper::settings.mChannels = this->Format.VoiceChannels[0] = 2;
     ModPlugWrapper::settings.mBits = 32;
     ModPlugWrapper::settings.mFrequency = this->Format.SampleRate = gConfig.ModPlugSampleRate;
     
@@ -138,8 +139,8 @@ void ModPlugWrapper::fillBuffer()
 void ModPlugWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
     STANDARDWRAPPER_RENDER(int32_t,
-                           int ret = ModPlug_Read(this->handle, pcm, framesToDoNow*this->Format.Channels*sizeof(int32_t));
-                           framesToDoNow = ret / (this->Format.Channels * sizeof(int32_t));
+                           int ret = ModPlug_Read(this->handle, pcm, framesToDoNow*Channels*sizeof(int32_t));
+                           framesToDoNow = ret / (Channels * sizeof(int32_t));
                           )
 }
 

@@ -1,4 +1,5 @@
 #include "JackOutput.h"
+#include "IAudioOutput_impl.h"
 
 #include "CommonExceptions.h"
 #include "AtomicWrite.h"
@@ -71,65 +72,46 @@ void JackOutput::open()
 
         // initially assign the sample rate
         JackOutput::onJackSampleRateChanged(jack_get_sample_rate(this->handle), this);
+        
+        // initially create jack ports
+        this->JackOutput::SetOutputChannels(2);
     }
 }
 
-void JackOutput::init(SongFormat format, bool realtime)
+void JackOutput::SetOutputChannels(Nullable<uint16_t> chan)
 {
-    if(!format.IsValid())
+    // deregister all ports
+    for(int i=this->playbackPorts.size()-1; i>=0; i--)
     {
-        return;
+        int err = jack_port_unregister (this->handle, this->playbackPorts[i]);
+        if (err != 0)
+        {
+            // ?? what to do ??
+        }
+
+        this->playbackPorts.pop_back();
     }
-    
-    // shortcut
-    decltype(format.Channels)& channels = format.Channels;
-    
-    // avoid jack thread Interference
-    lock_guard<recursive_mutex> lck(this->mtx);
-    
-    // channel count differ?
-    if(this->currentFormat.Channels != channels)
+
+    if(chan.hasValue)
     {
-        // register "channels" number of input ports
-        if(this->playbackPorts.size() < channels)
+        // re-register ports
+        char portName[3+1];
+        for(unsigned int i=this->playbackPorts.size(); i<chan.Value && i <= 99; i++)
         {
-            char portName[3+1];
-            for(unsigned int i=this->playbackPorts.size(); i<channels && i <= 99; i++)
+            snprintf(portName, 3+1, "%.2d", i);
+
+            // we provide an output port (from the view of jack), i.e. a capture port, i.e. a readable port
+            jack_port_t* out_port = jack_port_register (this->handle, portName, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+
+            if (out_port == nullptr)
             {
-                snprintf(portName, 3+1, "%.2d", i);
-
-                // we provide an output port (from the view of jack), i.e. a capture port, i.e. a readable port
-                jack_port_t* out_port = jack_port_register (this->handle, portName, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
-
-                if (out_port == nullptr)
-                {
-                    // TODO: throw or just break??
-                    THROW_RUNTIME_ERROR("no more JACK ports available");
-                }
-
-                this->playbackPorts.push_back(out_port);
+                // TODO: throw or just break??
+                THROW_RUNTIME_ERROR("no more JACK ports available");
             }
-        }
-        else if(this->playbackPorts.size() > channels)
-        {
-            // 2016-08-06: dont deregister port!
-            /*          // assumption that (this->currentFormat.Channels == this->playbackPorts.size()) may not always be correct
-                for(int i=this->playbackPorts.size()-1; i>=channels; i--)
-                {
-                    int err = jack_port_unregister (this->handle, this->playbackPorts[i]);
-                    if (err != 0)
-                    {
-                        // ?? what to do ??
-                    }
 
-                    this->playbackPorts.pop_back();
-                }*/
+            this->playbackPorts.push_back(out_port);
         }
-        else
-        {
-            // this->playbackPorts.size() == channels, nothing to do here
-        }
-        
+                
         // we have to delete the resampler in order to refresh channel count
         if(this->srcState != nullptr)
         {
@@ -140,27 +122,53 @@ void JackOutput::init(SongFormat format, bool realtime)
         // SRC_LINEAR has high frequency audible garbage
         // SRC_ZERO_ORDER_HOLD is even worse than LINEAR
         // SRC_SINC_MEDIUM_QUALITY might still be too slow when using jack with very low latency having a bit of CPU load
-        this->srcState = src_new(SRC_SINC_FASTEST, channels, &error);
+        this->srcState = src_new(SRC_SINC_FASTEST, chan.Value, &error);
         if(this->srcState == nullptr)
         {
             THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) <<")");
         }
         
-        // update the current channel format before allocating new jack buffer (next line)
-        this->currentFormat = format;
-        
         // channel count changed, buffer needs to be realloced
-        JackOutput::onJackBufSizeChanged(jack_get_buffer_size(this->handle), this);
+        if(JackOutput::onJackBufSizeChanged(jack_get_buffer_size(this->handle), this) != 0)
+        {
+            // invalidate the current format
+            this->currentFormat.SetVoices(0);
+            THROW_RUNTIME_ERROR("unable to onJackBufSizeChanged()");
+        }
+
+        // start the process thread, no error if it is already started
+        if (jack_activate(this->handle))
+        {
+            THROW_RUNTIME_ERROR("cannot activate client")
+        }
         
+        this->connectPorts();
     }
-    else
+    
+    // call base method to make sure we allocate temporary mixdown buffer
+    this->IAudioOutput::SetOutputChannels(min<uint16_t>(chan.Value, this->playbackPorts.size()));
+}
+
+void JackOutput::init(SongFormat& format, bool realtime)
+{   
+    if(format.IsValid())
     {
-        // zero out any buffer in resampler, to avoid hearable cracks, when switching from one song to another
-        src_reset(this->srcState);
-        
-        // dont forget to update channelcount, srate and sformat
-        this->currentFormat = format;
+        if(this->currentFormat == format)
+        {
+            // nothing
+        }
+        else
+        {
+            // avoid jack thread Interference
+            lock_guard<mutex> lck(this->mtx);
+
+            // zero out any buffer in resampler, to avoid hearable cracks, when switching from one song to another
+            src_reset(this->srcState);
+        }
     }
+    
+    // dont forget to update channelcount, srate and sformat
+    this->currentFormat = format;
 }
 
 void JackOutput::close()
@@ -172,61 +180,23 @@ void JackOutput::close()
     }
 }
 
-int JackOutput::write (const float* buffer, frame_t frames)
-{
-//     unique_lock<recursive_mutex> lck(this->mtx);
-    
-    if(this->interleavedProcessedBuffer.ready)
-    {
-        // buffer has not been consumed yet
-        return 0;
-    }
-//     lck.unlock();
-
-    const size_t Items = frames*this->currentFormat.Channels;
-
-    // converted_to_float_but_not_resampled buffer
-    float* tempBuf = new float[Items];
-    this->getAmplifiedBuffer<float>(buffer, tempBuf, Items);
-
-    int framesUsed = this->doResampling(tempBuf, frames);
-
-    delete[] tempBuf;
-
-    return framesUsed;
-}
-
-template<typename T> void JackOutput::getAmplifiedFloatBuffer(const T* inBuf, float* outBuf, const size_t Items)
-{
-    for(unsigned int i = 0; i<Items; i++)
-    {
-        float& item = outBuf[i];
-        // convert that item in inBuf[i] to float
-        item = inBuf[i] / (static_cast<float>(numeric_limits<T>::max())+1);
-        // amplify
-        item *= this->volume;
-
-        // clip
-        if(item > 1.0f)
-        {
-            item = 1.0f;
-        }
-        else if(item < -1.0f)
-        {
-            item = -1.0f;
-        }
-    }
-}
 
 int JackOutput::doResampling(const float* inBuf, const size_t Frames)
 {
-    lock_guard<recursive_mutex> lock(this->mtx);
+    if(!this->interleavedProcessedBuffer.isRunning)
+    {
+        return 0;
+    }
+    if(!this->currentFormat.IsValid())
+    {
+        THROW_RUNTIME_ERROR("SongFormat not valid")
+    }
     
     this->srcData.data_in = /*const_cast<float*>*/(inBuf);
     this->srcData.input_frames = Frames;
 
     this->srcData.data_out = this->interleavedProcessedBuffer.buf;
-    this->srcData.data_out += this->srcData.output_frames_gen * this->currentFormat.Channels;
+    this->srcData.data_out += this->srcData.output_frames_gen * this->GetOutputChannels().Value;
 
     this->srcData.output_frames = this->jackBufSize - this->srcData.output_frames_gen;
 
@@ -256,6 +226,8 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
         {
             this->srcData.output_frames_gen = 0;
             this->interleavedProcessedBuffer.ready = true;
+            // notify jacks process thread. in fact doesnt do anything, because jacks process thread doesnt this->cv.wait()
+            this->cv.notify_one();
         }
     }
     return this->srcData.input_frames_used;
@@ -263,22 +235,30 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
 
 template<typename T> int JackOutput::write (const T* buffer, frame_t frames)
 {
-//     unique_lock<recursive_mutex> lck(this->mtx);
+    const uint16_t channels = this->GetOutputChannels().Value;
     
-    if(this->interleavedProcessedBuffer.ready)
-    {
-        // buffer has not been consumed yet
-        return 0;
-    }
-//     lck.unlock();
-
-    const size_t Items = frames*this->currentFormat.Channels;
-
     // converted_to_float_but_not_resampled buffer
-    float* tempBuf = new float[Items];
-    this->getAmplifiedFloatBuffer<T>(buffer, tempBuf, Items);
-
-    int framesUsed = this->doResampling(tempBuf, frames);
+    float* tempBuf = new float[frames*channels];
+    
+    this->Mix<T, float>(buffer, tempBuf, frames);
+    
+    unique_lock<mutex> lck(this->mtx);
+    
+    int framesUsed=0;
+    int framesUsedNow;
+    do
+    {
+        // wait until jacks buffer has been consumed
+        this->cv.wait(lck, [this]{ return !this->interleavedProcessedBuffer.ready || !this->interleavedProcessedBuffer.isRunning; });
+        
+        framesUsedNow = this->doResampling(tempBuf + framesUsed*channels, frames);
+        frames -= framesUsedNow;
+        framesUsed += framesUsedNow;
+        
+    } while(frames > 0 && this->interleavedProcessedBuffer.isRunning);
+    
+    // unlock before delete[]
+    lck.unlock();
 
     delete[] tempBuf;
     return framesUsed;
@@ -293,6 +273,11 @@ int JackOutput::write (const int16_t* buffer, frame_t frames)
 int JackOutput::write (const int32_t* buffer, frame_t frames)
 {
     return this->write<int32_t>(buffer, frames);
+}
+
+int JackOutput::write (const float* buffer, frame_t frames)
+{
+    return this->write<float>(buffer, frames);
 }
 
 
@@ -322,21 +307,20 @@ void JackOutput::connectPorts()
 
 void JackOutput::start()
 {
-    if (jack_activate(this->handle))
     {
-        THROW_RUNTIME_ERROR("cannot activate client")
+        lock_guard<mutex> lck(this->mtx);
+        
+        // zero out any buffer in resampler, to avoid hearable cracks, when pausing and restarting playback
+        src_reset(this->srcState);
+        
+        this->interleavedProcessedBuffer.isRunning = true;
+        
+        // avoid playing any outdated garbage
+        this->interleavedProcessedBuffer.ready = false;
     }
-    this->connectPorts();
     
-    lock_guard<recursive_mutex> lck(this->mtx);
-    
-    this->interleavedProcessedBuffer.isRunning = true;
-    
-    // avoid playing any outdated garbage
-    this->interleavedProcessedBuffer.ready = false;
-    
-    // zero out any buffer in resampler, to avoid hearable cracks, when pausing and restarting playback
-    src_reset(this->srcState);
+    // noone should be waiting within this->write(), just to be sure
+    this->cv.notify_all();
 }
 
 void JackOutput::stop()
@@ -344,8 +328,10 @@ void JackOutput::stop()
 // we should deactivate the client here, but if we do, any other jack client recording our output will get in trouble
 //     jack_deactivate(this->handle);
     
-    lock_guard<recursive_mutex> lck(this->mtx);
+    unique_lock<mutex> lck(this->mtx);
     this->interleavedProcessedBuffer.isRunning = false;
+    lck.unlock();
+    this->cv.notify_all();
 }
 
 int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
@@ -381,12 +367,13 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
         
     if(!pthis->mtx.try_lock())
     {
+        CLOG(LogLevel_t::Warning, "acquiring lock failed, discarding");
 //         ret = -1;
         goto fail;
     }
     
     {
-        const unsigned int nchannels = pthis->currentFormat.Channels;
+        const unsigned int nchannels = pthis->GetOutputChannels().Value;
         const unsigned int portsToFill = min<unsigned int>(nJackPorts, nchannels);
 
         jack_default_audio_sample_t* out[nJackPorts]; // temporary array that caches the retrieved buffers for jack ports
@@ -421,6 +408,7 @@ int JackOutput::processCallback(jack_nframes_t nframes, void* arg)
     }
     pthis->interleavedProcessedBuffer.ready = false;
     pthis->mtx.unlock();
+    pthis->cv.notify_all();
     
     return ret;
 
@@ -438,7 +426,7 @@ fail:
 int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
 {
     JackOutput *const pthis = static_cast<JackOutput*const>(arg);
-    lock_guard<recursive_mutex> lock(pthis->mtx);
+    unique_lock<mutex> lck(pthis->mtx);
 
     pthis->jackBufSize = nframes;
 
@@ -449,10 +437,18 @@ int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
     }
 
     delete[] pthis->interleavedProcessedBuffer.buf;
-    pthis->interleavedProcessedBuffer.buf = new (nothrow) jack_default_audio_sample_t[pthis->jackBufSize * pthis->currentFormat.Channels];
+    pthis->interleavedProcessedBuffer.buf = new (nothrow) jack_default_audio_sample_t[pthis->jackBufSize * pthis->GetOutputChannels().Value];
     pthis->interleavedProcessedBuffer.ready = false;
 
-    // TODO check if alloc successfull
+    if(pthis->interleavedProcessedBuffer.buf == nullptr)
+    {
+        CLOG(LogLevel_t::Error, "allocating new buffer failed, out of memory");
+        pthis->interleavedProcessedBuffer.isRunning = false;
+        return -1;
+    }
+    
+    lck.unlock();
+    pthis->cv.notify_all();
 
     return 0;
 }
@@ -467,6 +463,6 @@ int JackOutput::onJackSampleRateChanged(jack_nframes_t nframes, void* arg)
     return 0;
 }
 
-void JackOutput::onJackShutdown(void* arg)
+void JackOutput::onJackShutdown(void*)
 {
 }

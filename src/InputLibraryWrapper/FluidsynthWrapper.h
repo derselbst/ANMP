@@ -34,8 +34,8 @@ public:
     // returns the samplerate that will be synthesized at
     unsigned int GetSampleRate();
     
-    // returns the number of audio channels, that will be rendered to
-    unsigned int GetChannels();
+    unsigned int GetVoices();
+    unsigned int GetChannelsPerVoice();
     
     // returns the tick count the sequencer had during a call to this.Init()
     unsigned int GetInitTick();

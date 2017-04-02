@@ -31,7 +31,7 @@ public:
 
     void open () override;
 
-    void init (SongFormat format, bool realtime = false) override;
+    void init (SongFormat& format, bool realtime = false) override;
 
     void close () override;
 
@@ -43,12 +43,15 @@ public:
 
     void start () override;
     void stop () override;
+    
+    void SetOutputChannels(Nullable<uint16_t>) override;
 
 private:
 
     int epipe_count = 0;
     snd_pcm_t* alsa_dev = nullptr;
 
+    void _init (SongFormat& format, bool realtime = false);
     template<typename T> int write(const T* buffer, frame_t frames);
     void drain ();
     void drop ();

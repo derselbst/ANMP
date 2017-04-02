@@ -52,7 +52,9 @@ void LibSNDWrapper::open ()
         THROW_RUNTIME_ERROR("channels == " << sfinfo.channels);
     };
 
-    this->Format.Channels = sfinfo.channels;
+    // dont know how many voices there can be, must be adjusted by user
+    this->Format.SetVoices(1);
+    this->Format.VoiceChannels[0] = sfinfo.channels;
     this->Format.SampleRate = sfinfo.samplerate;
 
     // set scale factor for file containing floats as recommended by:
@@ -105,26 +107,26 @@ void LibSNDWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     if(haveInt32)
     {
         // no extra work necessary here, as usual write directly to pcm buffer
-        STANDARDWRAPPER_RENDER(int32_t, sf_read_int(this->sndfile, pcm, framesToDoNow*this->Format.Channels))
+        STANDARDWRAPPER_RENDER(int32_t, sf_read_int(this->sndfile, pcm, framesToDoNow*Channels))
     }
     else if(haveInt64)
     {
         // allocate an extra tempbuffer to store the int64s in
         // then convert them to int32
 
-        int* int64_temp_buf = new int[gConfig.FramesToRender*this->Format.Channels];
+        int* int64_temp_buf = new int[gConfig.FramesToRender*this->Format.Channels()];
 
-        STANDARDWRAPPER_RENDER(int32_t,
+        STANDARDWRAPPER_RENDER( int32_t,
 
-                               sf_read_int(this->sndfile, int64_temp_buf, framesToDoNow*this->Format.Channels);
-                               for(unsigned int i=0; i<framesToDoNow*this->Format.Channels; i++)
-    {
-        // see http://www.mega-nerd.com/libsndfile/api.html#note1:
-        // Whenever integer data is moved from one sized container to another sized container, the
-        // most significant bit in the source container will become the most significant bit in the destination container.
-        pcm[i] = static_cast<int32_t>(int64_temp_buf[i] >> 32);
-        }
-                              )
+                                sf_read_int(this->sndfile, int64_temp_buf, framesToDoNow*Channels);
+                                for(unsigned int i=0; i<framesToDoNow*Channels; i++)
+                                {
+                                    // see http://www.mega-nerd.com/libsndfile/api.html#note1:
+                                    // Whenever integer data is moved from one sized container to another sized container, the
+                                    // most significant bit in the source container will become the most significant bit in the destination container.
+                                    pcm[i] = static_cast<int32_t>(int64_temp_buf[i] >> 32);
+                                    }
+                               )
         delete [] int64_temp_buf;
     }
 }

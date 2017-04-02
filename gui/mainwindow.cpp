@@ -8,6 +8,7 @@
 #include "PlayheadSlider.h"
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
+#include "applets/channel/channelconfig.h"
 #include "PlaylistModel.h"
 
 #include <anmp.hpp>
@@ -34,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
 #ifdef USE_VISUALIZER
     analyzerWindow(new AnalyzerApplet(this->player, this)),
 #endif
+    channelView(new ChannelConfig(this->player, this)),
     settingsView(new ConfigDialog(this))
 {
 /*    
@@ -55,7 +57,9 @@ MainWindow::MainWindow(QWidget *parent) :
     
     // init UI
     this->ui->setupUi(this);
+    this->ui->mixLayout->addWidget(this->channelView);
 
+    // connect main buttons
     connect(this->ui->playButton,       &QPushButton::toggled, this, [this](bool){this->MainWindow::TogglePlayPause();});
     connect(this->ui->stopButton,       &QPushButton::clicked, this, &MainWindow::Stop);
 
@@ -68,6 +72,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->previousButton,   &QPushButton::clicked, this, &MainWindow::Previous);
 
 
+    // connect menu actions
     connect(this->ui->actionPlay,       &QAction::triggered, this, &MainWindow::Play);
     connect(this->ui->actionPause,      &QAction::triggered, this, &MainWindow::Pause);
     connect(this->ui->actionStop,       &QAction::triggered, this, &MainWindow::Stop);
@@ -123,8 +128,9 @@ MainWindow::~MainWindow()
     this->player->onIsPlayingChanged -= this;
     
     delete this->ui;
-    // manually delete analyzer before deleting player, since analzyer holds this.player
+    // manually delete applets before deleting player, since they hold this.player
     delete this->analyzerWindow;
+    delete this->channelView;
     delete this->player;
     delete this->playlistModel;
 }

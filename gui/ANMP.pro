@@ -29,14 +29,17 @@ SOURCES += main.cpp\
         configdialog.cpp \
     applets/analyzer/AnalyzerApplet.cpp overlaycontrol.cpp \
     mainwindow.callback.cpp \
-    mainwindow.slots.cpp
+    mainwindow.slots.cpp \
+    applets/channel/channelconfig.cpp
 
 HEADERS  += mainwindow.h PlaylistView.h PlaylistModel.h configdialog.h \
     applets/analyzer/AnalyzerApplet.h overlaycontrol.h \
-    PlayheadSlider.h
+    PlayheadSlider.h \
+    applets/channel/channelconfig.h
 
 FORMS    += mainwindow.ui configdialog.ui \
-    applets/analyzer/AnalyzerApplet.ui overlaycontrol.ui
+    applets/analyzer/AnalyzerApplet.ui overlaycontrol.ui \
+    applets/channel/channelconfig.ui
 
 DISTFILES +=
 

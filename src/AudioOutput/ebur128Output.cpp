@@ -46,12 +46,8 @@ void ebur128Output::open()
     }
 }
 
-void ebur128Output::init(SongFormat format, bool)
+void ebur128Output::init(SongFormat& format, bool)
 {
-    if(!format.IsValid())
-    {
-        return;
-    }
     this->currentFormat = format;
 }
 
@@ -66,21 +62,27 @@ void ebur128Output::onCurrentSongChanged(void* context)
         pthis->close();
         
         if(newSong != nullptr)
-        {   
-            pthis->handle = ebur128_init(pthis->currentFormat.Channels, pthis->currentFormat.SampleRate, EBUR128_MODE_TRUE_PEAK);
+        {
+            if(!pthis->currentFormat.IsValid())
+            {
+                CLOG(LogLevel_t::Warning, "attempting to use invalid SongFormat");
+            }
+            
+            const uint32_t chan = pthis->currentFormat.Channels();
+            pthis->handle = ebur128_init(chan, pthis->currentFormat.SampleRate, EBUR128_MODE_TRUE_PEAK);
             if(pthis->handle == nullptr)
             {
                 THROW_RUNTIME_ERROR("ebur128_init failed")
             }
             
             // set channel map (note: see ebur128.h for the default map)
-            if (pthis->currentFormat.Channels == 3)
+            if (chan == 3)
             {
                 ebur128_set_channel(pthis->handle, 0, EBUR128_LEFT);
                 ebur128_set_channel(pthis->handle, 1, EBUR128_RIGHT);
                 ebur128_set_channel(pthis->handle, 2, EBUR128_UNUSED);
             }
-            else if (pthis->currentFormat.Channels == 5)
+            else if (chan == 5)
             {
                 ebur128_set_channel(pthis->handle, 0, EBUR128_LEFT);
                 ebur128_set_channel(pthis->handle, 1, EBUR128_RIGHT);

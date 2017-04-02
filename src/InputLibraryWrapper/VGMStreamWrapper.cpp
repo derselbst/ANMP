@@ -45,10 +45,23 @@ void VGMStreamWrapper::open()
     {
         THROW_RUNTIME_ERROR("failed opening \"" << this->Filename << "\"");
     }
-
-    this->Format.Channels = this->handle->channels;
+    
     this->Format.SampleRate = this->handle->sample_rate;
-
+    constexpr uint8_t Stereo = 2;
+    // by default group them to stereo voices
+    int nvoices = this->handle->channels / Stereo;
+    int remainingvoices = (this->handle->channels % Stereo == 0) ? 0 : 1;
+    this->Format.SetVoices(nvoices + remainingvoices);
+    
+    for(int i=0; i<nvoices-remainingvoices; i++)
+    {
+        this->Format.VoiceChannels[i] = Stereo; // == this->handle->channels / nvoices
+    }
+    for(int i=0; i<remainingvoices; i++)
+    {
+        this->Format.VoiceChannels[nvoices + i] = this->handle->channels % Stereo;
+    }
+    
     // hold a copy
     this->fileLen = (this->handle->num_samples*1000.0) / this->Format.SampleRate;
 }

@@ -11,6 +11,7 @@ namespace Ui
 class MainWindow;
 }
 
+class ChannelConfig;
 class ConfigDialog;
 class AnalyzerApplet;
 class QFileSystemModel;
@@ -48,6 +49,7 @@ private:
     Player* player = nullptr;
 
     AnalyzerApplet * analyzerWindow = nullptr;
+    ChannelConfig* channelView = nullptr;
     ConfigDialog* settingsView = nullptr;
 
     void buildPlaylistView();

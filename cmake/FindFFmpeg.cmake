@@ -138,5 +138,18 @@ if(  FFMPEG_INCLUDE_DIRS AND
                          ${FFMPEG_avutil_LIBRARY}
                          ${FFMPEG_swresample_LIBRARY}
     )
+else()
+    if(NOT FFMPEG_avformat_LIBRARY)
+        message("\tlibavformat not found")
+    endif()
+    if(NOT FFMPEG_avcodec_LIBRARY)
+        message("\tlibavcodec not found")
+    endif()
+    if(NOT FFMPEG_avutil_LIBRARY)
+        message("\tlibavutil not found")
+    endif()
+    if(NOT FFMPEG_swresample_LIBRARY)
+        message("\tlibswresample not found")
+    endif()
 endif()
 

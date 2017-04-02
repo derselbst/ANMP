@@ -365,6 +365,9 @@ border-radius: 4px;
      </layout>
     </item>
     <item>
+     <layout class="QVBoxLayout" name="mixLayout"/>
+    </item>
+    <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <property name="topMargin">
        <number>0</number>

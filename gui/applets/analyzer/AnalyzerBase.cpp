@@ -117,14 +117,14 @@ void AnalyzerBase::processData( const Song* s, frame_t playhead )
     /* point to next item */\
     PCMBUF++;\
   \
-    for(unsigned int item = 1; item < s->Format.Channels; item++)\
+    for(unsigned int item = 1; item < s->Format.Channels(); item++)\
     {\
       scope[frame] += float( *PCMBUF );\
       PCMBUF++;\
     }\
   \
     /* Average between the channels */\
-    scope[frame] /= s->Format.Channels;\
+    scope[frame] /= s->Format.Channels();\
   \
     /* attenuate the signal: normalize the float by dividing through the maximum value of the type PCMBUF points to */\
     scope[frame] /= std::numeric_limits<std::remove_pointer<decltype(PCMBUF)>::type>::max();\
@@ -136,19 +136,19 @@ void AnalyzerBase::processData( const Song* s, frame_t playhead )
     QVector<float> scope(m_fht->size());
     if(s->Format.SampleFormat == SampleFormat_t::int16)
     {
-        int16_t* pcmBuf = static_cast<int16_t*>(s->data) + playhead * s->Format.Channels;
+        int16_t* pcmBuf = static_cast<int16_t*>(s->data) + playhead * s->Format.Channels();
 
         PREPARE_SCOPE(pcmBuf);
     }
     else if(s->Format.SampleFormat == SampleFormat_t::int32)
     {
-        int32_t* pcmBuf = static_cast<int32_t*>(s->data) + playhead * s->Format.Channels;
+        int32_t* pcmBuf = static_cast<int32_t*>(s->data) + playhead * s->Format.Channels();
 
         PREPARE_SCOPE(pcmBuf);
     }
     else if(s->Format.SampleFormat == SampleFormat_t::float32)
     {
-        float* pcmBuf = static_cast<float*>(s->data) + playhead * s->Format.Channels;
+        float* pcmBuf = static_cast<float*>(s->data) + playhead * s->Format.Channels();
         
           for(unsigned int frame = 0; (frame < gConfig.FramesToRender) && ((playhead + frame) < s->getFrames()); frame++)
           {
@@ -158,14 +158,14 @@ void AnalyzerBase::processData( const Song* s, frame_t playhead )
                 /* point to next item */
                 pcmBuf++;
             
-                for(unsigned int item = 1; item < s->Format.Channels; item++)
+                for(unsigned int item = 1; item < s->Format.Channels(); item++)
                 {
                     scope[frame] += *pcmBuf;
                     pcmBuf++;
                 }
             
                 /* Average between the channels */
-                scope[frame] /= s->Format.Channels;
+                scope[frame] /= s->Format.Channels();
             
                 /* already normalized*/
             

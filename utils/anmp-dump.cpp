@@ -23,6 +23,7 @@ void onSongChanged(void* pthis)
 static const struct option long_options[] =
 {
     {"unroll-loop",  no_argument, NULL, 'l'},
+    {"recursive",    no_argument, NULL, 'r'},
     {"output",       no_argument, NULL, 'o'},
     {"help",         no_argument, NULL, 'h'},
     {0, 0, 0, 0}
@@ -34,6 +35,7 @@ void usage(char* prog)
          << "\n" 
          << "options:\n"
          << "      -l      --unroll-loop     If there are loops in an audio file, unroll them according to the interal settings.\n"
+         << "      -r      --recursive       Recursively traverse directories.\n"
          << "      -o      --output PATTERN  Specifies the naming pattern for file names.\n"
          << "      -h      --help            Print this.\n"
          << endl;
@@ -51,7 +53,8 @@ int main(int argc, char* argv[])
     {
         usage(argv[0]);
     }
-        
+    
+    bool recursive = false;
     
     /* getopt_long stores the option index here. */
     int option_index = 0;
@@ -74,6 +77,10 @@ int main(int argc, char* argv[])
             return 0;
             break;
 
+        case 'r':
+            recursive = true;
+            break;
+            
         case '?':
             /* getopt_long already printed an error message. */
             break;
@@ -93,12 +100,26 @@ int main(int argc, char* argv[])
     {
         if(is_directory(argv[i]))
         {
-            for (directory_entry dirEntry : recursive_directory_iterator(argv[i]))
+            if(recursive)
             {
-                if(is_regular_file(dirEntry.status()))
+                for (directory_entry dirEntry : recursive_directory_iterator(argv[i]))
                 {
-                    PlaylistFactory::addSong(plist[curThread], dirEntry.path());
-                    curThread = (curThread+1) % Threads;
+                    if(is_regular_file(dirEntry.status()))
+                    {
+                        PlaylistFactory::addSong(plist[curThread], dirEntry.path());
+                        curThread = (curThread+1) % Threads;
+                    }
+                }
+            }
+            else
+            {
+                for (directory_entry dirEntry : directory_iterator(argv[i]))
+                {
+                    if(is_regular_file(dirEntry.status()))
+                    {
+                        PlaylistFactory::addSong(plist[curThread], dirEntry.path());
+                        curThread = (curThread+1) % Threads;
+                    }
                 }
             }
         }
@@ -109,7 +130,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    
     std::vector<Player> players;
     players.reserve(Threads);
 

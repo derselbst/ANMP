@@ -20,11 +20,11 @@ bool evaluate(const Song* song, frame_t left, frame_t right, const frame_t delta
 {
     bool result = true;
     T* buffer = static_cast<T*>(song->data);
-    left *= song->Format.Channels;
-    right *= song->Format.Channels;
+    left *= song->Format.Channels();
+    right *= song->Format.Channels();
 
     // walk along the delta environment
-    for (int i=0; result && i<delta*song->Format.Channels; i++)
+    for (int i=0; result && i<delta*song->Format.Channels(); i++)
     {
 //         if(left-i < 0 || left+i>song->count || right+i > song->count)
 //         {

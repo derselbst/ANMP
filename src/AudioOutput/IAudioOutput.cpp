@@ -4,7 +4,9 @@
 
 
 IAudioOutput::IAudioOutput()
-{}
+{
+    this->IAudioOutput::SetOutputChannels(2);
+}
 
 IAudioOutput::~IAudioOutput()
 {}
@@ -13,6 +15,27 @@ IAudioOutput::~IAudioOutput()
 void IAudioOutput::setVolume(float vol)
 {
     this->volume=vol;
+}
+
+Nullable<uint16_t> IAudioOutput::GetOutputChannels()
+{
+    return this->outputChannels;
+}
+
+void IAudioOutput::SetOutputChannels(Nullable<uint16_t> chan)
+{
+    this->outputChannels = chan;
+}
+
+void IAudioOutput::SetVoiceConfig(decltype(SongFormat::Voices) voices, decltype(SongFormat::VoiceChannels)& voiceChannels)
+{
+    this->currentFormat.Voices = voices;
+    this->currentFormat.VoiceChannels = voiceChannels;
+}
+
+void IAudioOutput::SetMuteMask(decltype(SongFormat::VoiceIsMuted)& mask)
+{
+    this->currentFormat.VoiceIsMuted = mask;
 }
 
 // takes care of pointer arithmetic
@@ -50,3 +73,14 @@ int IAudioOutput::write (const pcm_t* frameBuffer, frame_t frames, int offset)
         break;
     }
 }
+
+
+
+
+
+
+
+
+
+
+

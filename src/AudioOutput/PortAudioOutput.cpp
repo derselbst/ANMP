@@ -1,4 +1,5 @@
 #include "PortAudioOutput.h"
+#include "IAudioOutput_impl.h"
 
 #include "CommonExceptions.h"
 #include "AtomicWrite.h"
@@ -37,13 +38,38 @@ void PortAudioOutput::open()
     }
 }
 
-void PortAudioOutput::init(SongFormat format, bool realtime)
+
+void PortAudioOutput::SetOutputChannels(Nullable<uint16_t> chan)
 {
-    if(this->currentFormat == format || !format.IsValid())
+    this->IAudioOutput::SetOutputChannels(chan);
+    
+    // force reinit
+    if(this->currentFormat.IsValid() && chan.hasValue)
     {
-        return;
+        this->_init(this->currentFormat);
     }
-        
+}
+
+void PortAudioOutput::init(SongFormat& format, bool realtime)
+{
+    if(format.IsValid())
+    {
+        if(this->currentFormat == format)
+        {
+            // nothing
+        }
+        else
+        {
+            this->_init(format, realtime);
+        }
+    }
+    
+    // finally update channelcount, srate and sformat
+    this->currentFormat = format;
+}
+
+void PortAudioOutput::_init(SongFormat& format, bool realtime)
+{
     if (this->paInitError != PaErrorCode::paNoError)
     {
         THROW_RUNTIME_ERROR("portaudio not initialized! (" << Pa_GetErrorText(this->paInitError) << ")");
@@ -78,7 +104,7 @@ void PortAudioOutput::init(SongFormat format, bool realtime)
     /* Open an audio I/O stream. */
     err = Pa_OpenDefaultStream( &this->handle,
                                 0,          /* no input channels */
-                                format.Channels,   /* no. of output channels */
+                                this->GetOutputChannels().Value,   /* no. of output channels */
                                 paSampleFmt,  /* 32 bit floating point output */
                                 format.SampleRate,
                                 gConfig.FramesToRender,  /* frames per buffer, i.e. the number of sample frames that PortAudio will request from the callback.*/
@@ -89,9 +115,6 @@ void PortAudioOutput::init(SongFormat format, bool realtime)
     {
         THROW_RUNTIME_ERROR("unable to stop pcm (" << Pa_GetErrorText(err) << ")");
     }
-
-    // finally update channelcount, srate and sformat
-    this->currentFormat = format;
 }
 
 void PortAudioOutput::drain()
@@ -135,9 +158,9 @@ template<typename T> int PortAudioOutput::write(const T* buffer, frame_t frames)
         THROW_RUNTIME_ERROR("unable to write pcm since PortAudioOutput::init() has not been called yet or init failed");
     }
 
-    const int items = frames*this->currentFormat.Channels;
+    const int items = frames*this->GetOutputChannels().Value;
     T* processedBuffer = new T[items];
-    this->getAmplifiedBuffer(buffer, processedBuffer, items);
+    this->Mix<T, T>(buffer, processedBuffer, frames);
     buffer = processedBuffer;
 
     Pa_WriteStream(this->handle, buffer, frames );

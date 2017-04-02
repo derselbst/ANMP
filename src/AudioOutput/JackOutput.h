@@ -4,6 +4,7 @@
 #include "IAudioOutput.h"
 
 #include <mutex>
+#include <condition_variable>
 #include <vector>
 #include <jack/jack.h>
 #include <samplerate.h>
@@ -31,7 +32,7 @@ public:
 
     void open () override;
 
-    void init (SongFormat format, bool realtime = false) override;
+    void init (SongFormat& format, bool realtime = false) override;
 
     void close () override;
 
@@ -43,6 +44,8 @@ public:
 
     void start () override;
     void stop () override;
+    
+    void SetOutputChannels(Nullable<uint16_t>) override;
 
 protected:
 
@@ -68,7 +71,8 @@ protected:
     } jack_buffer_t;
 
     SRC_DATA srcData;
-    mutable std::recursive_mutex mtx;
+    std::condition_variable cv;
+    mutable std::mutex mtx;
     //*** Begin: mutex-protected vars ***//
     jack_buffer_t interleavedProcessedBuffer;
     jack_nframes_t jackBufSize = 0;
@@ -81,7 +85,6 @@ protected:
     static int onJackBufSizeChanged(jack_nframes_t nframes, void *arg);
 
     template<typename T> int write(const T* buffer, frame_t frames);
-    template<typename T> void getAmplifiedFloatBuffer(const T* inBuf, float* outBuf, const size_t Items);
     virtual int doResampling(const float* inBuf, const size_t Frames);
     void connectPorts();
 };

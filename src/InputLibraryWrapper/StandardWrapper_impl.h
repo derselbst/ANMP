@@ -45,7 +45,7 @@ template<typename SAMPLEFORMAT>
 template<typename WRAPPERCLASS>
 void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
 {
-    if(this->count == this->getFrames() * this->Format.Channels)
+    if(this->count == static_cast<size_t>(this->getFrames()) * this->Format.Channels())
     {
         // Song::data already filled up with all the audiofile's PCM, nothing to do here (most likely case)
         return;
@@ -64,7 +64,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
         size_t itemsToAlloc = 0;
         if(gConfig.RenderWholeSong)
         {
-            itemsToAlloc = this->getFrames() * this->Format.Channels;
+            itemsToAlloc = this->getFrames() * this->Format.Channels();
 
             // try to alloc a buffer to hold the whole song's pcm in memory
             this->data = new (std::nothrow) SAMPLEFORMAT[itemsToAlloc];
@@ -88,7 +88,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
         // well either we shall not render whole song once or something went wrong during alloc (not enough memory??)
         // so try to alloc at least enough to do double buffering
         // if this fails too, an exception will be thrown
-        itemsToAlloc = gConfig.FramesToRender * this->Format.Channels;
+        itemsToAlloc = gConfig.FramesToRender * this->Format.Channels();
 
         try
         {
