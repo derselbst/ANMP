@@ -290,7 +290,7 @@ void WaveOutput::open()
     }
 }
 
-void WaveOutput::init(SongFormat format, bool)
+void WaveOutput::init(SongFormat& format, bool)
 {
     this->currentFormat = format;
 }

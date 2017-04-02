@@ -28,7 +28,7 @@ public:
 
     void open () override;
 
-    void init (SongFormat format, bool realtime = false) override;
+    void init (SongFormat& format, bool realtime = false) override;
 
     void close () override;
 
@@ -52,7 +52,7 @@ private:
     PaError paInitError = ~PaErrorCode::paNoError;
 
     template<typename T> int write(const T* buffer, frame_t frames);
-    void _init (SongFormat format, bool realtime = false);
+    void _init (SongFormat& format, bool realtime = false);
     void drain ();
     void drop ();
 

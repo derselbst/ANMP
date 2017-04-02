@@ -59,7 +59,7 @@ void ALSAOutput::SetOutputChannels(Nullable<uint16_t> chan)
     }
 }
 
-void ALSAOutput::init(SongFormat format, bool realtime)
+void ALSAOutput::init(SongFormat& format, bool realtime)
 {
     if(format.IsValid())
     {
@@ -76,7 +76,7 @@ void ALSAOutput::init(SongFormat format, bool realtime)
     this->currentFormat = format;
 }
 
-void ALSAOutput::_init(SongFormat format, bool realtime)
+void ALSAOutput::_init(SongFormat& format, bool realtime)
 {
     // changing hw settings can only safely be done when pcm is not running
     // therefore stop the pcm and drain all pending frames

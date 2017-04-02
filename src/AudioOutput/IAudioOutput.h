@@ -54,7 +54,7 @@ public:
      *
      * when finishing the call to this->init() the PCM stream shall be in state "stopped"
      */
-    virtual void init (SongFormat format, bool realtime=false) = 0;
+    virtual void init (SongFormat& format, bool realtime=false) = 0;
 
     /**
      * Starts the PCM stream.

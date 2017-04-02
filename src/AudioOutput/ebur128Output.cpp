@@ -46,7 +46,7 @@ void ebur128Output::open()
     }
 }
 
-void ebur128Output::init(SongFormat format, bool)
+void ebur128Output::init(SongFormat& format, bool)
 {
     this->currentFormat = format;
 }

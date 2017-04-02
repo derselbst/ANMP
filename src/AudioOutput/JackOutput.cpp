@@ -149,7 +149,7 @@ void JackOutput::SetOutputChannels(Nullable<uint16_t> chan)
     this->IAudioOutput::SetOutputChannels(min<uint16_t>(chan.Value, this->playbackPorts.size()));
 }
 
-void JackOutput::init(SongFormat format, bool realtime)
+void JackOutput::init(SongFormat& format, bool realtime)
 {   
     if(format.IsValid())
     {

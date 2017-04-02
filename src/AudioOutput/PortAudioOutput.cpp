@@ -50,7 +50,7 @@ void PortAudioOutput::SetOutputChannels(Nullable<uint16_t> chan)
     }
 }
 
-void PortAudioOutput::init(SongFormat format, bool realtime)
+void PortAudioOutput::init(SongFormat& format, bool realtime)
 {
     if(format.IsValid())
     {
@@ -68,7 +68,7 @@ void PortAudioOutput::init(SongFormat format, bool realtime)
     this->currentFormat = format;
 }
 
-void PortAudioOutput::_init(SongFormat format, bool realtime)
+void PortAudioOutput::_init(SongFormat& format, bool realtime)
 {
     if (this->paInitError != PaErrorCode::paNoError)
     {
