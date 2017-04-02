@@ -50,11 +50,14 @@ if(USE_GUI)
     if(USE_VISUALIZER)
         # name of libraries that will be build in the applets subdir
         SET(LIBANAL analyzer)
-        SET(LIBMIX mix)
-        add_subdirectory(applets)
-        target_link_libraries(${PROJECT_NAME} ${LIBANAL} ${LIBMIX})
+        add_subdirectory(applets/analyzer)
+        target_link_libraries(${PROJECT_NAME} ${LIBANAL})
     endif(USE_VISUALIZER)
     
+    # compile channel mixer applet
+    SET(LIBMIX mix)
+    add_subdirectory(applets/channel)
+    target_link_libraries(${PROJECT_NAME} ${LIBMIX})
     
     target_link_libraries(${PROJECT_NAME}
         anmp
