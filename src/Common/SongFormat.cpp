@@ -1,18 +1,5 @@
 #include "SongFormat.h"
 
-// extensively used by IAudioOutput childs
-bool operator == (SongFormat const& lhs, SongFormat const& rhs)
-{
-    return lhs.SampleRate  == rhs.SampleRate   &&
-           lhs.SampleFormat== rhs.SampleFormat &&
-           lhs.Channels()    == rhs.Channels();
-}
-
-bool operator != (SongFormat const& lhs, SongFormat const& rhs)
-{
-    return !(lhs == rhs);
-}
-
 unsigned int SongFormat::Channels() const noexcept
 {
     unsigned int sum = 0;

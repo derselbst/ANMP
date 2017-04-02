@@ -153,11 +153,10 @@ void JackOutput::init(SongFormat& format, bool realtime)
 {   
     if(format.IsValid())
     {
-        if(this->currentFormat == format)
-        {
-            // nothing
-        }
-        else
+        // only care about samplerates here, reset resampler to avoid "smooth transition"
+        // sampleformat is not needed here, we always push floats to jack
+        // no. of channels is interesting for IAudioOutput::Mix()
+        if(this->currentFormat.SampleRate != format.SampleRate)
         {
             // avoid jack thread Interference
             lock_guard<mutex> lck(this->mtx);

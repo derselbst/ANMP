@@ -63,7 +63,7 @@ void ALSAOutput::init(SongFormat& format, bool realtime)
 {
     if(format.IsValid())
     {
-        if(this->currentFormat == format)
+        if(this->currentFormat.SampleFormat == format.SampleFormat && this->currentFormat.SampleRate == format.SampleRate)
         {
             // nothing
         }

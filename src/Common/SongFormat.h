@@ -12,10 +12,6 @@ using std::string;
   * class SongFormat
   *
   */
-struct SongFormat;
-bool operator == (SongFormat const& lhs, SongFormat const& rhs);
-bool operator != (SongFormat const& lhs, SongFormat const& rhs);
-
 struct SongFormat
 {
     // specifies the number of samples per seconds
