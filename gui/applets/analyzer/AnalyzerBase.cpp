@@ -100,6 +100,47 @@ void AnalyzerBase::transform( QVector<float> &scope ) //virtual
     delete [] f;
 }
 
+// fill the buffer that will be fourier transformed
+template<typename T>
+void AnalyzerBase::prepareScope(const Song* s, frame_t playhead, QVector<float>& scope)
+{
+    const unsigned int nVoices = s->Format.Voices;
+    const T* pcmBuf = static_cast<T*>(s->data) + playhead * s->Format.Channels();
+    
+    for(unsigned int frame = 0; (frame < gConfig.FramesToRender) && ((playhead + frame) < s->getFrames()); frame++)
+    {
+        /* init the frame'th element */
+        scope[frame] = 0;
+
+        for(unsigned int v=0; v < nVoices; v++)
+        {
+            const uint16_t vchan = s->Format.VoiceChannels[v];
+            if(!s->Format.VoiceIsMuted[v])
+            {
+                for(unsigned int m=0; m < vchan; m++)
+                {
+                    scope[frame] += float( pcmBuf[m] );
+                }
+            }
+            
+            // advance the pointer to point to next bunch of voice items
+            pcmBuf += vchan;
+        }
+    
+//         /* Average between the channels */
+//         scope[frame] /= s->Format.Channels();
+    
+        if(!std::is_floating_point<T>())
+        {
+            /* normalize the signal by dividing through the maximum value of the type PCMBUF points to */
+            scope[frame] /= std::numeric_limits<T>::max();
+        }
+        
+        /* further attenuation */
+        scope[frame] /= 20;
+    }
+}
+
 void AnalyzerBase::processData( const Song* s, frame_t playhead )
 {
     if(s==nullptr)
@@ -107,71 +148,18 @@ void AnalyzerBase::processData( const Song* s, frame_t playhead )
         return;
     }
 
-// fill the buffer that will be fourier transformed
-#define PREPARE_SCOPE(PCMBUF) \
-  for(unsigned int frame = 0; (frame < gConfig.FramesToRender) && ((playhead + frame) < s->getFrames()); frame++)\
-  {\
-    /* init the frame'th element */\
-    scope[frame] = float( *PCMBUF );\
-  \
-    /* point to next item */\
-    PCMBUF++;\
-  \
-    for(unsigned int item = 1; item < s->Format.Channels(); item++)\
-    {\
-      scope[frame] += float( *PCMBUF );\
-      PCMBUF++;\
-    }\
-  \
-    /* Average between the channels */\
-    scope[frame] /= s->Format.Channels();\
-  \
-    /* attenuate the signal: normalize the float by dividing through the maximum value of the type PCMBUF points to */\
-    scope[frame] /= std::numeric_limits<std::remove_pointer<decltype(PCMBUF)>::type>::max();\
-  \
-    /* further attenuation */\
-    scope[frame] /= 20;\
-  }
-
     QVector<float> scope(m_fht->size());
     if(s->Format.SampleFormat == SampleFormat_t::int16)
     {
-        int16_t* pcmBuf = static_cast<int16_t*>(s->data) + playhead * s->Format.Channels();
-
-        PREPARE_SCOPE(pcmBuf);
+        this->prepareScope<int16_t>(s, playhead, scope);
     }
     else if(s->Format.SampleFormat == SampleFormat_t::int32)
     {
-        int32_t* pcmBuf = static_cast<int32_t*>(s->data) + playhead * s->Format.Channels();
-
-        PREPARE_SCOPE(pcmBuf);
+        this->prepareScope<int32_t>(s, playhead, scope);
     }
     else if(s->Format.SampleFormat == SampleFormat_t::float32)
     {
-        float* pcmBuf = static_cast<float*>(s->data) + playhead * s->Format.Channels();
-        
-          for(unsigned int frame = 0; (frame < gConfig.FramesToRender) && ((playhead + frame) < s->getFrames()); frame++)
-          {
-              /* init the frame'th element */
-                scope[frame] = *pcmBuf;
-            
-                /* point to next item */
-                pcmBuf++;
-            
-                for(unsigned int item = 1; item < s->Format.Channels(); item++)
-                {
-                    scope[frame] += *pcmBuf;
-                    pcmBuf++;
-                }
-            
-                /* Average between the channels */
-                scope[frame] /= s->Format.Channels();
-            
-                /* already normalized*/
-            
-                /* further attenuation */
-                scope[frame] /= 20;
-            }
+        this->prepareScope<float>(s, playhead, scope);
     }
 
     transform( scope );

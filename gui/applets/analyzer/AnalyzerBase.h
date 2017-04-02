@@ -55,6 +55,10 @@ protected:
     FHT    *m_fht;
     QTimer *m_renderTimer;
 
+private:
+    template<typename T>
+    void prepareScope(const Song* s, frame_t playhead, QVector<float>& scope);
+
 public slots:
     void connectSignals();
     void disconnectSignals();
