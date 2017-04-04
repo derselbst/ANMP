@@ -89,6 +89,13 @@ void LibGMEWrapper::open()
         {
             this->Format.VoiceChannels[i] = 2;
         }
+
+        // set voice names
+        int voices = min(gme_voice_count(this->handle), 8);
+        for(int i = 0; i<voices; i++)
+        {
+            this->Format.VoiceName[i] = gme_voice_name(this->handle, i);
+        }
     }
     else
 #endif
@@ -141,7 +148,7 @@ void LibGMEWrapper::open()
 
     if(gConfig.gmePlayForever)
     {
-        gme_set_fade(this->handle, -1);
+        this->fileLen = -1;
     }
     else
     {
@@ -160,8 +167,8 @@ void LibGMEWrapper::open()
                 this->fileLen.Value = this->info->length;
             }
         }
-        gme_set_fade(this->handle, this->fileLen.Value);
     }
+    gme_set_fade(this->handle, this->fileLen.Value);
 
     if(this->Format.SampleRate != gConfig.gmeSampleRate)
     {
@@ -196,7 +203,7 @@ void LibGMEWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
 frame_t LibGMEWrapper::getFrames () const
 {
-    return gConfig.gmePlayForever ? msToFrames(-1, this->Format.SampleRate) : msToFrames(this->fileLen.Value, this->Format.SampleRate);
+    return msToFrames(this->fileLen.Value, this->Format.SampleRate);
 }
 
 vector<loop_t> LibGMEWrapper::getLoopArray () const noexcept
@@ -234,5 +241,5 @@ void LibGMEWrapper::buildMetadata() noexcept
 // true if we can hold the whole song in memory
 bool LibGMEWrapper::wholeSong() const
 {
-    return !gConfig.gmePlayForever;
+    return this->fileLen.Value!=-1;
 }
