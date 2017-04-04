@@ -47,6 +47,7 @@ void ConfigDialog::fillProperties()
     this->ui->spinGmeSfx->setValue(this->newConfig.gmeEchoDepth);
     this->ui->checkGmeAccurate->setChecked(this->newConfig.gmeAccurateEmulation);
     this->ui->checkGmeForever->setChecked(this->newConfig.gmePlayForever);
+    this->ui->checkGmeMultiChannel->setChecked(this->newConfig.gmeMultiChannel);
 
     this->ui->spinFluidSampleRate->setValue(this->newConfig.FluidsynthSampleRate);
     this->ui->checkMultiChannel->setChecked(this->newConfig.FluidsynthMultiChannel);
@@ -79,7 +80,6 @@ void ConfigDialog::closeEvent(QCloseEvent* event)
 {
     this->isShown = false;
     this->QDialog::closeEvent(event);
-
 }
 
 void ConfigDialog::accept()
@@ -199,6 +199,7 @@ void ConfigDialog::buttonBoxClicked(QAbstractButton* btn)
         this->newConfig.gmeSampleRate = static_cast<unsigned int>(this->ui->spinGmeSampleRate->value());
         this->newConfig.gmeAccurateEmulation = this->ui->checkGmeAccurate->isChecked();
         this->newConfig.gmePlayForever = this->ui->checkGmeForever->isChecked();
+        this->newConfig.gmeMultiChannel = this->ui->checkGmeMultiChannel->isChecked();
 
         this->newConfig.FluidsynthSampleRate = static_cast<unsigned int>(this->ui->spinFluidSampleRate->value());
         this->newConfig.FluidsynthMultiChannel = this->ui->checkMultiChannel->isChecked();

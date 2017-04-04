@@ -235,7 +235,7 @@
            <x>0</x>
            <y>0</y>
            <width>301</width>
-           <height>121</height>
+           <height>122</height>
           </rect>
          </property>
          <layout class="QFormLayout" name="formLayout_4">
@@ -305,6 +305,23 @@
           </item>
           <item row="3" column="1">
            <widget class="QCheckBox" name="checkGmeForever">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_24">
+            <property name="whatsThis">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Requests GME to render each voice to a dedicated stereo channel. Might not be supported by all emulator types.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
+            <property name="text">
+             <string>Multi-Channel Rendering</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QCheckBox" name="checkGmeMultiChannel">
             <property name="text">
              <string/>
             </property>
