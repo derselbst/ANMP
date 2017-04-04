@@ -45,21 +45,42 @@ void LibGMEWrapper::open()
     {
         return;
     }
-
-    gme_err_t msg = gme_open_file(this->Filename.c_str(), &this->handle, gConfig.gmeSampleRate);
-
-    if(msg)
+    
+    gme_type_t* emuType;
+    msg = gme_identify_file(this->Filename.c_str(), emuType);
+    
+    if(msg || emuType == nullptr)
     {
         THROW_RUNTIME_ERROR("libgme failed on file \"" << this->Filename << ")\"" << " with message " << msg);
     }
-
-    this->Format.SetVoices(1);
-    this->Format.VoiceChannels[0] = 2;
     
 #if GME_VERSION > 0x000601
-    bool multiChannelSupport = gme_multi_channel(this->handle);
+    if(gConfig.gmeMultiChannel)
+    {
+        this->handle = gme_new_emu_multi_channel( gme_type_t, int sample_rate );
+    }
+    else
+#else
+    #warning "libgme is too old to support multichannel rendering, falling back to stereo."
+#endif
+    {
+        this->handle = gme_new_emu( gme_type_t, int sample_rate );
+    }
     
-    // there will always be at least a stereo channel, if this will be real stereo sound or only mono depends on the game
+    if(this->handle == nullptr)
+    {
+        THROW_RUNTIME_ERROR("failed to create MusicEmu, out of memory?!");
+    }
+    
+    msg = gme_load_file( this->handle, this->Filename.c_str());
+    if(msg)
+    {
+        THROW_RUNTIME_ERROR("libgme's second attempt failed on file \"" << this->Filename << ")\"" << " with message " << msg);
+    }
+    
+    bool multiChannelSupport = false;
+#if GME_VERSION > 0x000601
+    multiChannelSupport = gme_multi_channel(this->handle);
     if(multiChannelSupport)
     {
         this->Format.SetVoices(8);
@@ -69,23 +90,28 @@ void LibGMEWrapper::open()
             this->Format.VoiceChannels[i] = 2;
         }
     }
+    else
+#endif
+    {
+    
+        // there will always be one stereo channel, if this will be real stereo sound or only mono depends on the game
+        this->Format.SetVoices(1);
+        this->Format.VoiceChannels[0] = 2;
+    }
     
     if(gConfig.gmeMultiChannel && !multiChannelSupport)
     {
         CLOG(LogLevel_t::Warning, "though requested, gme does not support multichannel rendering for file '" << this->Filename << "'");
     }
+    
     if(multiChannelSupport)
     {
         CLOG(LogLevel_t::Info, "multichannel rendering activated for file '" << this->Filename << "'");
     }
-#endif
 
 //     gme_mute_voices(this->handle, 0);
 
-    if(this->handle == nullptr)
-    {
-        THROW_RUNTIME_ERROR("THIS SHOULD NEVER HAPPEN! libgme handle is NULL although no error was reported");
-    }
+
 
     LibGMEWrapper::printWarning(this->handle);
 
@@ -119,12 +145,12 @@ void LibGMEWrapper::open()
     }
     else
     {
+        // if we have no playing duration
         if(!this->fileLen.hasValue)
         {
-            // if we have no playing duration
+            // ... and the file has no default duration
             if(this->info->length==-1)
             {
-                // ... and the file has no default duration
                 // use 3 minutes as default
                 this->fileLen.Value = 3*60*1000;
             }
