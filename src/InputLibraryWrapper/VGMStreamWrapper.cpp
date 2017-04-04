@@ -53,7 +53,7 @@ void VGMStreamWrapper::open()
     int remainingvoices = (this->handle->channels % Stereo == 0) ? 0 : 1;
     this->Format.SetVoices(nvoices + remainingvoices);
     
-    for(int i=0; i<nvoices-remainingvoices; i++)
+    for(int i=0; i<nvoices; i++)
     {
         this->Format.VoiceChannels[i] = Stereo; // == this->handle->channels / nvoices
     }
