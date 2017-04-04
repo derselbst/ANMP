@@ -46,8 +46,8 @@ void LibGMEWrapper::open()
         return;
     }
     
-    gme_type_t* emuType;
-    msg = gme_identify_file(this->Filename.c_str(), emuType);
+    gme_type_t emuType;
+    gme_err_t msg = gme_identify_file(this->Filename.c_str(), &emuType);
     
     if(msg || emuType == nullptr)
     {
@@ -57,14 +57,14 @@ void LibGMEWrapper::open()
 #if GME_VERSION > 0x000601
     if(gConfig.gmeMultiChannel)
     {
-        this->handle = gme_new_emu_multi_channel( gme_type_t, int sample_rate );
+        this->handle = gme_new_emu_multi_channel( emuType, gConfig.gmeSampleRate );
     }
     else
 #else
     #warning "libgme is too old to support multichannel rendering, falling back to stereo."
 #endif
     {
-        this->handle = gme_new_emu( gme_type_t, int sample_rate );
+        this->handle = gme_new_emu( emuType, gConfig.gmeSampleRate );
     }
     
     if(this->handle == nullptr)

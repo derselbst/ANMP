@@ -223,12 +223,8 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
     {
         // ... try to parse that file
 
-        Music_Emu * emu=nullptr;  
-#if GME_VERSION > 0x000601
-        gme_err_t msg = gme_open_file(filePath.c_str(), &emu, gme_info_only, false);
-#else
+        Music_Emu * emu=nullptr;
         gme_err_t msg = gme_open_file(filePath.c_str(), &emu, gme_info_only);
-#endif        
         if(msg || emu == nullptr)
         {
             if(emu != nullptr)
