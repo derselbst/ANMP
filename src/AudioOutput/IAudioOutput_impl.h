@@ -6,13 +6,9 @@
 
 
 template<typename TIN, typename TOUT>
-void IAudioOutput::Mix(const TIN *restrict in, TOUT *restrict out, const frame_t frames)
+void IAudioOutput::Mix(const frame_t frames, const TIN *restrict in, const SongFormat& inputFormat, TOUT *restrict out, const uint16_t N)
 {
-    const unsigned int nVoices = this->currentFormat.Voices;
-    
-    // IAudioOutput::Mix() may only be called with a previously specified number of output channels
-    // just silently assume that this happened
-    const uint16_t N = this->GetOutputChannels().Value;
+    const unsigned int nVoices = inputFormat.Voices;
 
     // we need to be fast, C99's VLAs are fast, use them
     // stack overflow should be unlikely, since N usually 2, at most 6, I hope...
@@ -40,8 +36,8 @@ void IAudioOutput::Mix(const TIN *restrict in, TOUT *restrict out, const frame_t
         // walk through all available voices. if not muted, they contribute to the mixed output
         for(unsigned int v=0; v < nVoices; v++)
         {
-            const uint16_t vchan = this->currentFormat.VoiceChannels[v];
-            if(!this->currentFormat.VoiceIsMuted[v])
+            const uint16_t vchan = inputFormat.VoiceChannels[v];
+            if(!inputFormat.VoiceIsMuted[v])
             {
                 const uint16_t channelsToMix = max(vchan, N);
                 for(unsigned int m=0; m < channelsToMix; m++)

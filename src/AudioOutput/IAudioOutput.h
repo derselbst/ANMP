@@ -50,21 +50,21 @@ public:
      * initializes a sound device, e.g. set samplerate, channels, i.e. settings that
      * can change while running ANMP
      *
-     * can be called multiple times if necessary
-     *
-     * when finishing the call to this->init() the PCM stream shall be in state "stopped"
+     * called every time a new song shall be played
      */
     virtual void init (SongFormat& format, bool realtime=false) = 0;
 
     /**
-     * Starts the PCM stream.
+     * Starts the PCM stream. Called only when "Play" button is pressed (i.e. playback shall start)
      *
      * If the stream is already started, no error shall be risen.
      */
     virtual void start () = 0;
 
     /**
-     * Stops the PCM stream immediately, i.e. when returning from this->stop() all pcm must have been processed, favourably by dropping them at once.
+     * Stops the PCM stream immediately, i.e. when returning from this->stop() all pcm must have been processed, favourably by dropping them at once, leaving no thread residing within this->write()
+     * 
+     * Usually called when requesting to stop playback.
      *
      * If the stream is already stopped, no error shall be risen.
      */
@@ -107,9 +107,7 @@ public:
      * @note "frameBuffer" has to contain at least ("frames"*this->currentChannelCount) items following "offset",
      * i.e. sizeof(frameBuffer)==(frames*this->currentChannelCount*sizeof(DataTypePointedToByBuffer))
      *
-     * @return number of frames successfully pushed to underlying audio driver
-     *
-     * @warning you can return a number smaller "frames" (but greater 0), however this case cannot always be recovered. you should better return 0 and play nothing, if you face such a problem.
+     * @return see private write()
      */
     int write (const pcm_t* frameBuffer, frame_t frames, int offset);
 
@@ -124,8 +122,17 @@ protected:
     // the current volume [0,1.0] to use, i.e. a factor by that the PCM gets amplified.
     float volume = 1.0f;
     
+    /**
+     * mixes all the available audio channels of pcm provided by @p in into the @p out pcm buffer
+     * 
+     * @param frames number of frames to mix from @p in to @p out. Thus also determines sizes of these pcm buffers.
+     * @param in interleaved input pcm buffer, usually Song::data.
+     * @param inputFormat Determines the number of audio channels and how they are grouped to voices for @p in.
+     * @param out mixed, amplified and interleaved output pcm buffer.
+     * @param outChannels number of audio channels in @p out buffer
+     */
     template<typename TIN, typename TOUT=TIN>
-    void Mix(const TIN* in, TOUT* out, const frame_t frames);
+    void Mix(const frame_t frames, const TIN *restrict in, const SongFormat& inputFormat, TOUT *restrict out, const uint16_t outChannels);
 
     /**
      * pushes the pcm pointed to by buffer to the underlying audio driver and by that causes it to play

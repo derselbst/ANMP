@@ -234,12 +234,12 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
 
 template<typename T> int JackOutput::write (const T* buffer, frame_t frames)
 {
-    const uint16_t channels = this->GetOutputChannels().Value;
+    const uint16_t Channels = this->GetOutputChannels().Value;
     
     // converted_to_float_but_not_resampled buffer
-    float* tempBuf = new float[frames*channels];
+    float* tempBuf = new float[frames * Channels];
     
-    this->Mix<T, float>(buffer, tempBuf, frames);
+    this->Mix<T, float>(frames, buffer, this->currentFormat, tempBuf, Channels);
     
     unique_lock<mutex> lck(this->mtx);
     
@@ -250,7 +250,7 @@ template<typename T> int JackOutput::write (const T* buffer, frame_t frames)
         // wait until jacks buffer has been consumed
         this->cv.wait(lck, [this]{ return !this->interleavedProcessedBuffer.ready || !this->interleavedProcessedBuffer.isRunning; });
         
-        framesUsedNow = this->doResampling(tempBuf + framesUsed*channels, frames);
+        framesUsedNow = this->doResampling(tempBuf + framesUsed * Channels, frames);
         frames -= framesUsedNow;
         framesUsed += framesUsedNow;
         

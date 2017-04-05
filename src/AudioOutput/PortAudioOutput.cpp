@@ -158,12 +158,11 @@ template<typename T> int PortAudioOutput::write(const T* buffer, frame_t frames)
         THROW_RUNTIME_ERROR("unable to write pcm since PortAudioOutput::init() has not been called yet or init failed");
     }
 
-    const int items = frames*this->GetOutputChannels().Value;
-    T* processedBuffer = new T[items];
-    this->Mix<T, T>(buffer, processedBuffer, frames);
-    buffer = processedBuffer;
+    const uint16_t Channels = this->GetOutputChannels().Value;
+    T* processedBuffer = new T[frames * Channels];
+    this->Mix<T, T>(frames, buffer, this->currentFormat, processedBuffer, Channels);
 
-    Pa_WriteStream(this->handle, buffer, frames );
+    Pa_WriteStream(this->handle, processedBuffer, frames);
 
     delete [] processedBuffer;
 

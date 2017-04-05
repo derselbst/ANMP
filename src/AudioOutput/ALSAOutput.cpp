@@ -258,11 +258,9 @@ int ALSAOutput::write (const int32_t* buffer, frame_t frames)
 
 template<typename T> int ALSAOutput::write(const T* buffer, frame_t frames)
 {
-    const int items = frames*this->GetOutputChannels().Value;
-    T* processedBuffer = new T[items];
-    this->Mix<T, T>(buffer, processedBuffer, frames);
-    buffer = processedBuffer;
-
+    const uint16_t Channels = this->GetOutputChannels().Value;
+    T* processedBuffer = new T[frames * Channels];
+    this->Mix<T, T>(frames, buffer, this->currentFormat, processedBuffer, Channels);
 
     if (this->epipe_count > 0)
     {
@@ -272,7 +270,7 @@ template<typename T> int ALSAOutput::write(const T* buffer, frame_t frames)
     int total = 0;
     while (total < frames)
     {
-        int retval = snd_pcm_writei(this->alsa_dev, buffer + total * this->currentFormat.Channels(), frames - total);
+        int retval = snd_pcm_writei(this->alsa_dev, processedBuffer + total * this->currentFormat.Channels(), frames - total);
 
         if (retval >= 0)
         {
