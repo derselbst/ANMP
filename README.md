@@ -1,6 +1,8 @@
 # ANMP
 **A**nother **N**ameless **M**usic **P**layer
 
+[![Project Stats](https://www.openhub.net/p/ANMP/widgets/project_thin_badge?format=gif)](https://www.openhub.net/p/ANMP)
+
 ![ANMP Screenshot](ANMP.png)
 
 ## Features
