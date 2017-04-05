@@ -92,9 +92,7 @@ cmake .. -G "Visual Studio 14 2015" -DENABLE_ALSA=0 -DENABLE_JACK=0 -DLIBSND_LIB
 ```
 ## TODO
 * support loading playlists (.m3u !)
-* save settings + playlist on close
-* invent a nice way of getting audio groups used (i.e. if one song offers multiple themes, such as underwater and mainland theme)
-* support libmodplug
+* serialize playlist to file on close, restore on open
 
 ## Legal
 ANMP is licensed under the terms of the *GNU GENERAL PUBLIC LICENSE Version 2*, see [LICENSE](LICENSE).
