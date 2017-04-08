@@ -34,8 +34,10 @@ if(USE_GUI)
         OPTIONS -M # exporting public slots only
     )
 
-    qt5_add_dbus_adaptor(GUI_SRCS ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml mainwindow.h MainWindow mainwindowadaptor MainWindowAdaptor)
+    # from the just generated xml file, generate implementation files for the dbus adaptor
+    qt5_add_dbus_adaptor(GUI_SRCS ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml mainwindow.h MainWindow mainwindow_adaptor MainWindowAdaptor)
 
+    
     qt5_wrap_ui(UI_HEADERS
         mainwindow.ui
         configdialog.ui

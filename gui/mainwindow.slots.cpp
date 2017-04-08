@@ -308,6 +308,10 @@ void MainWindow::FastSeekBackward()
     this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekFast), gConfig.FramesToRender));
 }
 
+void MainWindow::AddSongs(QStringList files)
+{
+    this->playlistModel->asyncAdd(files);
+}
 
 void MainWindow::updateStatusBar(QString file, int cur, int total)
 {

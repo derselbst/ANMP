@@ -21,7 +21,7 @@ class Player;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.anmp.player")
+    Q_CLASSINFO("D-Bus Interface", "org.anmp")
 
 public:
     explicit MainWindow(QWidget *parent = 0);
@@ -79,6 +79,7 @@ public slots:
     void SeekBackward();
     void FastSeekForward();
     void FastSeekBackward();
+    void AddSongs(QStringList); // only for dbus
     
 protected slots:
     friend class PlaylistModel;

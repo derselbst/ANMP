@@ -3,7 +3,7 @@
  */
 
 #include "mainwindow.h"
-#include "mainwindowadaptor.h"
+#include "mainwindow_adaptor.h"
 #include "ui_mainwindow.h"
 #include "PlayheadSlider.h"
 #include "applets/analyzer/AnalyzerApplet.h"
@@ -52,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent) :
     new MainWindowAdaptor(this);
     QDBusConnection dbus = QDBusConnection::sessionBus();
     dbus.registerObject("/MainWindow", this);
-    dbus.registerService("org.anmp.player");
+    dbus.registerService("org.anmp");
 
     
     // init UI
