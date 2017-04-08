@@ -1,6 +1,8 @@
 # ANMP
 **A**nother **N**ameless **M**usic **P**layer
 
+[![Project Stats](https://www.openhub.net/p/ANMP/widgets/project_thin_badge?format=gif)](https://www.openhub.net/p/ANMP)
+
 ![ANMP Screenshot](ANMP.png)
 
 ## Features
@@ -16,10 +18,11 @@ What ANMP does NOT:
 
 #### Main Features
 
-* cue sheets
+* muting multichannel audio files
 * gapless playback (for most streamed audio formats)
 * arbitrary (forward) looping of songs (i.e. even nested loops)
 * unrolling [looped MIDI tracks](https://github.com/derselbst/ANMP/wiki/MIDI-Customizations)
+* cue sheets
 * easy attempt to implement new formats
 
 ANMP handles audio differently than others: Instead of retrieving only small buffers that hold the raw pcm data, ANMP fetches the pcm of the whole file and puts that into memory. Todays computers have enough memory to hold raw pcm of even longer audio files. Uncompressing big audio files can take a long time, though. Thus filling the pcm buffer is usually done asynchronously. When the next song shall be played, the pcm buffer of the former song is released.
@@ -89,9 +92,7 @@ cmake .. -G "Visual Studio 14 2015" -DENABLE_ALSA=0 -DENABLE_JACK=0 -DLIBSND_LIB
 ```
 ## TODO
 * support loading playlists (.m3u !)
-* save settings + playlist on close
-* invent a nice way of getting audio groups used (i.e. if one song offers multiple themes, such as underwater and mainland theme)
-* support libmodplug
+* serialize playlist to file on close, restore on open
 
 ## Legal
 ANMP is licensed under the terms of the *GNU GENERAL PUBLIC LICENSE Version 2*, see [LICENSE](LICENSE).
