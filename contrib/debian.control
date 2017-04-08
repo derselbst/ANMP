@@ -7,4 +7,4 @@ Build-Depends: debhelper (>= 9), gcc (>= 4.8.1), cmake (>= 3.1), libcue-dev, lib
 Package: anmp
 Architecture: any
 Depends: ${shlibs:Depends}
-Description: Audio Player TODO: longer description here...
+Description: ANMP aims to be a versatile but lightweight audio player, just as the other hundred thousands out there. It is written in C++11. By using VgmStream, GameMusicEmu, LazyUSF and supporting looped songs natively, ANMP is esp. suited to play various audio formats from video games. Moreover it supports muting multichannel audio files, gapless playback, arbitrary (forward) looping of songs (i.e. even nested loops), unrolling looped MIDI tracks and cue sheets.

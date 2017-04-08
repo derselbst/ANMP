@@ -1,7 +1,7 @@
 pkgname=anmp
-pkgver=2
+pkgver=4
 pkgrel=1
-pkgdesc='Versatile Music Player'
+pkgdesc='Audio Player for Video Game Music'
 url='http://www.github.com/derselbst/ANMP/'
 license=('GPL2')
 arch=('i686' 'x86_64')
