@@ -400,12 +400,10 @@ void Player::playLoop (core::tree<loop_t>& loop)
             this->IsSeekingPossible() && // we loop by setting the playhead, if this is not possible, since we dont hold the whole pcm, no loops are available
             ((subloop = this->getNextLoop(loop)) != nullptr)) // are there subloops left that need to be played?
     {
-
-        // if the user requested to seek past the current loop, skip it at all
         if(this->playhead > (*(*subloop)).stop)
         {
-            cerr << "this code seems to be redundant... NO IT ISNT!!!" << endl;
-            continue;
+            // Should never happen, unless there are illegal loop points
+            throw LoopTreeConstructionException();
         }
 
         this->playFrames((*loop).start, (*(*subloop)).start);
