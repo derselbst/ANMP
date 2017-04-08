@@ -6,6 +6,8 @@
 #include <QBrush>
 #include <QMimeData>
 #include <QUrl>
+#include <QFileInfo>
+#include <QDirIterator>
 #include <QProgressDialog>
 #include <QApplication>
 #include <sstream>
@@ -344,7 +346,21 @@ void PlaylistModel::asyncAdd(const QStringList& files)
 
     for(int i=0; i<files.count() && !this->songsToAdd.shutDown; i++)
     {
-        this->songsToAdd.queue.push_back(files.at(i).toUtf8().constData());
+        QString file = files.at(i);
+        QFileInfo info(file);
+        
+        if(info.isDir())
+        {
+            QDirIterator it(file, QDir::Files, QDirIterator::Subdirectories);
+            while (it.hasNext())
+            {
+                this->songsToAdd.queue.push_back(it.next().toUtf8().constData());
+            }
+        }
+        else
+        {
+            this->songsToAdd.queue.push_back(file.toUtf8().constData());
+        }
     }
     this->songsToAdd.ready = true;
 
@@ -362,8 +378,22 @@ void PlaylistModel::asyncAdd(const QList<QUrl>& files)
     this->songsToAdd.cv.wait(lck, [this]{return !this->songsToAdd.ready;});
 
     for(int i=0; i<files.count() && !this->songsToAdd.shutDown; i++)
-    {
-        this->songsToAdd.queue.push_back(files.at(i).toLocalFile().toStdString());
+    {        
+        QString file = files.at(i).toLocalFile();
+        QFileInfo info(file);
+        
+        if(info.isDir())
+        {
+            QDirIterator it(file, QDir::Files, QDirIterator::Subdirectories);
+            while (it.hasNext())
+            {
+                this->songsToAdd.queue.push_back(it.next().toStdString());
+            }
+        }
+        else
+        {
+            this->songsToAdd.queue.push_back(file.toStdString());
+        }
     }
     this->songsToAdd.ready = true;
 
