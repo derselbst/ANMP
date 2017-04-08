@@ -39,7 +39,7 @@ void IAudioOutput::Mix(const frame_t frames, const TIN *restrict in, const SongF
         for(unsigned int v=0; v < nVoices; v++)
         {
             const uint16_t vchan = inputFormat.VoiceChannels[v];
-            if(vhan > 0 && !inputFormat.VoiceIsMuted[v])
+            if(vchan > 0 && !inputFormat.VoiceIsMuted[v])
             {
                 const uint16_t channelsToMix = max(vchan, N);
                 for(unsigned int m=0; m < channelsToMix; m++)
