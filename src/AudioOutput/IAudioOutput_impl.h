@@ -6,22 +6,24 @@
 
 
 template<typename TIN, typename TOUT>
-void IAudioOutput::Mix(const frame_t frames, const TIN *restrict in, const SongFormat& inputFormat, TOUT *restrict out, const uint16_t N)
+void IAudioOutput::Mix(const frame_t frames, const TIN *restrict in, const SongFormat& inputFormat, TOUT *restrict out, const uint16_t N) noexcept
 {
     const unsigned int nVoices = inputFormat.Voices;
 
+    // allocate a temporary mixdown buffer where all the voices get added to
+    // we cant use "out" directly, depending on TOUT this might overflow and would prevent proper clipping a few lines later
+    //
     // we need to be fast, C99's VLAs are fast, use them
     // stack overflow should be unlikely, since N usually 2, at most 6, I hope...
 #if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
     long double temp[N];
 #else
     #warning "Neither clang or GCC compiler, fearing to use C99 VLA, falling back to std::vector"
-    // temporary mixdown buffer where all the voices get added to
-    // we cant use "out" directly, this might overflow and would prevent proper clipping a few lines later
+    // yes, vector might throw and terminate will be called, I dont care, the performance gain by noexcept beats it up
     vector<long double> mixdownBuf;
     // HACK to allocate space without zeroing it out
     mixdownBuf.reserve(N);
-    // and then access the data via the pointer, not via vector::operator[], else index out of bounds assertion for MSVC
+    // and then access the data via the pointer, not via vector::operator[], else index out of bounds assertion for MSVC, because actually vector is still empty
     long double* temp = mixdownBuf.data();
 #endif
     
@@ -37,7 +39,7 @@ void IAudioOutput::Mix(const frame_t frames, const TIN *restrict in, const SongF
         for(unsigned int v=0; v < nVoices; v++)
         {
             const uint16_t vchan = inputFormat.VoiceChannels[v];
-            if(!inputFormat.VoiceIsMuted[v])
+            if(vhan > 0 && !inputFormat.VoiceIsMuted[v])
             {
                 const uint16_t channelsToMix = max(vchan, N);
                 for(unsigned int m=0; m < channelsToMix; m++)
