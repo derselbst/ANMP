@@ -12,7 +12,7 @@
 #include "Playlist.h"
 
 class Song;
-
+class QFileInfo;
 
 class PlaylistModel : public QAbstractTableModel, public Playlist
 {
@@ -55,7 +55,7 @@ public:
     void shuffle(unsigned int, unsigned int) override;
 
 
-
+    void asyncAdd(const QList<QFileInfo>& files);
     void asyncAdd(const QStringList& files);
     void asyncAdd(const QList<QUrl>& files);
 

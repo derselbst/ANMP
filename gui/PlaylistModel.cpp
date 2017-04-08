@@ -339,6 +339,38 @@ bool PlaylistModel::dropMimeData(const QMimeData *data, Qt::DropAction action, i
     return true;
 }
 
+void PlaylistModel::asyncAdd(const QFileInfoList& files)
+{
+    std::unique_lock<mutex> lck(this->songsToAdd.mtx);
+    this->songsToAdd.cv.wait(lck, [this]{return !this->songsToAdd.ready;});
+
+    for(int i=0; i<files.count() && !this->songsToAdd.shutDown; i++)
+    {
+        QString file = files.at(i).absoluteFilePath();
+        QFileInfo info(file);
+        
+        if(info.isDir())
+        {
+            QDir dir(file);
+            lck.unlock();
+            this->asyncAdd(dir.entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot, QDir::LocaleAware));
+            lck.lock();
+        }
+        else
+        {
+            this->songsToAdd.queue.push_back(file.toUtf8().constData());
+        }
+    }
+    this->songsToAdd.ready = true;
+
+    lck.unlock();
+    if(this->songsToAdd.processed && !this->songsToAdd.shutDown)
+    {
+        this->songAdderWorker = std::async(launch::async, &PlaylistModel::workerLoop, this);
+    }
+    this->songsToAdd.cv.notify_one();
+}
+
 void PlaylistModel::asyncAdd(const QStringList& files)
 {
     std::unique_lock<mutex> lck(this->songsToAdd.mtx);
@@ -351,11 +383,10 @@ void PlaylistModel::asyncAdd(const QStringList& files)
         
         if(info.isDir())
         {
-            QDirIterator it(file, QDir::Files, QDirIterator::Subdirectories);
-            while (it.hasNext())
-            {
-                this->songsToAdd.queue.push_back(it.next().toUtf8().constData());
-            }
+            QDir dir(file);
+            lck.unlock();
+            this->asyncAdd(dir.entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot, QDir::LocaleAware));
+            lck.lock();
         }
         else
         {
@@ -364,11 +395,11 @@ void PlaylistModel::asyncAdd(const QStringList& files)
     }
     this->songsToAdd.ready = true;
 
+    lck.unlock();
     if(this->songsToAdd.processed && !this->songsToAdd.shutDown)
     {
         this->songAdderWorker = std::async(launch::async, &PlaylistModel::workerLoop, this);
     }
-    lck.unlock();
     this->songsToAdd.cv.notify_one();
 }
 
@@ -384,11 +415,10 @@ void PlaylistModel::asyncAdd(const QList<QUrl>& files)
         
         if(info.isDir())
         {
-            QDirIterator it(file, QDir::Files, QDirIterator::Subdirectories);
-            while (it.hasNext())
-            {
-                this->songsToAdd.queue.push_back(it.next().toStdString());
-            }
+            QDir dir(file);
+            lck.unlock();
+            this->asyncAdd(dir.entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot, QDir::LocaleAware));
+            lck.lock();
         }
         else
         {
@@ -397,11 +427,11 @@ void PlaylistModel::asyncAdd(const QList<QUrl>& files)
     }
     this->songsToAdd.ready = true;
 
+    lck.unlock();
     if(this->songsToAdd.processed && !this->songsToAdd.shutDown)
     {
         this->songAdderWorker = std::async(launch::async, &PlaylistModel::workerLoop, this);
     }
-    lck.unlock();
     this->songsToAdd.cv.notify_one();
 }
 
