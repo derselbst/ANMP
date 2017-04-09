@@ -166,6 +166,7 @@ cmake .. \
         -DCMAKE_MODULES_INSTALL_DIR=%{_datadir}/cmake/Modules
 
 make %{?_smp_mflags} anmp-qt
+make %{?_smp_mflags} anmp-launcher
 
 %install
 make VERBOSE=1 DESTDIR=%{buildroot} install/fast -C %{builddir}
@@ -199,6 +200,7 @@ export LD_LIBRARY_PATH=%{buildroot}/%{_libdir}/:$LD_LIBRARY_PATH
 %defattr(-,root,root)
 %{_bindir}/anmp
 %{_bindir}/anmp-qt
+%{_bindir}/anmp-launcher
 %dir %{_datadir}/%{name}/
 %{_datadir}/%{name}/%{sffile}
 %if 0%{?suse_version}
