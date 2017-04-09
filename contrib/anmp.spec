@@ -99,7 +99,7 @@ The key features are:
 
 
 %package -n libanmp%{soname}
-Summary:        core lib for %{name}
+Summary:        Core lib for %{name}
 Group:          Development/Libraries/C and C++
 
 %description -n libanmp%{soname}
