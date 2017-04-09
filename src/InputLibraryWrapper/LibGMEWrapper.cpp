@@ -146,37 +146,36 @@ void LibGMEWrapper::open()
         THROW_RUNTIME_ERROR("libgme failed to retrieve track info for track no. " << offset << " for file \"" << this->Filename << "\" with message: " << msg);
     }
 
+    bool hasHadVal = this->fileLen.hasValue;
     if(gConfig.gmePlayForever)
     {
         this->fileLen = -1;
     }
     else
     {
-        // if we have no playing duration
-        if(!this->fileLen.hasValue)
+        // ... and the file has no default duration
+        if(this->info->length==-1)
         {
-            // ... and the file has no default duration
-            if(this->info->length==-1)
-            {
-                // use 3 minutes as default
-                this->fileLen.Value = 3*60*1000;
-            }
-            else
-            {
-                // use the duration from file
-                this->fileLen.Value = this->info->length;
-            }
+            // use 3 minutes as default
+            this->fileLen.Value = 3*60*1000;
+        }
+        else
+        {
+            // use the duration from file
+            this->fileLen.Value = this->info->length;
         }
     }
-    gme_set_fade(this->handle, this->fileLen.Value);
-
-    if(this->Format.SampleRate != gConfig.gmeSampleRate)
+    
+    // rebuild loop tree, to get proper infinite playback, if it was just enabled
+    if(hasHadVal || this->Format.SampleRate != gConfig.gmeSampleRate)
     {
         // the sample rate may have changed, if requested by user
         this->Format.SampleRate = gConfig.gmeSampleRate;
         // so we have to build up the loop tree again
         this->buildLoopTree();
     }
+    
+    gme_set_fade(this->handle, this->fileLen.Value);
 }
 
 void LibGMEWrapper::close() noexcept
