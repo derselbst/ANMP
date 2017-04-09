@@ -6,7 +6,6 @@ GenericName=Music Player
 Comment=Audio Player for various formats
 Exec=/usr/bin/anmp-launcher %U
 TryExec=/usr/bin/anmp-launcher
-Icon=anmp
 Terminal=true
 Type=Application
 Categories=Audio;Player;

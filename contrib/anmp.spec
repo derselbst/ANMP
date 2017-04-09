@@ -57,6 +57,8 @@ BuildRequires: libavcodec-devel
 BuildRequires: libavformat-devel
 BuildRequires: libavutil-devel
 BuildRequires: libswresample-devel
+
+BuildRequires: update-desktop-files
 %endif
 
 # CentOS specific:
@@ -83,8 +85,6 @@ BuildRequires: libebur128-devel
 BuildRequires: pkgconfig(Qt5Widgets)
 BuildRequires: pkgconfig(Qt5DBus)
 BuildRequires: pkgconfig(Qt5OpenGL)
-
-BuildRequires: update-desktop-files
 
 
 %description
@@ -177,7 +177,10 @@ ln -s /%{_bindir}/anmp-qt %{buildroot}/%{_bindir}/anmp
 mkdir -p %{buildroot}%{_datadir}/%{name}/
 install %{SOURCE1} %{buildroot}%{_datadir}/%{name}/
 
-%suse_update_desktop_file anmp
+
+%if 0%{?suse_version}
+%suse_update_desktop_file -i anmp Audio Player
+%endif
 
 %check
 cd %{builddir}
@@ -198,6 +201,9 @@ export LD_LIBRARY_PATH=%{buildroot}/%{_libdir}/:$LD_LIBRARY_PATH
 %{_bindir}/anmp-qt
 %dir %{_datadir}/%{name}/
 %{_datadir}/%{name}/%{sffile}
+%if 0%{?suse_version}
+%{_datadir}/applications/anmp.desktop
+%endif
 
 %files devel
 %defattr(-,root,root)
