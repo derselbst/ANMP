@@ -172,9 +172,18 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
     if( iEquals(ext, "ebur128") ||
         iEquals(ext, "mood")    ||
         iEquals(ext, "usflib")  ||
-        iEquals(ext, "sf2")     ||
-        iEquals(ext, "txt")     ||
+        iEquals(ext, "sf2")     || // libmad forever busy
+        iEquals(ext, "txt")     || // libmad converts it to sound
         iEquals(ext, "bash")    ||
+        iEquals(ext, "zip")     || // libsmf assertion fail
+        iEquals(ext, "tar")     ||
+        iEquals(ext, "7z")      ||
+        iEquals(ext, "gz")      ||
+        iEquals(ext, "bz")      ||
+        iEquals(ext, "bz2")     ||
+        iEquals(ext, "bzip")    ||
+        iEquals(ext, "xz")      ||
+        iEquals(ext, "png")     || // libmad assertion fail
         iEquals(ext, "jpg")
     )
     {
