@@ -1,3 +1,5 @@
+// anmp-launcher: appends songs to the currently running anmp instance via dbus
+
 #include "anmp_dbus_interface.h"
 
 #include <QApplication>
