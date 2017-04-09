@@ -199,9 +199,9 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
 
     this->srcData.output_frames = this->jackBufSize - this->srcData.output_frames_gen;
 
-    // just to be sure
-    this->srcData.output_frames_gen = 0;
-
+    // remember the count of frames the already have been resampled
+    int old = this->srcData.output_frames_gen;
+    
     // output_sample_rate / input_sample_rate
     this->srcData.src_ratio = (double)this->jackSampleRate / this->currentFormat.SampleRate;
 
@@ -217,9 +217,9 @@ int JackOutput::doResampling(const float* inBuf, const size_t Frames)
             CLOG(LogLevel_t::Info, "jacks callback buffer has not been filled completely" << endl <<
                     "input_frames: " << this->srcData.input_frames << "\toutput_frames: " << this->srcData.output_frames << endl <<
                     "input_frames_used: " << this->srcData.input_frames_used << "\toutput_frames_gen: " << this->srcData.output_frames_gen);
-
-// 				const size_t diffItems = this->srcData.output_frames - this->srcData.output_frames_gen;
-// 				memset(this->interleavedProcessedBuffer.buf, 0, diffItems * sizeof(jack_default_audio_sample_t));
+            
+            // needed next time to advance data_out
+            this->srcData.output_frames_gen += old;
         }
         else
         {
