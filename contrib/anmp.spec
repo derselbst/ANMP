@@ -75,16 +75,16 @@ BuildRequires: libswresample-devel
 %if %{defined rhel_version}
 %endif
 
-
 BuildRequires: pkgconfig(alsa)
 BuildRequires: pkgconfig(jack) pkgconfig(samplerate)
 BuildRequires: pkgconfig(portaudio-2.0)
 BuildRequires: libebur128-devel
 
-
 BuildRequires: pkgconfig(Qt5Widgets)
 BuildRequires: pkgconfig(Qt5DBus)
 BuildRequires: pkgconfig(Qt5OpenGL)
+
+BuildRequires: update-desktop-files
 
 
 %description
@@ -176,6 +176,8 @@ ln -s /%{_bindir}/anmp-qt %{buildroot}/%{_bindir}/anmp
 
 mkdir -p %{buildroot}%{_datadir}/%{name}/
 install %{SOURCE1} %{buildroot}%{_datadir}/%{name}/
+
+%suse_update_desktop_file anmp
 
 %check
 cd %{builddir}
