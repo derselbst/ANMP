@@ -179,7 +179,7 @@ install %{SOURCE1} %{buildroot}%{_datadir}/%{name}/
 
 
 %if 0%{?suse_version}
-%suse_update_desktop_file -i anmp Audio Player
+%suse_update_desktop_file -i anmp
 %endif
 
 %check
