@@ -158,7 +158,7 @@ void ALSAOutput::_init(SongFormat& format, bool realtime)
     else
     {
         alsa_period_size = gConfig.FramesToRender;
-        alsa_buffer_frames = 4 * alsa_period_size;
+        alsa_buffer_frames = 2 * alsa_period_size;
     }
 
     if ((err = snd_pcm_hw_params_set_buffer_size_near (this->alsa_dev, hw_params, &alsa_buffer_frames)) < 0)
