@@ -58,6 +58,7 @@
     #define ANMP_COMPILER_VERSION_USED __SUNPRO_CC
     
 #else
+    #warning "Using unknown compiler"
     #define ANMP_COMPILER_USED "unknown"
     #define ANMP_COMPILER_VERSION_USED ""
     
