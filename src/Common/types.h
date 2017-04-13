@@ -1,21 +1,25 @@
-#ifndef TYPES_H
-#define TYPES_H
+#pragma once
 
 // declares commonly used types
+
+#if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
+    #define restrict __restrict__
+#elif defined(_MSC_VER)
+    #define restrict __restrict
+#else
+    #warning "Dont know how this compiler handles restrict pointers, refuse using them."
+    #define restrict 
+#endif
 
 
 #include <cstdint>
 
-#include "AudioDriver.h"
-
 // includes all headers with no corresponding cpp file
-
+#include "AudioDriver.h"
 #include "CommonExceptions.h"
 #include "Event.h"
 #include "Nullable.h"
 #include "tree.h"
-
-#define restrict __restrict__
 
 // type used for all pcm buffers
 // only IAudioOutput needs to know the specific type, determined by SampleFormat_t
@@ -76,5 +80,3 @@ enum class SampleFormat_t : uint8_t
     float32,
     float64,
 };
-
-#endif
