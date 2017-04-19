@@ -24,8 +24,9 @@ void AopsfWrapper::initAttr()
 {
     this->Format.SampleFormat = SampleFormat_t::int16;
 
+    this->Format.SetVoices(1);
     // there will always be 2 channels, if this will be real stereo sound or only mono depends on the game
-    this->Format.Channels = 2;
+    this->Format.VoiceChannels[0] = 2;
 }
 
 AopsfWrapper::~AopsfWrapper ()
