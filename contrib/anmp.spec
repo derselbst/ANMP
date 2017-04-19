@@ -40,6 +40,7 @@ BuildRequires: cmake >= 3.1.0
 
 BuildRequires: pkgconfig(fluidsynth)
 BuildRequires: pkgconfig(smf)
+BuildRequires: libaopsf-devel
 BuildRequires: libcue-devel
 BuildRequires: libgme-devel
 BuildRequires: libmad-devel pkgconfig(id3tag)
