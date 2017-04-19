@@ -1,7 +1,7 @@
 #ifndef IAUDIOOUTPUT_IMPL_H
 #define IAUDIOOUTPUT_IMPL_H
 
-#include <algorithm>
+#include <type_traits>
 #include <cmath> // lround
 
 

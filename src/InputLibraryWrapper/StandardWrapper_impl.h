@@ -4,6 +4,7 @@
 #include "Common.h"
 #include "Config.h"
 #include "AtomicWrite.h"
+#include "LoudnessFile.h"
 
 #include <utility> // std::swap
 

@@ -89,27 +89,6 @@ vector<loop_t> VGMStreamWrapper::getLoopArray () const noexcept
 {
     vector<loop_t> res;
 
-    // TODO implement
-//     /* force only if there aren't already loop points */
-//     if (force_loop && !handle->loop_flag) {
-//         /* this requires a bit more messing with the VGMSTREAM than I'm
-//          * comfortable with... */
-//         handle->loop_flag=1;
-//         handle->loop_start_sample=0;
-//         handle->loop_end_sample=handle->num_samples;
-//         handle->loop_ch=calloc(handle->channels,sizeof(VGMSTREAMCHANNEL));
-//     }
-//
-//     /* force even if there are loop points */
-//     if (really_force_loop) {
-//         if (!handle->loop_flag) handle->loop_ch=calloc(handle->channels,sizeof(VGMSTREAMCHANNEL));
-//         handle->loop_flag=1;
-//         handle->loop_start_sample=0;
-//         handle->loop_end_sample=handle->num_samples;
-//     }
-//
-//     if (ignore_loop) handle->loop_flag=0;
-
     if(this->handle!=nullptr && this->handle->loop_flag) // does stream contain loop information?
     {
         loop_t l;

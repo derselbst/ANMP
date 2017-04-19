@@ -1,12 +1,12 @@
 #pragma once
 
 #include "IAudioOutput.h"
-#include "Song.h"
 #include "CommonExceptions.h"
 #include <cstdio>
 #include <mutex>
 
 class Player;
+class Song;
 
 /**
   * class WaveOutput
