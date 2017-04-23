@@ -237,6 +237,7 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
     {
         // tracker formats (.mod, .it)
         PlaylistFactory::tryWith<ModPlugWrapper>(pcm, filePath, offset, len);
+    }
 #endif
 
 #ifdef USE_LIBGME
@@ -305,18 +306,13 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
         const char** extList = vgmstream_get_formats();
         int len = vgmstream_get_formats_length();
 
-        for (i=0; i < len; i++)
+        for (i=0; i < len && pcm == nullptr; i++)
         {
             if (iEquals(ext, extList[i]))
             {
                 // most fileformats from videogames
                 // also eats raw pcm files (although they'll may have wrong samplerate
                 PlaylistFactory::tryWith<VGMStreamWrapper>(pcm, filePath, offset, len);
-              
-                if(pcm != nullptr) // very unlikely that pcm is still null
-                {
-                    break;
-                }
             }
         }
 #endif
