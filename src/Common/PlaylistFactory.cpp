@@ -165,6 +165,7 @@ void PlaylistFactory::parseCue(IPlaylist& playlist, const string& filePath)
 
 bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nullable<size_t> offset, Nullable<size_t> len, Nullable<SongInfo> overridingMetadata)
 {
+    int i;
     Song* pcm=nullptr;
     
     string ext = getFileExtension(filePath);
@@ -257,7 +258,7 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
 
         gme_delete(emu);
 
-        for(int i=0; i<trackCount; i++)
+        for(i=0; i<trackCount; i++)
         {
             // add each sub-song again, with default playing time of 3 mins
             PlaylistFactory::addSong(playlist, filePath, i, 3*60*1000);
@@ -266,7 +267,7 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
 #endif
 
 #ifdef USE_LIBMAD
-    else if(iEquals(ext, "mp3"))
+    else if(iEquals(ext, "mp3") || iEquals(ext, "mp2"))
     {
         goto l_LIBMAD;
     }
@@ -292,7 +293,7 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
         const char** extList = vgmstream_get_formats();
         int len = vgmstream_get_formats_length();
 
-        for (int i=0; i < len; i++)
+        for (i=0; i < len; i++)
         {
             if (iEquals(ext, extList[i]))
             {
