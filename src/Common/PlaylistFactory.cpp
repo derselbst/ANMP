@@ -303,16 +303,18 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
 #endif
 
 #ifdef USE_VGMSTREAM
-        const char** extList = vgmstream_get_formats();
-        int len = vgmstream_get_formats_length();
-
-        for (i=0; i < len && pcm == nullptr; i++)
         {
-            if (iEquals(ext, extList[i]))
+            const char** extList = vgmstream_get_formats();
+            int len = vgmstream_get_formats_length();
+
+            for (i=0; i < len && pcm == nullptr; i++)
             {
-                // most fileformats from videogames
-                // also eats raw pcm files (although they'll may have wrong samplerate
-                PlaylistFactory::tryWith<VGMStreamWrapper>(pcm, filePath, offset, len);
+                if (iEquals(ext, extList[i]))
+                {
+                    // most fileformats from videogames
+                    // also eats raw pcm files (although they'll may have wrong samplerate
+                    PlaylistFactory::tryWith<VGMStreamWrapper>(pcm, filePath, offset, len);
+                }
             }
         }
 #endif
