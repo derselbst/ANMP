@@ -227,6 +227,18 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
     }
 #endif
 
+#ifdef USE_MODPLUG
+    else if ( iEquals(ext, "MOD") || iEquals(ext, "MDZ") || iEquals(ext, "MDR") || iEquals(ext, "MDGZ") ||
+              iEquals(ext, "S3M") || iEquals(ext, "S3Z") || iEquals(ext, "S3R") || iEquals(ext, "S3GZ") ||
+              iEquals(ext, "XM")  || iEquals(ext, "XMZ") || iEquals(ext, "XMR") || iEquals(ext, "XMGZ") || 
+              iEquals(ext, "IT")  || iEquals(ext, "ITZ") || iEquals(ext, "ITR") || iEquals(ext, "ITGZ") || 
+              iEquals(ext, "669") || iEquals(ext, "AMF") || iEquals(ext, "AMS") || iEquals(ext, "DBM") || iEquals(ext, "DMF") || iEquals(ext, "DSM") || iEquals(ext, "FAR") || iEquals(ext, "MDL") || iEquals(ext, "MED") || iEquals(ext, "MTM") || iEquals(ext, "OKT") || iEquals(ext, "PTM") || iEquals(ext, "STM") || iEquals(ext, "ULT") || iEquals(ext, "UMX") || iEquals(ext, "MT2") || iEquals(ext, "PSM")
+            )
+    {
+        // tracker formats (.mod, .it)
+        PlaylistFactory::tryWith<ModPlugWrapper>(pcm, filePath, offset, len);
+#endif
+
 #ifdef USE_LIBGME
     else if((iEquals(ext, "gbs") || iEquals(ext, "nsf")) // for files that can contain multiple sub-songs
             && !offset.hasValue && !len.hasValue) // and this is the first call for this file, i.e. no sub-songs and song lengths have been specified
@@ -312,11 +324,6 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
 #ifdef USE_FFMPEG
         // OPUS, videofiles, etc.
         PlaylistFactory::tryWith<FFMpegWrapper>(pcm, filePath, offset, len);
-#endif
-
-#ifdef USE_MODPLUG
-        // tracker formats (.mod, .it)
-        PlaylistFactory::tryWith<ModPlugWrapper>(pcm, filePath, offset, len);
 #endif
 
 // !!! libmad always has to be last !!!
