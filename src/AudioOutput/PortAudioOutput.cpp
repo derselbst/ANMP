@@ -113,7 +113,7 @@ void PortAudioOutput::_init(SongFormat& format, bool realtime)
 
     if (err != PaErrorCode::paNoError)
     {
-        THROW_RUNTIME_ERROR("unable to stop pcm (" << Pa_GetErrorText(err) << ")");
+        THROW_RUNTIME_ERROR("unable to open pcm (" << Pa_GetErrorText(err) << ")");
     }
 }
 
@@ -159,15 +159,18 @@ template<typename T> int PortAudioOutput::write(const T* buffer, frame_t frames)
     }
 
     const uint16_t Channels = this->GetOutputChannels().Value;
-    T* processedBuffer = new T[frames * Channels];
-    this->Mix<T, T>(frames, buffer, this->currentFormat, processedBuffer, Channels);
+    vector<T> processedBuffer;
+    processedBuffer.reserve(frames * Channels);
+    
+    this->Mix<T, T>(frames, buffer, this->currentFormat, processedBuffer.data(), Channels);
 
-    Pa_WriteStream(this->handle, processedBuffer, frames);
-
-    delete [] processedBuffer;
-
-    // well, just hope that all of them have actually been written
-    return frames;
+    PaError err = Pa_WriteStream(this->handle, processedBuffer.data(), frames);
+    if (err == PaErrorCode::paNoError)
+    {
+        return frames;
+    }
+    
+    THROW_RUNTIME_ERROR("unable to write pcm (" << Pa_GetErrorText(err) << ")");
 }
 
 void PortAudioOutput::start()
