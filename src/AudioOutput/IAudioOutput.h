@@ -47,10 +47,11 @@ public:
     virtual void open () = 0;
 
     /**
-     * initializes a sound device, e.g. set samplerate, channels, i.e. settings that
-     * can change while running ANMP
+     * initializes a sound device, e.g. set samplerate, channels, i.e. settings that can change while running ANMP
      *
      * called every time a new song shall be played
+     * 
+     * a succeding call shall leave the PCM stream in a state in which it is possible to call this->write(). else an exception shall be thrown.
      */
     virtual void init (SongFormat& format, bool realtime=false) = 0;
 

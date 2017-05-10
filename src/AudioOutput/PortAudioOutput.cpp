@@ -115,6 +115,8 @@ void PortAudioOutput::_init(SongFormat& format, bool realtime)
     {
         THROW_RUNTIME_ERROR("unable to open pcm (" << Pa_GetErrorText(err) << ")");
     }
+    
+    this->start();
 }
 
 void PortAudioOutput::drain()
@@ -165,12 +167,19 @@ template<typename T> int PortAudioOutput::write(const T* buffer, frame_t frames)
     this->Mix<T, T>(frames, buffer, this->currentFormat, processedBuffer.data(), Channels);
 
     PaError err = Pa_WriteStream(this->handle, processedBuffer.data(), frames);
-    if (err == PaErrorCode::paNoError)
+    switch(err)
     {
-        return frames;
+        case PaErrorCode::paUnanticipatedHostError:
+            return 0;
+        case PaErrorCode::paInputOverflowed:
+            [[fallthrough]];
+        case PaErrorCode::paOutputUnderflowed:
+            [[fallthrough]];
+        case PaErrorCode::paNoError:
+            return frames;
+        default:
+            THROW_RUNTIME_ERROR("unable to write pcm (" << Pa_GetErrorText(err) << ")");
     }
-    
-    THROW_RUNTIME_ERROR("unable to write pcm (" << Pa_GetErrorText(err) << ")");
 }
 
 void PortAudioOutput::start()
