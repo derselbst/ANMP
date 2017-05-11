@@ -5,18 +5,26 @@
 
 #include <sndfile.h>
 
+// depending whether the audio file we contains floats, doubles or ints, access the decoded pcm as int or float
+union sndfile_sample_t
+{
+    // classes from the outside will either see an int32 or a float here. they dont see this union. they cant acces the members via f and i members. there require float to be 32 bits, to avoid having any padding bits that would be treated as audio.
+    static_assert(sizeof(float) == sizeof(int32_t), "sizeof(float) != sizeof(int32_t), sry, this code wont work");
+    
+    float f;
+    int32_t i;
+};
 
 /**
   * class LibSNDWrapper
   *
   * Wrapper for libsndfile, for supporting multiple common audio formats
   */
-class LibSNDWrapper : public StandardWrapper<int32_t>
+class LibSNDWrapper : public StandardWrapper<sndfile_sample_t>
 {
 public:
     LibSNDWrapper(string filename);
     LibSNDWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
-    void initAttr();
 
     // forbid copying
     LibSNDWrapper(LibSNDWrapper const&) = delete;

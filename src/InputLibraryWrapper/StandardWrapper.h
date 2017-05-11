@@ -32,7 +32,7 @@
   * @warning whenever changing this implementation, dont forget LibMadWrapper::render() AND FFMpegWrapper::render(), which does
   * pretty much the same thing, without using this macro
   */
-#define STANDARDWRAPPER_RENDER(SAMPLEFORMAT, LIB_SPECIFIC_RENDER_FUNCTION)\
+#define STANDARDWRAPPER_RENDER_WITH_POST_PROC(SAMPLEFORMAT, LIB_SPECIFIC_RENDER_FUNCTION, POST_PROCESSING) \
     if(framesToRender==0)\
     {\
         /* render rest of file */ \
@@ -42,8 +42,6 @@
     {\
         framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);\
     }\
-    /* audio normalization factor */\
-    const float absoluteGain = (numeric_limits<SAMPLEFORMAT>::max()) / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);\
     const uint32_t Channels = this->Format.Channels(); \
     SAMPLEFORMAT* pcm = static_cast<SAMPLEFORMAT*>(bufferToFill);\
     /* advance the pcm pointer by that many items where we previously ended filling it */\
@@ -57,11 +55,8 @@
         /* call the function whatever is responsible for decoding to raw pcm */\
         LIB_SPECIFIC_RENDER_FUNCTION;\
 \
-        /* actually do the audio normalization */\
-        for(unsigned int i=0; gConfig.useAudioNormalization && i<framesToDoNow*Channels; i++)\
-        {\
-	    pcm[i] = static_cast<SAMPLEFORMAT>(pcm[i] * absoluteGain);\
-        }\
+        /* actually do the audio normalization or anything else here */\
+        POST_PROCESSING;\
 \
         /* advance the pcm pointer by that many items that have just been rendered */\
         pcm += (framesToDoNow * Channels) % this->count;\
@@ -69,7 +64,16 @@
 \
         framesToRender -= framesToDoNow;\
     }\
- 
+
+#define DO_AUDIO_NORMALIZATION(SAMPLEFORMAT) \
+    /* audio normalization factor */\
+    const float absoluteGain = (numeric_limits<SAMPLEFORMAT>::max()) / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);\
+    for(unsigned int i=0; gConfig.useAudioNormalization && i<framesToDoNow*Channels; i++)\
+    {\
+        pcm[i] = static_cast<SAMPLEFORMAT>(pcm[i] * absoluteGain);\
+    }
+    
+#define STANDARDWRAPPER_RENDER(SAMPLEFORMAT, LIB_SPECIFIC_RENDER_FUNCTION) STANDARDWRAPPER_RENDER_WITH_POST_PROC(SAMPLEFORMAT, LIB_SPECIFIC_RENDER_FUNCTION, DO_AUDIO_NORMALIZATION(SAMPLEFORMAT))
 
 template<typename SAMPLEFORMAT>
 class StandardWrapper : public Song
