@@ -47,7 +47,7 @@ void LibSNDWrapper::open ()
         THROW_RUNTIME_ERROR(sf_strerror (nullptr) << " (in File \"" << this->Filename << ")\"");
     };
 
-    if (sfinfo.channels < 1 || sfinfo.channels > 6)
+    if (sfinfo.channels < 1)
     {
         THROW_RUNTIME_ERROR("channels == " << sfinfo.channels);
     };
