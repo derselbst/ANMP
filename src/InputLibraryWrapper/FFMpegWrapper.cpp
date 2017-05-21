@@ -299,6 +299,9 @@ void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
 
     av_frame_free(&frame);
+    
+    
+    this->doAudioNormalization(static_cast<int16_t*>(bufferToFill), framesToRender);
 }
 
 frame_t FFMpegWrapper::getFrames () const

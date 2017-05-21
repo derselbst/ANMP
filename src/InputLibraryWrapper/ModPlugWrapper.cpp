@@ -142,6 +142,8 @@ void ModPlugWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
                            int ret = ModPlug_Read(this->handle, pcm, framesToDoNow*Channels*sizeof(int32_t));
                            framesToDoNow = ret / (Channels * sizeof(int32_t));
                           )
+    
+    this->doAudioNormalization(static_cast<int32_t*>(bufferToFill), framesToRender);
 }
 
 frame_t ModPlugWrapper::getFrames () const

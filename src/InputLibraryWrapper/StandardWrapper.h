@@ -32,15 +32,17 @@
   * @warning whenever changing this implementation, dont forget LibMadWrapper::render() AND FFMpegWrapper::render(), which does
   * pretty much the same thing, without using this macro
   */
-#define STANDARDWRAPPER_RENDER_WITH_POST_PROC(SAMPLEFORMAT, LIB_SPECIFIC_RENDER_FUNCTION, POST_PROCESSING) \
+#define STANDARDWRAPPER_RENDER(SAMPLEFORMAT, LIB_SPECIFIC_RENDER_FUNCTION) \
+{\
+    decltype(framesToRender) backup;\
     if(framesToRender==0)\
     {\
         /* render rest of file */ \
-        framesToRender = this->getFrames()-this->framesAlreadyRendered;\
+        backup = framesToRender = this->getFrames()-this->framesAlreadyRendered;\
     }\
     else\
     {\
-        framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);\
+        backup = framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);\
     }\
     const uint32_t Channels = this->Format.Channels(); \
     SAMPLEFORMAT* pcm = static_cast<SAMPLEFORMAT*>(bufferToFill);\
@@ -55,25 +57,15 @@
         /* call the function whatever is responsible for decoding to raw pcm */\
         LIB_SPECIFIC_RENDER_FUNCTION;\
 \
-        /* actually do the audio normalization or anything else here */\
-        POST_PROCESSING;\
-\
         /* advance the pcm pointer by that many items that have just been rendered */\
         pcm += (framesToDoNow * Channels) % this->count;\
         this->framesAlreadyRendered += framesToDoNow;\
 \
         framesToRender -= framesToDoNow;\
     }\
+    framesToRender = backup;\
+}
 
-#define DO_AUDIO_NORMALIZATION(SAMPLEFORMAT) \
-    /* audio normalization factor */\
-    const float absoluteGain = (numeric_limits<SAMPLEFORMAT>::max()) / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);\
-    for(unsigned int i=0; gConfig.useAudioNormalization && i<framesToDoNow*Channels; i++)\
-    {\
-        pcm[i] = static_cast<SAMPLEFORMAT>(pcm[i] * absoluteGain);\
-    }
-    
-#define STANDARDWRAPPER_RENDER(SAMPLEFORMAT, LIB_SPECIFIC_RENDER_FUNCTION) STANDARDWRAPPER_RENDER_WITH_POST_PROC(SAMPLEFORMAT, LIB_SPECIFIC_RENDER_FUNCTION, DO_AUDIO_NORMALIZATION(SAMPLEFORMAT))
 
 template<typename SAMPLEFORMAT>
 class StandardWrapper : public Song
@@ -106,6 +98,9 @@ protected:
 
     template<typename WRAPPERCLASS>
     void fillBuffer(WRAPPERCLASS* context);
+    
+    template<typename REAL_SAMPLEFORMAT>
+    void doAudioNormalization(REAL_SAMPLEFORMAT* bufferToFill, const frame_t framesToProcess);
 
     // used for sound normalization
     // usual range: (0,1]

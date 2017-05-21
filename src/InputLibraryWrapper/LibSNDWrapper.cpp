@@ -97,38 +97,25 @@ void LibSNDWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     constexpr bool haveInt64 = sizeof(int)==8;
 
     static_assert(haveInt32 || haveInt64, "sizeof(int) is neither 4 nor 8 bits on your platform");
-
-#define SND_AMPLIFY(TYPE, XXX) \
-    /* audio normalization factor */\
-    const float absoluteGain = (numeric_limits<TYPE>::max()) / (numeric_limits<TYPE>::max() * this->gainCorrection);\
-    for(unsigned int i=0; gConfig.useAudioNormalization && i<framesToDoNow*Channels; i++)\
-    {\
-        pcm[i].XXX = static_cast<TYPE>(pcm[i].XXX * absoluteGain);\
-    }
     
     const SampleFormat_t cachedFormat = this->Format.SampleFormat;
     
     if(haveInt32)
     {
         // no extra work necessary here, as usual write directly to pcm buffer
-        STANDARDWRAPPER_RENDER_WITH_POST_PROC(
+        STANDARDWRAPPER_RENDER(
                                 sndfile_sample_t,
                                 if(cachedFormat == SampleFormat_t::float32)
                                 {
                                     // the file contains floats, thus read floats
                                     sf_read_float(this->sndfile, reinterpret_cast<float*>(pcm), framesToDoNow*Channels);
-                                    
-                                    SND_AMPLIFY(float, f);
                                 }
                                 else if(cachedFormat == SampleFormat_t::int32)
                                 {
                                     // or read int32s
                                     sf_read_int(this->sndfile, reinterpret_cast<int32_t*>(pcm), framesToDoNow*Channels);
-                                    
-                                    SND_AMPLIFY(int32_t, i);
                                 }
                                 else THROW_RUNTIME_ERROR("THIS SHOULD NEVER HAPPEN: SampleFormat neither int32 nor float32");
-                                , ;
         )
     }
     else if(haveInt64)
@@ -144,41 +131,38 @@ void LibSNDWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
             int64_temp_buf = tmp.data();
         }
         
-        STANDARDWRAPPER_RENDER_WITH_POST_PROC(
+        STANDARDWRAPPER_RENDER(
                                 sndfile_sample_t, // bufferToFill shall be of this type
                                 if(cachedFormat == SampleFormat_t::float32)
                                 {
                                     // just read out floats
                                     sf_read_float(this->sndfile, reinterpret_cast<float*>(pcm), framesToDoNow*Channels);
-                                    
-                                    SND_AMPLIFY(float, f);
                                 }
                                 else if(cachedFormat == SampleFormat_t::int32)
                                 {
                                     // hm, int is 64 bits wide. write it to temp buffer and force it to int32 and amplify it within the same run.
                                     sf_read_int(this->sndfile, int64_temp_buf, framesToDoNow*Channels);
                                     
-                                    /* audio normalization factor */
-                                    const float absoluteGain = (numeric_limits<int32_t>::max()) / (numeric_limits<int32_t>::max() * this->gainCorrection);
                                     for(unsigned int i=0; i<framesToDoNow*Channels; i++)
                                     {
                                         // see http://www.mega-nerd.com/libsndfile/api.html#note1:
                                         // Whenever integer data is moved from one sized container to another sized container, the
                                         // most significant bit in the source container will become the most significant bit in the destination container.
                                         pcm[i].i = static_cast<int32_t>(int64_temp_buf[i] >> ((sizeof(int) - sizeof(sndfile_sample_t))*8)/*==32*/ );
-                                        
-                                        if(gConfig.useAudioNormalization)
-                                        {
-                                            pcm[i].i = static_cast<int32_t>(pcm[i].i * absoluteGain); // so sry for that nesting...
-                                        }
                                     }
                                 }
                                 else THROW_RUNTIME_ERROR("THIS SHOULD NEVER HAPPEN: SampleFormat neither int32 nor float32");
-                                , ; // postprocession already done :/
         )
     }
     
-#undef SND_AMPLIFY
+    if(cachedFormat == SampleFormat_t::float32)
+    {
+        this->doAudioNormalization(static_cast<float*>(bufferToFill), framesToRender);
+    }
+    else if(cachedFormat == SampleFormat_t::int32)
+    {
+        this->doAudioNormalization(static_cast<int32_t*>(bufferToFill), framesToRender);
+    }
 }
 
 vector<loop_t> LibSNDWrapper::getLoopArray () const noexcept

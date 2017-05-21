@@ -367,5 +367,7 @@ vector<loop_t> MidiWrapper::getLoopArray () const noexcept
 void MidiWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
     STANDARDWRAPPER_RENDER(float, this->synth->Render(pcm, framesToDoNow))
+    
+    this->doAudioNormalization(static_cast<float*>(bufferToFill), framesToRender);
 }
 #undef FramesToRender

@@ -190,6 +190,8 @@ void AopsfWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
                                }
                            }
                           )
+    
+    this->doAudioNormalization(static_cast<int16_t*>(bufferToFill), framesToRender);
 }
 
 frame_t AopsfWrapper::getFrames () const

@@ -139,4 +139,30 @@ frame_t StandardWrapper<SAMPLEFORMAT>::getFramesRendered()
 {
     return this->framesAlreadyRendered;
 }
+
+template<typename IGNORE>
+template<typename SAMPLEFORMAT>
+void StandardWrapper<IGNORE>::doAudioNormalization(SAMPLEFORMAT* bufferToFill, const frame_t framesToProcess)
+{
+    if(!gConfig.useAudioNormalization)
+    {
+        return;
+    }
+    
+    const uint32_t Channels = this->Format.Channels();
+    SAMPLEFORMAT* pcm = static_cast<SAMPLEFORMAT*>(bufferToFill);
+    
+    /* advance the pcm pointer by that many items where we previously ended filling it */
+    pcm += (this->getFramesRendered() * Channels) % this->count;
+    
+    const unsigned int itemsToProcess = framesToProcess*Channels;
+    /* audio normalization factor */
+    const float AbsoluteGain = (numeric_limits<SAMPLEFORMAT>::max()) / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);
+    #pragma omp parallel for default(none) firstprivate(pcm) shared(itemsToProcess, AbsoluteGain)
+    for(unsigned int i=0; i<itemsToProcess && !this->stopFillBuffer; i++)
+    {
+        pcm[i] = static_cast<SAMPLEFORMAT>(pcm[i] * AbsoluteGain);
+    }
+}
+
 #endif
