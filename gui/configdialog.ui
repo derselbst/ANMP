@@ -382,7 +382,7 @@
           <item row="1" column="0">
            <widget class="QLabel" name="label_15">
             <property name="whatsThis">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Whether each midi channel gets rendered to a distinct stereo channel. Thus enabling this option will give 16*2=32 audio channels.&lt;/p&gt;&lt;p&gt;Enabling this option usually only makes sense when using Jack as audio driver, or directly writing WAVE files.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Warning:&lt;/span&gt; This option is very memory hungry when having enabled the &lt;span style=&quot; font-style:italic;&quot;&gt;RenderWholeSong&lt;/span&gt; option!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Whether each midi channel gets rendered to a distinct stereo channel. Thus enabling this option will give 16*2=32 audio channels.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Warning:&lt;/span&gt; This option is very memory hungry when having enabled the &lt;span style=&quot; font-style:italic;&quot;&gt;RenderWholeSong&lt;/span&gt; option!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>Multi-Channel Rendering</string>
