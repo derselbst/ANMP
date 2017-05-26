@@ -363,11 +363,12 @@ void PlaylistModel::asyncAdd(const QFileInfoList& files)
     }
     this->songsToAdd.ready = true;
 
-    lck.unlock();
     if(this->songsToAdd.processed && !this->songsToAdd.shutDown)
     {
         this->songAdderWorker = std::async(launch::async, &PlaylistModel::workerLoop, this);
+        this->songsToAdd.processed = false;
     }
+    lck.unlock();
     this->songsToAdd.cv.notify_one();
 }
 
@@ -395,11 +396,12 @@ void PlaylistModel::asyncAdd(const QStringList& files)
     }
     this->songsToAdd.ready = true;
 
-    lck.unlock();
     if(this->songsToAdd.processed && !this->songsToAdd.shutDown)
     {
         this->songAdderWorker = std::async(launch::async, &PlaylistModel::workerLoop, this);
+        this->songsToAdd.processed = false;
     }
+    lck.unlock();
     this->songsToAdd.cv.notify_one();
 }
 
@@ -427,11 +429,12 @@ void PlaylistModel::asyncAdd(const QList<QUrl>& files)
     }
     this->songsToAdd.ready = true;
 
-    lck.unlock();
     if(this->songsToAdd.processed && !this->songsToAdd.shutDown)
     {
         this->songAdderWorker = std::async(launch::async, &PlaylistModel::workerLoop, this);
+        this->songsToAdd.processed = false;
     }
+    lck.unlock();
     this->songsToAdd.cv.notify_one();
 }
 
@@ -440,7 +443,7 @@ void PlaylistModel::workerLoop()
 {
     int i=0;
     std::unique_lock<mutex> lck(this->songsToAdd.mtx);
-    this->songsToAdd.processed = false;
+//     this->songsToAdd.processed = false;
 
     while(!this->songsToAdd.queue.empty() && !this->songsToAdd.shutDown)
     {
