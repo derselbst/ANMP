@@ -55,9 +55,8 @@ public:
     void shuffle(unsigned int, unsigned int) override;
 
 
-    void asyncAdd(const QList<QFileInfo>& files);
-    void asyncAdd(const QStringList& files);
-    void asyncAdd(const QList<QUrl>& files);
+    template<typename T>
+    void asyncAdd(const QList<T>&);
 
 signals:
     void SongAdded(QString file, int cur, int total);
@@ -94,8 +93,46 @@ private:
     std::future<void> songAdderWorker;
 
     QColor calculateRowColor(int row) const;
+    
+    static QString __toQString(const QFileInfo& fi);
+    static QString __toQString(const QString& str);
+    static QString __toQString(const QUrl& url);
 
 };
 
+#include <QDir>
+template<typename T>
+void PlaylistModel::asyncAdd(const QList<T>& files)
+{
+    std::unique_lock<mutex> lck(this->songsToAdd.mtx);
+    this->songsToAdd.cv.wait(lck, [this]{return !this->songsToAdd.ready;});
+
+    for(int i=0; i<files.count() && !this->songsToAdd.shutDown; i++)
+    {        
+        QString file = this->__toQString(files.at(i));
+        QFileInfo info(file);
+        
+        if(info.isDir())
+        {
+            QDir dir(file);
+            lck.unlock();
+            this->asyncAdd(dir.entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot, QDir::LocaleAware));
+            lck.lock();
+        }
+        else
+        {
+            this->songsToAdd.queue.push_back(file.toStdString());
+        }
+    }
+    this->songsToAdd.ready = true;
+
+    if(this->songsToAdd.processed && !this->songsToAdd.shutDown)
+    {
+        this->songAdderWorker = std::async(launch::async, &PlaylistModel::workerLoop, this);
+        this->songsToAdd.processed = false;
+    }
+    lck.unlock();
+    this->songsToAdd.cv.notify_one();
+}
 
 #endif
