@@ -241,7 +241,7 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
 #endif
 
 #ifdef USE_LIBGME
-    else if((iEquals(ext, "gbs") || iEquals(ext, "nsf")) // for files that can contain multiple sub-songs
+    else if((iEquals(ext, "gbs") || iEquals(ext, "nsf")  || iEquals(ext, "kss")) // for files that can contain multiple sub-songs
             && !offset.hasValue && !len.hasValue) // and this is the first call for this file, i.e. no sub-songs and song lengths have been specified
     {
         // ... try to parse that file
