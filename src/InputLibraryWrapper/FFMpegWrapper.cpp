@@ -61,62 +61,83 @@ void FFMpegWrapper::open ()
     // Find the first audio stream:
     this->audioStreamID = -1;
 
-    int ret = av_find_best_stream(this->handle, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
-    if (ret < 0)
+    int id = av_find_best_stream(this->handle, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
+    if (id < 0)
     {
         THROW_RUNTIME_ERROR("Could not find " << av_get_media_type_string(AVMEDIA_TYPE_AUDIO) << " stream in \"" << this->Filename << "\"");
     }
-    else
-    {
-        this->audioStreamID = ret;
-    }
-
-    AVStream* audioStream = this->handle->streams[this->audioStreamID];
     
-    // Get a pointer to the codec context for the audio stream
-    AVCodecContext *pCodecCtx = audioStream->codec;
+    AVCodecContext *pCodecCtx = nullptr;
+    // the stream suggested by av_find_best_stream might not be the best (e.g. it might not have set a duration (.xma files from Sonic The Hedgehog 2006))
+    // thus, iterate through all streams again if necessary hoping to find a better one
+    for( ; id < this->handle->nb_streams; ++id)
+    {
+        AVStream* audioStream = this->handle->streams[id];
+// new way, somewhen implement it
+//         if (audioStream->codecpar->codec_type != AVMEDIA_TYPE_AUDIO)
+//         {
+//             continue;
+//         }
+    
+        // Get a pointer to the codec context for the audio stream
+        pCodecCtx = audioStream->codec;
+        if (pCodecCtx->codec_type != AVMEDIA_TYPE_AUDIO)
+        {
+            continue;
+        }
+        
+        // Find the decoder for the audio stream
+        AVCodec *decoder = avcodec_find_decoder(pCodecCtx->codec_id);
+        if(decoder==nullptr)
+        {
+            THROW_RUNTIME_ERROR("Codec type " <<  pCodecCtx->codec_id << " not found.")
+        }
 
-    // Find the decoder for the audio stream
-    AVCodec *decoder = avcodec_find_decoder(pCodecCtx->codec_id);
-    if(decoder==nullptr)
-    {
-        THROW_RUNTIME_ERROR("Codec type " <<  pCodecCtx->codec_id << " not found.")
-    }
+        // Open the codec found suitable for this stream in the last step
+        if(avcodec_open2(pCodecCtx, decoder, nullptr)<0)
+        {
+            THROW_RUNTIME_ERROR("Could not open decoder.");
+        }
 
-    // Open the codec found suitable for this stream in the last step
-    if(avcodec_open2(pCodecCtx, decoder, nullptr)<0)
-    {
-        THROW_RUNTIME_ERROR("Could not open decoder.");
-    }
+        this->Format.SetVoices(1);
+        this->Format.VoiceChannels[0] = pCodecCtx->channels;
+        this->Format.SampleRate = pCodecCtx->sample_rate;
 
-    this->Format.SetVoices(1);
-    this->Format.VoiceChannels[0] = pCodecCtx->channels;
-    this->Format.SampleRate = pCodecCtx->sample_rate;
-
-    // we now have to retrieve the playduration of this file
-    // if it's possible to retrieve this from the currently decoded audio stream itself, we prefer that way
-    if(audioStream->duration != AV_NOPTS_VALUE && audioStream->duration >= 0)
-    {
-        // get the timebase for this stream. The presentation timestamp,
-        // decoding timestamp and packet duration is expressed in timestamp
-        // as unit:
-        // e.g. if timebase is 1/90000, a packet with duration 4500
-        // is 4500 * 1/90000 seconds long, that is 0.05 seconds == 50 ms.
-        AVRational& tb = audioStream->time_base;
-        double time_base =  (double)tb.num / (double)tb.den;
-        double msDuration = audioStream->duration * time_base * 1000.0;
-        this->fileLen = msDuration;
+        // we now have to retrieve the playduration of this file
+        // if it's possible to retrieve this from the currently decoded audio stream itself, we prefer that way
+        if(audioStream->duration != AV_NOPTS_VALUE && audioStream->duration >= 0)
+        {
+            // get the timebase for this stream. The presentation timestamp,
+            // decoding timestamp and packet duration is expressed in timestamp
+            // as unit:
+            // e.g. if timebase is 1/90000, a packet with duration 4500
+            // is 4500 * 1/90000 seconds long, that is 0.05 seconds == 50 ms.
+            AVRational& tb = audioStream->time_base;
+            double time_base =  (double)tb.num / (double)tb.den;
+            double msDuration = audioStream->duration * time_base * 1000.0;
+            this->fileLen = msDuration;
+        }
+        else if(this->handle->duration != AV_NOPTS_VALUE && this->handle->duration >= 0)
+        {
+            // this line seems to be completely pointless
+            // stolen from FFMPEG/libavformat/dump.c:558
+            int64_t duration = this->handle->duration + (this->handle->duration <= INT64_MAX - 5000 ? 5000 : 0);
+            size_t msDuration = (static_cast<double>(duration) / AV_TIME_BASE)/*sec*/ * 1000;
+            this->fileLen = msDuration;
+        }
+        else
+        {
+            avcodec_close(pCodecCtx);
+            continue;
+        }
+        
+        // seems we've found an audio stream that has a duration
+        break;
     }
-    else if(this->handle->duration != AV_NOPTS_VALUE && this->handle->duration >= 0)
+    
+    if(id >= this->handle->nb_streams)
     {
-        // this line seems to be completely pointless
-        // stolen from FFMPEG/libavformat/dump.c:558
-        int64_t duration = this->handle->duration + (this->handle->duration <= INT64_MAX - 5000 ? 5000 : 0);
-        size_t msDuration = (static_cast<double>(duration) / AV_TIME_BASE)/*sec*/ * 1000;
-        this->fileLen = msDuration;
-    }
-    else
-    {
+        avcodec_close(pCodecCtx);
         THROW_RUNTIME_ERROR("FFMpeg doesnt specify duration for this file."); // either this, or there is some other weird way of getting the duration, which is not implemented
     }
 
@@ -137,6 +158,8 @@ void FFMpegWrapper::open ()
     av_opt_set_sample_fmt(this->swr, "out_sample_fmt", AV_SAMPLE_FMT_S16,  0);
     swr_init(this->swr);
 
+    
+    avcodec_close(pCodecCtx);
 }
 
 void FFMpegWrapper::close() noexcept
