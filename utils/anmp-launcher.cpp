@@ -39,7 +39,8 @@ int main(int argc, char *argv[])
     QStringList fileList;
     for(int i=1; i<argc; i++)
     {
-        fileList.append(argv[i]);
+        QFileInfo info(argv[i]);
+        fileList.append(info.absoluteFilePath());
     }
     
     interface->AddSongs(fileList);
