@@ -172,8 +172,6 @@ make %{?_smp_mflags} anmp-launcher
 %install
 make VERBOSE=1 DESTDIR=%{buildroot} install/fast -C %{builddir}
 
-mv %{buildroot}/%{_libdir}/libanmp.so %{buildroot}/%{_libdir}/libanmp.so.%{soname}
-ln -s /%{_libdir}/libanmp.so.%{soname} %{buildroot}/%{_libdir}/libanmp.so
 ln -s /%{_bindir}/anmp-qt %{buildroot}/%{_bindir}/anmp
 
 mkdir -p %{buildroot}%{_datadir}/%{name}/
