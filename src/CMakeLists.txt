@@ -14,8 +14,10 @@ add_library(${PROJECT_NAME} $<TARGET_OBJECTS:anmp-audio-output>
                             $<TARGET_OBJECTS:anmp-common>
                             $<TARGET_OBJECTS:anmp-input>
                             $<TARGET_OBJECTS:anmp-player>)
+set_target_properties(${PROJECT_NAME} PROPERTIES SOVERSION 0)
 target_link_libraries(${PROJECT_NAME} ${LD_FLAGS})
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
 # this target requires c++11
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
