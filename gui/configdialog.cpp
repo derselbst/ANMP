@@ -163,7 +163,10 @@ void ConfigDialog::on_browseSF2_clicked()
     QString selFilter = "SoundFont (*.sf2)";
     QString sf2 = QFileDialog::getOpenFileName(this, "Select Soundfont", QString::fromStdString(dir), "SoundFont (*.sf2);;All files (*.*)", &selFilter);
 
-    this->ui->defaultSF2Path->setText(sf2);
+    if(!sf2.isNull())
+    {
+        this->ui->defaultSF2Path->setText(sf2);
+    }
 }
 
 void ConfigDialog::buttonBoxClicked(QAbstractButton* btn)
