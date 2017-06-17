@@ -31,6 +31,8 @@
   * 
   * @warning whenever changing this implementation, dont forget LibMadWrapper::render() AND FFMpegWrapper::render(), which does
   * pretty much the same thing, without using this macro
+  * 
+  * @warning modifies bufferToFill to point to the beginning, where the macro started filling up the PCM buffer, allowing \c StandardWrapper::doAudioNormalization() to directly take and use this pointer
   */
 #define STANDARDWRAPPER_RENDER(SAMPLEFORMAT, LIB_SPECIFIC_RENDER_FUNCTION) \
 {\
@@ -48,6 +50,7 @@
     SAMPLEFORMAT* pcm = static_cast<SAMPLEFORMAT*>(bufferToFill);\
     /* advance the pcm pointer by that many items where we previously ended filling it */\
     pcm += (this->framesAlreadyRendered * Channels) % this->count;\
+    bufferToFill = pcm;\
 \
     while(framesToRender>0 && !this->stopFillBuffer)\
     {\

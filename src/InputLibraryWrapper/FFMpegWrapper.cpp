@@ -251,7 +251,7 @@ void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 
     // int16 because we told swr to convert everything to int16
     int16_t* pcm = static_cast<int16_t*>(bufferToFill);
-    pcm += this->framesAlreadyRendered * this->Format.Channels();
+    bufferToFill = (pcm += this->framesAlreadyRendered * this->Format.Channels());
 
 
     while(!this->stopFillBuffer &&
