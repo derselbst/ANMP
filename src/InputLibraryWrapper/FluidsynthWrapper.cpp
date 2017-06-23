@@ -192,6 +192,7 @@ void FluidsynthWrapper::DeepInit(MidiWrapper& caller)
     {
         THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (strong test): \"" << this->cachedSf2 << "\"");
     }
+    fluid_synth_bank_select(this->synth, 9, 128); // try to force drum channel to bank 128
 }
 
 void FluidsynthWrapper::Unload()

@@ -560,7 +560,15 @@ void Player::playInternal ()
         this->_pause();
         exceptionMsg = e.what();
     }
-
+    
+    if(!this->IsSeekingPossible())
+    {
+        // in case we are not holding whole song in memory, align playhead to FramesToRender boundary to avoid corrupt playback next time
+        frame_t f = this->playhead;
+        f -= f % gConfig.FramesToRender;
+        this->_seekTo(f);
+    }
+    
     this->onIsPlayingChanged.Fire(this->IsPlaying(), exceptionMsg);
 }
 
