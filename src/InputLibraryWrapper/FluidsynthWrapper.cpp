@@ -90,6 +90,9 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     fluid_synth_system_reset(this->synth);
     fluid_synth_bank_select(this->synth, 9, 0); // try to force drum channel to bank 0
     
+    // set highest resampler quality on all channels
+    fluid_synth_set_interp_method(this->synth, -1, FLUID_INTERP_HIGHEST);
+    
     // reverb and chrous settings might have changed
     fluid_synth_set_reverb_on(this->synth, gConfig.FluidsynthEnableReverb);
     fluid_synth_set_reverb(this->synth, gConfig.FluidsynthRoomSize, gConfig.FluidsynthDamping, gConfig.FluidsynthWidth, gConfig.FluidsynthLevel);
