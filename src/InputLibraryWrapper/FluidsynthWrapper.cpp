@@ -85,10 +85,9 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
         // retrieve this after the synth has been inited (just for sure)
         fluid_settings_getint(this->settings, "audio.period-size", &gConfig.FluidsynthPeriodSize);
     }
-    
-    // press the big red panic/reset button
-    fluid_synth_system_reset(this->synth);
-    fluid_synth_bank_select(this->synth, 9, 0); // try to force drum channel to bank 0
+        
+    // increase default polyphone of 256
+    fluid_synth_set_polyphony(this->synth, 1024*4);
     
     // set highest resampler quality on all channels
     fluid_synth_set_interp_method(this->synth, -1, FLUID_INTERP_HIGHEST);
@@ -103,6 +102,10 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     fluid_synth_set_sample_rate(this->synth, gConfig.FluidsynthSampleRate);
     this->cachedSampleRate = gConfig.FluidsynthSampleRate;
 
+    // press the big red panic/reset button
+    fluid_synth_system_reset(this->synth);
+    fluid_synth_bank_select(this->synth, 9, 0); // try to force drum channel to bank 0
+    
     // find a soundfont
     Nullable<string> soundfont;
     if(!gConfig.FluidsynthForceDefaultSoundfont)
