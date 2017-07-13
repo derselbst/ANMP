@@ -29,12 +29,15 @@ public:
     
     void ShallowInit();
     void DeepInit(MidiWrapper&);
+    void ConfigureChannels(SongFormat* f);
     void Unload();
     
     // returns the samplerate that will be synthesized at
     unsigned int GetSampleRate();
     
     unsigned int GetVoices();
+    unsigned int GetAudioVoices();
+    unsigned int GetEffectVoices();
     unsigned int GetChannelsPerVoice();
     
     // returns the tick count the sequencer had during a call to this.Init()

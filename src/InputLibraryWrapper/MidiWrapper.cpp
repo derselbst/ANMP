@@ -163,12 +163,7 @@ void MidiWrapper::open ()
     this->synth = new FluidsynthWrapper();
     this->synth->ShallowInit();
     
-    unsigned int nVoices = this->synth->GetVoices();
-    this->Format.SetVoices(nVoices);
-    for(unsigned int i=0; i<nVoices; i++)
-    {
-        this->Format.VoiceChannels[i] = this->synth->GetChannelsPerVoice();
-    }
+    this->synth->ConfigureChannels(&this->Format);
     
     unsigned int srate = this->synth->GetSampleRate();
     if(this->Format.SampleRate != srate)
