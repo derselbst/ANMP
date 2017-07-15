@@ -225,9 +225,16 @@ void FluidsynthWrapper::ConfigureChannels(SongFormat* f)
         f->VoiceChannels[i] = this->GetChannelsPerVoice();
     }
     
-    for(unsigned int i=0; i<nAudVoices; i++)
+    if(nAudVoices==1)
     {
-        f->VoiceName[i] = "Midi Channel " + to_string(i);
+        f->VoiceName[0] = "Dry Sound";
+    }
+    else
+    {
+        for(unsigned int i=0; i<nAudVoices; i++)
+        {
+            f->VoiceName[i] = "Midi Channel " + to_string(i);
+        }
     }
     
     for(unsigned int i=nAudVoices; i<nVoices; i++)
