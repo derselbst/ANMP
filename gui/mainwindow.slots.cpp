@@ -17,6 +17,7 @@
 
 #include <QMessageBox>
 #include <QFileSystemModel>
+#include <QStandardItemModel>
 
 void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, QString msg)
 {
@@ -70,8 +71,9 @@ void MainWindow::slotSeek(long long pos)
 
 void MainWindow::slotCurrentSongChanged()
 {
-    PlayheadSlider* playheadSlider = this->ui->seekBar;
+    this->channelConfigModel->removeRows(0, this->channelConfigModel->rowCount());
 
+    PlayheadSlider* playheadSlider = this->ui->seekBar;
     const Song* s = this->player->getCurrentSong();
     if(s==nullptr)
     {
@@ -94,6 +96,7 @@ void MainWindow::slotCurrentSongChanged()
         playheadSlider->setMaximum(s->getFrames());
 
         this->enableSeekButtons(this->player->IsSeekingPossible());
+        this->updateChannelConfig(s->Format);
     }
 }
 
@@ -311,6 +314,19 @@ void MainWindow::FastSeekBackward()
 void MainWindow::AddSongs(QStringList files)
 {
     this->playlistModel->asyncAdd(files);
+}
+
+void MainWindow::DoChannelMuting(const QModelIndex&)
+{
+    const QItemSelectionModel* sel = this->ui->channelViewNew->selectionModel();
+    QModelIndex root = this->channelConfigModel->invisibleRootItem()->index();
+    const SongFormat& f = this->player->getCurrentSong()->Format;
+
+    for(int i=0; i<f.Voices; i++)
+    {
+        f.VoiceIsMuted[i] = f.VoiceIsMuted[i] ^ sel->isRowSelected(i,root);
+    }
+    this->updateChannelConfig(f);
 }
 
 void MainWindow::updateStatusBar(QString file, int cur, int total)

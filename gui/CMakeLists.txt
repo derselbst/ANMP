@@ -55,12 +55,7 @@ if(USE_GUI)
         add_subdirectory(applets/analyzer)
         target_link_libraries(${PROJECT_NAME} ${LIBANAL})
     endif(USE_VISUALIZER)
-    
-    # compile channel mixer applet
-    SET(LIBMIX mix)
-    add_subdirectory(applets/channel)
-    target_link_libraries(${PROJECT_NAME} ${LIBMIX})
-    
+
     target_link_libraries(${PROJECT_NAME}
         anmp
         ${LD_FLAGS}

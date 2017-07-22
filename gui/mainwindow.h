@@ -11,12 +11,14 @@ namespace Ui
 class MainWindow;
 }
 
-class ChannelConfig;
 class ConfigDialog;
 class AnalyzerApplet;
 class QFileSystemModel;
+class QStandardItemModel;
+class QItemSelection;
 class PlaylistModel;
 class Player;
+struct SongFormat;
 
 class MainWindow : public QMainWindow
 {
@@ -47,17 +49,19 @@ private:
     QFileSystemModel *filesModel = nullptr;
     PlaylistModel* playlistModel = nullptr;
     Player* player = nullptr;
+    QStandardItemModel* channelConfigModel = nullptr;
 
     AnalyzerApplet * analyzerWindow = nullptr;
-    ChannelConfig* channelView = nullptr;
     ConfigDialog* settingsView = nullptr;
 
     void buildPlaylistView();
+    void buildChannelConfig();
     void buildFileBrowser();
     void createShortcuts();
 
     void relativeSeek(int ms);
     void enableSeekButtons(bool isEnabled);
+    void updateChannelConfig(const SongFormat& currentFormat);
     
     void showAnalyzer(enum AnalyzerApplet::AnalyzerType type);
 #ifndef USE_VISUALIZER
@@ -80,6 +84,7 @@ public slots:
     void FastSeekForward();
     void FastSeekBackward();
     void AddSongs(QStringList); // only for dbus
+    void DoChannelMuting(const QModelIndex &index);
     
 protected slots:
     friend class PlaylistModel;

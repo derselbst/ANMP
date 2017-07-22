@@ -8,12 +8,12 @@
 #include "PlayheadSlider.h"
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
-#include "applets/channel/channelconfig.h"
 #include "PlaylistModel.h"
 
 #include <anmp.hpp>
 
 #include <QFileSystemModel>
+#include <QStandardItemModel>
 #include <QShortcut>
 #include <QResizeEvent>
 #include <QFileDialog>
@@ -32,10 +32,10 @@ MainWindow::MainWindow(QWidget *parent) :
     filesModel(new QFileSystemModel(this)),
     playlistModel(new PlaylistModel(this)),
     player(new Player(this->playlistModel)),
+    channelConfigModel(new QStandardItemModel(0, 1, this)),
 #ifdef USE_VISUALIZER
     analyzerWindow(new AnalyzerApplet(this->player, this)),
 #endif
-    channelView(new ChannelConfig(this->player, this)),
     settingsView(new ConfigDialog(this))
 {
 /*    
@@ -54,10 +54,8 @@ MainWindow::MainWindow(QWidget *parent) :
     dbus.registerObject("/MainWindow", this);
     dbus.registerService("org.anmp");
 
-    
     // init UI
     this->ui->setupUi(this);
-    this->ui->mixLayout->addWidget(this->channelView);
 
     // connect main buttons
     connect(this->ui->playButton,       &QPushButton::toggled, this, [this](bool){this->MainWindow::TogglePlayPause();});
@@ -108,6 +106,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->playlistModel, &PlaylistModel::SongAdded, this, &MainWindow::updateStatusBar);
     connect(this->playlistModel, &PlaylistModel::UnloadCurrentSong, this, [this]{this->player->stop(); this->player->setCurrentSong(nullptr);});
 
+    connect(this->ui->channelViewNew, &QTableView::activated,     this, &MainWindow::DoChannelMuting);
+    connect(this->ui->channelViewNew, &QTableView::doubleClicked, this, &MainWindow::DoChannelMuting);
 
     this->setWindowState(Qt::WindowMaximized);
 
@@ -118,6 +118,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->buildFileBrowser();
     this->buildPlaylistView();
+    this->buildChannelConfig();
     this->createShortcuts();
 }
 
@@ -128,9 +129,10 @@ MainWindow::~MainWindow()
     this->player->onIsPlayingChanged -= this;
     
     delete this->ui;
+
     // manually delete applets before deleting player, since they hold this.player
     delete this->analyzerWindow;
-    delete this->channelView;
+
     delete this->player;
     delete this->playlistModel;
 }
@@ -213,26 +215,40 @@ void MainWindow::createShortcuts()
 void MainWindow::buildFileBrowser()
 {
     QString rootPath = qgetenv("HOME");
-    drivesModel->setFilter(QDir::NoDotAndDotDot | QDir::Dirs);
-    ui->treeView->setModel(drivesModel);
-    ui->treeView->setRootIndex(drivesModel->setRootPath(rootPath+"/../"));
-    ui->treeView->hideColumn(1);
-    ui->treeView->hideColumn(2);
-    ui->treeView->hideColumn(3);
+    this->drivesModel->setFilter(QDir::NoDotAndDotDot | QDir::Dirs);
+    this->ui->treeView->setModel(this->drivesModel);
+    this->ui->treeView->setRootIndex(this->drivesModel->setRootPath(rootPath+"/../"));
+    this->ui->treeView->hideColumn(1);
+    this->ui->treeView->hideColumn(2);
+    this->ui->treeView->hideColumn(3);
 
-    filesModel->setFilter(QDir::NoDotAndDotDot | QDir::Files);
-    ui->listView->setModel(filesModel);
-    ui->listView->setRootIndex(filesModel->setRootPath(rootPath));
+    this->filesModel->setFilter(QDir::NoDotAndDotDot | QDir::Files);
+    this->ui->listView->setModel(this->filesModel);
+    this->ui->listView->setRootIndex(this->filesModel->setRootPath(rootPath));
 
     this->ui->listView->show();
     this->ui->treeView->show();
+}
+
+void MainWindow::buildChannelConfig()
+{
+    QStringList strlist;
+    strlist.append(QString("Channel Name"));
+    this->channelConfigModel->setHorizontalHeaderLabels(strlist);
+
+    this->ui->channelViewNew->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    this->ui->channelViewNew->setSelectionBehavior(QAbstractItemView::SelectRows);
+    this->ui->channelViewNew->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    this->ui->channelViewNew->setAcceptDrops(false);
+    this->ui->channelViewNew->setDragEnabled(false);
+    this->ui->channelViewNew->setModel(this->channelConfigModel);
 }
 
 void MainWindow::buildPlaylistView()
 {
     this->ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     this->ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    this->ui->tableView->setModel(playlistModel);
+    this->ui->tableView->setModel(this->playlistModel);
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event)
@@ -349,6 +365,25 @@ void MainWindow::enableSeekButtons(bool isEnabled)
     this->ui->fforwardButton->setEnabled(isEnabled);
     this->ui->backwardButton->setEnabled(isEnabled);
     this->ui->fbackwardButton->setEnabled(isEnabled);
+}
+
+void MainWindow::updateChannelConfig(const SongFormat& currentFormat)
+{
+    this->channelConfigModel->setRowCount(currentFormat.Voices);
+    for(int i=0; i < currentFormat.Voices; i++)
+    {
+        const string& voiceName = currentFormat.VoiceName[i];
+        QStandardItem *item = new QStandardItem(QString::fromStdString(voiceName));
+
+        QBrush b(currentFormat.VoiceIsMuted[i] ? Qt::red : Qt::green);
+        item->setBackground(b);
+
+        QBrush f(currentFormat.VoiceIsMuted[i] ? Qt::white : Qt::black);
+        item->setForeground(f);
+
+        item->setTextAlignment(Qt::AlignCenter);
+        this->channelConfigModel->setItem(i, 0, item);
+    }
 }
 
 void MainWindow::showError(const QString& detail, const QString& general)
