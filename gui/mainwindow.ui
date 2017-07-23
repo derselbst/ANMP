@@ -374,6 +374,17 @@ border-radius: 4px;
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="styleSheet">
+         <string notr="true">QTableWidget::item
+{
+  selection-background-color: rgba(0,0,139, 50);
+  selection-color: rgba(0,0,139, 50);
+};
+/*QTableWidget::item:selected
+{
+  background-color: rgba(0,0,139, 100);
+}*/</string>
+        </property>
        </widget>
       </item>
      </layout>
@@ -637,11 +648,11 @@ border-radius: 4px;
  <connections/>
  <buttongroups>
   <buttongroup name="controlButtonsHideFirst"/>
-  <buttongroup name="controlButtonsHideSecond"/>
   <buttongroup name="controlButtonsAlwaysVisible">
    <property name="exclusive">
     <bool>false</bool>
    </property>
   </buttongroup>
+  <buttongroup name="controlButtonsHideSecond"/>
  </buttongroups>
 </ui>

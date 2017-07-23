@@ -316,17 +316,27 @@ void MainWindow::AddSongs(QStringList files)
     this->playlistModel->asyncAdd(files);
 }
 
-void MainWindow::DoChannelMuting(const QModelIndex&)
+void MainWindow::DoChannelMuting(const QModelIndex& index)
 {
-    const QItemSelectionModel* sel = this->ui->channelViewNew->selectionModel();
     QModelIndex root = this->channelConfigModel->invisibleRootItem()->index();
     const SongFormat& f = this->player->getCurrentSong()->Format;
+    QItemSelectionModel* sel = this->ui->channelViewNew->selectionModel();
+    QModelIndexList selRows = sel->selectedRows();
 
     for(int i=0; i<f.Voices; i++)
     {
         f.VoiceIsMuted[i] = f.VoiceIsMuted[i] ^ sel->isRowSelected(i,root);
     }
     this->updateChannelConfig(f);
+
+    // restore selection and focus
+    sel->clearSelection();
+    sel->setCurrentIndex(index, QItemSelectionModel::NoUpdate);
+    for(QModelIndex i : selRows)
+    {
+        sel->select(i, QItemSelectionModel::Select);
+    }
+    this->ui->channelViewNew->setFocus();
 }
 
 void MainWindow::updateStatusBar(QString file, int cur, int total)
