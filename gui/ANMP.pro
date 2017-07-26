@@ -24,6 +24,7 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp\
         PlaylistView.cpp\
+        ChannelConfigView.cpp\
         PlaylistModel.cpp \
         PlayheadSlider.cpp\
         configdialog.cpp \
@@ -35,7 +36,8 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h PlaylistView.h PlaylistModel.h configdialog.h \
     applets/analyzer/AnalyzerApplet.h overlaycontrol.h \
     PlayheadSlider.h \
-    applets/channel/channelconfig.h
+    applets/channel/channelconfig.h \
+    ChannelConfigView.h
 
 FORMS    += mainwindow.ui configdialog.ui \
     applets/analyzer/AnalyzerApplet.ui overlaycontrol.ui \

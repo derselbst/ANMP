@@ -382,6 +382,8 @@ void MainWindow::updateChannelConfig(const SongFormat& currentFormat)
         item->setForeground(f);
 
         item->setTextAlignment(Qt::AlignCenter);
+        item->setCheckable(false);
+        item->setCheckState(currentFormat.VoiceIsMuted[i] ? Qt::Unchecked : Qt::Checked);
         this->channelConfigModel->setItem(i, 0, item);
     }
 }

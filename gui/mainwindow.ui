@@ -367,23 +367,12 @@ border-radius: 4px;
     <item>
      <layout class="QVBoxLayout" name="mixLayout">
       <item>
-       <widget class="QTableView" name="channelViewNew">
+       <widget class="ChannelConfigView" name="channelViewNew">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QTableWidget::item
-{
-  selection-background-color: rgba(0,0,139, 50);
-  selection-color: rgba(0,0,139, 50);
-};
-/*QTableWidget::item:selected
-{
-  background-color: rgba(0,0,139, 100);
-}*/</string>
         </property>
        </widget>
       </item>
@@ -641,6 +630,11 @@ border-radius: 4px;
    <extends>QSlider</extends>
    <header>PlayheadSlider.h</header>
   </customwidget>
+  <customwidget>
+   <class>ChannelConfigView</class>
+   <extends>QTableView</extends>
+   <header>ChannelConfigView.h</header>
+  </customwidget>
  </customwidgets>
  <resources>
   <include location="icons.qrc"/>
@@ -648,11 +642,11 @@ border-radius: 4px;
  <connections/>
  <buttongroups>
   <buttongroup name="controlButtonsHideFirst"/>
+  <buttongroup name="controlButtonsHideSecond"/>
   <buttongroup name="controlButtonsAlwaysVisible">
    <property name="exclusive">
     <bool>false</bool>
    </property>
   </buttongroup>
-  <buttongroup name="controlButtonsHideSecond"/>
  </buttongroups>
 </ui>

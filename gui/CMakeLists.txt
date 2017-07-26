@@ -25,6 +25,7 @@ if(USE_GUI)
         PlaylistModel.cpp
         PlaylistView.cpp
         PlayheadSlider.cpp
+        ChannelConfigView.cpp
 #         ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml # cause this xml to be a dependency and thus force it to get generated
     )
     
