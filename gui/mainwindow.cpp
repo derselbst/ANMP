@@ -56,6 +56,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // init UI
     this->ui->setupUi(this);
+    this->setWindowTitleCustom("");
 
     // connect main buttons
     connect(this->ui->playButton,       &QPushButton::toggled, this, [this](bool){this->MainWindow::TogglePlayPause();});
@@ -279,6 +280,21 @@ void MainWindow::buildPlaylistView()
     this->ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     this->ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
     this->ui->tableView->setModel(this->playlistModel);
+}
+
+
+void MainWindow::setWindowTitleCustom(QString title)
+{
+    if(title.isEmpty())
+    {
+        title.append("ANMP " ANMP_VERSION);
+    }
+    else
+    {
+        title.append(" :: ANMP");
+    }
+
+    this->setWindowTitle(title);
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event)

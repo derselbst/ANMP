@@ -73,6 +73,8 @@ private:
     // must be private because qdbuscpp2xml only generates garbage for it
     void DoChannelMuting(bool (*pred)(bool voiceIsMuted, bool voiceIsSelected));
 
+    void setWindowTitleCustom(QString);
+
 public slots:
     void Play();
     void Pause();

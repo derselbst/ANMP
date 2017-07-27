@@ -77,8 +77,7 @@ void MainWindow::slotCurrentSongChanged()
     const Song* s = this->player->getCurrentSong();
     if(s==nullptr)
     {
-        this->setWindowTitle("ANMP");
-
+        this->setWindowTitleCustom("");
         playheadSlider->SilentReset();
     }
     else
@@ -87,11 +86,11 @@ void MainWindow::slotCurrentSongChanged()
         QString interpret = QString::fromStdString(s->Metadata.Artist);
         if(title == "" || interpret == "")
         {
-            this->setWindowTitle(QString::fromStdString(::mybasename(s->Filename)) + " :: ANMP");
+            this->setWindowTitleCustom(QString::fromStdString(::mybasename(s->Filename)));
         }
         else
         {
-            this->setWindowTitle(interpret + " - " + title  + " :: ANMP");
+            this->setWindowTitleCustom(interpret + " - " + title);
         }
         playheadSlider->setMaximum(s->getFrames());
 

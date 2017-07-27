@@ -10,9 +10,6 @@
     <height>452</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>ANMP</string>
-  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
@@ -703,12 +700,12 @@ border-radius: 4px;
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="controlButtonsHideFirst"/>
-  <buttongroup name="controlButtonsHideSecond"/>
   <buttongroup name="controlButtonsAlwaysVisible">
    <property name="exclusive">
     <bool>false</bool>
    </property>
   </buttongroup>
+  <buttongroup name="controlButtonsHideSecond"/>
+  <buttongroup name="controlButtonsHideFirst"/>
  </buttongroups>
 </ui>
