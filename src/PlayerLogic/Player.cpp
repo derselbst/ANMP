@@ -147,7 +147,7 @@ void Player::play ()
     if(this->currentSong==nullptr)
     {
         // maybe we are uninitialized. ask playlist to be sure
-        Song* s=this->playlist->current();
+        Song* s=this->playlist->getCurrentSong();
         if(s==nullptr)
         {
             return;

@@ -398,14 +398,14 @@ void PlaylistModel::workerLoop()
 }
 
 
-void PlaylistModel::add(Song* s)
+size_t PlaylistModel::add(Song* s)
 {
     Playlist::add(s);
 
     this->insertRows(this->rowCount(QModelIndex()), 1);
 }
 
-void PlaylistModel::remove(int i)
+void PlaylistModel::remove(size_t i)
 {
     this->removeRows(i, 1);
 }
@@ -419,7 +419,7 @@ void PlaylistModel::clear()
     this->removeRows(0, Elements);
 }
 
-Song* PlaylistModel::setCurrentSong (unsigned int id)
+Song* PlaylistModel::setCurrentSong (size_t id)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
 
@@ -472,7 +472,7 @@ QColor PlaylistModel::calculateRowColor(int row) const
     return QColor(Qt::white);
 }
 
-void PlaylistModel::shuffle(unsigned int start, unsigned int end)
+void PlaylistModel::shuffle(size_t start, size_t end)
 {
     this->beginResetModel();
     Playlist::shuffle(start, end);

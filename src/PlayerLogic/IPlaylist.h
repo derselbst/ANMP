@@ -1,6 +1,8 @@
 #ifndef IPLAYLIST_H
 #define IPLAYLIST_H
 
+#include <cstddef>
+
 class Song;
 
 /**
@@ -23,8 +25,10 @@ public:
      * appends a song to the playlist
      *
      * @param song the song to be added
+     * 
+     * @return a unique ID of the added song
      */
-    virtual void add (Song* song) = 0;
+    virtual size_t add (Song* song) = 0;
 
 
     /**
@@ -39,9 +43,9 @@ public:
     /**
      * @brief removes an element at the given index
      *
-     * @param idx a zero-based index, specifying the element to be removed
+     * @param ID a zero-based index, specifying the element to be removed
      */
-    virtual void remove (int idx) = 0;
+    virtual void remove (size_t ID) = 0;
 
     /**
      * @brief clears the playlist
@@ -53,11 +57,11 @@ public:
     /**
      * @brief gets the song at the given index
      *
-     * @param idx a zero-based index, specifying the element to be retrieved
+     * @param ID a zero-based index, specifying the element to be retrieved
      *
      * @return returns the song at the specified index, nullptr if song does not exist
      */
-    virtual Song* getSong(unsigned int idx) const = 0;
+    virtual Song* getSong(size_t ID) const = 0;
 
 
     /**
@@ -85,18 +89,19 @@ public:
      *
      * @return returns the currently played back song, nullptr if there is no song set, which makes playback stop
      */
-    virtual Song* current () = 0;
+    virtual Song*  getCurrentSong () = 0;
+    virtual size_t getCurrentSongId () = 0;
 
     /**
      * @brief sets the song currently played back
      *
      * the song at the givend index becomes the currently played song
      *
-     * @param idx a zero-based index, specifying the element to be set for current playback
+     * @param ID a zero-based index, specifying the element to be set for current playback
      *
-     * @return returns the song at the specified index (same as this->getSong(idx))
+     * @return returns the song at the specified index (same as this->getSong(ID))
      */
-    virtual Song* setCurrentSong(unsigned int idx) = 0;
+    virtual Song* setCurrentSong(size_t ID) = 0;
 
 };
 

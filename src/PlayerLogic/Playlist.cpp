@@ -9,11 +9,13 @@ Playlist::~Playlist()
     this->clear();
 }
 
-void Playlist::add (Song* song)
+size_t Playlist::add (Song* song)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
 
     this->queue.push_back(song);
+    
+    return this->queue.size()-1;
 }
 
 
@@ -25,7 +27,7 @@ void Playlist::remove (Song* song)
     delete song;
 }
 
-void Playlist::remove (int i)
+void Playlist::remove (size_t i)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
 
@@ -54,11 +56,18 @@ void Playlist::clear()
     this->queue.clear();
 }
 
-Song* Playlist::current ()
+Song* Playlist::getCurrentSong ()
 {
     lock_guard<recursive_mutex> lck(this->mtx);
 
     return this->getSong(this->currentSong);
+}
+
+size_t Playlist::getCurrentSongId ()
+{
+    lock_guard<recursive_mutex> lck(this->mtx);
+
+    return this->currentSong;
 }
 
 Song* Playlist::next ()
@@ -85,7 +94,7 @@ Song* Playlist::previous ()
     return this->setCurrentSong((this->currentSong+this->queue.size()-1) % this->queue.size());
 }
 
-Song* Playlist::getSong(unsigned int id) const
+Song* Playlist::getSong(size_t id) const
 {
     lock_guard<recursive_mutex> lck(this->mtx);
 
@@ -97,7 +106,7 @@ Song* Playlist::getSong(unsigned int id) const
     return nullptr;
 }
 
-Song* Playlist::setCurrentSong(unsigned int id)
+Song* Playlist::setCurrentSong(size_t id)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
 
@@ -110,7 +119,7 @@ Song* Playlist::setCurrentSong(unsigned int id)
     return s;
 }
 
-void Playlist::shuffle(unsigned int start, unsigned int end)
+void Playlist::shuffle(size_t start, size_t end)
 {
     if(start > end)
     {
@@ -131,7 +140,7 @@ void Playlist::shuffle(unsigned int start, unsigned int end)
  * @param[in] steps if positive: move them "steps" steps further to the end of the queue
  *                  if negative: move them "steps" steps further to the start of the queue
  */
-void Playlist::move(signed int source, unsigned int count, int steps)
+void Playlist::move(size_t source, unsigned int count, int steps)
 {
     lock_guard<recursive_mutex> lck(this->mtx);
 

@@ -17,27 +17,28 @@ public:
     virtual ~Playlist();
 
 
-    void add (Song* song) override;
+    size_t add (Song* song) override;
 
     void remove (Song* song) override;
 
-    void remove (int i) override;
+    void remove (size_t i) override;
 
     void clear() override;
 
-    Song* current () override;
+    Song*  getCurrentSong () override;
+    size_t getCurrentSongId () override;
 
     Song* next () override;
 
     Song* previous () override;
 
-    Song* getSong(unsigned int id) const override;
+    Song* getSong(size_t id) const override;
 
-    Song* setCurrentSong(unsigned int id) override;
+    Song* setCurrentSong(size_t id) override;
 
-    void move(signed int source, unsigned int count, int steps);
+    void move(size_t source, unsigned int count, int steps);
 
-    virtual void shuffle(unsigned int start, unsigned int end);
+    virtual void shuffle(size_t start, size_t end);
 
 
 protected:

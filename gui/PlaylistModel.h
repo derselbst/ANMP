@@ -44,15 +44,15 @@ public:
     bool canDropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const override;
     bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
 
-    void add (Song* song) override;
+    size_t add (Song* song) override;
 
-    void remove (int i) override;
+    void remove (size_t i) override;
 
     void clear() override;
 
-    Song* setCurrentSong (unsigned int id) override;
+    Song* setCurrentSong (size_t id) override;
 
-    void shuffle(unsigned int, unsigned int) override;
+    void shuffle(size_t, size_t) override;
 
 
     template<typename T>
