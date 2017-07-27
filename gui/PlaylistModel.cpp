@@ -400,9 +400,11 @@ void PlaylistModel::workerLoop()
 
 size_t PlaylistModel::add(Song* s)
 {
-    Playlist::add(s);
+    size_t id = Playlist::add(s);
 
     this->insertRows(this->rowCount(QModelIndex()), 1);
+    
+    return id;
 }
 
 void PlaylistModel::remove(size_t i)
