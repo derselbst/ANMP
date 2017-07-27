@@ -316,7 +316,14 @@ void MainWindow::AddSongs(QStringList files)
     this->playlistModel->asyncAdd(files);
 }
 
-void MainWindow::DoChannelMuting(const QModelIndex& index)
+void MainWindow::ToggleSelectedVoices(const QModelIndex& index)
+{
+    this->DoChannelMuting([](bool voiceMuted, bool voiceSelected){return voiceMuted != voiceSelected;});
+
+    this->ui->channelViewNew->selectionModel()->setCurrentIndex(index, QItemSelectionModel::NoUpdate);
+}
+
+void MainWindow::DoChannelMuting(bool (*pred)(bool voiceIsMuted, bool voiceIsSelected))
 {
     QModelIndex root = this->channelConfigModel->invisibleRootItem()->index();
     const SongFormat& f = this->player->getCurrentSong()->Format;
@@ -325,18 +332,47 @@ void MainWindow::DoChannelMuting(const QModelIndex& index)
 
     for(int i=0; i<f.Voices; i++)
     {
-        f.VoiceIsMuted[i] = f.VoiceIsMuted[i] ^ sel->isRowSelected(i,root);
+        f.VoiceIsMuted[i] = (*pred)(f.VoiceIsMuted[i], sel->isRowSelected(i,root));
     }
     this->updateChannelConfig(f);
 
     // restore selection and focus
     sel->clearSelection();
-    sel->setCurrentIndex(index, QItemSelectionModel::NoUpdate);
     for(QModelIndex i : selRows)
     {
         sel->select(i, QItemSelectionModel::Select);
     }
     this->ui->channelViewNew->setFocus();
+}
+
+void MainWindow::MuteSelectedVoices()
+{
+    this->DoChannelMuting([](bool voiceMuted, bool voiceSelected){return voiceMuted || voiceSelected;});
+}
+
+void MainWindow::UnmuteSelectedVoices()
+{
+    this->DoChannelMuting([](bool voiceMuted, bool voiceSelected){return voiceMuted && !voiceSelected;});
+}
+
+void MainWindow::SoloSelectedVoices()
+{
+    this->DoChannelMuting([](bool, bool voiceSelected){return !voiceSelected;});
+}
+
+void MainWindow::MuteAllVoices()
+{
+    this->DoChannelMuting([](bool, bool){return true;});
+}
+
+void MainWindow::UnmuteAllVoices()
+{
+    this->DoChannelMuting([](bool, bool){return false;});
+}
+
+void MainWindow::ToggleAllVoices()
+{
+    this->DoChannelMuting([](bool voiceMuted, bool){return voiceMuted != true;});
 }
 
 void MainWindow::updateStatusBar(QString file, int cur, int total)

@@ -468,6 +468,7 @@ border-radius: 4px;
     </property>
     <addaction name="actionAdd_Songs"/>
     <addaction name="actionAdd_Playback_Stop"/>
+    <addaction name="actionAdd_Playback_Stop_At_End"/>
     <addaction name="actionShuffle_Playst"/>
     <addaction name="separator"/>
     <addaction name="actionClear_Playlist"/>
@@ -509,9 +510,25 @@ border-radius: 4px;
     <addaction name="actionAbout_Qt"/>
     <addaction name="actionAbout_ANMP"/>
    </widget>
+   <widget class="QMenu" name="menuVoices">
+    <property name="title">
+     <string>Voices</string>
+    </property>
+    <addaction name="actionSelect_Muted_Voices"/>
+    <addaction name="actionSelect_Unmuted_Voices"/>
+    <addaction name="separator"/>
+    <addaction name="actionMute_Selected_Voices"/>
+    <addaction name="actionUnmute_Selected_Voices"/>
+    <addaction name="actionSolo_Selected_Voices"/>
+    <addaction name="separator"/>
+    <addaction name="actionMute_All_Voices"/>
+    <addaction name="actionUnmute_All_Voices"/>
+    <addaction name="actionToggle_All_Voices"/>
+   </widget>
    <addaction name="menuHello"/>
    <addaction name="menuPlayer"/>
    <addaction name="menuPlaylist"/>
+   <addaction name="menuVoices"/>
    <addaction name="menuShow"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -613,6 +630,51 @@ border-radius: 4px;
   <action name="actionAbout_ANMP">
    <property name="text">
     <string>About ANMP</string>
+   </property>
+  </action>
+  <action name="actionSelect_Muted_Voices">
+   <property name="text">
+    <string>Select Muted Voices</string>
+   </property>
+  </action>
+  <action name="actionSelect_Unmuted_Voices">
+   <property name="text">
+    <string>Select Unmuted Voices</string>
+   </property>
+  </action>
+  <action name="actionMute_Selected_Voices">
+   <property name="text">
+    <string>Mute Selected Voices</string>
+   </property>
+  </action>
+  <action name="actionUnmute_Selected_Voices">
+   <property name="text">
+    <string>Unmute Selected Voices</string>
+   </property>
+  </action>
+  <action name="actionMute_All_Voices">
+   <property name="text">
+    <string>Mute All Voices</string>
+   </property>
+  </action>
+  <action name="actionUnmute_All_Voices">
+   <property name="text">
+    <string>Unmute All Voices</string>
+   </property>
+  </action>
+  <action name="actionToggle_All_Voices">
+   <property name="text">
+    <string>Toogle All Voices</string>
+   </property>
+  </action>
+  <action name="actionAdd_Playback_Stop_At_End">
+   <property name="text">
+    <string>Add Playback-Stop At End</string>
+   </property>
+  </action>
+  <action name="actionSolo_Selected_Voices">
+   <property name="text">
+    <string>Solo Selected Voices</string>
    </property>
   </action>
  </widget>

@@ -8,18 +8,7 @@
 
 ChannelConfigView::ChannelConfigView(QWidget * parent)
     : QTableView(parent)
-{
-    this->createActions();
-}
-
-void ChannelConfigView::createActions()
-{
-    this->actSelMuted = new QAction("Select muted voices", this);
-    connect(this->actSelMuted, &QAction::triggered, this, &ChannelConfigView::SelectMuted);
-    
-    this->actSelUnmuted = new QAction("Select unmuted voices", this);
-    connect(this->actSelUnmuted, &QAction::triggered, this, &ChannelConfigView::SelectUnmuted);
-}
+{}
 
 void ChannelConfigView::Select(Qt::CheckState state)
 {
@@ -41,21 +30,17 @@ void ChannelConfigView::Select(Qt::CheckState state)
     }
 }
 
-void ChannelConfigView::SelectUnmuted()
+void ChannelConfigView::SetContextMenu(QMenu *menu)
 {
-    this->Select(Qt::Checked);
-}
-
-void ChannelConfigView::SelectMuted()
-{
-    this->Select(Qt::Unchecked);
+    this->contextMenu = menu;
 }
 
 void ChannelConfigView::contextMenuEvent(QContextMenuEvent *event)
-{    
-    QMenu menu(this);
-    menu.addAction(actSelMuted);
-    menu.addAction(actSelUnmuted);
-    menu.exec(event->globalPos());
+{
+    // open the context menu slightly below where user clicked, else he might accidently trigger first menu element
+    QPoint offset(0, 7);
+    QPoint p = event->globalPos();
+    p+=offset;
+    this->contextMenu->exec(p);
 
 }

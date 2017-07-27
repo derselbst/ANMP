@@ -82,7 +82,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     connect(this->ui->actionAdd_Songs,        &QAction::triggered, this, [this]{this->playlistModel->asyncAdd(QFileDialog::getOpenFileNames(this, "Open Audio Files", QString(), ""));});
-    connect(this->ui->actionAdd_Playback_Stop,&QAction::triggered, this, [this]{this->playlistModel->add(nullptr);});
+    connect(this->ui->actionAdd_Playback_Stop,&QAction::triggered, this, [this]
+    {
+//         size_t idx = this->playlistModel->add(nullptr);
+//         size_t target = this->playlistModel->getCurrentSongId();
+//         this->playlistModel->moveRows(QModelIndex(), idx, 1, QModelIndex(), target);
+    });
+    connect(this->ui->actionAdd_Playback_Stop_At_End,&QAction::triggered, this, [this]{this->playlistModel->add(nullptr);});
     connect(this->ui->actionShuffle_Playst,   &QAction::triggered, this, &MainWindow::shufflePlaylist);
     connect(this->ui->actionClear_Playlist,   &QAction::triggered, this, &MainWindow::clearPlaylist);
 
@@ -106,8 +112,18 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->playlistModel, &PlaylistModel::SongAdded, this, &MainWindow::updateStatusBar);
     connect(this->playlistModel, &PlaylistModel::UnloadCurrentSong, this, [this]{this->player->stop(); this->player->setCurrentSong(nullptr);});
 
-    connect(this->ui->channelViewNew, &QTableView::activated,     this, &MainWindow::DoChannelMuting);
-    connect(this->ui->channelViewNew, &QTableView::doubleClicked, this, &MainWindow::DoChannelMuting);
+
+    connect(this->ui->actionSelect_Muted_Voices,    &QAction::triggered, this, [this]{this->ui->channelViewNew->Select(Qt::Unchecked);});
+    connect(this->ui->actionSelect_Unmuted_Voices,  &QAction::triggered, this, [this]{this->ui->channelViewNew->Select(Qt::Checked);});
+    connect(this->ui->actionMute_Selected_Voices,   &QAction::triggered, this, &MainWindow::MuteSelectedVoices);
+    connect(this->ui->actionUnmute_Selected_Voices, &QAction::triggered, this, &MainWindow::UnmuteSelectedVoices);
+    connect(this->ui->actionSolo_Selected_Voices, &QAction::triggered, this,   &MainWindow::SoloSelectedVoices);
+    connect(this->ui->actionMute_All_Voices,        &QAction::triggered, this, &MainWindow::MuteAllVoices);
+    connect(this->ui->actionUnmute_All_Voices,      &QAction::triggered, this, &MainWindow::UnmuteAllVoices);
+    connect(this->ui->actionToggle_All_Voices,      &QAction::triggered, this, &MainWindow::ToggleAllVoices);
+
+    connect(this->ui->channelViewNew, &QTableView::activated,     this, &MainWindow::ToggleSelectedVoices);
+    connect(this->ui->channelViewNew, &QTableView::doubleClicked, this, &MainWindow::ToggleSelectedVoices);
 
     this->setWindowState(Qt::WindowMaximized);
 
@@ -242,6 +258,20 @@ void MainWindow::buildChannelConfig()
     this->ui->channelViewNew->setAcceptDrops(false);
     this->ui->channelViewNew->setDragEnabled(false);
     this->ui->channelViewNew->setModel(this->channelConfigModel);
+
+    QMenu* m = new QMenu(this->ui->channelViewNew);
+    m->addAction(this->ui->actionSelect_Muted_Voices);
+    m->addAction(this->ui->actionSelect_Unmuted_Voices);
+    m->addSeparator();
+    m->addAction(this->ui->actionMute_Selected_Voices);
+    m->addAction(this->ui->actionUnmute_Selected_Voices);
+    m->addAction(this->ui->actionSolo_Selected_Voices);
+    m->addSeparator();
+    m->addAction(this->ui->actionMute_All_Voices);
+    m->addAction(this->ui->actionUnmute_All_Voices);
+    m->addAction(this->ui->actionToggle_All_Voices);
+
+    this->ui->channelViewNew->SetContextMenu(m);
 }
 
 void MainWindow::buildPlaylistView()

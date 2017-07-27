@@ -70,6 +70,9 @@ private:
 
     void showError(const QString& msg, const QString& gen="An Error occurred");
 
+    // must be private because qdbuscpp2xml only generates garbage for it
+    void DoChannelMuting(bool (*pred)(bool voiceIsMuted, bool voiceIsSelected));
+
 public slots:
     void Play();
     void Pause();
@@ -84,11 +87,18 @@ public slots:
     void FastSeekForward();
     void FastSeekBackward();
     void AddSongs(QStringList); // only for dbus
-    void DoChannelMuting(const QModelIndex &index);
+    void MuteSelectedVoices();
+    void UnmuteSelectedVoices();
+    void SoloSelectedVoices();
+    void MuteAllVoices();
+    void UnmuteAllVoices();
+    void ToggleAllVoices();
+    void ToggleSelectedVoices(const QModelIndex &index);
     
 protected slots:
     friend class PlaylistModel;
     friend class PlayheadSlider;
+
 
     void slotIsPlayingChanged(bool isPlaying, bool, QString);
     void slotSeek(long long);

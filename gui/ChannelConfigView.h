@@ -12,18 +12,12 @@ class ChannelConfigView : public QTableView
 
 public:
     ChannelConfigView(QWidget * parent = 0);
-
-public slots:
-    void SelectMuted();
-    void SelectUnmuted();
+    void Select(Qt::CheckState state);
+    void SetContextMenu(QMenu* menu);
 
 protected:
     void contextMenuEvent(QContextMenuEvent *event) override;
 
-private:
-    void createActions();
-    void Select(Qt::CheckState state);
 
-    QAction* actSelMuted;
-    QAction* actSelUnmuted;
+    QMenu* contextMenu;
 };
