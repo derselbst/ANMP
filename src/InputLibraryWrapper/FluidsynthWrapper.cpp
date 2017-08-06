@@ -90,7 +90,7 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     fluid_synth_system_reset(this->synth);
     fluid_synth_bank_select(this->synth, 9, 0); // try to force drum channel to bank 0
         
-    // increase default polyphone of 256
+    // increase default polyphone
     fluid_synth_set_polyphony(this->synth, 1024*4);
     
     // set highest resampler quality on all channels
@@ -101,6 +101,13 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     fluid_synth_set_reverb(this->synth, gConfig.FluidsynthRoomSize, gConfig.FluidsynthDamping, gConfig.FluidsynthWidth, gConfig.FluidsynthLevel);
     
     fluid_synth_set_chorus_on(this->synth, gConfig.FluidsynthEnableChorus);
+    
+    // make sure lsb mod and breath controller used by CBFD's IIR bandpass filter are inited to their default value to avoid unhearable instruments
+    for(int i=0; i<fluid_synth_count_midi_channels(this->synth); i++)
+    {
+        fluid_synth_cc(this->synth, i, 33, 0);
+        fluid_synth_cc(this->synth, i, 34, 127);
+    }
     
     // then update samplerate
     fluid_synth_set_sample_rate(this->synth, gConfig.FluidsynthSampleRate);
