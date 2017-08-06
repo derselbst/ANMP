@@ -5,6 +5,7 @@
 
 IAudioOutput::IAudioOutput()
 {
+    // by default assume that stereo output will be sent to hardware
     this->IAudioOutput::SetOutputChannels(2);
 }
 

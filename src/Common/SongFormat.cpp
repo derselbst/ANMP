@@ -36,6 +36,29 @@ void SongFormat::SetVoices(uint16_t nVoices)
     this->Voices = nVoices;
 }
 
+void SongFormat::ConfigureVoices(const uint16_t nChannels, const uint16_t defaultChannelsPerVoice, bool force)
+{
+    if(!force && this->IsValid())
+    {
+        // current voice config already valid, user might have changed it, do nothing if not forced
+        return;
+    }
+    
+    // by default group them to stereo voices
+    int nvoices = nChannels / defaultChannelsPerVoice;
+    int remainingvoices = (nChannels % defaultChannelsPerVoice == 0) ? 0 : 1;
+    this->SetVoices(nvoices + remainingvoices);
+    
+    for(int i=0; i<nvoices; i++)
+    {
+        this->VoiceChannels[i] = defaultChannelsPerVoice; // == nChannels / nvoices
+    }
+    for(int i=0; i<remainingvoices; i++)
+    {
+        this->VoiceChannels[nvoices + i] = nChannels % defaultChannelsPerVoice;
+    }
+}
+
 
 /**
  * returns bitrate in bit/s

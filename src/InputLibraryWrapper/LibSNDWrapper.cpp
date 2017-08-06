@@ -43,9 +43,8 @@ void LibSNDWrapper::open ()
         THROW_RUNTIME_ERROR("channels == " << sfinfo.channels);
     };
 
-    // dont know how many voices there can be, must be adjusted by user
-    this->Format.SetVoices(1);
-    this->Format.VoiceChannels[0] = sfinfo.channels;
+    // group all available channels to individual stereo voices
+    this->Format.ConfigureVoices(sfinfo.channels, 2);
     this->Format.SampleRate = sfinfo.samplerate;
 
     // set scale factor for file containing floats as recommended by:

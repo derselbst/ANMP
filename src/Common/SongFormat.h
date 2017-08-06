@@ -45,6 +45,13 @@ struct SongFormat
      * whether this instance holds valid data
      */
     bool IsValid();
+    
+    /**
+     * from \c nChannels create voices and assign each as many as \c defaultChannelsPerVoice channels
+     * 
+     * will do nothing if this.IsValid()==true (unless update \c forced)
+     */
+    void ConfigureVoices(const uint16_t nChannels, const uint16_t defaultChannelsPerVoice, bool force=false);
 
 };
 
