@@ -5,7 +5,8 @@
 
 
 // exception-free waiting
-#define WAIT(future)     try{ future.wait(); } catch(future_error& e){}
+// gnu's stdc++ throws an exception if future not valid; llvm's libc++ needs the valid() call
+#define WAIT(future)     try{ if(future.valid()) future.wait(); } catch(future_error& e){}
 
 using namespace std;
 
