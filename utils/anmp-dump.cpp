@@ -15,7 +15,7 @@ using namespace std::experimental::filesystem;
 
 void onSongChanged(void* pthis)
 {
-  Song* s = static_cast<Playlist*>(pthis)->current();
+  Song* s = static_cast<Playlist*>(pthis)->getCurrentSong();
   
   CLOG(LogLevel_t::Info, "Now handling: " << s->Filename);
 }

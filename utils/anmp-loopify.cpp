@@ -60,7 +60,7 @@ int main(int argc, char** argv)
     {
     case 4:
         delta = atoll(argv[3]);
-        [[fallthrough]]
+        [[fallthrough]];
     case 3:
         epsilon = atoll(argv[2]);
         [[fallthrough]];
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     plist.add(nullptr);
     
     
-    Song* song = plist.current();
+    Song* song = plist.getCurrentSong();
     do
     {
         song->open();
