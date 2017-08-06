@@ -2,6 +2,7 @@
 
 #include <exception>
 #include <stdexcept>
+#include <string>
 
 class NotImplementedException : public std::logic_error
 {
