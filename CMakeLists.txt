@@ -38,7 +38,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     if(USE_LIBCXX)
         set(STDCXX "libc++")
     else(USE_LIBCXX)
-        set(STDCXX "stdc++")
+        set(STDCXX "libstdc++")
     endif(USE_LIBCXX)
     
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -stdlib=${STDCXX}")
