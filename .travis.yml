@@ -27,7 +27,6 @@ matrix:
             - libsamplerate0-dev
             - libmodplug-dev
             - portaudio19-dev
-            - libebur128-dev
             - qt5-default
             - qtbase5-dev
             - libqt5opengl5-dev
@@ -56,7 +55,6 @@ matrix:
             - libsamplerate0-dev
             - libmodplug-dev
             - portaudio19-dev
-            - libebur128-dev
             - qt5-default
             - qtbase5-dev
             - libqt5opengl5-dev
@@ -85,7 +83,6 @@ matrix:
             - libsamplerate0-dev
             - libmodplug-dev
             - portaudio19-dev
-            - libebur128-dev
             - qt5-default
             - qtbase5-dev
             - libqt5opengl5-dev
@@ -116,7 +113,6 @@ matrix:
             - libsamplerate0-dev
             - libmodplug-dev
             - portaudio19-dev
-            - libebur128-dev
             - qt5-default
             - qtbase5-dev
             - libqt5opengl5-dev
@@ -176,7 +172,6 @@ matrix:
             - libsamplerate0-dev
             - libmodplug-dev
             - portaudio19-dev
-            - libebur128-dev
             - qt5-default
             - qtbase5-dev
             - libqt5opengl5-dev
@@ -206,7 +201,6 @@ matrix:
             - libsamplerate0-dev
             - libmodplug-dev
             - portaudio19-dev
-            - libebur128-dev
             - qt5-default
             - qtbase5-dev
             - libqt5opengl5-dev
@@ -236,7 +230,6 @@ matrix:
             - libsamplerate0-dev
             - libmodplug-dev
             - portaudio19-dev
-            - libebur128-dev
             - qt5-default
             - qtbase5-dev
             - libqt5opengl5-dev
@@ -257,8 +250,6 @@ matrix:
       osx_image: xcode8
       env:
         - MATRIX_EVAL="brew install gcc && CC=gcc-6 && CXX=g++-6"
-
-
 
 before_install:
     - eval "${MATRIX_EVAL}"
