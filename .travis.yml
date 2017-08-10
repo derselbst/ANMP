@@ -179,7 +179,6 @@ matrix:
             - libqt5opengl5-dev
       env:
         - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
-
     ## works on Trusty
     #- os: linux
       #addons:
@@ -208,8 +207,6 @@ matrix:
             #- libqt5opengl5-dev
       #env:
         #- MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
-
-matrix:
   allow_failures:
     - os: osx
       osx_image: xcode8
