@@ -260,9 +260,7 @@ before_install:
     
 before_script:
     - mkdir build && cd build
-    - export CMAKE_FLAGS="-DUSE_LIBCXX=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo"
-    - if [ -z "$TRAVIS_TAG" ]; then export CMAKE_FLAGS="$CMAKE_FLAGS -DUSE_CCACHE=ON"; fi
     
 script:
-    - cmake ..
+    - cmake "-DUSE_LIBCXX=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo" ..
     - make -j4 anmp-qt
