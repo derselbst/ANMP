@@ -141,6 +141,11 @@ matrix:
         - MATRIX_EVAL="brew install gcc && CC=gcc-6 && CXX=g++-6"
 
 
-        
+
 before_install:
     - eval "${MATRIX_EVAL}"
+
+script:
+mkdir build && cd build
+cmake .. 
+make anmp-qt
