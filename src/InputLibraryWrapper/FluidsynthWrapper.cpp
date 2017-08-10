@@ -257,7 +257,7 @@ void FluidsynthWrapper::ConfigureChannels(SongFormat* f)
     
 }
 
-unsigned int FluidsynthWrapper::GetChannelsPerVoice()
+constexpr unsigned int FluidsynthWrapper::GetChannelsPerVoice()
 {
     return 2; //stereo
 }
@@ -266,14 +266,14 @@ unsigned int FluidsynthWrapper::GetAudioVoices()
 {
     int stereoChannels;
     fluid_settings_getint(this->settings, "synth.audio-channels", &stereoChannels);
-    return stereoChannels*2 / this->GetChannelsPerVoice();
+    return stereoChannels*2 / FluidsynthWrapper::GetChannelsPerVoice();
 }
 
 unsigned int FluidsynthWrapper::GetEffectVoices()
 {
     int chan;
     fluid_settings_getint(this->settings, "synth.effects-channels", &chan);
-    return chan*2 / this->GetChannelsPerVoice();
+    return chan*2 / FluidsynthWrapper::GetChannelsPerVoice();
 }
 
 unsigned int FluidsynthWrapper::GetVoices()
@@ -386,7 +386,8 @@ void FluidsynthWrapper::FinishSong(int millisec)
     
 void FluidsynthWrapper::Render(float* bufferToFill, frame_t framesToRender)
 {
-    int channels = this->GetVoices() * this->GetChannelsPerVoice();
+    constexpr unsigned int chanPerV = FluidsynthWrapper::GetChannelsPerVoice();
+    int channels = this->GetVoices() * chanPerV;
     
     // fluid_synth_process renders planar audio, i.e. each midi channel gets render to its own buffer, rather than having one buffer and interleaving PCM
     float** temp_buf = new float*[channels];
@@ -394,7 +395,7 @@ void FluidsynthWrapper::Render(float* bufferToFill, frame_t framesToRender)
     {
         temp_buf[i] = new float[framesToRender];
         
-        // incase fluidsynth doesnt fill up all buffers, zero them out to avoid noise
+        // in case fluidsynth doesnt fill up all buffers, zero them out to avoid noise
         memset(temp_buf[i], 0, framesToRender*sizeof(float));
     }
     
@@ -412,8 +413,8 @@ void FluidsynthWrapper::Render(float* bufferToFill, frame_t framesToRender)
         for(int frame=0; frame<framesToRender; frame++)
         {
             // frame by frame write planar audio to interleaved buffer
-            bufferToFill[frame * channels + (2*c+0)] = mix_buf_l[c][frame];
-            bufferToFill[frame * channels + (2*c+1)] = mix_buf_r[c][frame];
+            bufferToFill[frame * channels + (chanPerV*c+0)] = mix_buf_l[c][frame];
+            bufferToFill[frame * channels + (chanPerV*c+1)] = mix_buf_r[c][frame];
         }
     }
     
@@ -422,8 +423,8 @@ void FluidsynthWrapper::Render(float* bufferToFill, frame_t framesToRender)
         for(int frame=0; frame<framesToRender; frame++)
         {
             int d = audVoices+c;
-            bufferToFill[frame * channels + (2*d+0)] = fx_buf_l[c][frame];
-            bufferToFill[frame * channels + (2*d+1)] = fx_buf_r[c][frame];
+            bufferToFill[frame * channels + (chanPerV*d+0)] = fx_buf_l[c][frame];
+            bufferToFill[frame * channels + (chanPerV*d+1)] = fx_buf_r[c][frame];
         }
     }
     

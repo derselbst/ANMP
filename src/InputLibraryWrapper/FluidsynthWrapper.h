@@ -38,9 +38,9 @@ public:
     unsigned int GetVoices();
     unsigned int GetAudioVoices();
     unsigned int GetEffectVoices();
-    unsigned int GetChannelsPerVoice();
+    static constexpr unsigned int GetChannelsPerVoice();
     
-    // returns the tick count the sequencer had during a call to this.Init()
+    // returns the tick count the sequencer had during a call to this.DeepInit()
     unsigned int GetInitTick();
     
     void AddEvent(smf_event_t* event, double offset=0.0);
@@ -63,7 +63,7 @@ private:
     // fluidsynth's synth has no samplerate getter, so cache it here
     unsigned int cachedSampleRate = 0;
     
-    // tick count of the sequencer when this->Init() was called
+    // tick count of the sequencer when this->DeepInit() was called
     unsigned int initTick = 0;
 
     string cachedSf2;
