@@ -119,35 +119,37 @@ matrix:
       env:
         - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6"
 
-    ## works on Precise and Trusty
-    #- os: linux
-      #addons:
-        #apt:
-          #sources:
-            #- ubuntu-toolchain-r-test
-            #- llvm-toolchain-precise-3.7
-            #- george-edison55-precise-backports
-          #packages:
-            #- clang-3.7
-            #- cmake-data
-            #- cmake
-      #env:
-        #- MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
 
-    ## works on Precise and Trusty
-    #- os: linux
-      #addons:
-        #apt:
-          #sources:
-            #- ubuntu-toolchain-r-test
-            #- llvm-toolchain-precise-3.8
-            #- george-edison55-precise-backports
-          #packages:
-            #- clang-3.8
-            #- cmake-data
-            #- cmake
-      #env:
-        #- MATRIX_EVAL="CC=clang-3.8 && CXX=clang++-3.8"
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+            - george-edison55-precise-backports
+          packages:
+            - clang-3.8
+            - libc++-dev
+            - cmake-data
+            - cmake
+            - libcue-dev
+            - libgme-dev
+            - libfluidsynth-dev
+            - libsmf-dev
+            - libmad0-dev
+            - libid3tag0-dev
+            - libsndfile-dev
+            - libasound2-dev
+            - libjack-dev
+            - libsamplerate0-dev
+            - libmodplug-dev
+            - portaudio19-dev
+            - qt5-default
+            - qtbase5-dev
+            - libqt5opengl5-dev
+      env:
+        - MATRIX_EVAL="CC=clang-3.8 && CXX=clang++-3.8"
 
     # works on Trusty
     - os: linux
@@ -158,6 +160,7 @@ matrix:
             - george-edison55-precise-backports
           packages:
             - clang-3.9
+            - libc++-dev
             - cmake-data
             - cmake
             - libcue-dev
@@ -187,6 +190,7 @@ matrix:
             - george-edison55-precise-backports
           packages:
             - clang-4.0
+            - libc++-dev
             - cmake-data
             - cmake
             - libcue-dev
@@ -207,34 +211,34 @@ matrix:
       env:
         - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
 
-    # works on Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty
-            - george-edison55-precise-backports
-          packages:
-            - clang-5.0
-            - cmake-data
-            - cmake
-            - libcue-dev
-            - libgme-dev
-            - libfluidsynth-dev
-            - libsmf-dev
-            - libmad0-dev
-            - libid3tag0-dev
-            - libsndfile-dev
-            - libasound2-dev
-            - libjack-dev
-            - libsamplerate0-dev
-            - libmodplug-dev
-            - portaudio19-dev
-            - qt5-default
-            - qtbase5-dev
-            - libqt5opengl5-dev
-      env:
-        - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+    ## works on Trusty
+    #- os: linux
+      #addons:
+        #apt:
+          #sources:
+            #- llvm-toolchain-trusty
+            #- george-edison55-precise-backports
+          #packages:
+            #- clang-5.0
+            #- cmake-data
+            #- cmake
+            #- libcue-dev
+            #- libgme-dev
+            #- libfluidsynth-dev
+            #- libsmf-dev
+            #- libmad0-dev
+            #- libid3tag0-dev
+            #- libsndfile-dev
+            #- libasound2-dev
+            #- libjack-dev
+            #- libsamplerate0-dev
+            #- libmodplug-dev
+            #- portaudio19-dev
+            #- qt5-default
+            #- qtbase5-dev
+            #- libqt5opengl5-dev
+      #env:
+        #- MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
 
     - os: osx
       osx_image: xcode8
@@ -256,7 +260,7 @@ before_install:
     
 before_script:
     - mkdir build && cd build
-    - export CMAKE_FLAGS="-DWANT_QT5=$QT5 -DUSE_WERROR=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo"
+    - export CMAKE_FLAGS="-DUSE_LIBCXX=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo"
     - if [ -z "$TRAVIS_TAG" ]; then export CMAKE_FLAGS="$CMAKE_FLAGS -DUSE_CCACHE=ON"; fi
     
 script:
