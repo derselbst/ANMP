@@ -13,6 +13,24 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-4.9
+            - cmake-data
+            - cmake
+            - libcue-dev
+            - libgme-dev
+            - libfluidsynth-dev
+            - libsmf-dev
+            - libmad0-dev
+            - libid3tag0-dev
+            - libsndfile-dev
+            - libasound2-dev
+            - libjack-dev
+            - libsamplerate0-dev
+            - libmodplug-dev
+            - portaudio19-dev
+            - libebur128-dev
+            - qt5-default
+            - qtbase5-dev
+            - libqt5opengl5-dev
       env:
          - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
 
@@ -24,6 +42,24 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
+            - cmake-data
+            - cmake
+            - libcue-dev
+            - libgme-dev
+            - libfluidsynth-dev
+            - libsmf-dev
+            - libmad0-dev
+            - libid3tag0-dev
+            - libsndfile-dev
+            - libasound2-dev
+            - libjack-dev
+            - libsamplerate0-dev
+            - libmodplug-dev
+            - portaudio19-dev
+            - libebur128-dev
+            - qt5-default
+            - qtbase5-dev
+            - libqt5opengl5-dev
       env:
          - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
 
@@ -35,6 +71,24 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-6
+            - cmake-data
+            - cmake
+            - libcue-dev
+            - libgme-dev
+            - libfluidsynth-dev
+            - libsmf-dev
+            - libmad0-dev
+            - libid3tag0-dev
+            - libsndfile-dev
+            - libasound2-dev
+            - libjack-dev
+            - libsamplerate0-dev
+            - libmodplug-dev
+            - portaudio19-dev
+            - libebur128-dev
+            - qt5-default
+            - qtbase5-dev
+            - libqt5opengl5-dev
       env:
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
 
@@ -50,38 +104,54 @@ matrix:
             - clang-3.6
             - cmake-data
             - cmake
+            - libcue-dev
+            - libgme-dev
+            - libfluidsynth-dev
+            - libsmf-dev
+            - libmad0-dev
+            - libid3tag0-dev
+            - libsndfile-dev
+            - libasound2-dev
+            - libjack-dev
+            - libsamplerate0-dev
+            - libmodplug-dev
+            - portaudio19-dev
+            - libebur128-dev
+            - qt5-default
+            - qtbase5-dev
+            - libqt5opengl5-dev
       env:
         - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6"
 
-    # works on Precise and Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
-            - george-edison55-precise-backports
-          packages:
-            - clang-3.7
-            - cmake-data
-            - cmake
-      env:
-        - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
+    ## works on Precise and Trusty
+    #- os: linux
+      #addons:
+        #apt:
+          #sources:
+            #- ubuntu-toolchain-r-test
+            #- llvm-toolchain-precise-3.7
+            #- george-edison55-precise-backports
+          #packages:
+            #- clang-3.7
+            #- cmake-data
+            #- cmake
+      #env:
+        #- MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
 
-    # works on Precise and Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.8
-            - george-edison55-precise-backports
-          packages:
-            - clang-3.8
-            - cmake-data
-            - cmake
-      env:
-        - MATRIX_EVAL="CC=clang-3.8 && CXX=clang++-3.8"
+    ## works on Precise and Trusty
+    #- os: linux
+      #addons:
+        #apt:
+          #sources:
+            #- ubuntu-toolchain-r-test
+            #- llvm-toolchain-precise-3.8
+            #- george-edison55-precise-backports
+          #packages:
+            #- clang-3.8
+            #- cmake-data
+            #- cmake
+      #env:
+        #- MATRIX_EVAL="CC=clang-3.8 && CXX=clang++-3.8"
 
     # works on Trusty
     - os: linux
@@ -94,6 +164,22 @@ matrix:
             - clang-3.9
             - cmake-data
             - cmake
+            - libcue-dev
+            - libgme-dev
+            - libfluidsynth-dev
+            - libsmf-dev
+            - libmad0-dev
+            - libid3tag0-dev
+            - libsndfile-dev
+            - libasound2-dev
+            - libjack-dev
+            - libsamplerate0-dev
+            - libmodplug-dev
+            - portaudio19-dev
+            - libebur128-dev
+            - qt5-default
+            - qtbase5-dev
+            - libqt5opengl5-dev
       env:
         - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
 
@@ -108,6 +194,22 @@ matrix:
             - clang-4.0
             - cmake-data
             - cmake
+            - libcue-dev
+            - libgme-dev
+            - libfluidsynth-dev
+            - libsmf-dev
+            - libmad0-dev
+            - libid3tag0-dev
+            - libsndfile-dev
+            - libasound2-dev
+            - libjack-dev
+            - libsamplerate0-dev
+            - libmodplug-dev
+            - portaudio19-dev
+            - libebur128-dev
+            - qt5-default
+            - qtbase5-dev
+            - libqt5opengl5-dev
       env:
         - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
 
@@ -122,6 +224,22 @@ matrix:
             - clang-5.0
             - cmake-data
             - cmake
+            - libcue-dev
+            - libgme-dev
+            - libfluidsynth-dev
+            - libsmf-dev
+            - libmad0-dev
+            - libid3tag0-dev
+            - libsndfile-dev
+            - libasound2-dev
+            - libjack-dev
+            - libsamplerate0-dev
+            - libmodplug-dev
+            - portaudio19-dev
+            - libebur128-dev
+            - qt5-default
+            - qtbase5-dev
+            - libqt5opengl5-dev
       env:
         - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
 
