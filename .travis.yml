@@ -144,8 +144,12 @@ matrix:
 
 before_install:
     - eval "${MATRIX_EVAL}"
-
+    
+before_script:
+    - mkdir build && cd build
+    - export CMAKE_FLAGS="-DWANT_QT5=$QT5 -DUSE_WERROR=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo"
+    - if [ -z "$TRAVIS_TAG" ]; then export CMAKE_FLAGS="$CMAKE_FLAGS -DUSE_CCACHE=ON"; fi
+    
 script:
-mkdir build && cd build
-cmake .. 
-make anmp-qt
+    - cmake ..
+    - make -j4 anmp-qt
