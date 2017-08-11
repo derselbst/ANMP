@@ -26,7 +26,6 @@ Requires: libanmp%{soname} = %{version}
 %if 0%{?suse_version}
 %ifarch x86_64
 BuildRequires: clang >= 3.5
-BuildRequires: libc++-devel
 %else
 BuildRequires: gcc-c++ >= 4.8
 %endif
@@ -158,7 +157,6 @@ cmake .. \
         -DCMAKE_SHARED_LINKER_FLAGS="-Wl,--as-needed -Wl,--no-undefined -Wl,-z,now" \
 %if "%{?_lib}" == "lib64"
         -DLIB_SUFFIX=64 \
-        -DUSE_LIBCXX=ON \
 %endif
         -DCMAKE_SKIP_RPATH:BOOL=ON \
         -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
