@@ -88,6 +88,7 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     
     // press the big red panic/reset button
     fluid_synth_system_reset(this->synth);
+    fluid_synth_set_channel_type(this->synth, 9, CHANNEL_TYPE_MELODIC);
     fluid_synth_bank_select(this->synth, 9, 0); // try to force drum channel to bank 0
         
     // increase default polyphone
