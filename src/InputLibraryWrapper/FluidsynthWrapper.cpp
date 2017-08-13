@@ -20,7 +20,13 @@ FluidsynthWrapper::~FluidsynthWrapper ()
         delete_fluid_event(this->callbackEvent);
         this->callbackEvent = nullptr;
     }
-        
+    
+    if(this->callbackNoteEvent != nullptr)
+    {
+        delete_fluid_event(this->callbackNoteEvent);
+        this->callbackNoteEvent = nullptr;
+    }
+    
     if(this->synthEvent != nullptr)
     {
         delete_fluid_event(this->synthEvent);
@@ -51,13 +57,21 @@ void FluidsynthWrapper::setupSeq(MidiWrapper& midi)
         this->synthId = fluid_sequencer_register_fluidsynth(this->sequencer, this->synth);
     }
     
+    if(this->midiwrapperID.hasValue)
+    {
+        // unregister any client
+        fluid_sequencer_unregister_client(this->sequencer, this->midiwrapperID.Value);
+    }
+    // register myself as second destination
+    this->midiwrapperID = fluid_sequencer_register_client(this->sequencer, "schedule_loop_callback", &MidiWrapper::FluidSeqCallback, &midi);
+        
     if(this->myselfID.hasValue)
     {
         // unregister any client
         fluid_sequencer_unregister_client(this->sequencer, this->myselfID.Value);
     }
     // register myself as second destination
-    this->myselfID = fluid_sequencer_register_client(this->sequencer, "schedule_loop_callback", &MidiWrapper::FluidSeqCallback, &midi);
+    this->myselfID = fluid_sequencer_register_client(this->sequencer, "schedule_note_callback", &FluidsynthWrapper::FluidSeqNoteCallback, this);
     
     // remove all events from the sequencer's queue
     fluid_sequencer_remove_events(this->sequencer, -1, -1, -1);
@@ -194,7 +208,15 @@ void FluidsynthWrapper::DeepInit(MidiWrapper& caller)
         fluid_event_set_source(this->callbackEvent, -1);
     }
     // destination may have changed, refresh it
-    fluid_event_set_dest(this->callbackEvent, this->myselfID.Value);
+    fluid_event_set_dest(this->callbackEvent, this->midiwrapperID.Value);
+    
+    if(this->callbackNoteEvent == nullptr)
+    {
+        this->callbackNoteEvent = new_fluid_event();
+        fluid_event_set_source(this->callbackNoteEvent, -1);
+    }
+    // destination may have changed, refresh it
+    fluid_event_set_dest(this->callbackNoteEvent, this->myselfID.Value);
     
     /* Load the soundfont */
     if (!fluid_is_soundfont(this->cachedSf2.c_str()))
@@ -295,16 +317,23 @@ unsigned int FluidsynthWrapper::GetInitTick()
 void FluidsynthWrapper::AddEvent(smf_event_t * event, double offset)
 {
     int ret; // fluidsynths return value
+    MidiNoteInfo n;
 
     uint16_t chan = event->midi_buffer[0] & 0x0F;
     switch (event->midi_buffer[0] & 0xF0)
     {
     case 0x80: // notoff
-        fluid_event_noteoff(this->synthEvent, chan, event->midi_buffer[1]);
+        n.chan = chan;
+        n.key = event->midi_buffer[1];
+        n.vel = 0;
+        this->ScheduleNote(n);
         break;
 
     case 0x90:
-        fluid_event_noteon(this->synthEvent, chan, event->midi_buffer[1], event->midi_buffer[2]);
+        n.chan = chan;
+        n.key = event->midi_buffer[1];
+        n.vel = event->midi_buffer[2];
+        this->ScheduleNote(n);
         break;
 
     case 0xA0:
@@ -374,6 +403,82 @@ void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo* loopInfo)
     }
 
     return;
+}
+
+void FluidsynthWrapper::ScheduleNote(const MidiNoteInfo& noteInfo)
+{
+    MidiNoteInfo* dup = new MidiNoteInfo(noteInfo);
+    
+    unsigned int callbackdate = fluid_sequencer_get_tick(this->sequencer); // now    
+    fluid_event_timer(this->callbackNoteEvent, dup);
+
+    int ret = fluid_sequencer_send_at(this->sequencer, this->callbackNoteEvent, callbackdate, true);
+    if(ret != FLUID_OK)
+    {
+        CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
+    }
+
+    return;
+}
+
+void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_t* e, fluid_sequencer_t* /*seq*/, void* data)
+{
+    auto pthis = static_cast<FluidsynthWrapper*>(data);
+    auto ninfo = static_cast<MidiNoteInfo*>(fluid_event_get_data(e));
+    if(pthis==nullptr || ninfo==nullptr)
+    {
+        return;
+    }
+    
+    pthis->NoteOnOff(ninfo);
+    
+    delete ninfo;
+}
+
+void FluidsynthWrapper::NoteOnOff(MidiNoteInfo* nInfo)
+{
+    int id=0;
+
+    const int chan = nInfo->chan;
+    const int key = nInfo->key;
+    const int activeVoices = fluid_synth_get_active_voice_count(this->synth);
+    
+    // look through currently playing voices to determine the voice group id to start or stop voices later on
+    {
+        vector<fluid_voice_t*> voiceList;
+        voiceList.reserve(activeVoices);
+        
+        fluid_synth_get_voicelist(this->synth, voiceList.data(), activeVoices, -1);
+        
+        for(int i=0; i<activeVoices; i++)
+        {
+            fluid_voice_t* v = voiceList.data()[i];
+            if(fluid_voice_is_playing(v) // should always be true
+                && fluid_voice_get_channel(v) == chan
+                && fluid_voice_get_key(v) == key)
+            {
+                ++id;
+            }
+        }
+    }
+    
+    const int nMidiChan = fluid_synth_count_midi_channels(this->synth);
+    const int vel = nInfo->vel;
+    // find a way of creating unique voice group ids depending on channel and key
+    id = (id*128*nMidiChan)+(chan*128)+(key);
+    
+    if(vel == 0)
+    {
+        fluid_synth_stop(this->synth, id);
+    }
+    else
+    {
+        fluid_preset_t* preset = fluid_synth_get_channel_preset();
+        if(preset != nullptr)
+        {
+            fluid_synth_start(this->synth, id, preset, 0, chan, key, vel);
+        }
+    }
 }
 
 void FluidsynthWrapper::FinishSong(int millisec)

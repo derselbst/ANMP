@@ -37,6 +37,14 @@ struct MidiLoopInfo
     uint8_t count = 0;
 };
 
+struct MidiNoteInfo
+{
+    uint8_t chan;
+    
+    uint8_t key;
+    
+    uint8_t vel;
+};
 
 /**
   * class MidiWrapper
