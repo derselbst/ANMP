@@ -437,7 +437,7 @@ void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_
 
 void FluidsynthWrapper::NoteOnOff(MidiNoteInfo* nInfo)
 {
-    int id=0;
+    int id=-1;
 
     const int chan = nInfo->chan;
     const int key = nInfo->key;
@@ -450,16 +450,21 @@ void FluidsynthWrapper::NoteOnOff(MidiNoteInfo* nInfo)
         
         fluid_synth_get_voicelist(this->synth, voiceList.data(), activeVoices, -1);
         
-        for(int i=0; i<activeVoices; i++)
+        fluid_voice_t* v;
+        for(int i=0; i<activeVoices && ((v=voiceList.data()[i])!=nullptr); i++)
         {
-            fluid_voice_t* v = voiceList.data()[i];
             if(fluid_voice_is_playing(v) // should always be true
                 && fluid_voice_get_channel(v) == chan
                 && fluid_voice_get_key(v) == key)
             {
-                ++id;
+                int foundID = fluid_voice_get_id(v);
+                foundID -= key;
+                foundID -= chan*128;
+                foundID /= 128*nMidiChan;
+                id = max(id, foundID);
             }
         }
+        ++id;
     }
     
     const int nMidiChan = fluid_synth_count_midi_channels(this->synth);
