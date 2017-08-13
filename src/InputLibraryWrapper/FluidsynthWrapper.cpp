@@ -326,15 +326,15 @@ void FluidsynthWrapper::AddEvent(smf_event_t * event, double offset)
         n.chan = chan;
         n.key = event->midi_buffer[1];
         n.vel = 0;
-        this->ScheduleNote(n);
-        break;
+        this->ScheduleNote(n, static_cast<unsigned int>((event->time_seconds - offset)*1000) + fluid_sequencer_get_tick(this->sequencer));
+        return;
 
     case 0x90:
         n.chan = chan;
         n.key = event->midi_buffer[1];
         n.vel = event->midi_buffer[2];
-        this->ScheduleNote(n);
-        break;
+        this->ScheduleNote(n, static_cast<unsigned int>((event->time_seconds - offset)*1000) + fluid_sequencer_get_tick(this->sequencer));
+        return;
 
     case 0xA0:
         CLOG(LogLevel_t::Debug, "Aftertouch, channel " << chan << ", note " << static_cast<int>(event->midi_buffer[1]) << ", pressure " << static_cast<int>(event->midi_buffer[2]));
@@ -405,14 +405,13 @@ void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo* loopInfo)
     return;
 }
 
-void FluidsynthWrapper::ScheduleNote(const MidiNoteInfo& noteInfo)
+void FluidsynthWrapper::ScheduleNote(const MidiNoteInfo& noteInfo, unsigned int time)
 {
     MidiNoteInfo* dup = new MidiNoteInfo(noteInfo);
-    
-    unsigned int callbackdate = fluid_sequencer_get_tick(this->sequencer); // now    
+     
     fluid_event_timer(this->callbackNoteEvent, dup);
 
-    int ret = fluid_sequencer_send_at(this->sequencer, this->callbackNoteEvent, callbackdate, true);
+    int ret = fluid_sequencer_send_at(this->sequencer, this->callbackNoteEvent, time, true);
     if(ret != FLUID_OK)
     {
         CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
@@ -437,16 +436,19 @@ void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_
 
 void FluidsynthWrapper::NoteOnOff(MidiNoteInfo* nInfo)
 {
-    int id=-1;
+    int id=0;
 
+    const int nMidiChan = fluid_synth_count_midi_channels(this->synth);
     const int chan = nInfo->chan;
     const int key = nInfo->key;
+    const int vel = nInfo->vel;
     const int activeVoices = fluid_synth_get_active_voice_count(this->synth);
     
     // look through currently playing voices to determine the voice group id to start or stop voices later on
+    if(activeVoices > 0)
     {
         vector<fluid_voice_t*> voiceList;
-        voiceList.reserve(activeVoices);
+        voiceList.resize(activeVoices);
         
         fluid_synth_get_voicelist(this->synth, voiceList.data(), activeVoices, -1);
         
@@ -462,23 +464,27 @@ void FluidsynthWrapper::NoteOnOff(MidiNoteInfo* nInfo)
                 foundID -= chan*128;
                 foundID /= 128*nMidiChan;
                 id = max(id, foundID);
+//                 id++;
             }
         }
-        ++id;
     }
+//     ++id;
     
-    const int nMidiChan = fluid_synth_count_midi_channels(this->synth);
-    const int vel = nInfo->vel;
     // find a way of creating unique voice group ids depending on channel and key
-    id = (id*128*nMidiChan)+(chan*128)+(key);
+//     id = (id*128*nMidiChan)+(chan*128)+(key);
     
     if(vel == 0)
     {
-        fluid_synth_stop(this->synth, id);
+        if(id>=0)
+        {
+            id = (id*128*nMidiChan)+(chan*128)+(key);
+            fluid_synth_stop(this->synth, id);
+        }
     }
     else
     {
-        fluid_preset_t* preset = fluid_synth_get_channel_preset();
+        id = (++id*128*nMidiChan)+(chan*128)+(key);
+        fluid_preset_t* preset = fluid_synth_get_channel_preset(this->synth, chan);
         if(preset != nullptr)
         {
             fluid_synth_start(this->synth, id, preset, 0, chan, key, vel);
