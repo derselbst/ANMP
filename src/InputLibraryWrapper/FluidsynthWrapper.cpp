@@ -448,7 +448,7 @@ void FluidsynthWrapper::NoteOnOff(MidiNoteInfo* nInfo)
     if(activeVoices > 0)
     {
         vector<fluid_voice_t*> voiceList;
-        voiceList.resize(activeVoices);
+        voiceList.reserve(activeVoices);
         
         fluid_synth_get_voicelist(this->synth, voiceList.data(), activeVoices, -1);
         
