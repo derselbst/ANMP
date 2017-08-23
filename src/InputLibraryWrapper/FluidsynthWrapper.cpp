@@ -162,11 +162,14 @@ void FluidsynthWrapper::setupSettings()
         fluid_settings_setstr(this->settings, "player.timing-source", "sample");
         fluid_settings_setint(this->settings, "synth.parallel-render", 0);
         fluid_settings_setint(this->settings, "synth.threadsafe-api", 0);
+        fluid_settings_setint(this->settings, "synth.lock-memory", 0);
     }
     
     int stereoChannels = gConfig.FluidsynthMultiChannel ? NMidiChannels : 1;
     fluid_settings_setint(this->settings, "synth.audio-groups",    stereoChannels);
     fluid_settings_setint(this->settings, "synth.audio-channels",  stereoChannels);
+    
+    fluid_settings_setint(this->settings, "synth.band-pass-filter", true);
 }
 
 void FluidsynthWrapper::ShallowInit()
