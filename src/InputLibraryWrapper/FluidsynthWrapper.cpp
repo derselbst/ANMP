@@ -483,7 +483,7 @@ void FluidsynthWrapper::NoteOnOff(MidiNoteInfo* nInfo)
     }
     else
     {
-        id = (++id*128*nMidiChan)+(chan*128)+(key);
+        id = ((id+1)*128*nMidiChan)+(chan*128)+(key);
         fluid_preset_t* preset = fluid_synth_get_channel_preset(this->synth, chan);
         if(preset != nullptr)
         {
