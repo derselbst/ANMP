@@ -436,13 +436,14 @@ void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_
 
 void FluidsynthWrapper::NoteOnOff(MidiNoteInfo* nInfo)
 {
-    int id=0;
-
     const int nMidiChan = fluid_synth_count_midi_channels(this->synth);
     const int chan = nInfo->chan;
     const int key = nInfo->key;
     const int vel = nInfo->vel;
     const int activeVoices = fluid_synth_get_active_voice_count(this->synth);
+    const bool isNoteOff = vel == 0;
+    
+    Nullable<int> id;
     
     // look through currently playing voices to determine the voice group id to start or stop voices later on
     if(activeVoices > 0)
@@ -455,7 +456,7 @@ void FluidsynthWrapper::NoteOnOff(MidiNoteInfo* nInfo)
         fluid_voice_t* v;
         for(int i=0; i<activeVoices && ((v=voiceList.data()[i])!=nullptr); i++)
         {
-            if(fluid_voice_is_playing(v) // should always be true
+            if(fluid_voice_is_on(v)
                 && fluid_voice_get_channel(v) == chan
                 && fluid_voice_get_key(v) == key)
             {
@@ -463,31 +464,45 @@ void FluidsynthWrapper::NoteOnOff(MidiNoteInfo* nInfo)
                 foundID -= key;
                 foundID -= chan*128;
                 foundID /= 128*nMidiChan;
-                id = max(id, foundID);
-//                 id++;
+                
+                if(!id.hasValue)
+                {
+                    id = foundID;
+                }
+                else
+                {
+                    id = isNoteOff ? min(id.Value, foundID) : max(id.Value, foundID);
+                }
             }
         }
     }
-//     ++id;
     
     // find a way of creating unique voice group ids depending on channel and key
 //     id = (id*128*nMidiChan)+(chan*128)+(key);
     
-    if(vel == 0)
+    if(isNoteOff)
     {
-        if(id>=0)
+        if(id.hasValue)
         {
-            id = (id*128*nMidiChan)+(chan*128)+(key);
-            fluid_synth_stop(this->synth, id);
+            id = (id.Value*128*nMidiChan)+(chan*128)+(key);
+            fluid_synth_stop(this->synth, id.Value);
         }
     }
     else
     {
-        id = ((id+1)*128*nMidiChan)+(chan*128)+(key);
+        if(!id.hasValue)
+        {
+            id = 0;
+        }
+        else
+        {
+            id = id.Value+1;
+        }
+        id = ((id.Value)*128*nMidiChan)+(chan*128)+(key);
         fluid_preset_t* preset = fluid_synth_get_channel_preset(this->synth, chan);
         if(preset != nullptr)
         {
-            fluid_synth_start(this->synth, id, preset, 0, chan, key, vel);
+            fluid_synth_start(this->synth, id.Value, preset, 0, chan, key, vel);
         }
     }
 }
