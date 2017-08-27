@@ -218,7 +218,7 @@ void FluidsynthWrapper::DeepInit(MidiWrapper& caller)
     // destination may have changed, refresh it
     fluid_event_set_dest(this->callbackNoteEvent, this->myselfID.Value);
     
-    /* Load the soundfont */
+    // Load the soundfont
     if (!fluid_is_soundfont(this->cachedSf2.c_str()))
     {
         THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (weak test): \"" << this->cachedSf2 << "\"");
@@ -388,6 +388,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t * event, double offset)
     }
 }
 
+// in case MidiWrapper experiences a loop event, schedule an event that calls MidiWrapper back at the end of that loop, so it can feed all the midi events with that loop back to fluidsynth again
 void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo* loopInfo)
 {
     unsigned int callbackdate = fluid_sequencer_get_tick(this->sequencer); // now
@@ -405,6 +406,12 @@ void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo* loopInfo)
     return;
 }
 
+// use a very complicated way to turn on and off notes by scheduling callbacks to \c this
+// 
+// purpose: using fluid_synth_noteon|off() would kill overlapping notes (i.e. noteons on the same key and channel)
+//
+// unfortunately many N64 games seem to have overlapping notes in their sequences (or is it only a bug when converting from it to MIDI??)
+// anyway, to avoid missing notes we are scheduling a callback on every noteon and off, so that this.FluidSeqNoteCallback() (resp. this.NoteOnOff()) takes care of switching voices on and off
 void FluidsynthWrapper::ScheduleNote(const MidiNoteInfo& noteInfo, unsigned int time)
 {
     MidiNoteInfo* dup = new MidiNoteInfo(noteInfo);
@@ -434,6 +441,10 @@ void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_
     delete ninfo;
 }
 
+// switch voices on and off via FIFO occurrence of noteon/offs
+//
+// i.e. the first noteon is switched off by the first noteoff,
+//      the second noteon is switched off by the second noteoff, etc.
 void FluidsynthWrapper::NoteOnOff(MidiNoteInfo* nInfo)
 {
     const int nMidiChan = fluid_synth_count_midi_channels(this->synth);
@@ -467,17 +478,26 @@ void FluidsynthWrapper::NoteOnOff(MidiNoteInfo* nInfo)
                 
                 if(!id.hasValue)
                 {
+                    // so if this is the first voice already playing at this key and chan found, just use its id
                     id = foundID;
                 }
                 else
                 {
-                    id = isNoteOff ? min(id.Value, foundID) : max(id.Value, foundID);
+                    // else if this is a noteoff:
+                    id = isNoteOff ?
+                    // remember the id of that voice that was switched on first (smallest id)
+                    min(id.Value, foundID)
+                    // it's a noteon? find out how many voices of the same key, chan are already playing (get largest id available)
+                    : max(id.Value, foundID);
                 }
             }
         }
     }
     
     // find a way of creating unique voice group ids depending on channel and key
+    //
+    // the id needs to include information about what key and what channel the voice is playing on.
+    // just do this the same way like accessing a 3 dimensional array
 //     id = (id*128*nMidiChan)+(chan*128)+(key);
     
     if(isNoteOff)
@@ -486,6 +506,10 @@ void FluidsynthWrapper::NoteOnOff(MidiNoteInfo* nInfo)
         {
             id = (id.Value*128*nMidiChan)+(chan*128)+(key);
             fluid_synth_stop(this->synth, id.Value);
+        }
+        else
+        {
+            // strange, no voice playing at this key and channel was found, however, we got a noteoff for it. silently ignore.
         }
     }
     else
