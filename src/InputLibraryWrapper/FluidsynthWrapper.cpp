@@ -497,7 +497,7 @@ void FluidsynthWrapper::NoteOnOff(MidiNoteInfo* nInfo)
                 {
                     // else if this is a noteoff:
                     id = isNoteOff ?
-                    // remember the id of that voice that was switched on first (smallest id)
+                    // find the id of that voice that was switched on first (smallest id)
                     min(id.Value, foundID)
                     // it's a noteon? find out how many voices of the same key, chan are already playing (get largest id available)
                     : max(id.Value, foundID);
