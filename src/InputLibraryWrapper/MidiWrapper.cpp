@@ -354,15 +354,9 @@ vector<loop_t> MidiWrapper::getLoopArray () const noexcept
     return loopArr;
 }
 
-// HACK there seems to be some strange bug in fluidsynth:
-// whenever we ask the synth to render something else than exactly 64 frames, we get strangely timed audio
-// thus obtain the period size (?always? == 64) within this->open() and use this value instead of our gConfig.FramesToRender
-// by replacing gConfig.FramesToRender with gConfig.FluidsynthPeriodSize
-#define FramesToRender FluidsynthPeriodSize
 void MidiWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
 {
     STANDARDWRAPPER_RENDER(float, this->synth->Render(pcm, framesToDoNow))
     
     this->doAudioNormalization(static_cast<float*>(bufferToFill), framesToRender);
 }
-#undef FramesToRender
