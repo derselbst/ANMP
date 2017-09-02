@@ -63,9 +63,27 @@ void SongFormat::ConfigureVoices(const uint16_t nChannels, const uint16_t defaul
 /**
  * returns bitrate in bit/s
  */
-void SongFormat::getBitrate ()
+int SongFormat::getBitrate() const
 {
-// samplerate * sample depth * channels
+    int rate = this->SampleRate * this->Channels();
+    
+    int width;
+    switch(this->SampleFormat)
+    {
+        case SampleFormat_t::int16:
+            width = 16/8;
+        case SampleFormat_t::int32:
+        case SampleFormat_t::float32:
+            width = 32/8;
+        case SampleFormat_t::float64:
+            width = 64/8;
+        case SampleFormat_t::uint8:
+            width = 8/8;
+        default:
+            return -1;
+    }
+    
+    return rate * width;
 }
 
 bool SongFormat::IsValid()

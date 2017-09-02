@@ -39,7 +39,7 @@ struct SongFormat
     /**
      * returns bitrate in bit/s
      */
-    void getBitrate ();
+    int getBitrate () const;
 
     /**
      * whether this instance holds valid data
