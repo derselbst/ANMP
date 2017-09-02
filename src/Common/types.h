@@ -75,7 +75,6 @@ enum class SampleFormat_t : uint8_t
     unknown,
     uint8,
     int16,
-    int24,
     int32,
     float32,
     float64,
