@@ -4,6 +4,7 @@
 #include "songinspector.h"
 #include <QMenu>
 #include <QKeyEvent>
+#include <QtGlobal>
 #include <QItemSelectionModel>
 
 PlaylistView::PlaylistView(QWidget * parent)
@@ -116,6 +117,7 @@ void PlaylistView::keyPressEvent(QKeyEvent * event)
 
 void PlaylistView::contextMenuEvent(QContextMenuEvent *event)
 {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
     QModelIndex i = this->currentIndex();
     if(i.isValid())
     {
@@ -125,6 +127,7 @@ void PlaylistView::contextMenuEvent(QContextMenuEvent *event)
         menu.exec(event->globalPos());
     }
     else
+#endif
     {
         QTableView::contextMenuEvent(event);
     }
