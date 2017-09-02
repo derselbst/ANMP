@@ -5,11 +5,12 @@
 #include <QLabel>
 #include <anmp.hpp>
 
-SongInspector::SongInspector(QWidget *parent) :
+SongInspector::SongInspector(const Song* s, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SongInspector)
 {
     ui->setupUi(this);
+    this->FillView(s);
 }
 
 void SongInspector::FillView(const Song* s)
@@ -29,9 +30,10 @@ void SongInspector::fillGeneral(const Song* s)
     form->addRow("File Offset:", new QLabel(QString::number(s->fileOffset.Value), scroll));
     form->addRow("File Length:", new QLabel(QString::number(s->fileLen.Value) + " ms", scroll));
     form->addRow("Sample Rate:", new QLabel(QString::number(s->Format.SampleRate) + " Hz", scroll));
+    form->addRow("Sample Format:", new QLabel(SampleFormatName[static_cast<int>(s->Format.SampleFormat)], scroll));
     form->addRow("Audio Channels:", new QLabel(QString::number(s->Format.Channels()), scroll));
     form->addRow("Audio Voices:", new QLabel(QString::number(s->Format.Voices), scroll));
-    form->addRow("Bit Rate:", new QLabel(QString::number(s->Format.getBitrate()), scroll));
+    form->addRow("Bit Rate:", new QLabel(QString::number(s->Format.getBitrate()/1024) + " kBit/s", scroll));
 
     scroll->setLayout(form);
 }
@@ -42,7 +44,7 @@ void SongInspector::fillMetadata(const SongInfo& m)
     QLayout* oldLayout = scroll->layout();
     delete oldLayout;
 
-    QFormLayout* form = new QFormLayout(this->ui->tabMeta);
+    QFormLayout* form = new QFormLayout(scroll);
     form->addRow("Composer", new QLabel(QString::fromStdString(m.Composer), scroll));
     form->addRow("Artist", new QLabel(QString::fromStdString(m.Artist), scroll));
     form->addRow("Album", new QLabel(QString::fromStdString(m.Album), scroll));

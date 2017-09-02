@@ -4,7 +4,6 @@
 #include <QTableView>
 
 class QKeyEvent;
-class SongInspector;
 
 class PlaylistView : public QTableView
 {
@@ -18,8 +17,6 @@ protected:
     void contextMenuEvent(QContextMenuEvent *event) override;
 
 private:
-    SongInspector* inspectorView = nullptr;
-
     void moveItems(int steps);
 
 protected slots:

@@ -7,8 +7,7 @@
 #include <QItemSelectionModel>
 
 PlaylistView::PlaylistView(QWidget * parent)
-    : QTableView(parent),
-    inspectorView(new SongInspector(this))
+    : QTableView(parent)
 {
 }
 
@@ -117,11 +116,18 @@ void PlaylistView::keyPressEvent(QKeyEvent * event)
 
 void PlaylistView::contextMenuEvent(QContextMenuEvent *event)
 {
-    QMenu menu;
-    menu.addAction(QIcon::fromTheme("help-contents"), "Details", this, &PlaylistView::showInspector);
-
-
-    menu.exec(event->globalPos());
+    QModelIndex i = this->currentIndex();
+    if(i.isValid())
+    {
+        event->accept();
+        QMenu menu;
+        menu.addAction(QIcon::fromTheme("help-contents"), "Details", this, &PlaylistView::showInspector);
+        menu.exec(event->globalPos());
+    }
+    else
+    {
+        QTableView::contextMenuEvent(event);
+    }
 }
 
 void PlaylistView::showInspector()
@@ -138,7 +144,7 @@ void PlaylistView::showInspector()
         int row = i.row();
         const Song* s = playlistModel->getSong(row);
 
-        this->inspectorView->FillView(s);
-        this->inspectorView->show();
+        SongInspector insp (s, this);
+        insp.exec();
     }
 }

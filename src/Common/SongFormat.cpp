@@ -72,13 +72,18 @@ int SongFormat::getBitrate() const
     {
         case SampleFormat_t::int16:
             width = 16/8;
+            break;
         case SampleFormat_t::int32:
+            [[fallthrough]];
         case SampleFormat_t::float32:
             width = 32/8;
+            break;
         case SampleFormat_t::float64:
             width = 64/8;
+            break;
         case SampleFormat_t::uint8:
             width = 8/8;
+            break;
         default:
             return -1;
     }

@@ -16,6 +16,7 @@
 
 // includes all headers with no corresponding cpp file
 #include "AudioDriver.h"
+#include "SampleFormat.h"
 #include "CommonExceptions.h"
 #include "Event.h"
 #include "Nullable.h"
@@ -69,13 +70,3 @@ typedef struct loop
 
 } loop_t;
 
-
-enum class SampleFormat_t : uint8_t
-{
-    unknown,
-    uint8,
-    int16,
-    int32,
-    float32,
-    float64,
-};

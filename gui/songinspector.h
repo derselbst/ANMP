@@ -15,7 +15,7 @@ class SongInspector : public QDialog
     Q_OBJECT
 
 public:
-    explicit SongInspector(QWidget *parent = 0);
+    explicit SongInspector(const Song*, QWidget *parent = 0);
     ~SongInspector();
 
     void FillView(const Song* s);

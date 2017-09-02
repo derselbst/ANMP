@@ -8,6 +8,7 @@ SET(ANMP_COMMON_SRC
        PlaylistFactory.cpp
        SongFormat.cpp
        StringFormatter.cpp
+       SampleFormat.c
 )
 
 
