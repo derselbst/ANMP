@@ -31,17 +31,20 @@ SOURCES += main.cpp\
     applets/analyzer/AnalyzerApplet.cpp overlaycontrol.cpp \
     mainwindow.callback.cpp \
     mainwindow.slots.cpp \
-    applets/channel/channelconfig.cpp
+    applets/channel/channelconfig.cpp \
+    songinspector.cpp
 
 HEADERS  += mainwindow.h PlaylistView.h PlaylistModel.h configdialog.h \
     applets/analyzer/AnalyzerApplet.h overlaycontrol.h \
     PlayheadSlider.h \
     applets/channel/channelconfig.h \
-    ChannelConfigView.h
+    ChannelConfigView.h \
+    songinspector.h
 
 FORMS    += mainwindow.ui configdialog.ui \
     applets/analyzer/AnalyzerApplet.ui overlaycontrol.ui \
-    applets/channel/channelconfig.ui
+    applets/channel/channelconfig.ui \
+    songinspector.ui
 
 DISTFILES +=
 

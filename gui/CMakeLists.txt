@@ -26,6 +26,7 @@ if(USE_GUI)
         PlaylistView.cpp
         PlayheadSlider.cpp
         ChannelConfigView.cpp
+        songinspector.cpp
 #         ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml # cause this xml to be a dependency and thus force it to get generated
     )
     
@@ -43,6 +44,7 @@ if(USE_GUI)
         mainwindow.ui
         configdialog.ui
         overlaycontrol.ui
+        songinspector.ui
     )
 
     add_executable(${PROJECT_NAME} ${UI_HEADERS} ${GUI_SRCS} icons.qrc)

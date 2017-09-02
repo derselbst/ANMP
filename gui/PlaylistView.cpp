@@ -1,11 +1,14 @@
 #include "PlaylistView.h"
 #include "IPlaylist.h"
 #include "PlaylistModel.h"
+#include "songinspector.h"
+#include <QMenu>
 #include <QKeyEvent>
 #include <QItemSelectionModel>
 
 PlaylistView::PlaylistView(QWidget * parent)
-    : QTableView(parent)
+    : QTableView(parent),
+    inspectorView(new SongInspector(this))
 {
 }
 
@@ -108,5 +111,34 @@ void PlaylistView::keyPressEvent(QKeyEvent * event)
     default:
         QTableView::keyPressEvent(event);
         break;
+    }
+}
+
+
+void PlaylistView::contextMenuEvent(QContextMenuEvent *event)
+{
+    QMenu menu;
+    menu.addAction(QIcon::fromTheme("help-contents"), "Details", this, &PlaylistView::showInspector);
+
+
+    menu.exec(event->globalPos());
+}
+
+void PlaylistView::showInspector()
+{
+    PlaylistModel* playlistModel = dynamic_cast<PlaylistModel*>(this->model());
+    if(playlistModel==nullptr)
+    {
+        return;
+    }
+
+    QModelIndex i = this->currentIndex();
+    if(i.isValid())
+    {
+        int row = i.row();
+        const Song* s = playlistModel->getSong(row);
+
+        this->inspectorView->FillView(s);
+        this->inspectorView->show();
     }
 }
