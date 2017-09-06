@@ -23,7 +23,9 @@ What ANMP does NOT:
 * muting multichannel audio files
 * gapless playback (for most streamed audio formats)
 * arbitrary (forward) looping of songs (i.e. even nested loops)
-* unrolling [looped MIDI tracks](https://github.com/derselbst/ANMP/wiki/MIDI-Customizations)
+* synthesizing MIDI files using fluidsynth
+  * unrolling [looped MIDI tracks](https://github.com/derselbst/ANMP/wiki/MIDI-Customizations)
+  * overlapping notes do not kill each other
 * cue sheets
 * easy attempt to implement new formats
 

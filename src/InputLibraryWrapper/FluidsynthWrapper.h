@@ -24,9 +24,6 @@ public:
     FluidsynthWrapper(FluidsynthWrapper const&) = delete;
     FluidsynthWrapper& operator=(FluidsynthWrapper const&) = delete;
     
-    static void seqCallback(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data);
-
-    
     void ShallowInit();
     void DeepInit(MidiWrapper&);
     void ConfigureChannels(SongFormat* f);
@@ -45,6 +42,8 @@ public:
     
     void AddEvent(smf_event_t* event, double offset=0.0);
     void ScheduleLoop(MidiLoopInfo* info);
+    void ScheduleNote(const MidiNoteInfo& noteInfo, unsigned int time);
+    void NoteOnOff(MidiNoteInfo* nInfo);
     void FinishSong(int millisec);
     
     void Render(float* bufferToFill, frame_t framesToRender);
@@ -54,10 +53,22 @@ private:
     fluid_synth_t* synth = nullptr;
     fluid_sequencer_t* sequencer = nullptr;
     
+    // common fluid_event_t used for most MIDI CCs and stuff
     fluid_event_t* synthEvent = nullptr;
+    
+    // event used for scheduling midi track loops and calling back MidiWrapper
     fluid_event_t* callbackEvent = nullptr;
+    
+    // event used for triggering note on/offs by calling back ourselfs
+    fluid_event_t* callbackNoteEvent = nullptr;
 
+    // fluidsynth's internal synth
     short synthId;
+    
+    // callback ID for our parent MidiWrapper instance
+    Nullable<short> midiwrapperID;
+    
+    // callback ID for ourself
     Nullable<short> myselfID;
     
     // fluidsynth's synth has no samplerate getter, so cache it here
@@ -75,4 +86,6 @@ private:
 
     void deleteSynth();
     void deleteSeq();
+    
+    static void FluidSeqNoteCallback(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data);
 };
