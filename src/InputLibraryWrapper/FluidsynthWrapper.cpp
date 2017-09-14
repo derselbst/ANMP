@@ -175,7 +175,7 @@ void FluidsynthWrapper::setupSettings()
         // these maybe needed for fast renderer (even fluidsynth itself isnt sure about)
         fluid_settings_setstr(this->settings, "player.timing-source", "sample");
         fluid_settings_setint(this->settings, "synth.parallel-render", 0);
-        fluid_settings_setint(this->settings, "synth.threadsafe-api", 0);
+        fluid_settings_setint(this->settings, "synth.threadsafe-api", 1);
         fluid_settings_setint(this->settings, "synth.lock-memory", 0);
     }
     
@@ -184,6 +184,8 @@ void FluidsynthWrapper::setupSettings()
     fluid_settings_setint(this->settings, "synth.audio-channels",  stereoChannels);
     
     fluid_settings_setint(this->settings, "synth.band-pass-filter", true);
+    fluid_settings_setstr(this->settings, "synth.volenv", "-500.0");
+    fluid_settings_setstr(this->settings, "synth.cpu-cores", "4");
 }
 
 void FluidsynthWrapper::ShallowInit()
