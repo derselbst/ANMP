@@ -176,6 +176,7 @@ int FFMpegWrapper::decode_packet(int16_t* (&pcm), int& framesToDo, int& got_fram
         if (ret < 0)
         {
             CLOG(LogLevel_t::Error, "Failed decoding audio frame");
+            return ret;
         }
 
         /* Some audio decoders decode only part of the packet, and have to be
@@ -294,7 +295,9 @@ void FFMpegWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
     packet.size = 0;
     do
     {
-        decode_packet(pcm, framesToDo, frameFinished, packet, frame);
+        int ret = decode_packet(pcm, framesToDo, frameFinished, packet, frame);
+        if (ret < 0)
+            break;
     } while (frameFinished);
 
 
