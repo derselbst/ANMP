@@ -62,6 +62,8 @@ void LibSNDWrapper::open ()
             this->Format.SampleFormat = SampleFormat_t::int32;
             break;
     }
+    
+    this->fileLen = (sfinfo.frames*1000.0) / this->Format.SampleRate;
 }
 
 void LibSNDWrapper::close() noexcept
