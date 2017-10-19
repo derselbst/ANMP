@@ -11,13 +11,6 @@
 
 ANMP aims to be a versatile but lightweight audio player, just as the other hundred thousands out there. It is written in C++11. As being only a frontend, ANMP itself doesnt know anything about audioformats and how to decode them. That's why it uses 3rd party libraries to decode them. By using VgmStream, GameMusicEmu, LazyUSF and supporting looped songs natively, ANMP is esp. suited to play various audio formats from video games. Moreover it supports [Looped Midi Tracks](https://github.com/derselbst/ANMP/wiki/MIDI-Customizations).
 
-What ANMP does NOT:
-* crawl through your music library, building a huge useless database for all artists, albums, genres, titles, etc., just because the user wants to have a nice overview over what is on his HDD (SSD); the filesystem is our database!
-* mess around with any audio files, i.e. no changing of ID3 tags, no writing of ReplayGain or whatever; additional info will always be written to separate files and ONLY then, when the user explicitly says so (e.g. by executing anmp-normalize)
-* support ReplayGain tags, since video game codecs don't do (instead it uses a custom approach using helper files to handle loudness normalization independently from audio formats)
-* provide a multilingual GUI; everything is done in English!
-
-
 #### Main Features
 
 * muting multichannel audio files
@@ -28,6 +21,13 @@ What ANMP does NOT:
   * overlapping notes do not kill each other
 * cue sheets
 * easy attempt to implement new formats
+
+#### ANMP does NOT...
+
+* crawl through your music library, building a huge useless database for all artists, albums, genres, titles, etc., just because the user wants to have a nice overview over what is on his HDD (SSD); the filesystem is our database!
+* mess around with any audio files, i.e. no changing of ID3 tags, no writing of ReplayGain or whatever; additional info will always be written to separate files and ONLY then, when the user explicitly says so (e.g. by executing anmp-normalize)
+* support ReplayGain tags, since video game codecs don't do (instead it uses a custom approach using helper files to handle loudness normalization independently from audio formats)
+* provide a multilingual GUI; everything is done in English!
 
 ANMP handles audio differently than others: Instead of retrieving only small buffers that hold the raw pcm data, ANMP fetches the pcm of the whole file and puts that into memory. Todays computers have enough memory to hold raw pcm of even longer audio files. Uncompressing big audio files can take a long time, though. Thus filling the pcm buffer is usually done asynchronously. When the next song shall be played, the pcm buffer of the former song is released.
 
