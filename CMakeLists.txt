@@ -42,7 +42,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     endif(USE_LIBCXX)
     
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -stdlib=${STDCXX}")
-    set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -Wextra -Wdocumentation -fstack-protector-all -fno-inline-functions -fsanitize=bounds,float-cast-overflow,float-divide-by-zero,object-size,integer,vptr  -stdlib=${STDCXX}")
+    set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -Wextra -Wdocumentation -fstack-protector-all -fno-inline-functions -fsanitize=address,undefined -stdlib=${STDCXX}")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g3 -O2 -Rpass=loop-vectorize -Rpass-analysis=loop-vectorize  -stdlib=${STDCXX}")
 endif()
 
