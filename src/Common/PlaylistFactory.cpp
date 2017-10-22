@@ -184,6 +184,7 @@ bool PlaylistFactory::addSong (IPlaylist& playlist, const string filePath, Nulla
         iEquals(ext, "bz2")     ||
         iEquals(ext, "bzip")    ||
         iEquals(ext, "xz")      ||
+        iEquals(ext, "rar")     ||
         iEquals(ext, "png")     || // libmad assertion fail
         iEquals(ext, "jpg")
     )
