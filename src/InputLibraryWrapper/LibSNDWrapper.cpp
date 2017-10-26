@@ -63,7 +63,22 @@ void LibSNDWrapper::open ()
             break;
     }
     
-    this->fileLen = (sfinfo.frames*1000.0) / this->Format.SampleRate;
+    if(!this->fileLen.hasValue)
+    {
+        // filelen not set by ctor, try to estimate it
+        int framesAvail = this->sfinfo.frames;
+
+        if(this->fileOffset.hasValue)
+        {
+            framesAvail -= msToFrames(this->fileOffset.Value, this->Format.SampleRate);
+        }
+        if(framesAvail < 0)
+        {
+            framesAvail=0;
+        }
+        
+        this->fileLen = (framesAvail*1000.0) / this->Format.SampleRate;
+    }
 }
 
 void LibSNDWrapper::close() noexcept
@@ -201,26 +216,14 @@ vector<loop_t> LibSNDWrapper::getLoopArray () const noexcept
 
 frame_t LibSNDWrapper::getFrames () const
 {
-    int framesAvail = this->sfinfo.frames;
-
-    if(this->fileOffset.hasValue)
+    if(this->fileLen.hasValue)
     {
-        framesAvail -= msToFrames(this->fileOffset.Value, this->Format.SampleRate);
+        return msToFrames(this->fileLen.Value, this->Format.SampleRate);
     }
-
-    if(framesAvail < 0)
+    else
     {
-        framesAvail=0;
+        THROW_RUNTIME_ERROR("THIS SHOULD NEVER HAPPEN! fileLen unset!");
     }
-
-    frame_t totalFrames = this->fileLen.hasValue ? msToFrames(this->fileLen.Value, this->Format.SampleRate) : framesAvail;
-
-    if(totalFrames > framesAvail)
-    {
-        totalFrames = framesAvail;
-    }
-
-    return totalFrames;
 }
 
 void LibSNDWrapper::buildMetadata() noexcept
