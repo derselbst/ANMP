@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>589</width>
-    <height>381</height>
+    <width>584</width>
+    <height>465</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,7 +25,7 @@
         </sizepolicy>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>4</number>
        </property>
        <widget class="QWidget" name="general">
         <attribute name="title">
@@ -235,7 +235,7 @@
            <x>0</x>
            <y>0</y>
            <width>301</width>
-           <height>122</height>
+           <height>150</height>
           </rect>
          </property>
          <layout class="QFormLayout" name="formLayout_4">
@@ -340,7 +340,7 @@
            <x>0</x>
            <y>0</y>
            <width>561</width>
-           <height>291</height>
+           <height>374</height>
           </rect>
          </property>
          <layout class="QFormLayout" name="formLayout_5">
