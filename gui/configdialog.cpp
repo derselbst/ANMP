@@ -158,10 +158,8 @@ void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
 
 void ConfigDialog::on_browseSF2_clicked()
 {
-    string dir = ::mydirname(this->newConfig.FluidsynthDefaultSoundfont);
-
     QString selFilter = "SoundFont (*.sf2)";
-    QString sf2 = QFileDialog::getOpenFileName(this, "Select Soundfont", QString::fromStdString(dir), "SoundFont (*.sf2);;All files (*.*)", &selFilter);
+    QString sf2 = QFileDialog::getOpenFileName(this, "Select Soundfont", this->ui->defaultSF2Path->text(), "SoundFont (*.sf2);;All files (*.*)", &selFilter);
 
     if(!sf2.isNull())
     {
