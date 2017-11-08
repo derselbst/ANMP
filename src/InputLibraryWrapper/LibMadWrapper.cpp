@@ -154,8 +154,6 @@ void LibMadWrapper::open ()
 
                 this->numFrames += 32 * MAD_NSBSAMPLES(&header);
             }
-            
-            this->fileLen = this->numFrames*1000.0 / this->Format.SampleRate;
         }
         else
         {
