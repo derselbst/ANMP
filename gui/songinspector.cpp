@@ -28,7 +28,7 @@ void SongInspector::fillGeneral(const Song* s)
     QFormLayout* form = new QFormLayout(scroll);
     form->addRow("File:", new QLabel(QString::fromStdString(s->Filename), scroll));
     form->addRow("File Offset:", new QLabel(QString::number(s->fileOffset.Value), scroll));
-    form->addRow("File Length:", new QLabel(QString::number(s->fileLen.Value) + " ms", scroll));
+    form->addRow("File Length:", new QLabel(QString::number(::framesToMs(s->getFrames(), s->Format.SampleRate)/1000.0) + " s", scroll));
     form->addRow("Sample Rate:", new QLabel(QString::number(s->Format.SampleRate) + " Hz", scroll));
     form->addRow("Sample Format:", new QLabel(SampleFormatName[static_cast<int>(s->Format.SampleFormat)], scroll));
     form->addRow("Audio Channels:", new QLabel(QString::number(s->Format.Channels()), scroll));

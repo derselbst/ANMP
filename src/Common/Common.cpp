@@ -177,6 +177,16 @@ frame_t msToFrames(const size_t& ms, const unsigned int& sampleRate)
     return (ms*sampleRate)/1000;
 }
 
+/**
+ * @param[in] ms position in audiofile in milliseconds
+ * @param[in] sampleRate sample rate of audiofile in HZ
+ *
+ * @return position in audiofile in frames (i.e. samples)
+ */
+size_t framesToMs(const frame_t& frames, const unsigned int& sampleRate)
+{
+    return static_cast<size_t>((frames*1000.0/sampleRate) + .5);
+}
 
 #ifdef _WIN32
 #include <stdlib.h>
