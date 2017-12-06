@@ -87,7 +87,28 @@ void FluidsynthWrapper::deleteSeq()
 }
 
 void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
-{
+{    
+    // find a soundfont
+    Nullable<string> soundfont;
+    if(!gConfig.FluidsynthForceDefaultSoundfont)
+    {
+        soundfont = ::findSoundfont(midi.Filename);
+    }
+
+    if(!soundfont.hasValue)
+    {
+        // so, either we were forced to use default, or we didnt find any suitable sf2
+        soundfont = gConfig.FluidsynthDefaultSoundfont;
+    }
+
+    if(!::myExists(soundfont.Value))
+    {
+        THROW_RUNTIME_ERROR("Cant synthesize this MIDI, soundfont not found: \"" << soundfont.Value << "\"");
+    }
+    
+    this->cachedSf2 = soundfont.Value;
+    
+    
     if(this->synth == nullptr)
     {
         /* Create the synthesizer */
@@ -117,7 +138,7 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     
     fluid_synth_set_chorus_on(this->synth, gConfig.FluidsynthEnableChorus);
     
-    // make sure lsb mod and breath controller used by CBFD's IIR bandpass filter are inited to their default value to avoid unhearable instruments
+    // make sure lsb mod and breath controller used by CBFD's IIR lowpass filter are inited to their default value to avoid unhearable instruments
     for(int i=0; i<fluid_synth_count_midi_channels(this->synth); i++)
     {
         fluid_synth_cc(this->synth, i, 33, 0);
@@ -128,25 +149,20 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     fluid_synth_set_sample_rate(this->synth, gConfig.FluidsynthSampleRate);
     this->cachedSampleRate = gConfig.FluidsynthSampleRate;
     
-    // find a soundfont
-    Nullable<string> soundfont;
-    if(!gConfig.FluidsynthForceDefaultSoundfont)
-    {
-        soundfont = ::findSoundfont(midi.Filename);
-    }
-
-    if(!soundfont.hasValue)
-    {
-        // so, either we were forced to use default, or we didnt find any suitable sf2
-        soundfont = gConfig.FluidsynthDefaultSoundfont;
-    }
-
-    if(!::myExists(soundfont.Value))
-    {
-        THROW_RUNTIME_ERROR("Cant synthesize this MIDI, soundfont not found: \"" << soundfont.Value << "\"");
-    }
+    fluid_mod_t* cbfd_iir_mod = fluid_mod_new();
+    fluid_mod_set_source1(cbfd_iir_mod, 34,
+                FLUID_MOD_CC
+                | FLUID_MOD_SIN
+                | FLUID_MOD_UNIPOLAR
+                | FLUID_MOD_POSITIVE
+                );
+    fluid_mod_set_source2(cbfd_iir_mod, 0, 0);
+    fluid_mod_set_dest(cbfd_iir_mod, GEN_CUSTOM_FILTERFC);
+    fluid_mod_set_amount(cbfd_iir_mod, 10000);
+    fluid_synth_add_default_mod(this->synth, cbfd_iir_mod, FLUID_SYNTH_OVERWRITE);
     
-    this->cachedSf2 = soundfont.Value;
+    fluid_mod_delete(cbfd_iir_mod);
+
 }
 
 void FluidsynthWrapper::deleteSynth()
@@ -183,7 +199,6 @@ void FluidsynthWrapper::setupSettings()
     fluid_settings_setint(this->settings, "synth.audio-groups",    stereoChannels);
     fluid_settings_setint(this->settings, "synth.audio-channels",  stereoChannels);
     
-    fluid_settings_setint(this->settings, "synth.band-pass-filter", true);
     fluid_settings_setstr(this->settings, "synth.volenv", "-500.0");
     fluid_settings_setstr(this->settings, "synth.cpu-cores", "4");
 }
