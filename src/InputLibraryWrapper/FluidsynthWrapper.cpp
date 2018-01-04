@@ -149,7 +149,8 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     fluid_synth_set_sample_rate(this->synth, gConfig.FluidsynthSampleRate);
     this->cachedSampleRate = gConfig.FluidsynthSampleRate;
     
-    fluid_mod_t* cbfd_iir_mod = fluid_mod_new();
+#if FLUIDSYNTH_VERSION_MAJOR >= 2
+    fluid_mod_t* cbfd_iir_mod = new_fluid_mod();
     fluid_mod_set_source1(cbfd_iir_mod, 34,
                 FLUID_MOD_CC
                 | FLUID_MOD_SIN
@@ -160,8 +161,10 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     fluid_mod_set_dest(cbfd_iir_mod, GEN_CUSTOM_FILTERFC);
     fluid_mod_set_amount(cbfd_iir_mod, 10000);
     fluid_synth_add_default_mod(this->synth, cbfd_iir_mod, FLUID_SYNTH_OVERWRITE);
-    
-    fluid_mod_delete(cbfd_iir_mod);
+    delete_fluid_mod(cbfd_iir_mod);
+#else
+#warning "Cannot simulate Rareware's IIR Lowpass Filter used in CBFD and JFG. Fluidsynth too old, use at least version 2.0"
+#endif
 
 }
 
