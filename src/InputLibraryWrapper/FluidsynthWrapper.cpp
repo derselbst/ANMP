@@ -199,7 +199,7 @@ void FluidsynthWrapper::setupSettings()
     fluid_settings_setint(this->settings, "synth.audio-groups",    stereoChannels);
     fluid_settings_setint(this->settings, "synth.audio-channels",  stereoChannels);
     
-    fluid_settings_setstr(this->settings, "synth.volenv", "-500.0");
+    fluid_settings_setstr(this->settings, "synth.volenv", "compliant");
     fluid_settings_setstr(this->settings, "synth.cpu-cores", "4");
 }
 
