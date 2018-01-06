@@ -150,42 +150,51 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     this->cachedSampleRate = gConfig.FluidsynthSampleRate;
     
 #if FLUIDSYNTH_VERSION_MAJOR >= 2
-    fluid_mod_t* cbfd_iir_mod = new_fluid_mod();
-    fluid_mod_set_source1(cbfd_iir_mod, 34,
-                FLUID_MOD_CC
-                | FLUID_MOD_SIN
-                | FLUID_MOD_UNIPOLAR
-                | FLUID_MOD_POSITIVE
-                );
-    fluid_mod_set_source2(cbfd_iir_mod, 0, 0);
-    fluid_mod_set_dest(cbfd_iir_mod, GEN_CUSTOM_FILTERFC);
-    fluid_mod_set_amount(cbfd_iir_mod, 10000);
-    fluid_synth_add_default_mod(this->synth, cbfd_iir_mod, FLUID_SYNTH_OVERWRITE);
+    fluid_mod_t* my_mod = new_fluid_mod();
     
+    // add a default modulator for CBFD's and JFG's IIR lowpass filter.
+    {
+        fluid_mod_set_source1(my_mod, 34,
+                    FLUID_MOD_CC
+                    | FLUID_MOD_SIN
+                    | FLUID_MOD_UNIPOLAR
+                    | FLUID_MOD_POSITIVE
+                    );
+        fluid_mod_set_source2(my_mod, 0, 0);
+        fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERFC);
+        fluid_mod_set_amount(my_mod, 10000);
+        fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
+    }
     
-    fluid_mod_set_source2(cbfd_iir_mod, 0, 0);
-    fluid_mod_set_dest(cbfd_iir_mod, GEN_ATTENUATION);
-    fluid_mod_set_amount(cbfd_iir_mod, 960 * 0.4);
+    fluid_mod_set_source2(my_mod, 0, 0);
+    fluid_mod_set_dest(my_mod, GEN_ATTENUATION);
+    fluid_mod_set_amount(my_mod, 960 * 0.4);
     
     // override default MIDI Note-On Velocity to Initial Attenuation modulator amount
-    fluid_mod_set_source1(cbfd_iir_mod,
-                            FLUID_MOD_VELOCITY,
-                            FLUID_MOD_GC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_NEGATIVE);
-    fluid_synth_add_default_mod(this->synth, cbfd_iir_mod, FLUID_SYNTH_OVERWRITE);
+    {
+        fluid_mod_set_source1(my_mod,
+                                FLUID_MOD_VELOCITY,
+                                FLUID_MOD_GC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_NEGATIVE);
+        fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
+    }
     
     // override default MIDI continuous controller 7 (main volume) to initial attenuation mod amount
-    fluid_mod_set_source1(cbfd_iir_mod,
-                          7,
-                          FLUID_MOD_CC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_NEGATIVE);
-    fluid_synth_add_default_mod(this->synth, cbfd_iir_mod, FLUID_SYNTH_OVERWRITE);
+    {
+        fluid_mod_set_source1(my_mod,
+                            7,
+                            FLUID_MOD_CC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_NEGATIVE);
+        fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
+    }
     
     // override default MIDI continuous controller 11 (expression) to initial attenuation mod amount
-    fluid_mod_set_source1(cbfd_iir_mod,
-                          11,
-                          FLUID_MOD_CC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_NEGATIVE);
-    fluid_synth_add_default_mod(this->synth, cbfd_iir_mod, FLUID_SYNTH_OVERWRITE);
-        
-    delete_fluid_mod(cbfd_iir_mod);
+    {
+        fluid_mod_set_source1(my_mod,
+                            11,
+                            FLUID_MOD_CC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_NEGATIVE);
+        fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
+    }
+    
+    delete_fluid_mod(my_mod);
 #else
 #warning "Cannot simulate Rareware's IIR Lowpass Filter used in CBFD and JFG. Fluidsynth too old, use at least version 2.0"
 #endif
