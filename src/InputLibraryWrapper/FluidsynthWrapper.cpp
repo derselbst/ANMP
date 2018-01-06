@@ -161,6 +161,30 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     fluid_mod_set_dest(cbfd_iir_mod, GEN_CUSTOM_FILTERFC);
     fluid_mod_set_amount(cbfd_iir_mod, 10000);
     fluid_synth_add_default_mod(this->synth, cbfd_iir_mod, FLUID_SYNTH_OVERWRITE);
+    
+    
+    fluid_mod_set_source2(cbfd_iir_mod, 0, 0);
+    fluid_mod_set_dest(cbfd_iir_mod, GEN_ATTENUATION);
+    fluid_mod_set_amount(cbfd_iir_mod, 960 * 0.4);
+    
+    // override default MIDI Note-On Velocity to Initial Attenuation modulator amount
+    fluid_mod_set_source1(cbfd_iir_mod,
+                            FLUID_MOD_VELOCITY,
+                            FLUID_MOD_GC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_NEGATIVE);
+    fluid_synth_add_default_mod(this->synth, cbfd_iir_mod, FLUID_SYNTH_OVERWRITE);
+    
+    // override default MIDI continuous controller 7 (main volume) to initial attenuation mod amount
+    fluid_mod_set_source1(cbfd_iir_mod,
+                          7,
+                          FLUID_MOD_CC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_NEGATIVE);
+    fluid_synth_add_default_mod(this->synth, cbfd_iir_mod, FLUID_SYNTH_OVERWRITE);
+    
+    // override default MIDI continuous controller 11 (expression) to initial attenuation mod amount
+    fluid_mod_set_source1(cbfd_iir_mod,
+                          11,
+                          FLUID_MOD_CC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_NEGATIVE);
+    fluid_synth_add_default_mod(this->synth, cbfd_iir_mod, FLUID_SYNTH_OVERWRITE);
+        
     delete_fluid_mod(cbfd_iir_mod);
 #else
 #warning "Cannot simulate Rareware's IIR Lowpass Filter used in CBFD and JFG. Fluidsynth too old, use at least version 2.0"
@@ -202,7 +226,7 @@ void FluidsynthWrapper::setupSettings()
     fluid_settings_setint(this->settings, "synth.audio-groups",    stereoChannels);
     fluid_settings_setint(this->settings, "synth.audio-channels",  stereoChannels);
     
-    fluid_settings_setstr(this->settings, "synth.volenv", "compliant");
+//     fluid_settings_setstr(this->settings, "synth.volenv", "compliant");
     fluid_settings_setstr(this->settings, "synth.cpu-cores", "4");
 }
 
