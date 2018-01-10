@@ -36,9 +36,6 @@ void AtomicWrite::write(LogLevel_t l, std::string s, std::ostream& o)
         break;
         
     case LogLevel_t::Info:
-#ifdef NDEBUG
-        return;
-#endif
         logLev="Info";
         break;
         
