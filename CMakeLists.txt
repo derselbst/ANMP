@@ -127,7 +127,17 @@ endif(ENABLE_PORTAUDIO)
 
 
 if(ENABLE_EBUR128)
-  MY_FIND_LIB(EBUR128 ebur128)
+  # previous versions neither provided pkgconfig, nor did true peak calc work
+  PKG_CHECK_MODULES(EBUR128 libebur128>=1.2.3)
+  
+  if(EBUR128_FOUND)
+        add_definitions(-DUSE_EBUR128)
+        set(USE_EBUR128 TRUE)
+        set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${EBUR128_INCLUDE_DIRS})
+        set(LD_FLAGS ${LD_FLAGS} ${EBUR128_LIBRARIES})
+        
+        MY_PRINT(EBUR128)
+  endif(EBUR128_FOUND)
   
   summary_add("ebur128 support" EBUR128_FOUND)
 endif(ENABLE_EBUR128)
