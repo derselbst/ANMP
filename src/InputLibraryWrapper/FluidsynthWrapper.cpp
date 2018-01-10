@@ -138,6 +138,9 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     
     fluid_synth_set_chorus_on(this->synth, gConfig.FluidsynthEnableChorus);
     
+    constexpr int SF2_FILTERFC_THRESHOLD = 13500;
+    constexpr int ACTUAL_FILTERFC_THRESHOLD = 9500 /* Hz */;
+    
     // make sure lsb mod and breath controller used by CBFD's IIR lowpass filter are inited to their default value to avoid unhearable instruments
     for(int i=0; i<fluid_synth_count_midi_channels(this->synth); i++)
     {
@@ -152,17 +155,35 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
 #if FLUIDSYNTH_VERSION_MAJOR >= 2
     fluid_mod_t* my_mod = new_fluid_mod();
     
+    // remove default velocity to filter cutoff modulator
+    {   
+        fluid_mod_set_source1(my_mod, FLUID_MOD_VELOCITY,
+                    FLUID_MOD_GC
+                    | FLUID_MOD_LINEAR
+                    | FLUID_MOD_UNIPOLAR
+                    | FLUID_MOD_NEGATIVE
+                    );
+        fluid_mod_set_source2(my_mod, FLUID_MOD_VELOCITY,
+                    FLUID_MOD_GC
+                    | FLUID_MOD_SWITCH
+                    | FLUID_MOD_UNIPOLAR
+                    | FLUID_MOD_POSITIVE
+                    );
+        fluid_mod_set_dest(my_mod, GEN_FILTERFC);
+        fluid_synth_remove_default_mod(this->synth, my_mod);
+    }
+    
     // add a custom default modulator for CBFD's and JFG's IIR lowpass filter.
     {
         fluid_mod_set_source1(my_mod, 34,
                     FLUID_MOD_CC
                     | FLUID_MOD_SIN
                     | FLUID_MOD_UNIPOLAR
-                    | FLUID_MOD_POSITIVE
+                    | FLUID_MOD_NEGATIVE
                     );
         fluid_mod_set_source2(my_mod, 0, 0);
-        fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERFC);
-        fluid_mod_set_amount(my_mod, 10000);
+        fluid_mod_set_dest(my_mod, GEN_FILTERFC);
+        fluid_mod_set_amount(my_mod, -ACTUAL_FILTERFC_THRESHOLD);
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
     
