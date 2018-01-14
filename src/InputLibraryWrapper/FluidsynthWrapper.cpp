@@ -138,7 +138,6 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     
     fluid_synth_set_chorus_on(this->synth, gConfig.FluidsynthEnableChorus);
     
-    constexpr int SF2_FILTERFC_THRESHOLD = 13500;
     constexpr int ACTUAL_FILTERFC_THRESHOLD = 9500 /* Hz */;
     
     // make sure lsb mod and breath controller used by CBFD's IIR lowpass filter are inited to their default value to avoid unhearable instruments
@@ -197,7 +196,7 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
                     );
         fluid_mod_set_source2(my_mod, 0, 0);
         fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERQ_LIN);
-        fluid_mod_set_amount(my_mod, 8);
+        fluid_mod_set_amount(my_mod, 20);
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
     
