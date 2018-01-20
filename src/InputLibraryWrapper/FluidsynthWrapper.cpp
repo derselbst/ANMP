@@ -143,7 +143,7 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     fluid_synth_set_chorus_on(this->synth, gConfig.FluidsynthEnableChorus);
     
 #if FLUIDSYNTH_VERSION_MAJOR >= 2
-    constexpr int SF2_FILTERFC = 15000 /* Hz */;
+    constexpr int SF2_FILTERFC = 15000 - 13500 /* Hz */;
     constexpr int ACTUAL_FILTERFC_THRESHOLD = 12500 /* Hz */;
     
     constexpr int CBFD_FILTERFC_CC = 34;
@@ -160,6 +160,8 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
         fluid_synth_cc(this->synth, i, CBFD_FILTERQ_CC, 0);
         fluid_synth_cc(this->synth, i, CBFD_FILTERFC_CC, 127);
     }
+    
+    fluid_synth_set_custom_filter(this->synth, FLUID_IIR_LOWPASS, FLUID_IIR_NO_GAIN_AMP | FLUID_IIR_Q_LINEAR);
     
     fluid_mod_t* my_mod = new_fluid_mod();
     
@@ -190,7 +192,7 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
                     | FLUID_MOD_POSITIVE
                     );
         fluid_mod_set_source2(my_mod, 0, 0);
-        fluid_mod_set_dest(my_mod, GEN_FILTERFC);
+        fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERFC);
         fluid_mod_set_amount(my_mod, -SF2_FILTERFC);
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
@@ -205,7 +207,7 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
                     | FLUID_MOD_POSITIVE
                     );
         fluid_mod_set_source2(my_mod, 0, 0);
-        fluid_mod_set_dest(my_mod, GEN_FILTERFC);
+        fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERFC);
         fluid_mod_set_amount(my_mod, ACTUAL_FILTERFC_THRESHOLD);
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
@@ -219,7 +221,7 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
                     | FLUID_MOD_POSITIVE
                     );
         fluid_mod_set_source2(my_mod, 0, 0);
-        fluid_mod_set_dest(my_mod, GEN_FILTERQ);
+        fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERQ);
         fluid_mod_set_amount(my_mod, 20);
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
