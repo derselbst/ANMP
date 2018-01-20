@@ -21,7 +21,7 @@
  * someEvent += std::make_pair(this, &SomeClass::someStaticMemberFunction);
  * someEvent += std::make_pair(nullptr, &someCallbackFunction);
  *
- * someEvent.Fire();
+ * someEvent();
  *
  * someEvent -= this;
  * someEvent -= std::make_pair(nullptr, &someCallbackFunction);
@@ -34,7 +34,7 @@
  * someOtherEvent += std::make_pair(this, &SomeOtherClass::someOtherStaticMemberFunction);
  * someOtherEvent += std::make_pair(someObject, &someOtherCallbackFunction);
  *
- * someOtherEvent.Fire();
+ * someOtherEvent();
  *
  * someOtherEvent -= someObject;
  * someOtherEvent -= this;
@@ -49,8 +49,8 @@ public:
     Event<Args...>& operator+=(std::pair<void*, void(*)(void*, Args...)>);
     Event<Args...>& operator-=(std::pair<void*, void(*)(void*, Args...)>);
     Event<Args...>& operator-=(void*obj);
-
-    void Fire(Args... args);
+    
+    Event<Args...>& operator()(Args... args);
 
 private:
     mutable std::mutex mtx;
@@ -93,7 +93,7 @@ Event<Args...>& Event<Args...>::operator-=(void* obj)
 }
 
 template<typename... Args>
-void Event<Args...>::Fire(Args... args)
+Event<Args...>& Event<Args...>::operator()(Args... args)
 {
     std::lock_guard<std::mutex> lock(this->mtx);
 
@@ -104,4 +104,5 @@ void Event<Args...>::Fire(Args... args)
         it->second(it->first, args...);
     }
 
+    return *this;
 }

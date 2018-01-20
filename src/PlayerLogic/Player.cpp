@@ -238,9 +238,9 @@ void Player::_setCurrentSong (Song* newSong)
         this->currentSong = newSong;
 
         // now we are ready to do the callback
-        this->onCurrentSongChanged.Fire();
+        this->onCurrentSongChanged();
         
-        // oldSong needs to stay open until the very end, i.e. after onCurrentSongChanged.Fire() and audioDriver init() are done!
+        // oldSong needs to stay open until the very end, i.e. after onCurrentSongChanged() and audioDriver init() are done!
         if(oldSong != nullptr && oldSong != newSong)
         {
             oldSong->releaseBuffer();
@@ -362,7 +362,7 @@ void Player::_seekTo (frame_t frame)
     }
 
     this->playhead=frame;
-    this->onPlayheadChanged.Fire(this->playhead);
+    this->onPlayheadChanged(this->playhead);
 }
 
 void Player::resetPlayhead ()
@@ -412,7 +412,7 @@ void Player::playLoop (core::tree<loop_t>& loop)
 
         uint32_t mycount = gConfig.overridingGlobalLoopCount!=-1 ? gConfig.overridingGlobalLoopCount : (*(*subloop)).count;
         bool forever = mycount==0;
-        mycount += 1; // +1 because the subloop we are just going to play, should be played one additional time by the parent of subloop (i.e. the loop we are currently in)
+//         mycount += 1; // +1 because the subloop we are just going to play, should be played one additional time by the parent of subloop (i.e. the loop we are currently in)
         while(this->IsPlaying() && (forever || mycount-- != 0u))
         {
             // if we play this loop multiple time, make sure we start at the beginning again
@@ -522,7 +522,7 @@ again:
         // update the playhead
         this->playhead+=framesWritten;
         // notify observers
-        this->onPlayheadChanged.Fire(this->playhead);
+        this->onPlayheadChanged(this->playhead);
 
         // update our local copy of playhead
         memorizedPlayhead+=framesWritten;
@@ -535,7 +535,7 @@ again:
 void Player::playInternal ()
 {
     Nullable<string> exceptionMsg = Nullable<string>();
-    this->onIsPlayingChanged.Fire(this->IsPlaying(), exceptionMsg);
+    this->onIsPlayingChanged(this->IsPlaying(), exceptionMsg);
 
     try
     {
@@ -570,6 +570,6 @@ void Player::playInternal ()
         this->_seekTo(f);
     }
     
-    this->onIsPlayingChanged.Fire(this->IsPlaying(), exceptionMsg);
+    this->onIsPlayingChanged(this->IsPlaying(), exceptionMsg);
 }
 
