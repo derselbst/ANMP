@@ -362,6 +362,7 @@ void Player::_seekTo (frame_t frame)
     }
 
     this->playhead=frame;
+    this->onPlayheadChanged.Fire(this->playhead);
 }
 
 void Player::resetPlayhead ()
