@@ -27,6 +27,7 @@ public:
 
     Song*  getCurrentSong () override;
     size_t getCurrentSongId () override;
+    size_t size();
 
     Song* next () override;
 

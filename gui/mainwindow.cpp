@@ -30,14 +30,16 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow),
     drivesModel(new QFileSystemModel(this)),
     filesModel(new QFileSystemModel(this)),
-    playlistModel(new PlaylistModel(this)),
-    player(new Player(this->playlistModel)),
+    playlist(new Playlist()),
+    playlistModel(new PlaylistModel(playlist, this)),
+    player(new Player(this->playlist)),
     channelConfigModel(new QStandardItemModel(0, 1, this)),
 #ifdef USE_VISUALIZER
     analyzerWindow(new AnalyzerApplet(this->player, this)),
 #endif
     settingsView(new ConfigDialog(this))
 {
+    qRegisterMetaType<const Song*>("const Song*");
 /*    
     // add our D-Bus interface and connect to D-Bus
     new AnmpAdaptor(this);
@@ -89,7 +91,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //         size_t target = this->playlistModel->getCurrentSongId();
 //         this->playlistModel->moveRows(QModelIndex(), idx, 1, QModelIndex(), target);
     });
-    connect(this->ui->actionAdd_Playback_Stop_At_End,&QAction::triggered, this, [this]{this->playlistModel->add(nullptr);});
+    connect(this->ui->actionAdd_Playback_Stop_At_End,&QAction::triggered, this, [this]{this->playlist->add(nullptr);});
     connect(this->ui->actionShuffle_Playst,   &QAction::triggered, this, &MainWindow::shufflePlaylist);
     connect(this->ui->actionClear_Playlist,   &QAction::triggered, this, &MainWindow::clearPlaylist);
 
@@ -110,7 +112,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->tableView, &PlaylistView::activated,     this, &MainWindow::selectSong);
     connect(this->ui->tableView, &PlaylistView::doubleClicked, this, &MainWindow::selectSong);
 
-    connect(this->playlistModel, &PlaylistModel::SongAdded, this, &MainWindow::updateStatusBar);
+    connect(this->playlistModel, &PlaylistModel::SongAdded, this, &MainWindow::slotSongAdded);
     connect(this->playlistModel, &PlaylistModel::UnloadCurrentSong, this, [this]{this->player->stop(); this->player->setCurrentSong(nullptr);});
 
 
@@ -152,6 +154,7 @@ MainWindow::~MainWindow()
 
     delete this->player;
     delete this->playlistModel;
+    delete this->playlist;
 }
 
 void MainWindow::createShortcuts()

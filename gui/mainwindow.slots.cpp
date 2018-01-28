@@ -69,12 +69,11 @@ void MainWindow::slotSeek(long long pos)
     }
 }
 
-void MainWindow::slotCurrentSongChanged()
+void MainWindow::slotCurrentSongChanged(const Song* s)
 {
     this->channelConfigModel->removeRows(0, this->channelConfigModel->rowCount());
 
     PlayheadSlider* playheadSlider = this->ui->seekBar;
-    const Song* s = this->player->getCurrentSong();
     if(s==nullptr)
     {
         this->setWindowTitleCustom("");
@@ -121,8 +120,8 @@ void MainWindow::selectSong(const QModelIndex &index)
     try
     {
         this->Stop();
-        Song* songToPlay = this->playlistModel->setCurrentSong(index.row());
-        this->player->setCurrentSong(songToPlay);
+        this->playlist->setCurrentSong(index.row());
+        this->player->setCurrentSong(this->playlist->getSong(index.row()));
         this->Play();
     }
     catch(const exception& e)
@@ -248,7 +247,7 @@ void MainWindow::Next()
     {
         bool oldState = this->player->IsPlaying();
         this->Stop();
-        this->player->next();
+        this->player->setCurrentSong(this->playlist->next());
         if(oldState)
         {
             this->Play();
@@ -266,7 +265,7 @@ void MainWindow::Previous()
     {
         bool oldState = this->player->IsPlaying();
         this->Stop();
-        this->player->previous();
+        this->player->setCurrentSong(this->playlist->previous());
         if(oldState)
         {
             this->Play();
@@ -374,7 +373,7 @@ void MainWindow::ToggleAllVoices()
     this->DoChannelMuting([](bool voiceMuted, bool){return voiceMuted != true;});
 }
 
-void MainWindow::updateStatusBar(QString file, int cur, int total)
+void MainWindow::slotSongAdded(QString file, int cur, int total)
 {
     QString text = "Adding file (";
     text += QString::number(cur);
@@ -391,6 +390,8 @@ void MainWindow::updateStatusBar(QString file, int cur, int total)
     {
         this->ui->statusbar->showMessage(text);
     }
+    
+    this->playlistModel->insertRows(this->playlist->size(), 1);
 }
 
 void MainWindow::aboutQt()

@@ -238,7 +238,7 @@ void Player::_setCurrentSong (Song* newSong)
         this->currentSong = newSong;
 
         // now we are ready to do the callback
-        this->onCurrentSongChanged();
+        this->onCurrentSongChanged(newSong);
         
         // oldSong needs to stay open until the very end, i.e. after onCurrentSongChanged() and audioDriver init() are done!
         if(oldSong != nullptr && oldSong != newSong)
@@ -290,16 +290,6 @@ void Player::_pause ()
         // usually by dropping the last few frames
         this->audioDriver->stop();
     }
-}
-
-void Player::next ()
-{
-    this->setCurrentSong(this->playlist->next());
-}
-
-void Player::previous ()
-{
-    this->setCurrentSong(this->playlist->previous());
 }
 
 void Player::fadeout (unsigned int fadeTime, int8_t fadeType)

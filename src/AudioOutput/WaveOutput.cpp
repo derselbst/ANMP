@@ -295,11 +295,9 @@ void WaveOutput::init(SongFormat& format, bool)
     this->currentFormat = format;
 }
 
-void WaveOutput::onCurrentSongChanged(void* context)
+void WaveOutput::onCurrentSongChanged(void* context, const Song* newSong)
 {
     WaveOutput* pthis = static_cast<WaveOutput*>(context);
-    
-    const Song* newSong = pthis->player->getCurrentSong();
     
     lock_guard<recursive_mutex> lck(pthis->mtx);
     try

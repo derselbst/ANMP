@@ -1,6 +1,7 @@
 #include "PlaylistView.h"
 #include "IPlaylist.h"
 #include "PlaylistModel.h"
+#include "Playlist.h"
 #include "songinspector.h"
 #include <QMenu>
 #include <QKeyEvent>
@@ -145,7 +146,7 @@ void PlaylistView::showInspector()
     if(i.isValid())
     {
         int row = i.row();
-        const Song* s = playlistModel->getSong(row);
+        const Song* s = playlistModel->getPlaylist()->getSong(row);
 
         SongInspector insp (s, this);
         insp.exec();

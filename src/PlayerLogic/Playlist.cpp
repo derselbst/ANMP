@@ -197,3 +197,8 @@ void Playlist::move(size_t source, unsigned int count, int steps)
         }
     }
 }
+
+size_t Playlist::size()
+{
+    return this->queue.size();
+}

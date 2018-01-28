@@ -51,11 +51,10 @@ void ebur128Output::init(SongFormat& format, bool)
     this->currentFormat = format;
 }
 
-void ebur128Output::onCurrentSongChanged(void* context)
+void ebur128Output::onCurrentSongChanged(void* context, const Song* newSong)
 {
     ebur128Output* pthis = static_cast<ebur128Output*>(context);
     
-    const Song* newSong = pthis->player->getCurrentSong();
     lock_guard<recursive_mutex> lck(pthis->mtx);
     try
     {

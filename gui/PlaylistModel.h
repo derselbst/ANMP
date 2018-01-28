@@ -8,18 +8,19 @@
 #include <mutex>
 #include <condition_variable>
 #include <future>
+#include <deque>
+#include <string>
 
-#include "Playlist.h"
-
+class Playlist;
 class Song;
 class QFileInfo;
 
-class PlaylistModel : public QAbstractTableModel, public Playlist
+class PlaylistModel : public QAbstractTableModel
 {
     Q_OBJECT
 
 public:
-    PlaylistModel(QObject *parent = 0);
+    PlaylistModel(Playlist *playlist, QObject *parent = 0);
     ~PlaylistModel() override;
 
     // *** MODEL READ SUPPORT ***
@@ -44,15 +45,9 @@ public:
     bool canDropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const override;
     bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
 
-    size_t add (Song* song) override;
-
-    void remove (size_t i) override;
-
-    void clear() override;
-
-    Song* setCurrentSong (size_t id) override;
-
-    void shuffle(size_t, size_t) override;
+    void clear();
+    void shuffle(size_t, size_t);
+    const Playlist* getPlaylist() {return this->playlist;};
 
 
     template<typename T>
@@ -64,14 +59,20 @@ signals:
     // emitted, if the song currently played back gets deleted
     void UnloadCurrentSong();
 
+public slots:
+    void slotCurrentSongChanged(const Song* s);
+    
 private:
+    Playlist *playlist;
+    int oldSongId = 0;
+    
     struct
     {
         // a queue to be filled with filepaths for songs that shall be added
-        std::deque<string> queue;
+        std::deque<std::string> queue;
 
         // mutex for that queue
-        mutable mutex mtx;
+        mutable std::mutex mtx;
 
         // cond var for synchronizing the worker thread and queue filler threads
         std::condition_variable cv;
@@ -104,7 +105,7 @@ private:
 template<typename T>
 void PlaylistModel::asyncAdd(const QList<T>& files)
 {
-    std::unique_lock<mutex> lck(this->songsToAdd.mtx);
+    std::unique_lock<std::mutex> lck(this->songsToAdd.mtx);
     this->songsToAdd.cv.wait(lck, [this]{return !this->songsToAdd.ready;});
 
     for(int i=0; i<files.count() && !this->songsToAdd.shutDown; i++)
@@ -128,7 +129,7 @@ void PlaylistModel::asyncAdd(const QList<T>& files)
 
     if(this->songsToAdd.processed && !this->songsToAdd.shutDown)
     {
-        this->songAdderWorker = std::async(launch::async, &PlaylistModel::workerLoop, this);
+        this->songAdderWorker = std::async(std::launch::async, &PlaylistModel::workerLoop, this);
         this->songsToAdd.processed = false;
     }
     lck.unlock();

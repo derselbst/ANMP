@@ -17,7 +17,9 @@ class QFileSystemModel;
 class QStandardItemModel;
 class QItemSelection;
 class PlaylistModel;
+class Playlist;
 class Player;
+class Song;
 struct SongFormat;
 
 class MainWindow : public QMainWindow
@@ -30,7 +32,7 @@ public:
     ~MainWindow();
 
     static void callbackSeek(void*, frame_t pos);
-    static void callbackCurrentSongChanged(void*);
+    static void callbackCurrentSongChanged(void*, const Song* s);
     static void callbackIsPlayingChanged(void* context, bool isPlaying, Nullable<string> msg);
 
 protected:
@@ -47,6 +49,7 @@ private:
 
     QFileSystemModel *drivesModel = nullptr;
     QFileSystemModel *filesModel = nullptr;
+    Playlist* playlist = nullptr;
     PlaylistModel* playlistModel = nullptr;
     Player* player = nullptr;
     QStandardItemModel* channelConfigModel = nullptr;
@@ -104,7 +107,7 @@ protected slots:
 
     void slotIsPlayingChanged(bool isPlaying, bool, QString);
     void slotSeek(long long);
-    void slotCurrentSongChanged();
+    void slotCurrentSongChanged(const Song* s);
 
     void shufflePlaylist();
     void clearPlaylist();
@@ -117,7 +120,7 @@ protected slots:
     void aboutQt();
     void aboutAnmp();
 
-    void updateStatusBar(QString file, int, int);
+    void slotSongAdded(QString file, int, int);
 
     void on_actionFileBrowser_triggered(bool checked);
 

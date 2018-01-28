@@ -48,5 +48,5 @@ private:
     ebur128_state* handle = nullptr;
 
     const Song* currentSong = nullptr;
-    static void onCurrentSongChanged(void* ctx);
+    static void onCurrentSongChanged(void* ctx, const Song* s);
 };

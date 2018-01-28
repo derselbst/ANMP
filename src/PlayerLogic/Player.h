@@ -72,16 +72,6 @@ public:
     bool IsSeekingPossible();
 
     /**
-     * plays the next song from the playlist, same behaviour as this->setCurrentSong()
-     */
-    void next ();
-
-    /**
-     * plays the previous song from the playlist, same behaviour as this->setCurrentSong()
-     */
-    void previous ();
-
-    /**
      * smoothly decreases playback volume to zero. when this method returns, the volume reached zero and playback continues!
      * 
      * @param fadeTime time in milliseconds needed to decrease the volume
@@ -112,7 +102,7 @@ public:
     
     Event<bool, Nullable<string>> onIsPlayingChanged;
     Event<frame_t> onPlayheadChanged;
-    Event<> onCurrentSongChanged;
+    Event<const Song*> onCurrentSongChanged;
 
 
 private:

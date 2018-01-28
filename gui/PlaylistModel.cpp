@@ -2,6 +2,7 @@
 #include <anmp.hpp>
 
 #include "PlaylistModel.h"
+#include "Playlist.h"
 
 #include <QBrush>
 #include <QMimeData>
@@ -15,8 +16,9 @@
 #include <iomanip>
 #include <thread>
 
-PlaylistModel::PlaylistModel(QObject *parent)
-    : QAbstractTableModel(parent)
+PlaylistModel::PlaylistModel(Playlist *playlist, QObject *parent)
+    : QAbstractTableModel(parent),
+    playlist(playlist)
 {
 }
 
@@ -43,9 +45,7 @@ PlaylistModel::~PlaylistModel()
 
 int PlaylistModel::rowCount(const QModelIndex & /* parent */) const
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
-
-    return this->queue.size();
+    return this->playlist->size();
 }
 
 int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
@@ -55,17 +55,15 @@ int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
 
 QVariant PlaylistModel::data(const QModelIndex &index, int role) const
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
-
 //       cout << "    DATA " << index.row() << " " << index.column() << role << endl;
-    if (!index.isValid() || this->queue.size() <= index.row())
+    if (!index.isValid() || this->rowCount(index) <= index.row())
     {
         return QVariant();
     }
 
     if (role == Qt::DisplayRole)
     {
-        Song* songToUse = this->queue[index.row()];
+        Song* songToUse = this->playlist->getSong(index.row());
 
         if(songToUse == nullptr)
         {
@@ -165,8 +163,6 @@ QVariant PlaylistModel::headerData(int section, Qt::Orientation orientation, int
 
 bool PlaylistModel::insertRows(int row, int count, const QModelIndex & parent)
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
-
     if(row>this->rowCount(QModelIndex()))
     {
         return false;
@@ -186,13 +182,15 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
     // in QT5.1 parent is overridden or hidden or something by QAbstractTableModel, which may break build
     QObject* p = this->QObject::parent();
 
+    int curentId = this->playlist->getCurrentSongId();
+    
     // stop playback if the currently playing song is about to be removed
-    if(p != nullptr && row <= this->currentSong && this->currentSong <= row+count-1)
+    if(p != nullptr && row <= curentId && curentId <= row+count-1)
     {
         emit this->UnloadCurrentSong();
     }
 
-    lock_guard<recursive_mutex> lck(this->mtx);
+    
 
     if(row+count>this->rowCount(QModelIndex()))
     {
@@ -204,7 +202,7 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
 
     for(int i=row+(count-1); i>=row; i--)
     {
-        Playlist::remove(i);
+        this->playlist->remove(i);
     }
 
     //finish insertion, notify views/models
@@ -215,13 +213,11 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
 
 bool PlaylistModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationRow)
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
-
     // if source and destination parents are the same, move elements locally
     if(true)
     {
         beginMoveRows(sourceParent, sourceRow, sourceRow+count-1, destinationParent, destinationRow);
-        this->move(sourceRow, count, destinationRow-sourceRow);
+        this->playlist->move(sourceRow, count, destinationRow-sourceRow);
         endMoveRows();
     }
     else
@@ -245,7 +241,6 @@ bool PlaylistModel::setData(const QModelIndex &index, const QVariant &value, int
         // TODO WHY DOES THIS HAS NO FUCKING EFFECT???
         emit(dataChanged(index, index));
     }
-
 
     // WARNING: the view will only properly be updated if we return true!
     return true;
@@ -378,7 +373,7 @@ void PlaylistModel::workerLoop()
         auto start = std::chrono::high_resolution_clock::now();
         i++;
         emit this->SongAdded(QString::fromStdString(s), i, i+total);
-        PlaylistFactory::addSong(*this, s);
+        PlaylistFactory::addSong(*this->playlist, s);
         auto end = std::chrono::high_resolution_clock::now();
 
         // if we add songs too fast we keep locking this->mtx (via this->add(Song*)) and thus potentially blocking the UI thread
@@ -398,75 +393,47 @@ void PlaylistModel::workerLoop()
     this->songsToAdd.ready = false;
 }
 
-
-size_t PlaylistModel::add(Song* s)
-{
-    size_t id = Playlist::add(s);
-
-    this->insertRows(this->rowCount(QModelIndex()), 1);
-    
-    return id;
-}
-
-void PlaylistModel::remove(size_t i)
-{
-    this->removeRows(i, 1);
-}
-
 void PlaylistModel::clear()
 {
     {
     std::unique_lock<mutex> lck(this->songsToAdd.mtx);
     this->songsToAdd.queue.clear();
-//     emit this->SongAdded("", 0, 0);
     }
     
-    lock_guard<recursive_mutex> lck(this->mtx);
+    this->playlist->clear();
 
     const int Elements = this->rowCount(QModelIndex());
     this->removeRows(0, Elements);
 }
 
-Song* PlaylistModel::setCurrentSong (size_t id)
+void PlaylistModel::slotCurrentSongChanged(const Song* s)
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    const int oldSongId = this->oldSongId;
+    const int newSongId = this->playlist->getCurrentSongId();
 
-    this->beginResetModel();
+    if(oldSongId != newSongId)
+    {
+        for(int j=0; j<this->columnCount(QModelIndex()); j++)
+        {
+            // clear color of old song
+            this->setData(this->index(oldSongId, j), this->calculateRowColor(oldSongId), Qt::BackgroundRole);
 
-    Song* newSong = Playlist::setCurrentSong(id);
-
-    this->endResetModel();
-
-    return newSong;
+            // color new song in view
+            this->setData(this->index(newSongId, j), this->calculateRowColor(newSongId), Qt::BackgroundRole);
+        }
+        this->oldSongId = newSongId;
+    }
 }
-// TODO: acutally smth like this should be done here for setCurrentSong()
-// Song* PlaylistModel::setCurrentSong ()
-// {
-//     lock_guard<recursive_mutex> lck(this->mtx);
-//
-//   int oldSong = this->currentSong;
-//   Song* newSong = Playlist::setCurrentSong();
-//
-// //     clear color of old song
-//   this->setData(this->index(oldSong, 0), this->calculateRowColor(oldSong),Qt::BackgroundRole);
-//
-// //     color new song in view
-//     this->setData(this->index(this->currentSong, 0), this->calculateRowColor(this->currentSong),Qt::BackgroundRole);
-//
-//     return newSong;
-// }
 
 QColor PlaylistModel::calculateRowColor(int row) const
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
-
-    if(this->currentSong == row)
-    {
-        return QColor(255, 0, 0, 127);
-    }
-    else if(this->getSong(row) == nullptr)
+    if(this->playlist->getCurrentSongId() == row)
     {
         return QColor(255,225,0);
+    }
+    else if(this->playlist->getSong(row) == nullptr)
+    {
+        return QColor(255, 0, 0, 127);
     }
     else if(row > 0 && row % 10 == 0)
     {
@@ -483,6 +450,6 @@ QColor PlaylistModel::calculateRowColor(int row) const
 void PlaylistModel::shuffle(size_t start, size_t end)
 {
     this->beginResetModel();
-    Playlist::shuffle(start, end);
+    this->playlist->shuffle(start, end);
     this->endResetModel();
 }
