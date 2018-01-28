@@ -23,6 +23,7 @@ PlaylistModel::PlaylistModel(QObject *parent)
 PlaylistModel::~PlaylistModel()
 {
     this->songsToAdd.shutDown=true;
+    this->songsToAdd.queue.clear();
 
     try
     {
@@ -414,10 +415,15 @@ void PlaylistModel::remove(size_t i)
 
 void PlaylistModel::clear()
 {
+    {
+    std::unique_lock<mutex> lck(this->songsToAdd.mtx);
+    this->songsToAdd.queue.clear();
+//     emit this->SongAdded("", 0, 0);
+    }
+    
     lock_guard<recursive_mutex> lck(this->mtx);
 
     const int Elements = this->rowCount(QModelIndex());
-
     this->removeRows(0, Elements);
 }
 
