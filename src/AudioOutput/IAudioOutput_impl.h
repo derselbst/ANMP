@@ -13,9 +13,11 @@ void IAudioOutput::Mix(const frame_t frames, const TIN *restrict in, const SongF
     // allocate a temporary mixdown buffer where all the voices get added to
     // we cant use "out" directly, depending on TOUT this might overflow and would prevent proper clipping a few lines later
     //
-    // we need to be fast, C99's VLAs are fast, use them
+    // we need to be fast, alloca and C99's VLAs are fast, use them
     // stack overflow should be unlikely, since N usually 2, at most 6, I hope...
-#if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
+#if defined(alloca)
+    long double *temp = static_cast<long double*>(alloca(N*sizeof(*temp)));
+#elif defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
     long double temp[N];
 #else
     #warning "Neither clang or GCC compiler, fearing to use C99 VLA, falling back to std::vector"
