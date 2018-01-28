@@ -8,7 +8,7 @@
 %define builddir build
 
 Name: anmp
-Version: 4
+Version: 6
 Release: 0
 License: GPL-2.0
 Summary: Another Nameless Music Player
