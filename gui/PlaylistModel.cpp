@@ -407,14 +407,11 @@ void PlaylistModel::slotCurrentSongChanged(const Song*)
 
     if(oldSongId != newSongId)
     {
-        for(int j=0; j<this->columnCount(QModelIndex()); j++)
-        {
-            // clear color of old song
-            this->setData(this->index(oldSongId, j), this->calculateRowColor(oldSongId), Qt::BackgroundRole);
+        const int lastCol = this->columnCount(QModelIndex())-1;
+        
+        emit(dataChanged(this->index(oldSongId, 0), this->index(oldSongId, lastCol)));
+        emit(dataChanged(this->index(newSongId, 0), this->index(newSongId, lastCol)));
 
-            // color new song in view
-            this->setData(this->index(newSongId, j), this->calculateRowColor(newSongId), Qt::BackgroundRole);
-        }
         this->oldSongId = newSongId;
     }
 }
