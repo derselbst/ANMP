@@ -184,20 +184,18 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
 
     int curentId = this->playlist->getCurrentSongId();
     
-    // stop playback if the currently playing song is about to be removed
-    if(p != nullptr && row <= curentId && curentId <= row+count-1)
-    {
-        emit this->UnloadCurrentSong();
-    }
-
-    
-
     if(row+count>this->rowCount(QModelIndex()))
     {
         return false;
     }
 
-    //notify views and proxy models that a line will be inserted
+    // stop playback if the currently playing song is about to be removed
+    if(p != nullptr && row <= curentId && curentId <= row+count-1)
+    {
+        emit this->UnloadCurrentSong();
+    }
+    
+    //notify views and proxy models that a line will be removed
     beginRemoveRows(parent, row, row+(count-1));
 
     for(int i=row+(count-1); i>=row; i--)
@@ -205,8 +203,10 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
         this->playlist->remove(i);
     }
 
-    //finish insertion, notify views/models
+    //finish removal, notify views/models
     endRemoveRows();
+    
+    this->slotCurrentSongChanged(nullptr);
 
     return true;
 }
@@ -228,17 +228,15 @@ bool PlaylistModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int
     return true;
 }
 
-bool PlaylistModel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool PlaylistModel::setData(const QModelIndex &index, const QVariant &, int role)
 {
-    if (!index.isValid() /*&& index.row() != index.column()*/ /*&& role == Qt::EditRole*/)
+    if (!index.isValid())
     {
         return false;
     }
 
     if(role==Qt::BackgroundRole)
     {
-        cout << "EMIT " << index.row() << " " << index.column() << endl;
-        // TODO WHY DOES THIS HAS NO FUCKING EFFECT???
         emit(dataChanged(index, index));
     }
 
@@ -295,12 +293,8 @@ QMimeData* PlaylistModel::mimeData(const QModelIndexList &indexes) const
     return mimeData;
 }
 
-bool PlaylistModel::canDropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const
+bool PlaylistModel::canDropMimeData(const QMimeData *data, Qt::DropAction, int , int , const QModelIndex &) const
 {
-    Q_UNUSED(action);
-    Q_UNUSED(row);
-    Q_UNUSED(parent);
-
     return data->hasFormat("text/uri-list");
 }
 
@@ -406,7 +400,7 @@ void PlaylistModel::clear()
     this->removeRows(0, Elements);
 }
 
-void PlaylistModel::slotCurrentSongChanged(const Song* s)
+void PlaylistModel::slotCurrentSongChanged(const Song*)
 {
     const int oldSongId = this->oldSongId;
     const int newSongId = this->playlist->getCurrentSongId();

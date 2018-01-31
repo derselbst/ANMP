@@ -40,6 +40,11 @@ void Playlist::remove (size_t i)
     Song* s = *it;
     this->queue.erase(it);
     delete s;
+    
+    if(i < this->currentSong)
+    {
+        this->currentSong--;
+    }
 }
 
 void Playlist::clear()

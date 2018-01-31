@@ -109,8 +109,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->seekBar,          &PlayheadSlider::sliderMoved, this, [this](int position){this->player->seekTo(position);});
 
 
+    // emitted double-clicking or pressing Enter
     connect(this->ui->tableView, &PlaylistView::activated,     this, &MainWindow::selectSong);
-    connect(this->ui->tableView, &PlaylistView::doubleClicked, this, &MainWindow::selectSong);
 
     connect(this->playlistModel, &PlaylistModel::SongAdded, this, &MainWindow::slotSongAdded);
     connect(this->playlistModel, &PlaylistModel::UnloadCurrentSong, this, [this]{this->player->stop(); this->player->setCurrentSong(nullptr);});

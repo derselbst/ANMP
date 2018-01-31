@@ -143,8 +143,8 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     fluid_synth_set_chorus_on(this->synth, gConfig.FluidsynthEnableChorus);
     
 #if FLUIDSYNTH_VERSION_MAJOR >= 2
-    constexpr int SF2_FILTERFC = 15000 - 13500 /* Hz */;
-    constexpr int ACTUAL_FILTERFC_THRESHOLD = 12500 /* Hz */;
+    constexpr int OFFSET = 500 /* Hz */;
+    constexpr int ACTUAL_FILTERFC_THRESHOLD = 13000; // 11500 /* Hz */;
     
     constexpr int CBFD_FILTERFC_CC = 34;
     constexpr int CBFD_FILTERQ_CC = 33;
@@ -156,7 +156,7 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     // make sure lsb mod and breath controller used by CBFD's IIR lowpass filter are inited to their default value to avoid unhearable instruments
     for(int i=0; i<fluid_synth_count_midi_channels(this->synth); i++)
     {
-        fluid_synth_cc(this->synth, i, MY_CUSTOM_CC, MY_CUSTOM_CC_VAL);
+//         fluid_synth_cc(this->synth, i, MY_CUSTOM_CC, MY_CUSTOM_CC_VAL);
         fluid_synth_cc(this->synth, i, CBFD_FILTERQ_CC, 0);
         fluid_synth_cc(this->synth, i, CBFD_FILTERFC_CC, 127);
     }
@@ -184,23 +184,29 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
     }
     
     // force the default sf2 lowpass filter to 0 Hz
-    {
-        fluid_mod_set_source1(my_mod, MY_CUSTOM_CC,
-                    FLUID_MOD_CC
-                    | FLUID_MOD_LINEAR
-                    | FLUID_MOD_UNIPOLAR
-                    | FLUID_MOD_POSITIVE
-                    );
-        fluid_mod_set_source2(my_mod, 0, 0);
-        fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERFC);
-        fluid_mod_set_amount(my_mod, -SF2_FILTERFC);
-        fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
-    }
+//     {
+//         fluid_mod_set_source1(my_mod, MY_CUSTOM_CC,
+//                     FLUID_MOD_CC
+//                     | FLUID_MOD_LINEAR
+//                     | FLUID_MOD_UNIPOLAR
+//                     | FLUID_MOD_POSITIVE
+//                     );
+//         fluid_mod_set_source2(my_mod, 0, 0);
+//         fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERFC);
+//         fluid_mod_set_amount(my_mod, OFFSET);
+//         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
+//     }
     
     
     // add a custom default modulator for CBFD's and JFG's IIR lowpass filter.
     {
         fluid_mod_set_source1(my_mod, CBFD_FILTERFC_CC,
+                    FLUID_MOD_CC
+                    | FLUID_MOD_SIN
+                    | FLUID_MOD_UNIPOLAR
+                    | FLUID_MOD_POSITIVE
+                    );
+        fluid_mod_set_source2(my_mod, CBFD_FILTERFC_CC,
                     FLUID_MOD_CC
                     | FLUID_MOD_SIN
                     | FLUID_MOD_UNIPOLAR
@@ -222,7 +228,7 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
                     );
         fluid_mod_set_source2(my_mod, 0, 0);
         fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERQ);
-        fluid_mod_set_amount(my_mod, 20);
+        fluid_mod_set_amount(my_mod, 7);
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
     

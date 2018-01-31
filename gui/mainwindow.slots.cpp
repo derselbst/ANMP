@@ -120,8 +120,7 @@ void MainWindow::selectSong(const QModelIndex &index)
     try
     {
         this->Stop();
-        this->playlist->setCurrentSong(index.row());
-        this->player->setCurrentSong(this->playlist->getSong(index.row()));
+        this->player->setCurrentSong(this->playlist->setCurrentSong(index.row()));
         this->Play();
     }
     catch(const exception& e)
@@ -236,9 +235,6 @@ void MainWindow::StopFade()
 void MainWindow::Stop()
 {
     this->player->stop();
-
-    // dont call the slot directly, a call might still be pending, making a direct call here useless
-    QMetaObject::invokeMethod( this, "slotSeek", Qt::QueuedConnection, Q_ARG(long long, 0 ) );
 }
 
 void MainWindow::Next()
