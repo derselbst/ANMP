@@ -178,10 +178,6 @@ bool PlaylistModel::insertRows(int row, int count, const QModelIndex & parent)
 
 bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
 {
-    // call QObjects parent() explicitly
-    // in QT5.1 parent is overridden or hidden or something by QAbstractTableModel, which may break build
-    QObject* p = this->QObject::parent();
-
     int curentId = this->playlist->getCurrentSongId();
     
     if(row+count>this->rowCount(QModelIndex()))
@@ -190,7 +186,7 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
     }
 
     // stop playback if the currently playing song is about to be removed
-    if(p != nullptr && row <= curentId && curentId <= row+count-1)
+    if(row <= curentId && curentId <= row+count-1)
     {
         emit this->UnloadCurrentSong();
     }
@@ -225,22 +221,6 @@ bool PlaylistModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int
         // otherwise, move the node under the parent
         return false;
     }
-    return true;
-}
-
-bool PlaylistModel::setData(const QModelIndex &index, const QVariant &, int role)
-{
-    if (!index.isValid())
-    {
-        return false;
-    }
-
-    if(role==Qt::BackgroundRole)
-    {
-        emit(dataChanged(index, index));
-    }
-
-    // WARNING: the view will only properly be updated if we return true!
     return true;
 }
 
@@ -390,14 +370,13 @@ void PlaylistModel::workerLoop()
 void PlaylistModel::clear()
 {
     {
-    std::unique_lock<mutex> lck(this->songsToAdd.mtx);
-    this->songsToAdd.queue.clear();
+        std::lock_guard<mutex> lck(this->songsToAdd.mtx);
+        this->songsToAdd.queue.clear();
     }
     
+    beginRemoveRows(QModelIndex(), 0, this->rowCount(QModelIndex())-1);
     this->playlist->clear();
-
-    const int Elements = this->rowCount(QModelIndex());
-    this->removeRows(0, Elements);
+    endRemoveRows();
 }
 
 void PlaylistModel::slotCurrentSongChanged(const Song*)

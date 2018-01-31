@@ -59,6 +59,7 @@ void Playlist::clear()
     }
 
     this->queue.clear();
+    this->currentSong = 0;
 }
 
 Song* Playlist::getCurrentSong ()
