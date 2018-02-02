@@ -153,28 +153,28 @@ void MainWindow::settingsDialogAccepted()
 
 void MainWindow::shufflePlaylist()
 {
-    QItemSelection indexList = this->ui->tableView->selectionModel()->selection();
-
-    if(indexList.empty())
-    {
+//     QItemSelection indexList = this->ui->tableView->selectionModel()->selection();
+// 
+//     if(indexList.empty())
+//     {
         this->playlistModel->shuffle(0, this->playlistModel->rowCount(this->playlistModel->index(0,0)));
-    }
-    else
-    {
-        for(QItemSelection::const_iterator i=indexList.cbegin(); i!=indexList.cend(); ++i)
-        {
-            int top = i->top();
-            int btm = i->bottom();
-
-            QModelIndex b = this->playlistModel->index(btm,0);
-            QModelIndex t = this->playlistModel->index(top,0);
-
-            if(b.isValid() && t.isValid())
-            {
-                this->playlistModel->shuffle(min(top, btm), max(top, btm));
-            }
-        }
-    }
+//     }
+//     else
+//     {
+//         for(QItemSelection::const_iterator i=indexList.cbegin(); i!=indexList.cend(); ++i)
+//         {
+//             int top = i->top();
+//             int btm = i->bottom();
+// 
+//             QModelIndex b = this->playlistModel->index(btm,0);
+//             QModelIndex t = this->playlistModel->index(top,0);
+// 
+//             if(b.isValid() && t.isValid())
+//             {
+//                 this->playlistModel->shuffle(min(top, btm), max(top, btm));
+//             }
+//         }
+//     }
 }
 
 void MainWindow::clearPlaylist()

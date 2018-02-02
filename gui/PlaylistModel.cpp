@@ -347,9 +347,9 @@ void PlaylistModel::workerLoop()
         auto start = std::chrono::high_resolution_clock::now();
         if(PlaylistFactory::addSong(*this->playlist, s))
         {
-            i++;
             emit this->SongAdded(QString::fromStdString(s), i, i+total);
         }
+        i++;
         auto end = std::chrono::high_resolution_clock::now();
 
         // if we add songs too fast we keep locking this->mtx (via this->add(Song*)) and thus potentially blocking the UI thread
