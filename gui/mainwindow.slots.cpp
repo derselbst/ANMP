@@ -386,8 +386,6 @@ void MainWindow::slotSongAdded(QString file, int cur, int total)
     {
         this->ui->statusbar->showMessage(text);
     }
-    
-    this->playlistModel->insertRows(this->playlist->size(), 1);
 }
 
 void MainWindow::aboutQt()

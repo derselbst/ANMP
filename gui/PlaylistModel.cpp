@@ -345,9 +345,14 @@ void PlaylistModel::workerLoop()
         this->songsToAdd.cv.notify_all();
 
         auto start = std::chrono::high_resolution_clock::now();
-        if(PlaylistFactory::addSong(*this->playlist, s))
+        int songsBefore = this->playlist->size();
+        PlaylistFactory::addSong(*this->playlist, s);
+        int songsAfter = this->playlist->size();
+        int songsAdded = songsAfter-songsBefore;
+        if(songsAdded > 0)
         {
             emit this->SongAdded(QString::fromStdString(s), i, i+total);
+            QMetaObject::invokeMethod( this, "insertRows", Qt::QueuedConnection, Q_ARG(int, songsBefore), Q_ARG(int, songsAdded));
         }
         i++;
         auto end = std::chrono::high_resolution_clock::now();
