@@ -285,8 +285,6 @@ border-radius: 10px;
 }
 
 QSlider::sub-page:horizontal {
-/*background: qlineargradient(x1: 0, y1: 0,    x2: 0, y2: 1,
-    stop: 0 #66e, stop: 1 #bbf);*/
 background: qlineargradient(x1: 0, y1: 0.2, x2: 1, y2: 0,
     stop: 0 #00cc44, stop: 1 #99ffbb);
 border: 0px solid #777;
@@ -319,19 +317,17 @@ border-radius: 0px;
 }
 
 QSlider::sub-page:horizontal:disabled {
-background: #bbb;
+background: qlineargradient(x1: 0, y1: 0.2, x2: 1, y2: 0,
+    stop: 0 #ccc, stop: 1 #aaa);
 border-color: #999;
 }
 
 QSlider::add-page:horizontal:disabled {
-background: #eee;
-border-color: #999;
+background: #fff;
 }
 
 QSlider::handle:horizontal:disabled {
 background: #eee;
-border: 1px solid #aaa;
-border-radius: 4px;
 }
 </string>
         </property>
@@ -450,7 +446,7 @@ border-radius: 4px;
      <x>0</x>
      <y>0</y>
      <width>652</width>
-     <height>21</height>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHello">
@@ -509,7 +505,7 @@ border-radius: 4px;
    </widget>
    <widget class="QMenu" name="menuVoices">
     <property name="title">
-     <string>Voices</string>
+     <string>&amp;Voices</string>
     </property>
     <addaction name="actionSelect_Muted_Voices"/>
     <addaction name="actionSelect_Unmuted_Voices"/>
@@ -611,67 +607,67 @@ border-radius: 4px;
   </action>
   <action name="actionShuffle_Playst">
    <property name="text">
-    <string>Shuffle Playst</string>
+    <string>&amp;Shuffle Playst</string>
    </property>
   </action>
   <action name="actionReinitAudioDriver">
    <property name="text">
-    <string>Reinit AudioDriver</string>
+    <string>Reinit &amp;AudioDriver</string>
    </property>
   </action>
   <action name="actionAbout_Qt">
    <property name="text">
-    <string>About Qt</string>
+    <string>&amp;About Qt</string>
    </property>
   </action>
   <action name="actionAbout_ANMP">
    <property name="text">
-    <string>About ANMP</string>
+    <string>A&amp;bout ANMP</string>
    </property>
   </action>
   <action name="actionSelect_Muted_Voices">
    <property name="text">
-    <string>Select Muted Voices</string>
+    <string>&amp;Select Muted Voices</string>
    </property>
   </action>
   <action name="actionSelect_Unmuted_Voices">
    <property name="text">
-    <string>Select Unmuted Voices</string>
+    <string>S&amp;elect Unmuted Voices</string>
    </property>
   </action>
   <action name="actionMute_Selected_Voices">
    <property name="text">
-    <string>Mute Selected Voices</string>
+    <string>&amp;Mute Selected Voices</string>
    </property>
   </action>
   <action name="actionUnmute_Selected_Voices">
    <property name="text">
-    <string>Unmute Selected Voices</string>
+    <string>&amp;Unmute Selected Voices</string>
    </property>
   </action>
   <action name="actionMute_All_Voices">
    <property name="text">
-    <string>Mute All Voices</string>
+    <string>Mute &amp;All Voices</string>
    </property>
   </action>
   <action name="actionUnmute_All_Voices">
    <property name="text">
-    <string>Unmute All Voices</string>
+    <string>Unmute All &amp;Voices</string>
    </property>
   </action>
   <action name="actionToggle_All_Voices">
    <property name="text">
-    <string>Toogle All Voices</string>
+    <string>&amp;Toogle All Voices</string>
    </property>
   </action>
   <action name="actionAdd_Playback_Stop_At_End">
    <property name="text">
-    <string>Add Playback-Stop At End</string>
+    <string>Add Playback-Stop At &amp;End</string>
    </property>
   </action>
   <action name="actionSolo_Selected_Voices">
    <property name="text">
-    <string>Solo Selected Voices</string>
+    <string>S&amp;olo Selected Voices</string>
    </property>
   </action>
  </widget>
@@ -700,12 +696,12 @@ border-radius: 4px;
  </resources>
  <connections/>
  <buttongroups>
+  <buttongroup name="controlButtonsHideFirst"/>
+  <buttongroup name="controlButtonsHideSecond"/>
   <buttongroup name="controlButtonsAlwaysVisible">
    <property name="exclusive">
     <bool>false</bool>
    </property>
   </buttongroup>
-  <buttongroup name="controlButtonsHideSecond"/>
-  <buttongroup name="controlButtonsHideFirst"/>
  </buttongroups>
 </ui>

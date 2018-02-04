@@ -410,6 +410,8 @@ void MainWindow::relativeSeek(int relpos)
 
 void MainWindow::enableSeekButtons(bool isEnabled)
 {
+    this->ui->seekBar->setEnabled(isEnabled);
+    this->ui->stopButton->setEnabled(isEnabled);
     this->ui->forwardButton->setEnabled(isEnabled);
     this->ui->fforwardButton->setEnabled(isEnabled);
     this->ui->backwardButton->setEnabled(isEnabled);

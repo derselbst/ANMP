@@ -196,7 +196,7 @@ void Player::_setCurrentSong (Song* newSong)
         this->_initAudio();
     }
         
-    this->resetPlayhead();
+    this->_seekTo(0);
     
     Song* oldSong = this->currentSong;
     try
@@ -271,7 +271,7 @@ void Player::_setCurrentSong (Song* newSong)
 void Player::stop ()
 {
     this->pause();
-    this->resetPlayhead();
+    this->seekTo(0);
 }
 
 void Player::pause ()
@@ -353,11 +353,6 @@ void Player::_seekTo (frame_t frame)
 
     this->playhead=frame;
     this->onPlayheadChanged(this->playhead);
-}
-
-void Player::resetPlayhead ()
-{
-    this->_seekTo(0);
 }
 
 core::tree<loop_t>* Player::getNextLoop(core::tree<loop_t>& l)

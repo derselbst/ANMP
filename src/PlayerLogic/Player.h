@@ -139,12 +139,6 @@ private:
     void _setCurrentSong (Song* song);
     void _pause ();
     
-
-    /**
-     * resets the playhead to beginning of this->currentSong
-     */
-    void resetPlayhead ();
-
     /**
      * within this->currentSong->loopTree at a level given by "l": retrieve that loop that starts just right after playhead
      * 
