@@ -45,9 +45,9 @@ protected:
 
 private:
     // percentage to seek normally
-    static constexpr float SeekNormal = 0.02f;
+    const float SeekNormal = 0.02f;
     // percentage for fast seek
-    static constexpr float SeekFast = 0.1f;
+    const float SeekFast = 0.1f;
 
     Ui::MainWindow *ui = nullptr;
     Ui::PlayControl *playctrl = nullptr;
