@@ -78,7 +78,6 @@
      <addaction name="actionASCII"/>
      <addaction name="actionBlocky"/>
     </widget>
-    <addaction name="actionControl_Panel"/>
     <addaction name="actionFileBrowser"/>
     <addaction name="menuVisualization"/>
     <addaction name="separator"/>
@@ -319,13 +318,4 @@
  </customwidgets>
  <resources/>
  <connections/>
- <buttongroups>
-  <buttongroup name="controlButtonsHideFirst"/>
-  <buttongroup name="controlButtonsAlwaysVisible">
-   <property name="exclusive">
-    <bool>false</bool>
-   </property>
-  </buttongroup>
-  <buttongroup name="controlButtonsHideSecond"/>
- </buttongroups>
 </ui>

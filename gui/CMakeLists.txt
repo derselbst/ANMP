@@ -21,7 +21,6 @@ if(USE_GUI)
         mainwindow.cpp
         mainwindow.slots.cpp
         mainwindow.callback.cpp
-        overlaycontrol.cpp
         PlaylistModel.cpp
         PlaylistView.cpp
         PlayheadSlider.cpp
@@ -43,7 +42,6 @@ if(USE_GUI)
     qt5_wrap_ui(UI_HEADERS
         mainwindow.ui
         configdialog.ui
-        overlaycontrol.ui
         songinspector.ui
         playcontrol.ui
     )
