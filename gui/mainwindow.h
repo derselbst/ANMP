@@ -9,13 +9,17 @@
 namespace Ui
 {
 class MainWindow;
+class PlayControl;
 }
 
+class ChannelConfigView;
 class ConfigDialog;
 class AnalyzerApplet;
 class QFileSystemModel;
 class QStandardItemModel;
 class QItemSelection;
+class QListView;
+class QTreeView;
 class PlaylistModel;
 class Playlist;
 class Player;
@@ -36,16 +40,17 @@ public:
     static void callbackIsPlayingChanged(void* context, bool isPlaying, Nullable<string> msg);
 
 protected:
-    void resizeEvent(QResizeEvent* event) override;
+//    void resizeEvent(QResizeEvent* event) override;
 //     void closeEvent(QCloseEvent* e) override;
 
 private:
     // percentage to seek normally
-    const float SeekNormal = 0.02;
+    static constexpr float SeekNormal = 0.02f;
     // percentage for fast seek
-    const float SeekFast = 0.1;
+    static constexpr float SeekFast = 0.1f;
 
     Ui::MainWindow *ui = nullptr;
+    Ui::PlayControl *playctrl = nullptr;
 
     QFileSystemModel *drivesModel = nullptr;
     QFileSystemModel *filesModel = nullptr;
@@ -56,6 +61,9 @@ private:
 
     AnalyzerApplet * analyzerWindow = nullptr;
     ConfigDialog* settingsView = nullptr;
+    ChannelConfigView *channelView = nullptr;
+    QListView *listView = nullptr;
+    QTreeView *treeView = nullptr;
 
     void buildPlaylistView();
     void buildChannelConfig();
@@ -112,7 +120,7 @@ protected slots:
     void shufflePlaylist();
     void clearPlaylist();
 
-    void on_treeView_clicked(const QModelIndex &index);
+    void treeViewClicked(const QModelIndex &index);
     void selectSong(const QModelIndex &index);
 
     void reinitAudioDriver();

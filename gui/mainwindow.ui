@@ -13,426 +13,14 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <layout class="QVBoxLayout" name="playlistLayout">
       <item>
-       <widget class="QPushButton" name="previousButton">
-        <property name="minimumSize">
-         <size>
-          <width>70</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="toolTip">
-         <string>Previous Song</string>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QPushButton{
-	background-color: #e3efff;
-}</string>
-        </property>
-        <property name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/basic/img/previous.svg</normaloff>:/basic/img/previous.svg</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
-        </property>
-        <attribute name="buttonGroup">
-         <string notr="true">controlButtonsAlwaysVisible</string>
-        </attribute>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="fbackwardButton">
-        <property name="minimumSize">
-         <size>
-          <width>70</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="toolTip">
-         <string>Seek Backward (fast)</string>
-        </property>
-        <property name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/basic/img/fbackw.svg</normaloff>:/basic/img/fbackw.svg</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
-        </property>
-        <attribute name="buttonGroup">
-         <string notr="true">controlButtonsHideFirst</string>
-        </attribute>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="backwardButton">
-        <property name="minimumSize">
-         <size>
-          <width>70</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="toolTip">
-         <string>Seek Backward</string>
-        </property>
-        <property name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/basic/img/backw.svg</normaloff>:/basic/img/backw.svg</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
-        </property>
-        <attribute name="buttonGroup">
-         <string notr="true">controlButtonsHideSecond</string>
-        </attribute>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="playButton">
-        <property name="minimumSize">
-         <size>
-          <width>70</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="toolTip">
-         <string>Play / Pause</string>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QPushButton{
-background-color: #ccffcb;
-}
-</string>
-        </property>
-        <property name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/basic/img/play.svg</normaloff>
-          <normalon>:/basic/img/pause.svg</normalon>
-          <disabledon>:/basic/img/pause.svg</disabledon>
-          <activeon>:/basic/img/pause.svg</activeon>
-          <selectedon>:/basic/img/pause.svg</selectedon>:/basic/img/play.svg</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
-        </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-        <attribute name="buttonGroup">
-         <string notr="true">controlButtonsAlwaysVisible</string>
-        </attribute>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="stopButton">
-        <property name="minimumSize">
-         <size>
-          <width>70</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="toolTip">
-         <string>Stop</string>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QPushButton {
-background-color: rgb(255, 209, 205);
-}
-</string>
-        </property>
-        <property name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/basic/img/stop.svg</normaloff>:/basic/img/stop.svg</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
-        </property>
-        <attribute name="buttonGroup">
-         <string notr="true">controlButtonsAlwaysVisible</string>
-        </attribute>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="forwardButton">
-        <property name="minimumSize">
-         <size>
-          <width>70</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="toolTip">
-         <string>Seek Forward</string>
-        </property>
-        <property name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/basic/img/forw.svg</normaloff>:/basic/img/forw.svg</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
-        </property>
-        <attribute name="buttonGroup">
-         <string notr="true">controlButtonsHideSecond</string>
-        </attribute>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="fforwardButton">
-        <property name="minimumSize">
-         <size>
-          <width>70</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="toolTip">
-         <string>Seek Forward (fast)</string>
-        </property>
-        <property name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/basic/img/fforw.svg</normaloff>:/basic/img/fforw.svg</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
-        </property>
-        <attribute name="buttonGroup">
-         <string notr="true">controlButtonsHideFirst</string>
-        </attribute>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="nextButton">
-        <property name="minimumSize">
-         <size>
-          <width>70</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="toolTip">
-         <string>Next Song</string>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">QPushButton{
-	background-color: #e3efff;
-}</string>
-        </property>
-        <property name="icon">
-         <iconset resource="icons.qrc">
-          <normaloff>:/basic/img/next.svg</normaloff>:/basic/img/next.svg</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>64</width>
-          <height>64</height>
-         </size>
-        </property>
-        <attribute name="buttonGroup">
-         <string notr="true">controlButtonsAlwaysVisible</string>
-        </attribute>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_3">
-      <item>
-       <widget class="QLabel" name="labelTimePast">
-        <property name="minimumSize">
-         <size>
-          <width>45</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>0:00</string>
-        </property>
-        <property name="textFormat">
-         <enum>Qt::PlainText</enum>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="PlayheadSlider" name="seekBar">
-        <property name="styleSheet">
-         <string notr="true">QSlider::groove:horizontal {
-border: 0px solid #bbb;
-background: white;
-height: 21px;
-border-radius: 10px;
-}
-
-QSlider::sub-page:horizontal {
-background: qlineargradient(x1: 0, y1: 0.2, x2: 1, y2: 0,
-    stop: 0 #00cc44, stop: 1 #99ffbb);
-border: 0px solid #777;
-height: 21px;
-border-radius: 10px;
-}
-
-QSlider::add-page:horizontal {
-background: #fff;
-border: 0px solid #777;
-height: 21px;
-border-radius: 10px;
-}
-
-QSlider::handle:horizontal {
-background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-    stop:0 #eee, stop:1 #ccc);
-border: 1px solid #777;
-width: 14px;
-margin-top: 3px;
-margin-bottom: 3px;
-border-radius: 7px;
-}
-
-QSlider::handle:horizontal:hover {
-background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-    stop:0 #fff, stop:1 #ddd);
-border: 1px solid #444;
-border-radius: 0px;
-}
-
-QSlider::sub-page:horizontal:disabled {
-background: qlineargradient(x1: 0, y1: 0.2, x2: 1, y2: 0,
-    stop: 0 #ccc, stop: 1 #aaa);
-border-color: #999;
-}
-
-QSlider::add-page:horizontal:disabled {
-background: #fff;
-}
-
-QSlider::handle:horizontal:disabled {
-background: #eee;
-}
-</string>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="labelTimeLeft">
-        <property name="minimumSize">
-         <size>
-          <width>45</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>-0:00</string>
-        </property>
-        <property name="textFormat">
-         <enum>Qt::PlainText</enum>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QVBoxLayout" name="mixLayout">
-      <item>
-       <widget class="ChannelConfigView" name="channelViewNew">
+       <widget class="PlaylistView" name="playlistView">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <item>
-       <widget class="QTreeView" name="treeView">
-        <property name="editTriggers">
-         <set>QAbstractItemView::NoEditTriggers</set>
-        </property>
-        <property name="dragEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="dragDropMode">
-         <enum>QAbstractItemView::DragOnly</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QListView" name="listView">
-        <property name="editTriggers">
-         <set>QAbstractItemView::NoEditTriggers</set>
-        </property>
-        <property name="dragEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="dragDropMode">
-         <enum>QAbstractItemView::DragOnly</enum>
-        </property>
-        <property name="selectionMode">
-         <enum>QAbstractItemView::ExtendedSelection</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="PlaylistView" name="tableView">
-        <property name="acceptDrops">
-         <bool>true</bool>
-        </property>
-        <property name="editTriggers">
-         <set>QAbstractItemView::NoEditTriggers</set>
-        </property>
-        <property name="dragEnabled">
-         <bool>true</bool>
-        </property>
-        <property name="dragDropOverwriteMode">
-         <bool>false</bool>
-        </property>
-        <property name="dragDropMode">
-         <enum>QAbstractItemView::DragDrop</enum>
-        </property>
-        <property name="defaultDropAction">
-         <enum>Qt::MoveAction</enum>
-        </property>
-        <property name="alternatingRowColors">
-         <bool>true</bool>
-        </property>
-        <property name="selectionBehavior">
-         <enum>QAbstractItemView::SelectRows</enum>
-        </property>
-        <property name="showGrid">
-         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -526,6 +114,54 @@ background: #eee;
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QDockWidget" name="dockDir">
+   <property name="allowedAreas">
+    <set>Qt::BottomDockWidgetArea|Qt::TopDockWidgetArea</set>
+   </property>
+   <property name="windowTitle">
+    <string notr="true">Di&amp;rectory Listing</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="widget"/>
+  </widget>
+  <widget class="QDockWidget" name="dockFile">
+   <property name="allowedAreas">
+    <set>Qt::BottomDockWidgetArea|Qt::TopDockWidgetArea</set>
+   </property>
+   <property name="windowTitle">
+    <string notr="true">File Lis&amp;ting</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="widget_2"/>
+  </widget>
+  <widget class="QDockWidget" name="dockChannel">
+   <property name="allowedAreas">
+    <set>Qt::BottomDockWidgetArea|Qt::TopDockWidgetArea</set>
+   </property>
+   <property name="windowTitle">
+    <string notr="true">&amp;Channel/Voice Muter</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="widget_3"/>
+  </widget>
+  <widget class="QDockWidget" name="dockControl">
+   <property name="allowedAreas">
+    <set>Qt::BottomDockWidgetArea|Qt::TopDockWidgetArea</set>
+   </property>
+   <property name="windowTitle">
+    <string notr="true">&amp;Main Control</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>4</number>
+   </attribute>
+   <widget class="QWidget" name="widget_4"/>
+  </widget>
   <action name="actionClose">
    <property name="text">
     <string>&amp;Close</string>
@@ -680,28 +316,16 @@ background: #eee;
     <signal>remove(QModelIndexList)</signal>
    </slots>
   </customwidget>
-  <customwidget>
-   <class>PlayheadSlider</class>
-   <extends>QSlider</extends>
-   <header>PlayheadSlider.h</header>
-  </customwidget>
-  <customwidget>
-   <class>ChannelConfigView</class>
-   <extends>QTableView</extends>
-   <header>ChannelConfigView.h</header>
-  </customwidget>
  </customwidgets>
- <resources>
-  <include location="icons.qrc"/>
- </resources>
+ <resources/>
  <connections/>
  <buttongroups>
   <buttongroup name="controlButtonsHideFirst"/>
-  <buttongroup name="controlButtonsHideSecond"/>
   <buttongroup name="controlButtonsAlwaysVisible">
    <property name="exclusive">
     <bool>false</bool>
    </property>
   </buttongroup>
+  <buttongroup name="controlButtonsHideSecond"/>
  </buttongroups>
 </ui>

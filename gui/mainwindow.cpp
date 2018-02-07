@@ -5,19 +5,23 @@
 #include "mainwindow.h"
 #include "mainwindow_adaptor.h"
 #include "ui_mainwindow.h"
+#include "ui_playcontrol.h"
 #include "PlayheadSlider.h"
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
 #include "PlaylistModel.h"
+#include "ChannelConfigView.h"
 
 #include <anmp.hpp>
 
 #include <QFileSystemModel>
 #include <QStandardItemModel>
 #include <QShortcut>
-#include <QResizeEvent>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QTableView>
+#include <QListView>
+#include <QTreeView>
 
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
@@ -28,6 +32,7 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
+    playctrl(new Ui::PlayControl),
     drivesModel(new QFileSystemModel(this)),
     filesModel(new QFileSystemModel(this)),
     playlist(new Playlist()),
@@ -60,17 +65,25 @@ MainWindow::MainWindow(QWidget *parent) :
     this->ui->setupUi(this);
     this->setWindowTitleCustom("");
 
+    QWidget* dockwid = new QWidget(this->ui->dockControl);
+    this->playctrl->setupUi(dockwid);
+    this->ui->dockControl->setWidget(dockwid);
+
+    this->buildFileBrowser();
+    this->buildPlaylistView();
+    this->buildChannelConfig();
+
     // connect main buttons
-    connect(this->ui->playButton,       &QPushButton::toggled, this, [this](bool){this->MainWindow::TogglePlayPause();});
-    connect(this->ui->stopButton,       &QPushButton::clicked, this, &MainWindow::Stop);
+    connect(this->playctrl->playButton,       &QPushButton::toggled, this, [this](bool){this->MainWindow::TogglePlayPause();});
+    connect(this->playctrl->stopButton,       &QPushButton::clicked, this, &MainWindow::Stop);
 
-    connect(this->ui->forwardButton,    &QPushButton::clicked, this, &MainWindow::SeekForward);
-    connect(this->ui->backwardButton,   &QPushButton::clicked, this, &MainWindow::SeekBackward);
-    connect(this->ui->fforwardButton,   &QPushButton::clicked, this, &MainWindow::FastSeekForward);
-    connect(this->ui->fbackwardButton,  &QPushButton::clicked, this, &MainWindow::FastSeekBackward);
+    connect(this->playctrl->forwardButton,    &QPushButton::clicked, this, &MainWindow::SeekForward);
+    connect(this->playctrl->backwardButton,   &QPushButton::clicked, this, &MainWindow::SeekBackward);
+    connect(this->playctrl->fforwardButton,   &QPushButton::clicked, this, &MainWindow::FastSeekForward);
+    connect(this->playctrl->fbackwardButton,  &QPushButton::clicked, this, &MainWindow::FastSeekBackward);
 
-    connect(this->ui->nextButton,       &QPushButton::clicked, this, &MainWindow::Next);
-    connect(this->ui->previousButton,   &QPushButton::clicked, this, &MainWindow::Previous);
+    connect(this->playctrl->nextButton,       &QPushButton::clicked, this, &MainWindow::Next);
+    connect(this->playctrl->previousButton,   &QPushButton::clicked, this, &MainWindow::Previous);
 
 
     // connect menu actions
@@ -106,18 +119,19 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->actionAbout_ANMP, &QAction::triggered, this, &MainWindow::aboutAnmp);
 
 
-    connect(this->ui->seekBar,          &PlayheadSlider::sliderMoved, this, [this](int position){this->player->seekTo(position);});
+    connect(this->playctrl->seekBar,          &PlayheadSlider::sliderMoved, this, [this](int position){this->player->seekTo(position);});
 
 
     // emitted double-clicking or pressing Enter
-    connect(this->ui->tableView, &PlaylistView::activated,     this, &MainWindow::selectSong);
+    connect(this->ui->playlistView, &PlaylistView::activated,     this, &MainWindow::selectSong);
 
     connect(this->playlistModel, &PlaylistModel::SongAdded, this, &MainWindow::slotSongAdded);
     connect(this->playlistModel, &PlaylistModel::UnloadCurrentSong, this, [this]{this->player->stop(); this->player->setCurrentSong(nullptr);});
 
+    connect(this->treeView, &QTreeView::clicked,     this, &MainWindow::treeViewClicked);
 
-    connect(this->ui->actionSelect_Muted_Voices,    &QAction::triggered, this, [this]{this->ui->channelViewNew->Select(Qt::Unchecked);});
-    connect(this->ui->actionSelect_Unmuted_Voices,  &QAction::triggered, this, [this]{this->ui->channelViewNew->Select(Qt::Checked);});
+    connect(this->ui->actionSelect_Muted_Voices,    &QAction::triggered, this, [this]{this->channelView->Select(Qt::Unchecked);});
+    connect(this->ui->actionSelect_Unmuted_Voices,  &QAction::triggered, this, [this]{this->channelView->Select(Qt::Checked);});
     connect(this->ui->actionMute_Selected_Voices,   &QAction::triggered, this, &MainWindow::MuteSelectedVoices);
     connect(this->ui->actionUnmute_Selected_Voices, &QAction::triggered, this, &MainWindow::UnmuteSelectedVoices);
     connect(this->ui->actionSolo_Selected_Voices, &QAction::triggered, this,   &MainWindow::SoloSelectedVoices);
@@ -125,8 +139,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->ui->actionUnmute_All_Voices,      &QAction::triggered, this, &MainWindow::UnmuteAllVoices);
     connect(this->ui->actionToggle_All_Voices,      &QAction::triggered, this, &MainWindow::ToggleAllVoices);
 
-    connect(this->ui->channelViewNew, &QTableView::activated,     this, &MainWindow::ToggleSelectedVoices);
-    connect(this->ui->channelViewNew, &QTableView::doubleClicked, this, &MainWindow::ToggleSelectedVoices);
+    connect(this->channelView, &QTableView::activated,     this, &MainWindow::ToggleSelectedVoices);
+    connect(this->channelView, &QTableView::doubleClicked, this, &MainWindow::ToggleSelectedVoices);
 
     this->setWindowState(Qt::WindowMaximized);
 
@@ -135,9 +149,6 @@ MainWindow::MainWindow(QWidget *parent) :
     this->player->onCurrentSongChanged += make_pair(this, &MainWindow::callbackCurrentSongChanged);
     this->player->onIsPlayingChanged   += make_pair(this, &MainWindow::callbackIsPlayingChanged);
 
-    this->buildFileBrowser();
-    this->buildPlaylistView();
-    this->buildChannelConfig();
     this->createShortcuts();
 }
 
@@ -170,7 +181,7 @@ void MainWindow::createShortcuts()
 
     playShortcut = new SHORTCUT(QKeySequence(Qt::Key_F4));
     connect(playShortcut, &QShortcut::activated, this, &MainWindow::TogglePlayPause);
-    this->ui->playButton->setToolTip(this->ui->playButton->toolTip() + " [F4]");
+    this->playctrl->playButton->setToolTip(this->playctrl->playButton->toolTip() + " [F4]");
 
     QShortcut *pauseFadeShortcut = new SHORTCUT(QKeySequence(Qt::SHIFT + Qt::Key_F4));
     connect(pauseFadeShortcut, &QShortcut::activated, this, &MainWindow::TogglePlayPauseFade);
@@ -180,7 +191,7 @@ void MainWindow::createShortcuts()
 
     QShortcut *stopShortcut = new SHORTCUT(QKeySequence(Qt::Key_F5));
     connect(stopShortcut, &QShortcut::activated, this, &MainWindow::Stop);
-    this->ui->stopButton->setToolTip(this->ui->stopButton->toolTip() + " [F5]");
+    this->playctrl->stopButton->setToolTip(this->playctrl->stopButton->toolTip() + " [F5]");
 
     // CHANGE CURRENT SONG SHORTS
     QShortcut *nextShortcut = new SHORTCUT(QKeySequence(Qt::Key_MediaNext));
@@ -188,14 +199,14 @@ void MainWindow::createShortcuts()
 
     nextShortcut = new SHORTCUT(QKeySequence(Qt::Key_F8));
     connect(nextShortcut, &QShortcut::activated, this, &MainWindow::Next);
-    this->ui->nextButton->setToolTip(this->ui->nextButton->toolTip() + " [F8]");
+    this->playctrl->nextButton->setToolTip(this->playctrl->nextButton->toolTip() + " [F8]");
 
     QShortcut *prevShortcut = new SHORTCUT(QKeySequence(Qt::Key_MediaPrevious));
     connect(prevShortcut, &QShortcut::activated, this, &MainWindow::Previous);
 
     prevShortcut = new SHORTCUT(QKeySequence(Qt::Key_F1));
     connect(prevShortcut, &QShortcut::activated, this, &MainWindow::Previous);
-    this->ui->previousButton->setToolTip(this->ui->previousButton->toolTip() + " [F1]");
+    this->playctrl->previousButton->setToolTip(this->playctrl->previousButton->toolTip() + " [F1]");
 
     // SEEK SHORTCUTS
     QShortcut *seekForward = new SHORTCUT(QKeySequence(Qt::Key_Right));
@@ -203,28 +214,28 @@ void MainWindow::createShortcuts()
 
     seekForward = new SHORTCUT(QKeySequence(Qt::Key_F6));
     connect(seekForward, &QShortcut::activated, this, &MainWindow::SeekForward);
-    this->ui->forwardButton->setToolTip(this->ui->forwardButton->toolTip() + " [F6]");
+    this->playctrl->forwardButton->setToolTip(this->playctrl->forwardButton->toolTip() + " [F6]");
 
     QShortcut *seekBackward = new SHORTCUT(QKeySequence(Qt::Key_Left));
     connect(seekBackward, &QShortcut::activated, this, &MainWindow::SeekBackward);
 
     seekBackward = new SHORTCUT(QKeySequence(Qt::Key_F3));
     connect(seekBackward, &QShortcut::activated, this, &MainWindow::SeekBackward);
-    this->ui->backwardButton->setToolTip(this->ui->backwardButton->toolTip() + " [F3]");
+    this->playctrl->backwardButton->setToolTip(this->playctrl->backwardButton->toolTip() + " [F3]");
 
     QShortcut *fastSeekForward = new SHORTCUT(QKeySequence(Qt::ALT + Qt::Key_Right));
     connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::FastSeekForward);
 
     fastSeekForward = new SHORTCUT(QKeySequence(Qt::Key_F7));
     connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::FastSeekForward);
-    this->ui->fforwardButton->setToolTip(this->ui->fforwardButton->toolTip() + " [F7]");
+    this->playctrl->fforwardButton->setToolTip(this->playctrl->fforwardButton->toolTip() + " [F7]");
 
     QShortcut *fastSeekBackward = new SHORTCUT(QKeySequence(Qt::ALT + Qt::Key_Left));
     connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::FastSeekBackward);
 
     fastSeekBackward = new SHORTCUT(QKeySequence(Qt::Key_F2));
     connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::FastSeekBackward);
-    this->ui->fbackwardButton->setToolTip(this->ui->fbackwardButton->toolTip() + " [F2]");
+    this->playctrl->fbackwardButton->setToolTip(this->playctrl->fbackwardButton->toolTip() + " [F2]");
 
     QShortcut *settings = new SHORTCUT(QKeySequence(Qt::Key_F12));
     connect(settings, &QShortcut::activated, this, [this]{this->settingsView->show();});
@@ -236,18 +247,29 @@ void MainWindow::buildFileBrowser()
 {
     QString rootPath = qgetenv("HOME");
     this->drivesModel->setFilter(QDir::NoDotAndDotDot | QDir::Dirs);
-    this->ui->treeView->setModel(this->drivesModel);
-    this->ui->treeView->setRootIndex(this->drivesModel->setRootPath(rootPath+"/../"));
-    this->ui->treeView->hideColumn(1);
-    this->ui->treeView->hideColumn(2);
-    this->ui->treeView->hideColumn(3);
+
+    QTreeView *treeView = this->treeView = new QTreeView(this->ui->dockDir);
+    treeView->setModel(this->drivesModel);
+    treeView->setRootIndex(this->drivesModel->setRootPath(rootPath+"/../"));
+    treeView->hideColumn(1);
+    treeView->hideColumn(2);
+    treeView->hideColumn(3);
+    treeView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    treeView->setDragEnabled(true);
+    treeView->setDragDropMode(QAbstractItemView::DragOnly);
+    this->ui->dockDir->setWidget(treeView);
 
     this->filesModel->setFilter(QDir::NoDotAndDotDot | QDir::Files);
-    this->ui->listView->setModel(this->filesModel);
-    this->ui->listView->setRootIndex(this->filesModel->setRootPath(rootPath));
+    QListView *listView = this->listView = new QListView(this->ui->dockFile);
+    listView->setModel(this->filesModel);
+    listView->setRootIndex(this->filesModel->setRootPath(rootPath));
+    listView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    listView->setDragEnabled(true);
+    listView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    this->ui->dockFile->setWidget(listView);
 
-    this->ui->listView->show();
-    this->ui->treeView->show();
+    listView->show();
+    treeView->show();
 }
 
 void MainWindow::buildChannelConfig()
@@ -256,14 +278,15 @@ void MainWindow::buildChannelConfig()
     strlist.append(QString("Channel Name"));
     this->channelConfigModel->setHorizontalHeaderLabels(strlist);
 
-    this->ui->channelViewNew->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    this->ui->channelViewNew->setSelectionBehavior(QAbstractItemView::SelectRows);
-    this->ui->channelViewNew->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    this->ui->channelViewNew->setAcceptDrops(false);
-    this->ui->channelViewNew->setDragEnabled(false);
-    this->ui->channelViewNew->setModel(this->channelConfigModel);
+    this->channelView = new ChannelConfigView(this->ui->dockChannel);
+    channelView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    channelView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    channelView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    channelView->setAcceptDrops(false);
+    channelView->setDragEnabled(false);
+    channelView->setModel(this->channelConfigModel);
 
-    QMenu* m = new QMenu(this->ui->channelViewNew);
+    QMenu* m = new QMenu(channelView);
     m->addAction(this->ui->actionSelect_Muted_Voices);
     m->addAction(this->ui->actionSelect_Unmuted_Voices);
     m->addSeparator();
@@ -275,14 +298,17 @@ void MainWindow::buildChannelConfig()
     m->addAction(this->ui->actionUnmute_All_Voices);
     m->addAction(this->ui->actionToggle_All_Voices);
 
-    this->ui->channelViewNew->SetContextMenu(m);
+    channelView->SetContextMenu(m);
+
+    this->ui->dockChannel->setWidget(channelView);
+    channelView->show();
 }
 
 void MainWindow::buildPlaylistView()
 {
-    this->ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    this->ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    this->ui->tableView->setModel(this->playlistModel);
+    this->ui->playlistView->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    this->ui->playlistView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    this->ui->playlistView->setModel(this->playlistModel);
 }
 
 
@@ -298,71 +324,6 @@ void MainWindow::setWindowTitleCustom(QString title)
     }
 
     this->setWindowTitle(title);
-}
-
-void MainWindow::resizeEvent(QResizeEvent* event)
-{
-    int minWidthVis = 0;
-    foreach(QAbstractButton *button, this->ui->controlButtonsAlwaysVisible->buttons())
-    {
-        minWidthVis += button->minimumWidth();
-    }
-
-    int minWidthHideSecond = minWidthVis;
-    foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
-    {
-        minWidthHideSecond += button->minimumWidth();
-    }
-
-    int minWidthHideFirst = minWidthHideSecond;
-    foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
-    {
-        minWidthHideFirst += button->minimumWidth();
-    }
-
-    int wndWidth = event->size().width() - 140;
-
-    if(wndWidth <= minWidthHideSecond)
-    {
-        foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
-        {
-            button->hide();
-        }
-        foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
-        {
-            button->hide();
-        }
-    }
-    else if(wndWidth <= minWidthHideFirst)
-    {
-        foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
-        {
-            button->hide();
-        }
-        foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
-        {
-            button->show();
-        }
-
-        this->ui->listView->hide();
-        this->ui->treeView->hide();
-    }
-    else
-    {
-        foreach(QAbstractButton *button, this->ui->controlButtonsHideFirst->buttons())
-        {
-            button->show();
-        }
-        foreach(QAbstractButton *button, this->ui->controlButtonsHideSecond->buttons())
-        {
-            button->show();
-        }
-
-        this->ui->listView->show();
-        this->ui->treeView->show();
-    }
-
-    QMainWindow::resizeEvent(event);
 }
 
 void MainWindow::showAnalyzer(enum AnalyzerApplet::AnalyzerType type)
@@ -395,14 +356,14 @@ void MainWindow::relativeSeek(int relpos)
         return;
     }
 
-    int pos = this->ui->seekBar->sliderPosition()+relpos;
+    int pos = this->playctrl->seekBar->sliderPosition()+relpos;
     if(pos < 0)
     {
         pos=0;
     }
-    else if(pos > this->ui->seekBar->maximum())
+    else if(pos > this->playctrl->seekBar->maximum())
     {
-        pos=this->ui->seekBar->maximum();
+        pos=this->playctrl->seekBar->maximum();
     }
     this->player->seekTo(pos);
 }
@@ -410,12 +371,12 @@ void MainWindow::relativeSeek(int relpos)
 
 void MainWindow::enableSeekButtons(bool isEnabled)
 {
-    this->ui->seekBar->setEnabled(isEnabled);
-    this->ui->stopButton->setEnabled(isEnabled);
-    this->ui->forwardButton->setEnabled(isEnabled);
-    this->ui->fforwardButton->setEnabled(isEnabled);
-    this->ui->backwardButton->setEnabled(isEnabled);
-    this->ui->fbackwardButton->setEnabled(isEnabled);
+    this->playctrl->seekBar->setEnabled(isEnabled);
+    this->playctrl->stopButton->setEnabled(isEnabled);
+    this->playctrl->forwardButton->setEnabled(isEnabled);
+    this->playctrl->fforwardButton->setEnabled(isEnabled);
+    this->playctrl->backwardButton->setEnabled(isEnabled);
+    this->playctrl->fbackwardButton->setEnabled(isEnabled);
 }
 
 void MainWindow::updateChannelConfig(const SongFormat& currentFormat)

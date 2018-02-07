@@ -45,6 +45,7 @@ if(USE_GUI)
         configdialog.ui
         overlaycontrol.ui
         songinspector.ui
+        playcontrol.ui
     )
 
     add_executable(${PROJECT_NAME} ${UI_HEADERS} ${GUI_SRCS} icons.qrc)

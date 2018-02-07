@@ -9,19 +9,23 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "ui_playcontrol.h"
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
 #include "PlaylistModel.h"
+#include "ChannelConfigView.h"
 
 #include <anmp.hpp>
 
 #include <QMessageBox>
 #include <QFileSystemModel>
 #include <QStandardItemModel>
+#include <QListView>
+#include <QTreeView>
 
 void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, QString msg)
 {
-    QPushButton* playbtn = this->ui->playButton;
+    QPushButton* playbtn = this->playctrl->playButton;
     bool oldState = playbtn->blockSignals(true);
     if(isPlaying)
     {
@@ -44,7 +48,7 @@ void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, QString msg)
 
 void MainWindow::slotSeek(long long pos)
 {
-    QSlider* playheadSlider = this->ui->seekBar;
+    QSlider* playheadSlider = this->playctrl->seekBar;
     bool oldState = playheadSlider->blockSignals(true);
     playheadSlider->setSliderPosition(pos);
     playheadSlider->blockSignals(oldState);
@@ -59,13 +63,13 @@ void MainWindow::slotSeek(long long pos)
     {
         temp = framesToTimeStr(pos,s->Format.SampleRate);
         QString strTimePast = QString::fromStdString(temp);
-        this->ui->labelTimePast->setText(strTimePast);
+        this->playctrl->labelTimePast->setText(strTimePast);
     }
 
     {
         temp = framesToTimeStr(s->getFrames()-pos, s->Format.SampleRate);
         QString strTimeLeft = QString("-") + QString::fromStdString(temp);
-        this->ui->labelTimeLeft->setText(strTimeLeft);
+        this->playctrl->labelTimeLeft->setText(strTimeLeft);
     }
 }
 
@@ -73,7 +77,7 @@ void MainWindow::slotCurrentSongChanged(const Song* s)
 {
     this->channelConfigModel->removeRows(0, this->channelConfigModel->rowCount());
 
-    PlayheadSlider* playheadSlider = this->ui->seekBar;
+    PlayheadSlider* playheadSlider = this->playctrl->seekBar;
     if(s==nullptr)
     {
         this->setWindowTitleCustom("");
@@ -98,14 +102,14 @@ void MainWindow::slotCurrentSongChanged(const Song* s)
     }
 }
 
-void MainWindow::on_treeView_clicked(const QModelIndex &index)
+void MainWindow::treeViewClicked(const QModelIndex &index)
 {
     if(!index.isValid())
     {
         return;
     }
     QString sPath = drivesModel->fileInfo(index).absoluteFilePath();
-    ui->listView->setRootIndex(filesModel->setRootPath(sPath));
+    this->listView->setRootIndex(filesModel->setRootPath(sPath));
 }
 
 
@@ -133,13 +137,13 @@ void MainWindow::on_actionFileBrowser_triggered(bool checked)
 {
     if(checked)
     {
-        this->ui->treeView->show();
-        this->ui->listView->show();
+        this->treeView->show();
+        this->listView->show();
     }
     else
     {
-        this->ui->treeView->hide();
-        this->ui->listView->hide();
+        this->treeView->hide();
+        this->listView->hide();
     }
 }
 
@@ -287,22 +291,22 @@ void MainWindow::reinitAudioDriver()
 
 void MainWindow::SeekForward()
 {
-    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekNormal), gConfig.FramesToRender));
+    this->relativeSeek(max(static_cast<frame_t>(this->playctrl->seekBar->maximum() * this->SeekNormal), gConfig.FramesToRender));
 }
 
 void MainWindow::SeekBackward()
 {
-    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekNormal), gConfig.FramesToRender));
+    this->relativeSeek(-1 * max(static_cast<frame_t>(this->playctrl->seekBar->maximum() * this->SeekNormal), gConfig.FramesToRender));
 }
 
 void MainWindow::FastSeekForward()
 {
-    this->relativeSeek(max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekFast), gConfig.FramesToRender));
+    this->relativeSeek(max(static_cast<frame_t>(this->playctrl->seekBar->maximum() * this->SeekFast), gConfig.FramesToRender));
 }
 
 void MainWindow::FastSeekBackward()
 {
-    this->relativeSeek(-1 * max(static_cast<frame_t>(this->ui->seekBar->maximum() * this->SeekFast), gConfig.FramesToRender));
+    this->relativeSeek(-1 * max(static_cast<frame_t>(this->playctrl->seekBar->maximum() * this->SeekFast), gConfig.FramesToRender));
 }
 
 void MainWindow::AddSongs(QStringList files)
@@ -314,14 +318,14 @@ void MainWindow::ToggleSelectedVoices(const QModelIndex& index)
 {
     this->DoChannelMuting([](bool voiceMuted, bool voiceSelected){return voiceMuted != voiceSelected;});
 
-    this->ui->channelViewNew->selectionModel()->setCurrentIndex(index, QItemSelectionModel::NoUpdate);
+    this->channelView->selectionModel()->setCurrentIndex(index, QItemSelectionModel::NoUpdate);
 }
 
 void MainWindow::DoChannelMuting(bool (*pred)(bool voiceIsMuted, bool voiceIsSelected))
 {
     QModelIndex root = this->channelConfigModel->invisibleRootItem()->index();
     const SongFormat& f = this->player->getCurrentSong()->Format;
-    QItemSelectionModel* sel = this->ui->channelViewNew->selectionModel();
+    QItemSelectionModel* sel = this->channelView->selectionModel();
     QModelIndexList selRows = sel->selectedRows();
 
     for(int i=0; i<f.Voices; i++)
@@ -336,7 +340,7 @@ void MainWindow::DoChannelMuting(bool (*pred)(bool voiceIsMuted, bool voiceIsSel
     {
         sel->select(i, QItemSelectionModel::Select);
     }
-    this->ui->channelViewNew->setFocus();
+    this->channelView->setFocus();
 }
 
 void MainWindow::MuteSelectedVoices()

@@ -44,7 +44,8 @@ HEADERS  += mainwindow.h PlaylistView.h PlaylistModel.h configdialog.h \
 FORMS    += mainwindow.ui configdialog.ui \
     applets/analyzer/AnalyzerApplet.ui overlaycontrol.ui \
     applets/channel/channelconfig.ui \
-    songinspector.ui
+    songinspector.ui \
+    playcontrol.ui
 
 DISTFILES +=
 

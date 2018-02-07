@@ -11,6 +11,14 @@
 PlaylistView::PlaylistView(QWidget * parent)
     : QTableView(parent)
 {
+    this->setAcceptDrops(true);
+    this->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    this->setDragEnabled(true);
+    this->setDragDropOverwriteMode(false);
+    this->setDragDropMode(QAbstractItemView::DragDrop);
+    this->setDefaultDropAction(Qt::MoveAction);
+    this->setSelectionBehavior(QAbstractItemView::SelectRows);
+    this->setShowGrid(false);
 }
 
 // sort ascendingly
