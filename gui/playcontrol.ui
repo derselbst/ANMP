@@ -10,6 +10,12 @@
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <widget class="QPushButton" name="previousButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
         <size>
          <width>70</width>
@@ -38,6 +44,12 @@
      </item>
      <item>
       <widget class="QPushButton" name="fbackwardButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
         <size>
          <width>70</width>
@@ -61,6 +73,12 @@
      </item>
      <item>
       <widget class="QPushButton" name="backwardButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
         <size>
          <width>70</width>
@@ -84,6 +102,12 @@
      </item>
      <item>
       <widget class="QPushButton" name="playButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
         <size>
          <width>70</width>
@@ -120,6 +144,12 @@ background-color: #ccffcb;
      </item>
      <item>
       <widget class="QPushButton" name="stopButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
         <size>
          <width>70</width>
@@ -149,6 +179,12 @@ background-color: rgb(255, 209, 205);
      </item>
      <item>
       <widget class="QPushButton" name="forwardButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
         <size>
          <width>70</width>
@@ -172,6 +208,12 @@ background-color: rgb(255, 209, 205);
      </item>
      <item>
       <widget class="QPushButton" name="fforwardButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
         <size>
          <width>70</width>
@@ -195,6 +237,12 @@ background-color: rgb(255, 209, 205);
      </item>
      <item>
       <widget class="QPushButton" name="nextButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="minimumSize">
         <size>
          <width>70</width>
@@ -246,11 +294,16 @@ background-color: rgb(255, 209, 205);
      </item>
      <item>
       <widget class="PlayheadSlider" name="seekBar">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>30</height>
+        </size>
+       </property>
        <property name="styleSheet">
         <string notr="true">QSlider::groove:horizontal {
 border: 0px solid #bbb;
 background: white;
-height: 21px;
 border-radius: 10px;
 }
 
@@ -258,14 +311,12 @@ QSlider::sub-page:horizontal {
 background: qlineargradient(x1: 0, y1: 0.2, x2: 1, y2: 0,
     stop: 0 #00cc44, stop: 1 #99ffbb);
 border: 0px solid #777;
-height: 21px;
 border-radius: 10px;
 }
 
 QSlider::add-page:horizontal {
 background: #fff;
 border: 0px solid #777;
-height: 21px;
 border-radius: 10px;
 }
 
