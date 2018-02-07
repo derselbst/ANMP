@@ -385,6 +385,7 @@ void MainWindow::slotSongAdded(QString file, int cur, int total)
     if(cur == total)
     {
         this->ui->statusbar->showMessage(text, 3000);
+        this->ui->playlistView->resizeColumnsToContents();
     }
     else
     {
