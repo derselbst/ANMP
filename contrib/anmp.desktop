@@ -1,6 +1,5 @@
 #!/usr/bin/env xdg-open
 [Desktop Entry]
-Version=1.0
 Name=ANMP
 GenericName=Music Player
 Comment=Audio Player for various formats
