@@ -56,61 +56,70 @@ int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
 QVariant PlaylistModel::data(const QModelIndex &index, int role) const
 {
 //       cout << "    DATA " << index.row() << " " << index.column() << role << endl;
-    if (!index.isValid() || this->rowCount(index) <= index.row())
+    if (index.isValid() && this->rowCount(index) > index.row())
     {
-        return QVariant();
-    }
-
-    if (role == Qt::DisplayRole)
-    {
-        Song* songToUse = this->playlist->getSong(index.row());
-
-        if(songToUse == nullptr)
+        if (role == Qt::DisplayRole)
         {
-            return QString("---");
-        }
+            Song* songToUse = this->playlist->getSong(index.row());
 
-        switch(index.column())
-        {
-        case 0:
-        {
-            string s="";
-            if(songToUse->Metadata.Track != "")
+            if(songToUse == nullptr)
             {
-                s += songToUse->Metadata.Track;
-                s += " - ";
+                return QString("---");
             }
 
-            if(songToUse->Metadata.Title == "")
+            switch(index.column())
             {
-                s += mybasename(songToUse->Filename);
-            }
-            else
+            case 0:
             {
-                s += songToUse->Metadata.Title;
-            }
+                string s="";
+                if(songToUse->Metadata.Track != "")
+                {
+                    s += songToUse->Metadata.Track;
+                    s += " - ";
+                }
 
-            return QString::fromStdString(s);
+                if(songToUse->Metadata.Title == "")
+                {
+                    s += mybasename(songToUse->Filename);
+                }
+                else
+                {
+                    s += songToUse->Metadata.Title;
+                }
+
+                return QString::fromStdString(s);
+            }
+            case 1:
+                return QString::fromStdString(songToUse->Metadata.Album);
+            case 2:
+                return QString::fromStdString(songToUse->Metadata.Artist);
+            case 3:
+                return QString::fromStdString(songToUse->Metadata.Genre);
+            case 4:
+            {
+                return QString::fromStdString(framesToTimeStr(songToUse->getFrames(),songToUse->Format.SampleRate));
+            }
+            default:
+                break;
+            }
         }
-        case 1:
-            return QString::fromStdString(songToUse->Metadata.Album);
-        case 2:
-            return QString::fromStdString(songToUse->Metadata.Artist);
-        case 3:
-            return QString::fromStdString(songToUse->Metadata.Genre);
-        case 4:
+        else if (role == Qt::BackgroundRole)
         {
-            return QString::fromStdString(framesToTimeStr(songToUse->getFrames(),songToUse->Format.SampleRate));
+            int row = index.row();
+            QColor color = this->calculateRowColor(row);
+            return QBrush(color);
         }
-        default:
-            break;
+        else if (role == Qt::TextAlignmentRole)
+        {
+            switch(index.column())
+            {
+                case 0:
+                    return (Qt::AlignLeft + Qt::AlignVCenter);
+                    
+                default:
+                    return Qt::AlignCenter;
+            }
         }
-    }
-    else if (role == Qt::BackgroundRole)
-    {
-        int row = index.row();
-        QColor color = this->calculateRowColor(row);
-        return QBrush(color);
     }
     return QVariant();
 }
