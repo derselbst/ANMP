@@ -413,13 +413,13 @@ void PlaylistModel::slotCurrentSongChanged(const Song*)
 
 QColor PlaylistModel::calculateRowColor(int row) const
 {
-    if(this->playlist->getCurrentSongId() == row)
-    {
-        return QColor(255,225,0);
-    }
-    else if(this->playlist->getSong(row) == nullptr)
+    if(this->playlist->getSong(row) == nullptr)
     {
         return QColor(255, 0, 0, 127);
+    }
+    else if(this->playlist->getCurrentSongId() == row)
+    {
+        return QColor(255,225,0);
     }
     else if(row > 0 && row % 10 == 0)
     {

@@ -218,7 +218,7 @@
   </action>
   <action name="actionAdd_Playback_Stop">
    <property name="text">
-    <string>Add &amp;Playback-Stop</string>
+    <string>Add &amp;Playback-Stop after current</string>
    </property>
   </action>
   <action name="actionFileBrowser">
@@ -297,7 +297,7 @@
   </action>
   <action name="actionAdd_Playback_Stop_At_End">
    <property name="text">
-    <string>Add Playback-Stop At &amp;End</string>
+    <string>Add Playback-Stop at &amp;end</string>
    </property>
   </action>
   <action name="actionSolo_Selected_Voices">

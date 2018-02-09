@@ -98,13 +98,19 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     connect(this->ui->actionAdd_Songs,        &QAction::triggered, this, [this]{this->playlistModel->asyncAdd(QFileDialog::getOpenFileNames(this, "Open Audio Files", QString(), ""));});
-    connect(this->ui->actionAdd_Playback_Stop,&QAction::triggered, this, [this]
-    {
-//         size_t idx = this->playlistModel->add(nullptr);
-//         size_t target = this->playlistModel->getCurrentSongId();
-//         this->playlistModel->moveRows(QModelIndex(), idx, 1, QModelIndex(), target);
-    });
-    connect(this->ui->actionAdd_Playback_Stop_At_End,&QAction::triggered, this, [this]{this->playlist->add(nullptr);});
+    connect(this->ui->actionAdd_Playback_Stop,&QAction::triggered, this,
+            [this]
+            {
+                long idxTarget = this->playlist->getCurrentSongId();
+                long idxAt = this->playlist->add(nullptr);
+                this->playlist->move(idxAt, 0, idxTarget - idxAt + 1);
+                this->playlistModel->insertRows(idxTarget, 1);
+            });
+    connect(this->ui->actionAdd_Playback_Stop_At_End,&QAction::triggered, this,
+            [this]
+            {
+                this->playlistModel->insertRows(this->playlist->add(nullptr), 1);
+            });
     connect(this->ui->actionShuffle_Playst,   &QAction::triggered, this, &MainWindow::shufflePlaylist);
     connect(this->ui->actionClear_Playlist,   &QAction::triggered, this, &MainWindow::clearPlaylist);
 
