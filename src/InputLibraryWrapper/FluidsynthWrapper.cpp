@@ -225,12 +225,12 @@ void FluidsynthWrapper::setupSynth(MidiWrapper& midi)
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
     
-    // override default MIDI continuous controller 11 (expression) to initial attenuation mod amount
+    // remove default MIDI continuous controller 11 (expression) to initial attenuation mod amount (to make Dinosaur Planet work)
     {
         fluid_mod_set_source1(my_mod,
                             11,
                             FLUID_MOD_CC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_NEGATIVE);
-        fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
+        fluid_synth_remove_default_mod(this->synth, my_mod);
     }
     
     delete_fluid_mod(my_mod);
