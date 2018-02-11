@@ -22,6 +22,7 @@
 #include <QStandardItemModel>
 #include <QListView>
 #include <QTreeView>
+#include <QResizeEvent>
 
 void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, QString msg)
 {
@@ -391,6 +392,13 @@ void MainWindow::slotSongAdded(QString file, int cur, int total)
     {
         this->ui->statusbar->showMessage(text);
     }
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    this->ui->dockDir->setMinimumHeight(event->size().height()/3);
+
+    this->QMainWindow::resizeEvent(event);
 }
 
 void MainWindow::aboutQt()

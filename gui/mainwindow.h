@@ -40,7 +40,7 @@ public:
     static void callbackIsPlayingChanged(void* context, bool isPlaying, Nullable<string> msg);
 
 protected:
-//    void resizeEvent(QResizeEvent* event) override;
+    void resizeEvent(QResizeEvent* event) override;
 //     void closeEvent(QCloseEvent* e) override;
 
 private:
