@@ -6,7 +6,6 @@
 extern "C"
 {
 #include <vgmstream.h>
-#include <vgmstream/formats.h>
 }
 
 /**
