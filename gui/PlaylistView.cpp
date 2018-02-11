@@ -7,6 +7,7 @@
 #include <QKeyEvent>
 #include <QtGlobal>
 #include <QItemSelectionModel>
+#include <QResizeEvent>
 
 PlaylistView::PlaylistView(QWidget * parent)
     : QTableView(parent)
@@ -19,6 +20,16 @@ PlaylistView::PlaylistView(QWidget * parent)
     this->setDefaultDropAction(Qt::MoveAction);
     this->setSelectionBehavior(QAbstractItemView::SelectRows);
     this->setShowGrid(false);
+}
+
+void PlaylistView::setModel(QAbstractItemModel *model)
+{
+    if(model != nullptr)
+    {
+        this->colSizes.resize(model->columnCount());
+    }
+
+    this->QTableView::setModel(model);
 }
 
 // sort ascendingly
@@ -159,4 +170,84 @@ void PlaylistView::showInspector()
         SongInspector insp (s, this);
         insp.exec();
     }
+}
+
+int PlaylistView::sizeHintForColumn(int column) const
+{
+    if(column < this->colSizes.size() && this->colSizes[column] > 0)
+    {
+        return this->colSizes[column];
+    }
+
+    // should not happen
+    return this->QTableView::sizeHintForColumn(column);
+}
+
+// try to stretch all columns to the full width, with respect to their content
+void PlaylistView::resizeEvent(QResizeEvent* evt)
+{
+    int newWidth = evt->size().width();
+    unsigned int colCount = this->colSizes.size();
+
+    // assign each column width equally
+    std::vector<unsigned int> freeCols, fullCols;
+    for(unsigned int i=0; i<colCount; i++)
+    {
+        int w = newWidth / colCount;
+
+        // keep track how much free space there is avail for column and how much more space all columns need
+        int free = w - this->QTableView::sizeHintForColumn(i);
+        if(free >= 0) // this is a free column indeed
+        {
+            freeCols.push_back(i);
+        }
+        else
+        {
+            fullCols.push_back(i);
+        }
+
+        this->colSizes[i] = w;
+    }
+
+    // attempt to give full columns more width
+    for(unsigned int i=0; i<fullCols.size(); i++)
+    {
+        unsigned int fullColIdx = fullCols[i];
+        int needed = this->QTableView::sizeHintForColumn(fullColIdx) - this->colSizes[fullColIdx];
+
+        // go through free columns and steal width
+        for(unsigned int j=0; j<freeCols.size() && needed > 0; j++)
+        {
+            unsigned int freeColIdx = freeCols[j];
+            int free = this->colSizes[freeColIdx] - this->QTableView::sizeHintForColumn(freeColIdx);
+            free /= fullCols.size();
+
+            free = min(free, needed);
+
+            this->colSizes[fullColIdx] += free;
+            this->colSizes[freeColIdx] -= free;
+            needed -= free;
+        }
+    }
+
+    int totalWidth = 0;
+    for(unsigned int i=0; i<colCount; i++)
+    {
+        totalWidth += max(this->colSizes[i], this->columnWidth(i));
+    }
+
+    int diff = totalWidth - newWidth;
+    // are we still too wide?
+    // make free columns even smaller
+    for(unsigned int j=freeCols.size(); j>0 && diff > 0; j--)
+    {
+        unsigned int freeColIdx = freeCols[j-1];
+        int free = max(0, this->colSizes[freeColIdx] - this->QTableView::sizeHintForColumn(freeColIdx));
+        free = min(diff, free);
+
+        this->colSizes[freeColIdx] -= free;
+        diff -= free;
+    }
+
+    this->QTableView::resizeEvent(evt);
 }
