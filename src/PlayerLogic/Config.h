@@ -149,6 +149,9 @@ public:
     int FluidsynthWidth = 0;
     double FluidsynthLevel = 0.8;
     
+    string FluidsynthBankSelect = "mma";
+    bool FluidsynthChannel9IsDrum = false;
+    
     
     //**********************************
     //   LIBMODPLUG-SPECIFIC SECTION   *
@@ -182,6 +185,11 @@ public:
     // Surround delay in ms, usually 5-40ms
     int ModPlugSurroundDelay = 10;
     
+    //**********************************
+    //   LIBMAD-SPECIFIC SECTION   *
+    //**********************************
+    bool MadPermissive = false;
+    
     
     void Load() noexcept;
     void Save() noexcept;
@@ -191,6 +199,11 @@ public:
     {
         switch(version)
         {
+            case 4:
+                archive( CEREAL_NVP(this->MadPermissive) );
+                archive( CEREAL_NVP(this->FluidsynthBankSelect) );
+                archive( CEREAL_NVP(this->FluidsynthChannel9IsDrum) );
+                [[fallthrough]];
             case 3: // added MidiControllerLoopCount
                 archive( CEREAL_NVP(this->MidiControllerLoopCount) );
                 [[fallthrough]];
@@ -249,7 +262,7 @@ public:
     }
 };
 
-CEREAL_CLASS_VERSION( Config, 3 )
+CEREAL_CLASS_VERSION( Config, 4 )
 
 // global var holding the singleton Config instance
 // just a nice little shortcut, so one doesnt always have to write Config::Singleton()

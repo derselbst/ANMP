@@ -145,11 +145,21 @@ void LibMadWrapper::open ()
                 if(this->Format.Channels() != MAD_NCHANNELS(&header))
                 {
                     CLOG(LogLevel_t::Warning, "channelcount varies (now: " << MAD_NCHANNELS(&header) << ") within File \"" << this->Filename << ")\"");
+                    
+                    if(!gConfig.MadPermissive)
+                    {
+                        THROW_RUNTIME_ERROR("invalid mp3: channelcount varies");
+                    }
                 }
 
                 if(this->Format.SampleRate != header.samplerate)
                 {
                     CLOG(LogLevel_t::Warning, "samplerate varies (now: " << header.samplerate << ") within File \"" << this->Filename << ")\"");
+                    
+                    if(!gConfig.MadPermissive)
+                    {
+                        THROW_RUNTIME_ERROR("invalid mp3: samplerate varies");
+                    }
                 }
 
                 this->numFrames += 32 * MAD_NSBSAMPLES(&header);
