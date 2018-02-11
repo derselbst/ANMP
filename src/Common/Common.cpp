@@ -201,9 +201,9 @@ string mybasename(const string& path)
 {
     string s = string(path.c_str());
 
-#ifdef _POSIX_SOURCE
+#if defined(_POSIX_SOURCE)
     return string(basename( const_cast<char*>(s.c_str()) ));
-#elif _WINDOWS
+#elif defined(_WIN32)
     _splitpath(s.c_str(),
                nullptr, // drive
                dirBuf, // dir
