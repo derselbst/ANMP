@@ -134,7 +134,22 @@ void Playlist::shuffle(size_t start, size_t end)
 
     lock_guard<recursive_mutex> lck(this->mtx);
     
-    std::random_shuffle(this->queue.begin()+start, this->queue.begin()+end);
+    if(start <= this->currentSong && this->currentSong <= end)
+    {
+        if (start - this->currentSong != 0)
+        {
+            std::random_shuffle(this->queue.begin()+start, this->queue.begin()+this->currentSong);
+        }
+        
+        if (this->currentSong+1 - end != 0)
+        {
+            std::random_shuffle(this->queue.begin()+(this->currentSong+1), this->queue.begin()+end);
+        }
+    }
+    else
+    {
+        std::random_shuffle(this->queue.begin()+start, this->queue.begin()+end);
+    }
 }
 
 /** @brief move songs within the playlist
