@@ -191,8 +191,20 @@ export LD_LIBRARY_PATH=%{buildroot}/%{_libdir}/:$LD_LIBRARY_PATH
 %endif
 
 %post -n libanmp%{soname} -p /sbin/ldconfig
+%if 0%{?suse_version}
+%desktop_database_post
+#icon_theme_cache_post
+#icon_theme_cache_post HighContrast
+%mime_database_post
+%endif
 
 %postun -n libanmp%{soname} -p /sbin/ldconfig
+%if 0%{?suse_version}
+%desktop_database_postun
+#icon_theme_cache_postun
+#icon_theme_cache_postun HighContrast
+%mime_database_postun
+%endif
 
 
 %files
