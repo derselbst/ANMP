@@ -23,16 +23,11 @@
 
 namespace The
 {
-static PaletteHandler* s_PaletteHandler_instance = 0;
-
 PaletteHandler* paletteHandler()
 {
-    if( !s_PaletteHandler_instance )
-    {
-        s_PaletteHandler_instance = new PaletteHandler();
-    }
-
-    return s_PaletteHandler_instance;
+    static PaletteHandler s_PaletteHandler_instance;
+    
+    return &s_PaletteHandler_instance;
 }
 }
 
@@ -43,9 +38,7 @@ PaletteHandler::PaletteHandler( QObject* parent )
 
 
 PaletteHandler::~PaletteHandler()
-{
-    The::s_PaletteHandler_instance = 0;
-}
+{}
 
 void
 PaletteHandler::setPalette( const QPalette & palette )
