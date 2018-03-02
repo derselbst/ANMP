@@ -45,19 +45,18 @@ public:
 protected:
     AnalyzerBase( QWidget* );
 
-    void interpolate( const QVector<float>&, QVector<float>& ) const;
+    static void interpolate( const QVector<float>&, QVector<float>& );
 
+    template<typename T>
+    void prepareScope(const Song* s, frame_t playhead, QVector<float>& scope);
     virtual void transform( QVector<float>& );
     virtual void analyze( const QVector<float>& ) = 0;
 
     void setFps( int fps );
 
     FHT    *m_fht;
+    QVector<float> m_fftData;
     QTimer *m_renderTimer;
-
-private:
-    template<typename T>
-    void prepareScope(const Song* s, frame_t playhead, QVector<float>& scope);
 
 public slots:
     void connectSignals();

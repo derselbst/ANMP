@@ -35,6 +35,7 @@
 AnalyzerBase::AnalyzerBase( QWidget *parent )
     : QGLWidget( parent )
     , m_fht( new FHT( log2( gConfig.FramesToRender ) ) )
+    , m_fftData(m_fht->size())
     , m_renderTimer( new QTimer( this ) )
 {
     setFps( 60 ); // Default unless changed by subclass
@@ -70,34 +71,11 @@ AnalyzerBase::disconnectSignals()
     m_renderTimer->stop();
 }
 
-// TODO this seems to be quite usefull
-// void
-// AnalyzerBase::currentDesktopChanged()
-// {
-//     // Optimization for X11/Linux desktops:
-//     // Don't update the analyzer if Amarok is not on the active virtual desktop.
-//
-//     if( The::mainWindow()->isOnCurrentDesktop() )
-//         connectSignals();
-//     else
-//         disconnectSignals();
-// }
-
-
-void AnalyzerBase::transform( QVector<float> &scope ) //virtual
+void AnalyzerBase::transform( QVector<float> &s )
 {
-    //this is a standard transformation that should give
-    //an FFT scope that has bands for pretty analyzers
+    float *front = static_cast<float*>( &s.front() );
 
-    float *front = static_cast<float*>( &scope.front() );
-
-    float* f = new float[ m_fht->size() ];
-    m_fht->copy( &f[0], front );
-    m_fht->logSpectrum( front, &f[0] );
-    m_fht->scale( front, 1.0 / 20 );
-
-    scope.resize( m_fht->size() / 2 ); //second half of values are rubbish
-    delete [] f;
+    m_fht->spectrum( front );
 }
 
 // fill the buffer that will be fourier transformed
@@ -148,28 +126,27 @@ void AnalyzerBase::processData( const Song* s, frame_t playhead )
         return;
     }
 
-    QVector<float> scope(m_fht->size());
     if(s->Format.SampleFormat == SampleFormat_t::int16)
     {
-        this->prepareScope<int16_t>(s, playhead, scope);
+        this->prepareScope<int16_t>(s, playhead, m_fftData);
     }
     else if(s->Format.SampleFormat == SampleFormat_t::int32)
     {
-        this->prepareScope<int32_t>(s, playhead, scope);
+        this->prepareScope<int32_t>(s, playhead, m_fftData);
     }
     else if(s->Format.SampleFormat == SampleFormat_t::float32)
     {
-        this->prepareScope<float>(s, playhead, scope);
+        this->prepareScope<float>(s, playhead, m_fftData);
     }
 
-    transform( scope );
-    analyze( scope );
+    transform( m_fftData );
+    analyze( m_fftData );
 }
 
-void AnalyzerBase::interpolate( const QVector<float> &inVec, QVector<float> &outVec ) const
+void AnalyzerBase::interpolate( const QVector<float> &inVec, QVector<float> &outVec )
 {
     double pos = 0.0;
-    const double step = ( double )inVec.size() / outVec.size();
+    const double step = ( double )(inVec.size()/2) / outVec.size(); // upper half of is only aliased duplication
 
     for( int i = 0; i < outVec.size(); ++i, pos += step )
     {

@@ -52,7 +52,6 @@ protected:
     virtual void initializeGL();
     virtual void paintGL();
     virtual void resizeGL( int w, int h );
-    virtual void transform( QVector<float>& );
     virtual void analyze( const QVector<float>& );
     virtual void paletteChange( const QPalette& );
 

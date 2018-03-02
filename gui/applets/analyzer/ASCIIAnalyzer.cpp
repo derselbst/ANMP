@@ -99,25 +99,6 @@ ASCIIAnalyzer::determineStep()
 }
 
 void
-ASCIIAnalyzer::transform( QVector<float> &s ) //pure virtual
-{
-    // Based on Mark Kretschmann's work in BlockAnalyzer
-    for( int x = 0; x < s.size(); ++x )
-    {
-        s[x] *= 2;
-    }
-
-    float *front = static_cast<float*>( &s.front() );
-
-    m_fht->spectrum( front );
-    m_fht->scale( front, 1.0 / 20 );
-
-    //the second half is pretty dull, so only show it if the user has a large analyzer
-    //by setting to m_scope.size() if large we prevent interpolation of large analyzers, this is good!
-    s.resize( m_scope.size() <= MAX_COLUMNS / 2 ? MAX_COLUMNS / 2 : m_scope.size() );
-}
-
-void
 ASCIIAnalyzer::analyze( const QVector<float> &s )
 {
     interpolate( s, m_scope );
@@ -151,7 +132,7 @@ ASCIIAnalyzer::paintGL()
     for( uint y, x = 0; x < (uint)m_scope.size(); ++x )
     {
         // determine y
-        for( y = 0; m_scope[x] < m_yscale[y]; ++y )
+        for( y = 0; y < m_yscale.size() && m_scope[x] < m_yscale[y]; ++y )
             ;
 
         // the higher the y, the lower the bar physically is.
