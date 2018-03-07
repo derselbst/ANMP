@@ -253,6 +253,10 @@ void FluidsynthWrapper::setupSettings()
 {
     if(this->settings == nullptr) // do a full init once
     {
+        // deactivate all audio drivers in fluidsynth; we are going to handle audio by ourself, so we dont need this
+        const char* DRV[] = { NULL };
+        fluid_audio_driver_register(DRV);
+        
         this->settings = new_fluid_settings();
         if (this->settings == nullptr)
         {
