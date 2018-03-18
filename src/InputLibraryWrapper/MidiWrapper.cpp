@@ -79,8 +79,12 @@ void MidiWrapper::FluidSeqCallback(unsigned int time, fluid_event_t* e, fluid_se
                 if(IsLoopStop(event))
                 {
                     // is that our corresponding loop stop?
-                    if(event->midi_buffer[2] == loopInfo->loopId)
+                    if(event->midi_buffer[2] == loopInfo->loopId &&
+                        // is there still loop count left? 2 because one loop was already scheduled by parseEvents() and 0 is excluded
+                       (loopInfo->count == 0 || loopInfo->count > 2)
+                    )
                     {
+                        loopInfo->count--;
                         pthis->synth->ScheduleLoop(loopInfo);
                         break;
                     }
@@ -215,7 +219,6 @@ void MidiWrapper::parseEvents()
             info.eventId = event->event_number;
             info.channel = chan;
             info.loopId = loopId;
-            info.count = lastestLoopCount[chan];
 
             if(!info.start.hasValue) // avoid multiple sets
             {
@@ -243,6 +246,7 @@ void MidiWrapper::parseEvents()
                 if(!info.stop.hasValue)
                 {
                     info.stop = event->time_seconds;
+                    info.count = lastestLoopCount[chan];
                 }
 
                 this->synth->ScheduleLoop(&info);
