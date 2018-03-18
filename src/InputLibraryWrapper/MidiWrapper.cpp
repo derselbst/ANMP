@@ -10,6 +10,7 @@
 #include <cstring>
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>
+#include <cmath>
 
 #define IsControlChange(e) ((e->midi_buffer[0] & 0xF0) == 0xB0)
 #define IsLoopStart(e) IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopStart)
@@ -22,11 +23,8 @@
  * Things we are doing here:
  *
  *  1. use libsmf to retrieve midi events from a midi file
- *  2. feed these event to some synthesizer (i.e. fluidsynth's sequencer)
+ *  2. feed these event to some synthesizer (i.e. fluidsynth's sequencer) and automatically unroll MIDI track loops as indicated by MIDI CC102 and 103
  *  3. the synth manages an internal queue. on every call to this->render(), the synth pops these events from the queue and synthesize them
- *
- * during 1) we observe the events sucked from a midi file. if we spot a MIDI CC102 (or 103), we've detected a midi track loop. so here we have to make sure,
- * that we get a callback whenever we reach the end of such a track loop during synthesization, in order to keep this midi track playing
  *
  */
 
@@ -38,73 +36,6 @@ string MidiWrapper::SmfEventToString(smf_event_t* event)
     ret +=     "\nat tick     : " + to_string(event->time_pulses);
 
     return ret;
-}
-
-/**
- * @param time value returned by fluid_sequencer_get_tick(), i.e. usually time in milliseconds
- */
-void MidiWrapper::FluidSeqCallback(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data)
-{
-    (void)seq;
-
-    MidiWrapper* pthis = static_cast<MidiWrapper*>(data);
-    MidiLoopInfo* loopInfo = static_cast<MidiLoopInfo*>(fluid_event_get_data(e));
-
-    if(pthis==nullptr || loopInfo == nullptr)
-    {
-        return;
-    }
-
-    // seek back to where the loop started
-    if(smf_seek_to_seconds(pthis->smf, loopInfo->start.Value) != 0)
-    {
-        CLOG(LogLevel_t::Error, "unable to seek to "<< loopInfo->start.Value << " seconds.");
-        return;
-    }
-
-    // the sequencer's tick is not necessarily resetted when playing the next midi file, however, we need his tick to perform that check down there
-    // thus, set it relative to the beginning of the current midi
-    time -= pthis->synth->GetInitTick();
-    
-    smf_event_t* event;
-    // read in every single event following the position we currently are
-    while((event = smf_get_next_event(pthis->smf)) != nullptr)
-    {
-        // does this event belong to the same track and plays on the same channel as where we found the corresponding loop event?
-        if(event->track_number == loopInfo->trackId && (event->midi_buffer[0] & 0x0F) == loopInfo->channel)
-        {
-            // events shall not be looped beyond the end of the song
-            if(time + event->time_seconds*1000 < pthis->fileLen.Value)
-            {
-                if(IsLoopStop(event))
-                {
-                    // is that our corresponding loop stop?
-                    if(event->midi_buffer[2] == loopInfo->loopId &&
-                        // is there still loop count left? 2 because one loop was already scheduled by parseEvents() and 0 is excluded
-                       (loopInfo->count == 0 || loopInfo->count > 2)
-                    )
-                    {
-                        loopInfo->count--;
-                        pthis->synth->ScheduleLoop(loopInfo);
-                        break;
-                    }
-                    else
-                    {
-                        // dont pass loop events to the synth
-                        continue;
-                    }
-                }
-                else if(IsLoopStart(event))
-                {
-                    continue;
-                }
-                else
-                {
-                    pthis->synth->AddEvent(event);
-                }
-            }
-        }
-    }
 }
 
 MidiWrapper::MidiWrapper(string filename) : StandardWrapper(filename)
@@ -182,6 +113,8 @@ void MidiWrapper::open ()
 void MidiWrapper::parseEvents()
 {
     int lastestLoopCount[NMidiChannels] = {};
+    const int endOfSong = this->fileLen.Value;
+    
     smf_event_t *event;
     while((event = smf_get_next_event(this->smf)) != nullptr)
     {
@@ -223,6 +156,7 @@ void MidiWrapper::parseEvents()
             if(!info.start.hasValue) // avoid multiple sets
             {
                 info.start = event->time_seconds;
+                info.start_tick = event->time_pulses;
             }
             
             continue;
@@ -246,10 +180,60 @@ void MidiWrapper::parseEvents()
                 if(!info.stop.hasValue)
                 {
                     info.stop = event->time_seconds;
+                    info.stop_tick = event->time_pulses;
                     info.count = lastestLoopCount[chan];
+                    
+                    // we have a complete loop. immediately dispatch all included events, by adding them to smf.
+                    // The old callback based approach with fluidsynth's sequencer was not able to handle tempo changes that occur during (unrolled) loops.
+                    // By adding the events back to smf, smf takes care of correct timing with existing tempo changes.
+                    {
+                        if(smf_seek_to_pulses(this->smf, info.start_tick.Value) != 0)
+                        {
+                            CLOG(LogLevel_t::Error, "unable to seek, cant unroll loops.");
+                            break;
+                        }
+                        
+                        smf_event_t* evt_of_loop;
+                        // read in every single event following the position we currently are
+                        while((evt_of_loop = smf_get_next_event(this->smf)) != nullptr)
+                        {
+                            // does this event belong to the same track and plays on the same channel as where we found the corresponding loop event?
+                            if(evt_of_loop->track_number == info.trackId && (evt_of_loop->midi_buffer[0] & 0x0F) == info.channel && !((IsLoopStart(evt_of_loop)) || (IsLoopCount(evt_of_loop)) || (IsLoopStop(evt_of_loop))))
+                            {
+                                // events shall not be looped beyond the end of the song
+                                const double evtTime = evt_of_loop->time_seconds;
+                                
+                                if(evtTime >= info.stop.Value)
+                                {
+                                    // all events of this loop handled, stop here
+                                    break;
+                                }
+                                
+                                int noOfInsertions = floor((endOfSong - evtTime*1000) / ((info.stop.Value - info.start.Value)*1000));
+                                if(info.count > 0)
+                                {
+                                    // trim finite loops
+                                    noOfInsertions = min<int>(noOfInsertions, info.count);
+                                }
+                                
+                                const double loopDur = (info.stop_tick.Value - info.start_tick.Value);
+                                for(int i=1; i<noOfInsertions; i++)
+                                {
+                                    smf_event_t* newEvt = smf_event_new_from_pointer(evt_of_loop->midi_buffer, evt_of_loop->midi_buffer_length);
+                                    
+                                    int pulses = evt_of_loop->time_pulses + loopDur * i;                   
+                                    smf_track_add_event_pulses(evt_of_loop->track, newEvt, pulses);
+                                }
+                            }
+                        }
+                        
+                        if(smf_seek_to_event(this->smf, event) != 0)
+                        {
+                            CLOG(LogLevel_t::Error, "unable to seek, cant unroll loops.");
+                            break;
+                        }
+                    }
                 }
-
-                this->synth->ScheduleLoop(&info);
             }
         }
 
@@ -261,7 +245,6 @@ void MidiWrapper::parseEvents()
     
     // finally send note offs on all channels
     // we have to do this, because some wind might be blowing (DK64)
-    const int& endOfSong = this->fileLen.Value;
     this->synth->FinishSong(endOfSong);
 }
 
@@ -323,16 +306,16 @@ vector<loop_t> MidiWrapper::getLoopArray () const noexcept
             {
                 const MidiLoopInfo& info = this->trackLoops[t][c][l];
 
-                if(info.start.hasValue && info.stop.hasValue)
+                if(info.start_tick.hasValue && info.stop_tick.hasValue)
                 {
-                    double duration = info.stop.Value - info.start.Value;
+                    int duration = info.stop_tick.Value - info.start_tick.Value;
                     if(max == nullptr)
                     {
                         max = &info;
                     }
                     else
                     {
-                        double durationMax = max->stop.Value - max->start.Value;
+                        int durationMax = max->stop_tick.Value - max->start_tick.Value;
                         if(durationMax < duration)
                         {
                             max=&info;

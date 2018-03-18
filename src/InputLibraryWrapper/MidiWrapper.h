@@ -32,6 +32,10 @@ struct MidiLoopInfo
     Nullable<double> start;
     Nullable<double> stop;
     
+    // time indexes in pulses
+    Nullable<int> start_tick;
+    Nullable<int> stop_tick;
+    
     // how often this loop is repeated, 0 for infinite loops
     // specified by MIDI CC104
     uint8_t count = 0;
@@ -66,7 +70,6 @@ public:
     virtual ~MidiWrapper ();
     
     static string SmfEventToString(smf_event_t* event);
-    static void FluidSeqCallback(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data);
 
     // interface methods declaration
 

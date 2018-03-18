@@ -1,4 +1,5 @@
 #include "FluidsynthWrapper.h"
+#include "MidiWrapper.h"
 
 #include "Config.h"
 #include "Common.h"
@@ -43,7 +44,7 @@ FluidsynthWrapper::~FluidsynthWrapper ()
     }
 }
 
-void FluidsynthWrapper::setupSeq(MidiWrapper& midi)
+void FluidsynthWrapper::setupSeq()
 {
     if(this->sequencer == nullptr) // only create the sequencer once
     {
@@ -57,14 +58,6 @@ void FluidsynthWrapper::setupSeq(MidiWrapper& midi)
         this->synthId = fluid_sequencer_register_fluidsynth(this->sequencer, this->synth);
     }
     
-    if(this->midiwrapperID.hasValue)
-    {
-        // unregister any client
-        fluid_sequencer_unregister_client(this->sequencer, this->midiwrapperID.Value);
-    }
-    // register myself as second destination
-    this->midiwrapperID = fluid_sequencer_register_client(this->sequencer, "schedule_loop_callback", &MidiWrapper::FluidSeqCallback, &midi);
-        
     if(this->myselfID.hasValue)
     {
         // unregister any client
@@ -290,7 +283,7 @@ void FluidsynthWrapper::ShallowInit()
 void FluidsynthWrapper::DeepInit(MidiWrapper& caller)
 {
     this->setupSynth(caller);
-    this->setupSeq(caller);
+    this->setupSeq();
     this->initTick = fluid_sequencer_get_tick(this->sequencer);
     
     if(this->synthEvent == nullptr)
@@ -305,8 +298,6 @@ void FluidsynthWrapper::DeepInit(MidiWrapper& caller)
         this->callbackEvent = new_fluid_event();
         fluid_event_set_source(this->callbackEvent, -1);
     }
-    // destination may have changed, refresh it
-    fluid_event_set_dest(this->callbackEvent, this->midiwrapperID.Value);
     
     if(this->callbackNoteEvent == nullptr)
     {
@@ -424,14 +415,14 @@ void FluidsynthWrapper::AddEvent(smf_event_t * event, double offset)
         n.chan = chan;
         n.key = event->midi_buffer[1];
         n.vel = 0;
-        this->ScheduleNote(n, static_cast<unsigned int>((event->time_seconds - offset)*1000) + fluid_sequencer_get_tick(this->sequencer));
+        this->ScheduleNote(n, static_cast<unsigned int>((event->time_seconds + offset)*1000) + fluid_sequencer_get_tick(this->sequencer));
         return;
 
     case 0x90:
         n.chan = chan;
         n.key = event->midi_buffer[1];
         n.vel = event->midi_buffer[2];
-        this->ScheduleNote(n, static_cast<unsigned int>((event->time_seconds - offset)*1000) + fluid_sequencer_get_tick(this->sequencer));
+        this->ScheduleNote(n, static_cast<unsigned int>((event->time_seconds + offset)*1000) + fluid_sequencer_get_tick(this->sequencer));
         return;
 
     case 0xA0:
@@ -478,7 +469,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t * event, double offset)
         return;
     }
 
-    ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, static_cast<unsigned int>((event->time_seconds - offset)*1000) + fluid_sequencer_get_tick(this->sequencer), true);
+    ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, static_cast<unsigned int>((event->time_seconds + offset)*1000) + fluid_sequencer_get_tick(this->sequencer), true);
 
     if(ret != FLUID_OK)
     {

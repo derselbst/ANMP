@@ -1,19 +1,23 @@
 
 #pragma once
 
-#include "MidiWrapper.h"
+#include "Nullable.h"
+#include "types.h"
 
 #include <fluidsynth.h>
 
 // libsmf - helper lib for reading midi files
 #include <smf.h>
 
+class MidiWrapper;
+struct MidiLoopInfo;
+struct MidiNoteInfo;
+struct SongFormat;
+
 /**
   * class FluidsynthWrapper
   *
   */
-
-
 class FluidsynthWrapper
 {
 public:
@@ -65,9 +69,6 @@ private:
     // fluidsynth's internal synth
     short synthId;
     
-    // callback ID for our parent MidiWrapper instance
-    Nullable<short> midiwrapperID;
-    
     // callback ID for ourself
     Nullable<short> myselfID;
     
@@ -82,7 +83,7 @@ private:
     
     void setupSettings();
     void setupSynth(MidiWrapper&);
-    void setupSeq(MidiWrapper&);
+    void setupSeq();
 
     void deleteSynth();
     void deleteSeq();
