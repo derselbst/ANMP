@@ -217,7 +217,7 @@ void MidiWrapper::parseEvents()
                                 }
                                 
                                 const double loopDur = (info.stop_tick.Value - info.start_tick.Value);
-                                for(int i=1; i<noOfInsertions; i++)
+                                for(int i=1; i<=noOfInsertions; i++)
                                 {
                                     smf_event_t* newEvt = smf_event_new_from_pointer(evt_of_loop->midi_buffer, evt_of_loop->midi_buffer_length);
                                     
