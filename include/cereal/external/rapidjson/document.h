@@ -2530,7 +2530,7 @@ class GenericValue
 #elif CEREAL_RAPIDJSON_64BIT
         char payload[sizeof(SizeType) * 2 + sizeof(void *) + 6]; // 6 padding bytes
 #else
-            char payload[sizeof(SizeType) * 2 + sizeof(void *) + 2]; // 2 padding bytes
+        char payload[sizeof(SizeType) * 2 + sizeof(void *) + 2]; // 2 padding bytes
 #endif
         uint16_t flags;
     };

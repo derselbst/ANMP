@@ -451,20 +451,32 @@ string LibMadWrapper::id3_get_tag(struct id3_tag const *tag, char const *what)
         j = 0;
         frame = id3_tag_findframe(tag, ID3_FRAME_COMMENT, j++);
         if (!frame)
+        {
             return "";
+        }
         ucs4 = id3_field_getfullstring(&frame->fields[3]);
         if (!ucs4)
+        {
             return "";
+        }
         latin1 = id3_ucs4_latin1duplicate(ucs4);
         if (!latin1 || strlen(reinterpret_cast<char *>(latin1)) == 0)
+        {
             return "";
+        }
         len = strlen(reinterpret_cast<char *>(latin1));
         if (avail > len)
+        {
             tocopy = len;
+        }
         else
+        {
             tocopy = 0;
+        }
         if (!tocopy)
+        {
             return "";
+        }
         avail -= tocopy;
         strncat(printable, reinterpret_cast<char *>(latin1), tocopy);
         free(latin1);
@@ -474,26 +486,40 @@ string LibMadWrapper::id3_get_tag(struct id3_tag const *tag, char const *what)
     {
         frame = id3_tag_findframe(tag, what, 0);
         if (!frame)
+        {
             return "";
+        }
         field = &frame->fields[1];
         nstrings = id3_field_getnstrings(field);
         for (j = 0; j < nstrings; ++j)
         {
             ucs4 = id3_field_getstrings(field, j);
             if (!ucs4)
+            {
                 return "";
+            }
             if (strcmp(what, ID3_FRAME_GENRE) == 0)
+            {
                 ucs4 = id3_genre_name(ucs4);
+            }
             latin1 = id3_ucs4_latin1duplicate(ucs4);
             if (!latin1)
+            {
                 break;
+            }
             len = strlen(reinterpret_cast<char *>(latin1));
             if (avail > len)
+            {
                 tocopy = len;
+            }
             else
+            {
                 tocopy = 0;
+            }
             if (!tocopy)
+            {
                 break;
+            }
             avail -= tocopy;
             strncat(printable, reinterpret_cast<char *>(latin1), tocopy);
             free(latin1);

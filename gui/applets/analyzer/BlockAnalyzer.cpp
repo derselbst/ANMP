@@ -139,7 +139,9 @@ void BlockAnalyzer::paintGL()
     {
         // determine y
         for (y = 0; y < m_yscale.size() && m_scope[x] < m_yscale[y]; ++y)
+        {
             ;
+        }
 
         // this is opposite to what you'd think, higher than y
         // means the bar is lower than y (physically)
@@ -282,10 +284,12 @@ void BlockAnalyzer::drawBackground()
 
     QPainter p(&background);
     for (int x = 0; x < m_columns; ++x)
+    {
         for (int y = 0; y < m_rows; ++y)
         {
             p.fillRect(x * (BLOCK_WIDTH + 1), y * (BLOCK_HEIGHT + 1), BLOCK_WIDTH, BLOCK_HEIGHT, bgdark);
         }
+    }
 
     m_background = QSharedPointer<Texture>(new Texture(background));
 }

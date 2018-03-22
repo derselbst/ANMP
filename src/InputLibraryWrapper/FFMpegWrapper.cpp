@@ -282,7 +282,9 @@ void FFMpegWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
         {
             ret = decode_packet(pcm, framesToDo, frameFinished, packet, frame);
             if (ret < 0)
+            {
                 break;
+            }
             packet.data += ret;
             packet.size -= ret;
         } while (packet.size > 0);
@@ -297,7 +299,9 @@ void FFMpegWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
     {
         int ret = decode_packet(pcm, framesToDo, frameFinished, packet, frame);
         if (ret < 0)
+        {
             break;
+        }
     } while (frameFinished);
 
 

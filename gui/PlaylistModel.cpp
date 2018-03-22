@@ -291,10 +291,14 @@ bool PlaylistModel::canDropMimeData(const QMimeData *data, Qt::DropAction, int, 
 bool PlaylistModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
 {
     if (!canDropMimeData(data, action, row, column, parent))
+    {
         return false;
+    }
 
     if (action == Qt::IgnoreAction)
+    {
         return true;
+    }
 
     int beginRow;
 

@@ -128,7 +128,9 @@ void ASCIIAnalyzer::paintGL()
     {
         // determine y
         for (y = 0; y < m_yscale.size() && m_scope[x] < m_yscale[y]; ++y)
+        {
             ;
+        }
 
         // the higher the y, the lower the bar physically is.
         if ((float)y > m_store[x])

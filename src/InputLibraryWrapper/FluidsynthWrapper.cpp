@@ -344,11 +344,17 @@ void FluidsynthWrapper::ConfigureChannels(SongFormat *f)
         unsigned int fxid = i - nAudVoices;
         f->VoiceName[i] = "Fx Channel " + to_string(fxid);
         if (fxid == 0)
+        {
             f->VoiceName[i] += " (reverb)";
+        }
         else if (fxid == 1)
+        {
             f->VoiceName[i] += " (chorus)";
+        }
         else
+        {
             f->VoiceName[i] += " (unknown fx)";
+        }
     }
 }
 
