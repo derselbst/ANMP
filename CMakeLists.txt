@@ -37,7 +37,7 @@ find_program(CLANG_TIDY
     if(CLANG_TIDY)
         # whenever clang-tidy is available, use it to automatically add braces after ever "make"
         set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=-*,readability-braces-around-statements;-fix")
-#         set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-style=file;-fix")
+#         set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-fix")
     endif(CLANG_TIDY)
 endif(${CMAKE_VERSION} VERSION_GREATER "3.6.0")
 
@@ -57,7 +57,6 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0 -Wextra -Wdocumentation -fstack-protector-all -fno-inline-functions -fsanitize=address,undefined -stdlib=${STDCXX}")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g3 -O2 -Rpass=loop-vectorize -Rpass-analysis=loop-vectorize  -stdlib=${STDCXX}")
 endif()
-
 
 ### setup project include dirs
 set(PROJECT_LOCAL_INCLUDE_DIRS
@@ -399,7 +398,7 @@ add_subdirectory(test)
 
 # Additional targets to perform clang-format/clang-tidy
 # Get all project files
-file(GLOB_RECURSE 
+file(GLOB_RECURSE
      ALL_SOURCE_FILES
      LIST_DIRECTORIES false
      ${CMAKE_SOURCE_DIR}/*.[chi]
