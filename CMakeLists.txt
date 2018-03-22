@@ -29,6 +29,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+if(${CMAKE_VERSION} VERSION_GREATER "3.6.0")
+find_program(CLANG_TIDY
+  NAMES "clang-tidy"
+  DOC "Path to clang-tidy executable")
+  
+    if(CLANG_TIDY)
+        # whenever clang-tidy is available, use it to automatically add braces after ever "make"
+        set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=-*,readability-braces-around-statements;-fix")
+#         set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-style=file;-fix")
+    endif(CLANG_TIDY)
+endif(${CMAKE_VERSION} VERSION_GREATER "3.6.0")
+
 
 ### set compile flags
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -384,4 +396,30 @@ add_subdirectory(utils)
 
 ENABLE_TESTING()
 add_subdirectory(test)
+
+# Additional targets to perform clang-format/clang-tidy
+# Get all project files
+file(GLOB_RECURSE 
+     ALL_SOURCE_FILES
+     LIST_DIRECTORIES false
+     ${CMAKE_SOURCE_DIR}/*.[chi]
+     ${CMAKE_SOURCE_DIR}/*.[chi]pp
+     ${CMAKE_SOURCE_DIR}/*.[chi]xx
+     ${CMAKE_SOURCE_DIR}/*.cc
+     ${CMAKE_SOURCE_DIR}/*.hh
+     ${CMAKE_SOURCE_DIR}/*.ii
+     ${CMAKE_SOURCE_DIR}/*.[CHI]
+     )
+
+# Adding clang-format target if executable is found
+find_program(CLANG_FORMAT "clang-format")
+if(CLANG_FORMAT)
+  add_custom_target(
+    format
+    COMMAND ${CLANG_FORMAT}
+    -i
+    -style=file
+    ${ALL_SOURCE_FILES}
+    )
+endif(CLANG_FORMAT)
 
