@@ -18,7 +18,7 @@ class LibGMEWrapper : public StandardWrapper<int16_t>
     //
 
     LibGMEWrapper(string filename);
-    LibGMEWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
+    LibGMEWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len);
     void initAttr();
 
     // forbid copying

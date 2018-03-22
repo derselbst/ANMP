@@ -15,7 +15,7 @@ class LibMadWrapper : public StandardWrapper<int32_t>
 {
     public:
     LibMadWrapper(string filename);
-    LibMadWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
+    LibMadWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len);
     void initAttr();
 
     // forbid copying

@@ -69,7 +69,7 @@ class PaletteHandler : public QObject
      * @return Highlight color, which is the KDE highlight color, with reduced saturation
      *         (less contrast).
      */
-    static QColor highlightColor(qreal percentSaturation = 0.5, qreal percentValue = 1.0);
+    static QColor highlightColor(qreal saturationPercent = 0.5, qreal valuePercent = 1.0);
 
     /**
      * Returns the background color used in context applets.

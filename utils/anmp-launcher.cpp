@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
     }
 
     QDBusReply<bool> reply = dbus.interface()->isServiceRegistered(org::anmp::staticInterfaceName());
-    if (reply.isValid() && reply.value() == false)
+    if (reply.isValid() && !reply.value())
     {
         std::cout << "anmp not started yet" << std::endl;
         QMessageBox box(QMessageBox::Warning, "ANMP not started yet", "ANMP has not yet registered a dbus service, probably not started.", QMessageBox::Ok);

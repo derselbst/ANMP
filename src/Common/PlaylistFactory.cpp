@@ -161,7 +161,7 @@ void PlaylistFactory::parseCue(IPlaylist &playlist, const string &filePath)
 #endif
 
 
-bool PlaylistFactory::addSong(IPlaylist &playlist, const string filePath, Nullable<size_t> offset, Nullable<size_t> len, Nullable<SongInfo> overridingMetadata)
+bool PlaylistFactory::addSong(IPlaylist &playlist, const string& filePath, Nullable<size_t> offset, Nullable<size_t> len, Nullable<SongInfo> overridingMetadata)
 {
     Song *pcm = nullptr;
 

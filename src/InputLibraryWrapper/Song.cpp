@@ -3,16 +3,17 @@
 #include "CommonExceptions.h"
 
 #include <algorithm> // std::sort
+#include <utility>
 
 // Constructors/Destructors
 //
 Song::Song(string filename)
-: Filename(filename)
+: Filename(std::move(filename))
 {
 }
 
 Song::Song(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen)
-: Filename(filename), fileOffset(fileOffset), fileLen(fileLen)
+: Filename(std::move(filename)), fileOffset(fileOffset), fileLen(fileLen)
 {
 }
 

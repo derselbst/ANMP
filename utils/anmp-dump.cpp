@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
         {
             if (recursive)
             {
-                for (directory_entry dirEntry : recursive_directory_iterator(argv[i]))
+                for (const directory_entry& dirEntry : recursive_directory_iterator(argv[i]))
                 {
                     if (is_regular_file(dirEntry.status()))
                     {
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                for (directory_entry dirEntry : directory_iterator(argv[i]))
+                for (const directory_entry& dirEntry : directory_iterator(argv[i]))
                 {
                     if (is_regular_file(dirEntry.status()))
                     {

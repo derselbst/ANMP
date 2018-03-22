@@ -41,7 +41,7 @@ class StringFormatter
      * 
      * if no such pattern was specified, returns a unique string based on Song->Filename
      */
-    string GetFilename(const Song *song, string extension = "");
+    string GetFilename(const Song *song, const string& extension = "");
 
     /**
      * sets the format pattern to be applied for GetFilename()

@@ -13,19 +13,20 @@
 
 #include <cmath> // floor
 #include <cstring> // strerror
+#include <utility>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 
 LibMadWrapper::LibMadWrapper(string filename)
-: StandardWrapper(filename)
+: StandardWrapper(std::move(filename))
 {
     this->initAttr();
 }
 
 LibMadWrapper::LibMadWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
-: StandardWrapper(filename, offset, len)
+: StandardWrapper(std::move(filename), offset, len)
 {
     this->initAttr();
 }

@@ -54,7 +54,7 @@ void StringFormatter::UpdateReplacements(const SongInfo &info)
     this->wildcards.push_back(wild);
 }
 
-string StringFormatter::GetFilename(const Song *song, string extension)
+string StringFormatter::GetFilename(const Song *song, const string& extension)
 {
     string filename;
     if (!this->pattern.empty())

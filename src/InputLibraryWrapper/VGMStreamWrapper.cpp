@@ -6,18 +6,20 @@
 
 extern "C" {
 #include <util.h>
+
+#include <utility>
 }
 // Constructors/Destructors
 //
 
 VGMStreamWrapper::VGMStreamWrapper(string filename)
-: StandardWrapper(filename)
+: StandardWrapper(std::move(filename))
 {
     this->initAttr();
 }
 
 VGMStreamWrapper::VGMStreamWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
-: StandardWrapper(filename, offset, len)
+: StandardWrapper(std::move(filename), offset, len)
 {
     this->initAttr();
 }

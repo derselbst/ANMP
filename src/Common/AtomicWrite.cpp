@@ -1,4 +1,5 @@
 #include <iostream>
+#include <utility>
 
 #include "AtomicWrite.h"
 
@@ -16,11 +17,11 @@ AtomicWrite &AtomicWrite::getSingleton()
 
 void AtomicWrite::write(std::string s, std::ostream &o)
 {
-    this->write(LogLevel_t::Info, s, o);
+    this->write(LogLevel_t::Info, std::move(s), o);
 }
 
 
-void AtomicWrite::write(LogLevel_t l, std::string s, std::ostream &o)
+void AtomicWrite::write(LogLevel_t l, const std::string& s, std::ostream &o)
 {
     std::ostream *out = &o;
 

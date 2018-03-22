@@ -17,7 +17,7 @@ class VGMStreamWrapper : public StandardWrapper<int16_t>
 {
     public:
     VGMStreamWrapper(string filename);
-    VGMStreamWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
+    VGMStreamWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len);
     void initAttr();
 
     // forbid copying

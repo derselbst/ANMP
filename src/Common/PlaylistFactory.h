@@ -38,7 +38,7 @@ class PlaylistFactory
      * @param  overridingMetadata not the metadata from Song::buildMetadata() but the metadata specified here will be used
      */
     static bool addSong(IPlaylist &playlist,
-                        const string filePath,
+                        const string& filePath,
                         Nullable<size_t> offset = Nullable<size_t>(),
                         Nullable<size_t> len = Nullable<size_t>(),
                         Nullable<SongInfo> overridingMetadata = Nullable<SongInfo>());

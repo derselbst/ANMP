@@ -135,7 +135,7 @@ class Player
      */
     void _initAudio();
     void _seekTo(frame_t frame);
-    void _setCurrentSong(Song *song);
+    void _setCurrentSong(Song *newSong);
     void _pause();
 
     /**

@@ -6,6 +6,7 @@
 #include "Config.h"
 
 #include <cstring>
+#include <utility>
 #include <errno.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -13,13 +14,13 @@
 ModPlug_Settings ModPlugWrapper::settings;
 
 ModPlugWrapper::ModPlugWrapper(string filename)
-: StandardWrapper(filename)
+: StandardWrapper(std::move(filename))
 {
     this->initAttr();
 }
 
 ModPlugWrapper::ModPlugWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
-: StandardWrapper(filename, offset, len)
+: StandardWrapper(std::move(filename), offset, len)
 {
     this->initAttr();
 }

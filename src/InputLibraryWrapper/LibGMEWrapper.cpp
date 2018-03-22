@@ -6,16 +6,17 @@
 #include "Config.h"
 
 #include <iomanip>
+#include <utility>
 
 LibGMEWrapper::LibGMEWrapper(string filename)
-: StandardWrapper(filename)
+: StandardWrapper(std::move(filename))
 {
     this->initAttr();
 }
 
 // NOTE! for this class we use Song::fileOffset as track offset (i.e. track num) for libgme
 LibGMEWrapper::LibGMEWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
-: StandardWrapper(filename, offset, len)
+: StandardWrapper(std::move(filename), offset, len)
 {
     this->initAttr();
 }

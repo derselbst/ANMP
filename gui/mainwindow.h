@@ -36,7 +36,7 @@ class MainWindow : public QMainWindow
     ~MainWindow();
 
     static void callbackSeek(void *, frame_t pos);
-    static void callbackCurrentSongChanged(void *, const Song *s);
+    static void callbackCurrentSongChanged(void *, const Song *newSong);
     static void callbackIsPlayingChanged(void *context, bool isPlaying, Nullable<string> msg);
 
     protected:
@@ -70,7 +70,7 @@ class MainWindow : public QMainWindow
     void buildFileBrowser();
     void createShortcuts();
 
-    void relativeSeek(int ms);
+    void relativeSeek(int relpos);
     void enableSeekButtons(bool isEnabled);
     void updateChannelConfig(const SongFormat &currentFormat);
 
@@ -79,7 +79,7 @@ class MainWindow : public QMainWindow
     void showNoVisualizer();
 #endif
 
-    void showError(const QString &msg, const QString &gen = "An Error occurred");
+    void showError(const QString &detail, const QString &general = "An Error occurred");
 
     // must be private because qdbuscpp2xml only generates garbage for it
     void DoChannelMuting(bool (*pred)(bool voiceIsMuted, bool voiceIsSelected));
@@ -99,7 +99,7 @@ class MainWindow : public QMainWindow
     void SeekBackward();
     void FastSeekForward();
     void FastSeekBackward();
-    void AddSongs(QStringList); // only for dbus
+    void AddSongs(const QStringList&); // only for dbus
     void MuteSelectedVoices();
     void UnmuteSelectedVoices();
     void SoloSelectedVoices();
@@ -113,7 +113,7 @@ class MainWindow : public QMainWindow
     friend class PlayheadSlider;
 
 
-    void slotIsPlayingChanged(bool isPlaying, bool, QString);
+    void slotIsPlayingChanged(bool isPlaying, bool, const QString&);
     void slotSeek(long long);
     void slotCurrentSongChanged(const Song *s);
 
@@ -128,7 +128,7 @@ class MainWindow : public QMainWindow
     void aboutQt();
     void aboutAnmp();
 
-    void slotSongAdded(QString file, int, int);
+    void slotSongAdded(const QString& file, int, int);
 
     void on_actionFileBrowser_triggered(bool checked);
 

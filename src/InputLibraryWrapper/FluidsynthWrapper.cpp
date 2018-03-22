@@ -493,8 +493,7 @@ void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo *loopInfo)
         CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
     }
 
-    return;
-}
+    }
 
 // use a very complicated way to turn on and off notes by scheduling callbacks to \c this
 //
@@ -514,8 +513,7 @@ void FluidsynthWrapper::ScheduleNote(const MidiNoteInfo &noteInfo, unsigned int 
         CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
     }
 
-    return;
-}
+    }
 
 void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_t *e, fluid_sequencer_t * /*seq*/, void *data)
 {

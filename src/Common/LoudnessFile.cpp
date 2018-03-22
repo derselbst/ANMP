@@ -6,7 +6,7 @@
 
 mutex LoudnessFile::mtx;
 
-string LoudnessFile::toebur128Filename(string filePath)
+string LoudnessFile::toebur128Filename(const string& filePath)
 {
     string file = mybasename(filePath);
     string dir = mydirname(filePath);

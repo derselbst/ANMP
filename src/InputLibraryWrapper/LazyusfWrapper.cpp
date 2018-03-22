@@ -8,14 +8,16 @@
 #include <psflib.h>
 #include <usf.h>
 
+#include <utility>
+
 LazyusfWrapper::LazyusfWrapper(string filename)
-: StandardWrapper(filename)
+: StandardWrapper(std::move(filename))
 {
     this->initAttr();
 }
 
 LazyusfWrapper::LazyusfWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
-: StandardWrapper(filename, offset, len)
+: StandardWrapper(std::move(filename), offset, len)
 {
     this->initAttr();
 }

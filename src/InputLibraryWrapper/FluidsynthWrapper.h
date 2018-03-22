@@ -45,7 +45,7 @@ class FluidsynthWrapper
     unsigned int GetInitTick();
 
     void AddEvent(smf_event_t *event, double offset = 0.0);
-    void ScheduleLoop(MidiLoopInfo *info);
+    void ScheduleLoop(MidiLoopInfo *loopInfo);
     void ScheduleNote(const MidiNoteInfo &noteInfo, unsigned int time);
     void NoteOnOff(MidiNoteInfo *nInfo);
     void FinishSong(int millisec);

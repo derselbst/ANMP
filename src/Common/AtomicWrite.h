@@ -37,7 +37,7 @@ class AtomicWrite
     static AtomicWrite &getSingleton();
 
     void write(std::string s, std::ostream &o = std::cout);
-    void write(LogLevel_t, std::string s, std::ostream &o = std::cout);
+    void write(LogLevel_t, const std::string& s, std::ostream &o = std::cout);
 
     private:
     std::mutex mtx;

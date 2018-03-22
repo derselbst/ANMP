@@ -11,6 +11,7 @@
 #include <cmath>
 #include <cstring>
 #include <thread> // std::this_thread::sleep_for
+#include <utility>
 
 #define IsControlChange(e) ((e->midi_buffer[0] & 0xF0) == 0xB0)
 #define IsLoopStart(e) IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopStart)
@@ -39,13 +40,13 @@ string MidiWrapper::SmfEventToString(smf_event_t *event)
 }
 
 MidiWrapper::MidiWrapper(string filename)
-: StandardWrapper(filename)
+: StandardWrapper(std::move(filename))
 {
     this->initAttr();
 }
 
 MidiWrapper::MidiWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen)
-: StandardWrapper(filename, fileOffset, fileLen)
+: StandardWrapper(std::move(filename), fileOffset, fileLen)
 {
     this->initAttr();
 }

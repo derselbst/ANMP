@@ -62,7 +62,7 @@ bool iEquals(const string &str1, const string &str2)
 
 string getFileExtension(const string &filePath)
 {
-    return filePath.substr(filePath.find_last_of(".") + 1);
+    return filePath.substr(filePath.find_last_of('.') + 1);
 }
 
 /** @brief converts a time string to ms
@@ -241,7 +241,7 @@ string getUniqueFilename(const string &path)
         unique = string(path.c_str());
 
         // remove the extension
-        unique.erase(unique.find_last_of(".") + 1);
+        unique.erase(unique.find_last_of('.') + 1);
 
         // add a unique number with leading zeros
         unique += string(log10(Max) - to_string(i).length(), '0') + to_string(i);
@@ -344,7 +344,7 @@ string myHomeDir()
 Nullable<string> findSoundfont(string midFile)
 {
     // trim extension
-    midFile = midFile.erase(midFile.find_last_of("."), string::npos);
+    midFile = midFile.erase(midFile.find_last_of('.'), string::npos);
 
     string soundffile = midFile + ".sf2";
 

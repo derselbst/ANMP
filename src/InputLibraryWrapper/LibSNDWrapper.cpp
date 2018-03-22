@@ -9,15 +9,16 @@
 #include <chrono>
 #include <cstring>
 #include <thread> // std::this_thread::sleep_for
+#include <utility>
 
 
 LibSNDWrapper::LibSNDWrapper(string filename)
-: StandardWrapper(filename)
+: StandardWrapper(std::move(filename))
 {
 }
 
 LibSNDWrapper::LibSNDWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
-: StandardWrapper(filename, offset, len)
+: StandardWrapper(std::move(filename), offset, len)
 {
 }
 

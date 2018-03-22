@@ -39,12 +39,12 @@ bool sortQModelIndexList(QModelIndex i, QModelIndex j)
 }
 
 // sort descendingly
-bool sortQItemSelectionDesc(QItemSelectionRange i, QItemSelectionRange j)
+bool sortQItemSelectionDesc(const QItemSelectionRange& i, const QItemSelectionRange& j)
 {
     return i.bottom() > j.bottom();
 }
 
-bool sortQItemSelectionAsc(QItemSelectionRange i, QItemSelectionRange j)
+bool sortQItemSelectionAsc(const QItemSelectionRange& i, const QItemSelectionRange& j)
 {
     return i.bottom() < j.bottom();
 }

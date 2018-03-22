@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 
     for (int i = 1; i < argc; i++)
     {
-        for (directory_entry dirEntry : recursive_directory_iterator(argv[i]))
+        for (const directory_entry& dirEntry : recursive_directory_iterator(argv[i]))
         {
             if (is_regular_file(dirEntry.status()))
             {

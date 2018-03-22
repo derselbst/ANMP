@@ -16,7 +16,7 @@ class Song;
 class WaveOutput : public IAudioOutput
 {
     public:
-    static void onCurrentSongChanged(void *ctx, const Song *s);
+    static void onCurrentSongChanged(void *context, const Song *newSong);
 
     WaveOutput(Player *);
 

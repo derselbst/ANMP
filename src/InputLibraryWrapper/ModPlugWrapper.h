@@ -13,7 +13,7 @@ class ModPlugWrapper : public StandardWrapper<int32_t>
 {
     public:
     ModPlugWrapper(string filename);
-    ModPlugWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
+    ModPlugWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len);
     void initAttr();
 
     // forbid copying

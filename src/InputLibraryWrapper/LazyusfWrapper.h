@@ -14,7 +14,7 @@ class LazyusfWrapper : public StandardWrapper<int16_t>
     // Constructors/Destructors
     //
     LazyusfWrapper(string filename);
-    LazyusfWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
+    LazyusfWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len);
     void initAttr();
 
     // forbid copying

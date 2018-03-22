@@ -24,7 +24,7 @@
 #include <QStandardItemModel>
 #include <QTreeView>
 
-void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, QString msg)
+void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, const QString& msg)
 {
     QPushButton *playbtn = this->playctrl->playButton;
     bool oldState = playbtn->blockSignals(true);
@@ -310,7 +310,7 @@ void MainWindow::FastSeekBackward()
     this->relativeSeek(-1 * max(static_cast<frame_t>(this->playctrl->seekBar->maximum() * this->SeekFast), gConfig.FramesToRender));
 }
 
-void MainWindow::AddSongs(QStringList files)
+void MainWindow::AddSongs(const QStringList& files)
 {
     this->playlistModel->asyncAdd(files);
 }
@@ -371,10 +371,10 @@ void MainWindow::UnmuteAllVoices()
 
 void MainWindow::ToggleAllVoices()
 {
-    this->DoChannelMuting([](bool voiceMuted, bool) { return voiceMuted != true; });
+    this->DoChannelMuting([](bool voiceMuted, bool) { return !voiceMuted; });
 }
 
-void MainWindow::slotSongAdded(QString file, int cur, int total)
+void MainWindow::slotSongAdded(const QString& file, int cur, int total)
 {
     QString text = "Adding file (";
     text += QString::number(cur);
