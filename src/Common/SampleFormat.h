@@ -3,8 +3,7 @@
 
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 enum
@@ -23,9 +22,8 @@ SampleFormat_t
     END,
 };
 
-extern const char* SampleFormatName[];
+extern const char *SampleFormatName[];
 
 #ifdef __cplusplus
 }
 #endif
-

@@ -3,8 +3,7 @@
 
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 enum
@@ -35,7 +34,7 @@ AudioDriver_t
     END,
 };
 
-extern const char* AudioDriverName[];
+extern const char *AudioDriverName[];
 
 #ifdef __cplusplus
 }

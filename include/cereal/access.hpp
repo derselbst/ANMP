@@ -29,19 +29,19 @@
 #ifndef CEREAL_ACCESS_HPP_
 #define CEREAL_ACCESS_HPP_
 
-#include <type_traits>
-#include <iostream>
 #include <cstdint>
 #include <functional>
+#include <iostream>
+#include <type_traits>
 
-#include <cereal/macros.hpp>
 #include <cereal/details/helpers.hpp>
+#include <cereal/macros.hpp>
 
 namespace cereal
 {
-  // ######################################################################
-  //! A class that allows cereal to load smart pointers to types that have no default constructor
-  /*! If your class does not have a default constructor, cereal will not be able
+    // ######################################################################
+    //! A class that allows cereal to load smart pointers to types that have no default constructor
+    /*! If your class does not have a default constructor, cereal will not be able
       to load any smart pointers to it unless you overload LoadAndConstruct
       for your class, and provide an appropriate load_and_construct method.  You can also
       choose to define a member static function instead of specializing this class.
@@ -103,17 +103,22 @@ namespace cereal
 
       @tparam T The type to specialize for
       @ingroup Access */
-  template <class T>
-  struct LoadAndConstruct
-  { };
+    template<class T>
+    struct LoadAndConstruct
+    {
+    };
 
-  // forward decl for construct
-  //! @cond PRIVATE_NEVERDEFINED
-  namespace memory_detail{ template <class Ar, class T> struct LoadAndConstructLoadWrapper; }
-  //! @endcond
+    // forward decl for construct
+    //! @cond PRIVATE_NEVERDEFINED
+    namespace memory_detail
+    {
+        template<class Ar, class T>
+        struct LoadAndConstructLoadWrapper;
+    }
+    //! @endcond
 
-  //! Used to construct types with no default constructor
-  /*! When serializing a type that has no default constructor, cereal
+    //! Used to construct types with no default constructor
+    /*! When serializing a type that has no default constructor, cereal
       will attempt to call either the class static function load_and_construct
       or the appropriate template specialization of LoadAndConstruct.  cereal
       will pass that function a reference to the archive as well as a reference
@@ -158,12 +163,12 @@ namespace cereal
 
       @tparam T The class type being serialized
       */
-  template <class T>
-  class construct
-  {
-    public:
-      //! Construct and initialize the type T with the given arguments
-      /*! This will forward all arguments to the underlying type T,
+    template<class T>
+    class construct
+    {
+        public:
+        //! Construct and initialize the type T with the given arguments
+        /*! This will forward all arguments to the underlying type T,
           calling an appropriate constructor.
 
           Calling this function more than once will result in an exception
@@ -171,53 +176,61 @@ namespace cereal
 
           @param args The arguments to the constructor for T
           @throw Exception If called more than once */
-      template <class ... Args>
-      void operator()( Args && ... args );
-      // implementation deferred due to reliance on cereal::access
+        template<class... Args>
+        void operator()(Args &&... args);
+        // implementation deferred due to reliance on cereal::access
 
-      //! Get a reference to the initialized underlying object
-      /*! This must be called after the object has been initialized.
+        //! Get a reference to the initialized underlying object
+        /*! This must be called after the object has been initialized.
 
           @return A reference to the initialized object
           @throw Exception If called before initialization */
-      T * operator->()
-      {
-        if( !itsValid )
-          throw Exception("Object must be initialized prior to accessing members");
+        T *operator->()
+        {
+            if (!itsValid)
+                throw Exception("Object must be initialized prior to accessing members");
 
-        return itsPtr;
-      }
+            return itsPtr;
+        }
 
-      //! Returns a raw pointer to the initialized underlying object
-      /*! This is mainly intended for use with passing an instance of
+        //! Returns a raw pointer to the initialized underlying object
+        /*! This is mainly intended for use with passing an instance of
           a constructed object to cereal::base_class.
 
           It is strongly recommended to avoid using this function in
           any other circumstance.
 
           @return A raw pointer to the initialized type */
-      T * ptr()
-      {
-        return operator->();
-      }
+        T *ptr()
+        {
+            return operator->();
+        }
 
-    private:
-      template <class A, class B> friend struct ::cereal::memory_detail::LoadAndConstructLoadWrapper;
+        private:
+        template<class A, class B>
+        friend struct ::cereal::memory_detail::LoadAndConstructLoadWrapper;
 
-      construct( T * p ) : itsPtr( p ), itsEnableSharedRestoreFunction( [](){} ), itsValid( false ) {}
-      construct( T * p, std::function<void()> enableSharedFunc ) : // g++4.7 ice with default lambda to std func
-        itsPtr( p ), itsEnableSharedRestoreFunction( enableSharedFunc ), itsValid( false ) {}
-      construct( construct const & ) = delete;
-      construct & operator=( construct const & ) = delete;
+        construct(T *p)
+        : itsPtr(p), itsEnableSharedRestoreFunction([]() {}), itsValid(false)
+        {
+        }
+        construct(T *p, std::function<void()> enableSharedFunc)
+        : // g++4.7 ice with default lambda to std func
+          itsPtr(p),
+          itsEnableSharedRestoreFunction(enableSharedFunc), itsValid(false)
+        {
+        }
+        construct(construct const &) = delete;
+        construct &operator=(construct const &) = delete;
 
-      T * itsPtr;
-      std::function<void()> itsEnableSharedRestoreFunction;
-      bool itsValid;
-  };
+        T *itsPtr;
+        std::function<void()> itsEnableSharedRestoreFunction;
+        bool itsValid;
+    };
 
-  // ######################################################################
-  //! A class that can be made a friend to give cereal access to non public functions
-  /*! If you desire non-public serialization functions within a class, cereal can only
+    // ######################################################################
+    //! A class that can be made a friend to give cereal access to non public functions
+    /*! If you desire non-public serialization functions within a class, cereal can only
       access these if you declare cereal::access a friend.
 
       @code{.cpp}
@@ -234,120 +247,150 @@ namespace cereal
       };
       @endcode
       @ingroup Access */
-  class access
-  {
-    public:
-      // ####### Standard Serialization ########################################
-      template<class Archive, class T> inline
-      static auto member_serialize(Archive & ar, T & t) -> decltype(t.CEREAL_SERIALIZE_FUNCTION_NAME(ar))
-      { return t.CEREAL_SERIALIZE_FUNCTION_NAME(ar); }
+    class access
+    {
+        public:
+        // ####### Standard Serialization ########################################
+        template<class Archive, class T>
+        inline static auto member_serialize(Archive &ar, T &t) -> decltype(t.CEREAL_SERIALIZE_FUNCTION_NAME(ar))
+        {
+            return t.CEREAL_SERIALIZE_FUNCTION_NAME(ar);
+        }
 
-      template<class Archive, class T> inline
-      static auto member_save(Archive & ar, T const & t) -> decltype(t.CEREAL_SAVE_FUNCTION_NAME(ar))
-      { return t.CEREAL_SAVE_FUNCTION_NAME(ar); }
+        template<class Archive, class T>
+        inline static auto member_save(Archive &ar, T const &t) -> decltype(t.CEREAL_SAVE_FUNCTION_NAME(ar))
+        {
+            return t.CEREAL_SAVE_FUNCTION_NAME(ar);
+        }
 
-      template<class Archive, class T> inline
-      static auto member_save_non_const(Archive & ar, T & t) -> decltype(t.CEREAL_SAVE_FUNCTION_NAME(ar))
-      { return t.CEREAL_SAVE_FUNCTION_NAME(ar); }
+        template<class Archive, class T>
+        inline static auto member_save_non_const(Archive &ar, T &t) -> decltype(t.CEREAL_SAVE_FUNCTION_NAME(ar))
+        {
+            return t.CEREAL_SAVE_FUNCTION_NAME(ar);
+        }
 
-      template<class Archive, class T> inline
-      static auto member_load(Archive & ar, T & t) -> decltype(t.CEREAL_LOAD_FUNCTION_NAME(ar))
-      { return t.CEREAL_LOAD_FUNCTION_NAME(ar); }
+        template<class Archive, class T>
+        inline static auto member_load(Archive &ar, T &t) -> decltype(t.CEREAL_LOAD_FUNCTION_NAME(ar))
+        {
+            return t.CEREAL_LOAD_FUNCTION_NAME(ar);
+        }
 
-      template<class Archive, class T> inline
-      static auto member_save_minimal(Archive const & ar, T const & t) -> decltype(t.CEREAL_SAVE_MINIMAL_FUNCTION_NAME(ar))
-      { return t.CEREAL_SAVE_MINIMAL_FUNCTION_NAME(ar); }
+        template<class Archive, class T>
+        inline static auto member_save_minimal(Archive const &ar, T const &t) -> decltype(t.CEREAL_SAVE_MINIMAL_FUNCTION_NAME(ar))
+        {
+            return t.CEREAL_SAVE_MINIMAL_FUNCTION_NAME(ar);
+        }
 
-      template<class Archive, class T> inline
-      static auto member_save_minimal_non_const(Archive const & ar, T & t) -> decltype(t.CEREAL_SAVE_MINIMAL_FUNCTION_NAME(ar))
-      { return t.CEREAL_SAVE_MINIMAL_FUNCTION_NAME(ar); }
+        template<class Archive, class T>
+        inline static auto member_save_minimal_non_const(Archive const &ar, T &t) -> decltype(t.CEREAL_SAVE_MINIMAL_FUNCTION_NAME(ar))
+        {
+            return t.CEREAL_SAVE_MINIMAL_FUNCTION_NAME(ar);
+        }
 
-      template<class Archive, class T, class U> inline
-      static auto member_load_minimal(Archive const & ar, T & t, U && u) -> decltype(t.CEREAL_LOAD_MINIMAL_FUNCTION_NAME(ar, std::forward<U>(u)))
-      { return t.CEREAL_LOAD_MINIMAL_FUNCTION_NAME(ar, std::forward<U>(u)); }
+        template<class Archive, class T, class U>
+        inline static auto member_load_minimal(Archive const &ar, T &t, U &&u) -> decltype(t.CEREAL_LOAD_MINIMAL_FUNCTION_NAME(ar, std::forward<U>(u)))
+        {
+            return t.CEREAL_LOAD_MINIMAL_FUNCTION_NAME(ar, std::forward<U>(u));
+        }
 
-      // ####### Versioned Serialization #######################################
-      template<class Archive, class T> inline
-      static auto member_serialize(Archive & ar, T & t, const std::uint32_t version ) -> decltype(t.CEREAL_SERIALIZE_FUNCTION_NAME(ar, version))
-      { return t.CEREAL_SERIALIZE_FUNCTION_NAME(ar, version); }
+        // ####### Versioned Serialization #######################################
+        template<class Archive, class T>
+        inline static auto member_serialize(Archive &ar, T &t, const std::uint32_t version) -> decltype(t.CEREAL_SERIALIZE_FUNCTION_NAME(ar, version))
+        {
+            return t.CEREAL_SERIALIZE_FUNCTION_NAME(ar, version);
+        }
 
-      template<class Archive, class T> inline
-      static auto member_save(Archive & ar, T const & t, const std::uint32_t version ) -> decltype(t.CEREAL_SAVE_FUNCTION_NAME(ar, version))
-      { return t.CEREAL_SAVE_FUNCTION_NAME(ar, version); }
+        template<class Archive, class T>
+        inline static auto member_save(Archive &ar, T const &t, const std::uint32_t version) -> decltype(t.CEREAL_SAVE_FUNCTION_NAME(ar, version))
+        {
+            return t.CEREAL_SAVE_FUNCTION_NAME(ar, version);
+        }
 
-      template<class Archive, class T> inline
-      static auto member_save_non_const(Archive & ar, T & t, const std::uint32_t version ) -> decltype(t.CEREAL_SAVE_FUNCTION_NAME(ar, version))
-      { return t.CEREAL_SAVE_FUNCTION_NAME(ar, version); }
+        template<class Archive, class T>
+        inline static auto member_save_non_const(Archive &ar, T &t, const std::uint32_t version) -> decltype(t.CEREAL_SAVE_FUNCTION_NAME(ar, version))
+        {
+            return t.CEREAL_SAVE_FUNCTION_NAME(ar, version);
+        }
 
-      template<class Archive, class T> inline
-      static auto member_load(Archive & ar, T & t, const std::uint32_t version ) -> decltype(t.CEREAL_LOAD_FUNCTION_NAME(ar, version))
-      { return t.CEREAL_LOAD_FUNCTION_NAME(ar, version); }
+        template<class Archive, class T>
+        inline static auto member_load(Archive &ar, T &t, const std::uint32_t version) -> decltype(t.CEREAL_LOAD_FUNCTION_NAME(ar, version))
+        {
+            return t.CEREAL_LOAD_FUNCTION_NAME(ar, version);
+        }
 
-      template<class Archive, class T> inline
-      static auto member_save_minimal(Archive const & ar, T const & t, const std::uint32_t version) -> decltype(t.CEREAL_SAVE_MINIMAL_FUNCTION_NAME(ar, version))
-      { return t.CEREAL_SAVE_MINIMAL_FUNCTION_NAME(ar, version); }
+        template<class Archive, class T>
+        inline static auto member_save_minimal(Archive const &ar, T const &t, const std::uint32_t version) -> decltype(t.CEREAL_SAVE_MINIMAL_FUNCTION_NAME(ar, version))
+        {
+            return t.CEREAL_SAVE_MINIMAL_FUNCTION_NAME(ar, version);
+        }
 
-      template<class Archive, class T> inline
-      static auto member_save_minimal_non_const(Archive const & ar, T & t, const std::uint32_t version) -> decltype(t.CEREAL_SAVE_MINIMAL_FUNCTION_NAME(ar, version))
-      { return t.CEREAL_SAVE_MINIMAL_FUNCTION_NAME(ar, version); }
+        template<class Archive, class T>
+        inline static auto member_save_minimal_non_const(Archive const &ar, T &t, const std::uint32_t version) -> decltype(t.CEREAL_SAVE_MINIMAL_FUNCTION_NAME(ar, version))
+        {
+            return t.CEREAL_SAVE_MINIMAL_FUNCTION_NAME(ar, version);
+        }
 
-      template<class Archive, class T, class U> inline
-      static auto member_load_minimal(Archive const & ar, T & t, U && u, const std::uint32_t version) -> decltype(t.CEREAL_LOAD_MINIMAL_FUNCTION_NAME(ar, std::forward<U>(u), version))
-      { return t.CEREAL_LOAD_MINIMAL_FUNCTION_NAME(ar, std::forward<U>(u), version); }
+        template<class Archive, class T, class U>
+        inline static auto member_load_minimal(Archive const &ar, T &t, U &&u, const std::uint32_t version) -> decltype(t.CEREAL_LOAD_MINIMAL_FUNCTION_NAME(ar, std::forward<U>(u), version))
+        {
+            return t.CEREAL_LOAD_MINIMAL_FUNCTION_NAME(ar, std::forward<U>(u), version);
+        }
 
-      // ####### Other Functionality ##########################################
-      // for detecting inheritance from enable_shared_from_this
-      template <class T> inline
-      static auto shared_from_this(T & t) -> decltype(t.shared_from_this());
+        // ####### Other Functionality ##########################################
+        // for detecting inheritance from enable_shared_from_this
+        template<class T>
+        inline static auto shared_from_this(T &t) -> decltype(t.shared_from_this());
 
-      // for placement new
-      template <class T, class ... Args> inline
-      static void construct( T *& ptr, Args && ... args )
-      {
-        new (ptr) T( std::forward<Args>( args )... );
-      }
+        // for placement new
+        template<class T, class... Args>
+        inline static void construct(T *&ptr, Args &&... args)
+        {
+            new (ptr) T(std::forward<Args>(args)...);
+        }
 
-      // for non-placement new with a default constructor
-      template <class T> inline
-      static T * construct()
-      {
-        return new T();
-      }
+        // for non-placement new with a default constructor
+        template<class T>
+        inline static T *construct()
+        {
+            return new T();
+        }
 
-      template <class T> inline
-      static std::false_type load_and_construct(...)
-      { return std::false_type(); }
+        template<class T>
+        inline static std::false_type load_and_construct(...)
+        {
+            return std::false_type();
+        }
 
-      template<class T, class Archive> inline
-      static auto load_and_construct(Archive & ar, ::cereal::construct<T> & construct) -> decltype(T::load_and_construct(ar, construct))
-      {
-        T::load_and_construct( ar, construct );
-      }
+        template<class T, class Archive>
+        inline static auto load_and_construct(Archive &ar, ::cereal::construct<T> &construct) -> decltype(T::load_and_construct(ar, construct))
+        {
+            T::load_and_construct(ar, construct);
+        }
 
-      template<class T, class Archive> inline
-      static auto load_and_construct(Archive & ar, ::cereal::construct<T> & construct, const std::uint32_t version) -> decltype(T::load_and_construct(ar, construct, version))
-      {
-        T::load_and_construct( ar, construct, version );
-      }
-  }; // end class access
+        template<class T, class Archive>
+        inline static auto load_and_construct(Archive &ar, ::cereal::construct<T> &construct, const std::uint32_t version) -> decltype(T::load_and_construct(ar, construct, version))
+        {
+            T::load_and_construct(ar, construct, version);
+        }
+    }; // end class access
 
-  // ######################################################################
-  //! A specifier used in conjunction with cereal::specialize to disambiguate
-  //! serialization in special cases
-  /*! @relates specialize
+    // ######################################################################
+    //! A specifier used in conjunction with cereal::specialize to disambiguate
+    //! serialization in special cases
+    /*! @relates specialize
       @ingroup Access */
-  enum class specialization
-  {
-    member_serialize,            //!< Force the use of a member serialize function
-    member_load_save,            //!< Force the use of a member load/save pair
-    member_load_save_minimal,    //!< Force the use of a member minimal load/save pair
-    non_member_serialize,        //!< Force the use of a non-member serialize function
-    non_member_load_save,        //!< Force the use of a non-member load/save pair
-    non_member_load_save_minimal //!< Force the use of a non-member minimal load/save pair
-  };
+    enum class specialization
+    {
+        member_serialize, //!< Force the use of a member serialize function
+        member_load_save, //!< Force the use of a member load/save pair
+        member_load_save_minimal, //!< Force the use of a member minimal load/save pair
+        non_member_serialize, //!< Force the use of a non-member serialize function
+        non_member_load_save, //!< Force the use of a non-member load/save pair
+        non_member_load_save_minimal //!< Force the use of a non-member minimal load/save pair
+    };
 
-  //! A class used to disambiguate cases where cereal cannot detect a unique way of serializing a class
-  /*! cereal attempts to figure out which method of serialization (member vs. non-member serialize
+    //! A class used to disambiguate cases where cereal cannot detect a unique way of serializing a class
+    /*! cereal attempts to figure out which method of serialization (member vs. non-member serialize
       or load/save pair) at compile time.  If for some reason cereal cannot find a non-ambiguous way
       of serializing a type, it will produce a static assertion complaining about this.
 
@@ -400,11 +443,13 @@ namespace cereal
       @tparam T The type to specialize the serialization for
       @tparam S The specialization type to use for T
       @ingroup Access */
-  template <class Archive, class T, specialization S>
-  struct specialize : public std::false_type {};
+    template<class Archive, class T, specialization S>
+    struct specialize : public std::false_type
+    {
+    };
 
-  //! Convenient macro for performing specialization for all archive types
-  /*! This performs specialization for the specific type for all types of archives.
+//! Convenient macro for performing specialization for all archive types
+/*! This performs specialization for the specific type for all types of archives.
       This macro should be placed at the global namespace.
 
       @code{cpp}
@@ -414,11 +459,17 @@ namespace cereal
 
       @relates specialize
       @ingroup Access */
-  #define CEREAL_SPECIALIZE_FOR_ALL_ARCHIVES( Type, Specialization )                                \
-  namespace cereal { template <class Archive> struct specialize<Archive, Type, Specialization> {}; }
+#define CEREAL_SPECIALIZE_FOR_ALL_ARCHIVES(Type, Specialization) \
+    namespace cereal                                             \
+    {                                                            \
+        template<class Archive>                                  \
+        struct specialize<Archive, Type, Specialization>         \
+        {                                                        \
+        };                                                       \
+    }
 
-  //! Convenient macro for performing specialization for a single archive type
-  /*! This performs specialization for the specific type for a single type of archive.
+//! Convenient macro for performing specialization for a single archive type
+/*! This performs specialization for the specific type for a single type of archive.
       This macro should be placed at the global namespace.
 
       @code{cpp}
@@ -428,21 +479,28 @@ namespace cereal
 
       @relates specialize
       @ingroup Access */
-  #define CEREAL_SPECIALIZE_FOR_ARCHIVE( Archive, Type, Specialization )               \
-  namespace cereal { template <> struct specialize<Archive, Type, Specialization> {}; }
+#define CEREAL_SPECIALIZE_FOR_ARCHIVE(Archive, Type, Specialization) \
+    namespace cereal                                                 \
+    {                                                                \
+        template<>                                                   \
+        struct specialize<Archive, Type, Specialization>             \
+        {                                                            \
+        };                                                           \
+    }
 
-  // ######################################################################
-  // Deferred Implementation, see construct for more information
-  template <class T> template <class ... Args> inline
-  void construct<T>::operator()( Args && ... args )
-  {
-    if( itsValid )
-      throw Exception("Attempting to construct an already initialized object");
+    // ######################################################################
+    // Deferred Implementation, see construct for more information
+    template<class T>
+    template<class... Args>
+    inline void construct<T>::operator()(Args &&... args)
+    {
+        if (itsValid)
+            throw Exception("Attempting to construct an already initialized object");
 
-    ::cereal::access::construct( itsPtr, std::forward<Args>( args )... );
-    itsEnableSharedRestoreFunction();
-    itsValid = true;
-  }
+        ::cereal::access::construct(itsPtr, std::forward<Args>(args)...);
+        itsEnableSharedRestoreFunction();
+        itsValid = true;
+    }
 } // namespace cereal
 
 #endif // CEREAL_ACCESS_HPP_

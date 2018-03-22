@@ -98,24 +98,24 @@
     will detect this and define CEREAL_NOEXCEPT as a no-op
     @internal */
 #if !defined(CEREAL_HAS_NOEXCEPT)
-  #if defined(__clang__)
-    #if __has_feature(cxx_noexcept)
-      #define CEREAL_HAS_NOEXCEPT
-    #endif
-  #else // NOT clang
-    #if defined(__GXX_EXPERIMENTAL_CXX0X__) && __GNUC__ * 10 + __GNUC_MINOR__ >= 46 || \
-        defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 190023026
-      #define CEREAL_HAS_NOEXCEPT
-    #endif // end GCC/MSVC check
-  #endif // end NOT clang block
+#if defined(__clang__)
+#if __has_feature(cxx_noexcept)
+#define CEREAL_HAS_NOEXCEPT
+#endif
+#else // NOT clang
+#if defined(__GXX_EXPERIMENTAL_CXX0X__) && __GNUC__ * 10 + __GNUC_MINOR__ >= 46 || \
+defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 190023026
+#define CEREAL_HAS_NOEXCEPT
+#endif // end GCC/MSVC check
+#endif // end NOT clang block
 
-  #ifndef CEREAL_NOEXCEPT
-    #ifdef CEREAL_HAS_NOEXCEPT
-      #define CEREAL_NOEXCEPT noexcept
-    #else
-      #define CEREAL_NOEXCEPT
-    #endif // end CEREAL_HAS_NOEXCEPT
-  #endif // end !defined(CEREAL_HAS_NOEXCEPT)
+#ifndef CEREAL_NOEXCEPT
+#ifdef CEREAL_HAS_NOEXCEPT
+#define CEREAL_NOEXCEPT noexcept
+#else
+#define CEREAL_NOEXCEPT
+#endif // end CEREAL_HAS_NOEXCEPT
+#endif // end !defined(CEREAL_HAS_NOEXCEPT)
 #endif // ifndef CEREAL_NOEXCEPT
 
 #endif // CEREAL_MACROS_HPP_

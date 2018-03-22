@@ -1,30 +1,30 @@
 
 #include <anmp.hpp>
 
-#include "PlaylistModel.h"
 #include "Playlist.h"
+#include "PlaylistModel.h"
 
-#include <QBrush>
-#include <QMimeData>
-#include <QUrl>
-#include <QFileInfo>
-#include <QDirIterator>
-#include <QProgressDialog>
 #include <QApplication>
-#include <sstream>
-#include <iostream>
+#include <QBrush>
+#include <QDirIterator>
+#include <QFileInfo>
+#include <QMimeData>
+#include <QProgressDialog>
+#include <QUrl>
 #include <iomanip>
+#include <iostream>
+#include <sstream>
 #include <thread>
 
 PlaylistModel::PlaylistModel(Playlist *playlist, QObject *parent)
-    : QAbstractTableModel(parent),
-    playlist(playlist)
+: QAbstractTableModel(parent),
+  playlist(playlist)
 {
 }
 
 PlaylistModel::~PlaylistModel()
 {
-    this->songsToAdd.shutDown=true;
+    this->songsToAdd.shutDown = true;
     this->songsToAdd.queue.clear();
 
     try
@@ -37,7 +37,7 @@ PlaylistModel::~PlaylistModel()
             std::terminate();
         }
     }
-    catch(const std::future_error& e)
+    catch (const std::future_error &e)
     {
         // probably no future associated, that's fine here
     }
@@ -55,52 +55,52 @@ int PlaylistModel::columnCount(const QModelIndex & /* parent */) const
 
 QVariant PlaylistModel::data(const QModelIndex &index, int role) const
 {
-//       cout << "    DATA " << index.row() << " " << index.column() << role << endl;
+    //       cout << "    DATA " << index.row() << " " << index.column() << role << endl;
     if (index.isValid() && this->rowCount(index) > index.row())
     {
         if (role == Qt::DisplayRole)
         {
-            Song* songToUse = this->playlist->getSong(index.row());
+            Song *songToUse = this->playlist->getSong(index.row());
 
-            if(songToUse == nullptr)
+            if (songToUse == nullptr)
             {
                 return QString("---");
             }
 
-            switch(index.column())
+            switch (index.column())
             {
-            case 0:
-            {
-                string s="";
-                if(songToUse->Metadata.Track != "")
+                case 0:
                 {
-                    s += songToUse->Metadata.Track;
-                    s += " - ";
-                }
+                    string s = "";
+                    if (songToUse->Metadata.Track != "")
+                    {
+                        s += songToUse->Metadata.Track;
+                        s += " - ";
+                    }
 
-                if(songToUse->Metadata.Title == "")
-                {
-                    s += mybasename(songToUse->Filename);
-                }
-                else
-                {
-                    s += songToUse->Metadata.Title;
-                }
+                    if (songToUse->Metadata.Title == "")
+                    {
+                        s += mybasename(songToUse->Filename);
+                    }
+                    else
+                    {
+                        s += songToUse->Metadata.Title;
+                    }
 
-                return QString::fromStdString(s);
-            }
-            case 1:
-                return QString::fromStdString(songToUse->Metadata.Album);
-            case 2:
-                return QString::fromStdString(songToUse->Metadata.Artist);
-            case 3:
-                return QString::fromStdString(songToUse->Metadata.Genre);
-            case 4:
-            {
-                return QString::fromStdString(framesToTimeStr(songToUse->getFrames(),songToUse->Format.SampleRate));
-            }
-            default:
-                break;
+                    return QString::fromStdString(s);
+                }
+                case 1:
+                    return QString::fromStdString(songToUse->Metadata.Album);
+                case 2:
+                    return QString::fromStdString(songToUse->Metadata.Artist);
+                case 3:
+                    return QString::fromStdString(songToUse->Metadata.Genre);
+                case 4:
+                {
+                    return QString::fromStdString(framesToTimeStr(songToUse->getFrames(), songToUse->Format.SampleRate));
+                }
+                default:
+                    break;
             }
         }
         else if (role == Qt::BackgroundRole)
@@ -111,11 +111,11 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
         }
         else if (role == Qt::TextAlignmentRole)
         {
-            switch(index.column())
+            switch (index.column())
             {
                 case 0:
                     return (Qt::AlignLeft + Qt::AlignVCenter);
-                    
+
                 default:
                     return Qt::AlignCenter;
             }
@@ -126,43 +126,43 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
 
 QVariant PlaylistModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if(orientation==Qt::Horizontal)
+    if (orientation == Qt::Horizontal)
     {
         // TODO: Complete Me!
-        switch(role)
+        switch (role)
         {
-        case Qt::DisplayRole: // The key data to be rendered in the form of text.
-            switch(section)
-            {
-            case 0:
-                return QString("Title");
-            case 1:
-                return QString("Album");
-            case 2:
-                return QString("Interpret");
-            case 3:
-                return QString("Genre");
-            case 4:
-                return QString("Duration");
+            case Qt::DisplayRole: // The key data to be rendered in the form of text.
+                switch (section)
+                {
+                    case 0:
+                        return QString("Title");
+                    case 1:
+                        return QString("Album");
+                    case 2:
+                        return QString("Interpret");
+                    case 3:
+                        return QString("Genre");
+                    case 4:
+                        return QString("Duration");
+                    default:
+                        return QString("");
+                }
+                break;
+            case Qt::ToolTipRole: // The data displayed in the item's tooltip.
+                break;
+            case Qt::WhatsThisRole: // The data displayed for the item in "What's This?" mode.
+                break;
             default:
-                return QString("");
-            }
-            break;
-        case Qt::ToolTipRole: // The data displayed in the item's tooltip.
-            break;
-        case Qt::WhatsThisRole: // The data displayed for the item in "What's This?" mode.
-            break;
-        default:
-            // do nothing special here
-            break;
+                // do nothing special here
+                break;
         }
     }
     else // i.e. orientation==Qt::Vertical
     {
-        if(role==Qt::DisplayRole)
+        if (role == Qt::DisplayRole)
         {
             // use one-based counting for rows
-            return QString::number(section+1);
+            return QString::number(section + 1);
         }
     }
 
@@ -170,47 +170,47 @@ QVariant PlaylistModel::headerData(int section, Qt::Orientation orientation, int
 }
 
 
-bool PlaylistModel::insertRows(int row, int count, const QModelIndex & parent)
+bool PlaylistModel::insertRows(int row, int count, const QModelIndex &parent)
 {
-    if(row>this->rowCount(QModelIndex()))
+    if (row > this->rowCount(QModelIndex()))
     {
         return false;
     }
 
     //notify views and proxy models that a line will be inserted
-    beginInsertRows(parent, row, row+(count-1));
+    beginInsertRows(parent, row, row + (count - 1));
     //finish insertion, notify views/models
     endInsertRows();
 
     return true;
 }
 
-bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
+bool PlaylistModel::removeRows(int row, int count, const QModelIndex &parent)
 {
     int curentId = this->playlist->getCurrentSongId();
-    
-    if(row+count>this->rowCount(QModelIndex()))
+
+    if (row + count > this->rowCount(QModelIndex()))
     {
         return false;
     }
 
     // stop playback if the currently playing song is about to be removed
-    if(row <= curentId && curentId <= row+count-1)
+    if (row <= curentId && curentId <= row + count - 1)
     {
         emit this->UnloadCurrentSong();
     }
-    
-    //notify views and proxy models that a line will be removed
-    beginRemoveRows(parent, row, row+(count-1));
 
-    for(int i=row+(count-1); i>=row; i--)
+    //notify views and proxy models that a line will be removed
+    beginRemoveRows(parent, row, row + (count - 1));
+
+    for (int i = row + (count - 1); i >= row; i--)
     {
         this->playlist->remove(i);
     }
 
     //finish removal, notify views/models
     endRemoveRows();
-    
+
     this->slotCurrentSongChanged(nullptr);
 
     return true;
@@ -219,10 +219,10 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex & parent)
 bool PlaylistModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationRow)
 {
     // if source and destination parents are the same, move elements locally
-    if(true)
+    if (true)
     {
-        beginMoveRows(sourceParent, sourceRow, sourceRow+count-1, destinationParent, destinationRow);
-        this->playlist->move(sourceRow, count, destinationRow-sourceRow);
+        beginMoveRows(sourceParent, sourceRow, sourceRow + count - 1, destinationParent, destinationRow);
+        this->playlist->move(sourceRow, count, destinationRow - sourceRow);
         endMoveRows();
     }
     else
@@ -262,7 +262,7 @@ QStringList PlaylistModel::mimeTypes() const
     return types;
 }
 
-QMimeData* PlaylistModel::mimeData(const QModelIndexList &indexes) const
+QMimeData *PlaylistModel::mimeData(const QModelIndexList &indexes) const
 {
     QMimeData *mimeData = new QMimeData();
     QByteArray encodedData;
@@ -282,7 +282,7 @@ QMimeData* PlaylistModel::mimeData(const QModelIndexList &indexes) const
     return mimeData;
 }
 
-bool PlaylistModel::canDropMimeData(const QMimeData *data, Qt::DropAction, int , int , const QModelIndex &) const
+bool PlaylistModel::canDropMimeData(const QMimeData *data, Qt::DropAction, int, int, const QModelIndex &) const
 {
     return data->hasFormat("text/uri-list");
 }
@@ -318,17 +318,17 @@ bool PlaylistModel::dropMimeData(const QMimeData *data, Qt::DropAction action, i
     return true;
 }
 
-QString PlaylistModel::__toQString(const QFileInfo& fi)
+QString PlaylistModel::__toQString(const QFileInfo &fi)
 {
     return fi.absoluteFilePath();
 }
 
-QString PlaylistModel::__toQString(const QString& str)
+QString PlaylistModel::__toQString(const QString &str)
 {
     return str;
 }
 
-QString PlaylistModel::__toQString(const QUrl& url)
+QString PlaylistModel::__toQString(const QUrl &url)
 {
     return url.toLocalFile();
 }
@@ -336,11 +336,11 @@ QString PlaylistModel::__toQString(const QUrl& url)
 
 void PlaylistModel::workerLoop()
 {
-    int i=0;
+    int i = 0;
     std::unique_lock<mutex> lck(this->songsToAdd.mtx);
-//     this->songsToAdd.processed = false;
+    //     this->songsToAdd.processed = false;
 
-    while(!this->songsToAdd.queue.empty() && !this->songsToAdd.shutDown)
+    while (!this->songsToAdd.queue.empty() && !this->songsToAdd.shutDown)
     {
         // grep the file at the very front and pop it from queue
         const string s = std::move(this->songsToAdd.queue[0]);
@@ -357,11 +357,11 @@ void PlaylistModel::workerLoop()
         int songsBefore = this->playlist->size();
         PlaylistFactory::addSong(*this->playlist, s);
         int songsAfter = this->playlist->size();
-        int songsAdded = songsAfter-songsBefore;
-        if(songsAdded > 0)
+        int songsAdded = songsAfter - songsBefore;
+        if (songsAdded > 0)
         {
-            emit this->SongAdded(QString::fromStdString(s), i, i+total);
-            QMetaObject::invokeMethod( this, "insertRows", Qt::QueuedConnection, Q_ARG(int, songsBefore), Q_ARG(int, songsAdded));
+            emit this->SongAdded(QString::fromStdString(s), i, i + total);
+            QMetaObject::invokeMethod(this, "insertRows", Qt::QueuedConnection, Q_ARG(int, songsBefore), Q_ARG(int, songsAdded));
         }
         i++;
         auto end = std::chrono::high_resolution_clock::now();
@@ -370,7 +370,7 @@ void PlaylistModel::workerLoop()
         std::chrono::milliseconds wait = std::chrono::milliseconds(10);
         std::chrono::milliseconds past = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         wait -= past;
-        if(wait > std::chrono::milliseconds(0))
+        if (wait > std::chrono::milliseconds(0))
         {
             std::this_thread::sleep_for(wait);
         }
@@ -389,21 +389,21 @@ void PlaylistModel::clear()
         std::lock_guard<mutex> lck(this->songsToAdd.mtx);
         this->songsToAdd.queue.clear();
     }
-    
-    beginRemoveRows(QModelIndex(), 0, this->rowCount(QModelIndex())-1);
+
+    beginRemoveRows(QModelIndex(), 0, this->rowCount(QModelIndex()) - 1);
     this->playlist->clear();
     endRemoveRows();
 }
 
-void PlaylistModel::slotCurrentSongChanged(const Song*)
+void PlaylistModel::slotCurrentSongChanged(const Song *)
 {
     const int oldSongId = this->oldSongId;
     const int newSongId = this->playlist->getCurrentSongId();
 
-    if(oldSongId != newSongId)
+    if (oldSongId != newSongId)
     {
-        const int lastCol = this->columnCount(QModelIndex())-1;
-        
+        const int lastCol = this->columnCount(QModelIndex()) - 1;
+
         emit(dataChanged(this->index(oldSongId, 0), this->index(oldSongId, lastCol)));
         emit(dataChanged(this->index(newSongId, 0), this->index(newSongId, lastCol)));
 
@@ -413,23 +413,23 @@ void PlaylistModel::slotCurrentSongChanged(const Song*)
 
 QColor PlaylistModel::calculateRowColor(int row) const
 {
-    if(this->playlist->getSong(row) == nullptr)
+    if (this->playlist->getSong(row) == nullptr)
     {
         return QColor(255, 0, 0, 127);
     }
-    else if(this->playlist->getCurrentSongId() == row)
+    else if (this->playlist->getCurrentSongId() == row)
     {
-        return QColor(255,225,0);
+        return QColor(255, 225, 0);
     }
-    else if(row > 0 && row % 10 == 0)
+    else if (row > 0 && row % 10 == 0)
     {
-        return QColor(220,220,220);
+        return QColor(220, 220, 220);
     }
-    else if(row % 2 == 0)
+    else if (row % 2 == 0)
     {
-        return QColor(233,233,233);
+        return QColor(233, 233, 233);
     }
-    
+
     return QColor(Qt::white);
 }
 

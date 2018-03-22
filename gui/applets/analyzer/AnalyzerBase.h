@@ -23,11 +23,11 @@
 #include <sys/types.h>
 #endif
 
-#include "fht.h"     //stack allocated
+#include "fht.h" //stack allocated
 
 #include <QGLWidget>
 
-#include <vector>    //included for convenience
+#include <vector> //included for convenience
 
 
 #include "types.h"
@@ -38,31 +38,30 @@ class Song;
 class AnalyzerBase : public QGLWidget
 {
     Q_OBJECT
-public:
-
+    public:
     ~AnalyzerBase();
 
-protected:
-    AnalyzerBase( QWidget* );
+    protected:
+    AnalyzerBase(QWidget *);
 
-    static void interpolate( const QVector<float>&, QVector<float>& );
+    static void interpolate(const QVector<float> &, QVector<float> &);
 
     template<typename T>
-    void prepareScope(const Song* s, frame_t playhead, QVector<float>& scope);
-    virtual void transform( QVector<float>& );
-    virtual void analyze( const QVector<float>& ) = 0;
+    void prepareScope(const Song *s, frame_t playhead, QVector<float> &scope);
+    virtual void transform(QVector<float> &);
+    virtual void analyze(const QVector<float> &) = 0;
 
-    void setFps( int fps );
+    void setFps(int fps);
 
-    FHT    *m_fht;
+    FHT *m_fht;
     QVector<float> m_fftData;
     QTimer *m_renderTimer;
 
-public slots:
+    public slots:
     void connectSignals();
     void disconnectSignals();
-//     void currentDesktopChanged();
-    void processData( const Song* thescope, frame_t playhead );
+    //     void currentDesktopChanged();
+    void processData(const Song *thescope, frame_t playhead);
 };
 
 

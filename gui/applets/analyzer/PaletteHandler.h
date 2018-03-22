@@ -25,7 +25,7 @@ class PaletteHandler;
 
 namespace The
 {
-PaletteHandler* paletteHandler();
+    PaletteHandler *paletteHandler();
 }
 
 /**
@@ -37,27 +37,27 @@ class PaletteHandler : public QObject
 {
     Q_OBJECT
 
-    friend PaletteHandler* The::paletteHandler();
+    friend PaletteHandler *The::paletteHandler();
 
-public:
+    public:
     ~PaletteHandler();
 
     QPalette palette() const;
 
-    void setPalette( const QPalette & palette );
+    void setPalette(const QPalette &palette);
 
     /** Gives the item view a special darker palette and transparent background.
         You need to connect to the newPalette signal afterwards because this
         darker palette does not automatically update.
     */
-    void updateItemView( QAbstractItemView * view );
+    void updateItemView(QAbstractItemView *view);
 
     /**
     * Returns the foreground color for the painter by checking the painting QWidget::foregroundRole() and falling back to
     * QPalette::WindowText (or QPalette::HighlightedText if @param selected)
     * Uses the widgets palette or the application palette as fallback
     */
-    QColor foregroundColor( const QPainter *p, bool selected = false );
+    QColor foregroundColor(const QPainter *p, bool selected = false);
 
     /**
      * Returns the highlight color which should be used instead of the color from KDE.
@@ -69,7 +69,7 @@ public:
      * @return Highlight color, which is the KDE highlight color, with reduced saturation
      *         (less contrast).
      */
-    static QColor highlightColor( qreal percentSaturation = 0.5, qreal percentValue = 1.0 );
+    static QColor highlightColor(qreal percentSaturation = 0.5, qreal percentValue = 1.0);
 
     /**
      * Returns the background color used in context applets.
@@ -81,11 +81,11 @@ public:
      */
     static QColor alternateBackgroundColor();
 
-signals:
-    void newPalette( const QPalette & palette );
+    signals:
+    void newPalette(const QPalette &palette);
 
-private:
-    PaletteHandler( QObject* parent = 0 );
+    private:
+    PaletteHandler(QObject *parent = 0);
 
     QPalette m_palette;
 };

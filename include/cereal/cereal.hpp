@@ -29,95 +29,97 @@
 #ifndef CEREAL_CEREAL_HPP_
 #define CEREAL_CEREAL_HPP_
 
-#include <type_traits>
-#include <string>
-#include <memory>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
-#include <cereal/macros.hpp>
-#include <cereal/details/traits.hpp>
 #include <cereal/details/helpers.hpp>
+#include <cereal/details/traits.hpp>
+#include <cereal/macros.hpp>
 #include <cereal/types/base_class.hpp>
 
 namespace cereal
 {
-  // ######################################################################
-  //! Creates a name value pair
-  /*! @relates NameValuePair
+    // ######################################################################
+    //! Creates a name value pair
+    /*! @relates NameValuePair
       @ingroup Utility */
-  template <class T> inline
-  NameValuePair<T> make_nvp( std::string const & name, T && value )
-  {
-    return {name.c_str(), std::forward<T>(value)};
-  }
+    template<class T>
+    inline NameValuePair<T> make_nvp(std::string const &name, T &&value)
+    {
+        return {name.c_str(), std::forward<T>(value)};
+    }
 
-  //! Creates a name value pair
-  /*! @relates NameValuePair
+    //! Creates a name value pair
+    /*! @relates NameValuePair
       @ingroup Utility */
-  template <class T> inline
-  NameValuePair<T> make_nvp( const char * name, T && value )
-  {
-    return {name, std::forward<T>(value)};
-  }
+    template<class T>
+    inline NameValuePair<T> make_nvp(const char *name, T &&value)
+    {
+        return {name, std::forward<T>(value)};
+    }
 
-  //! Creates a name value pair for the variable T with the same name as the variable
-  /*! @relates NameValuePair
+//! Creates a name value pair for the variable T with the same name as the variable
+/*! @relates NameValuePair
       @ingroup Utility */
-  #define CEREAL_NVP(T) ::cereal::make_nvp(#T, T)
+#define CEREAL_NVP(T) ::cereal::make_nvp(#T, T)
 
-  // ######################################################################
-  //! Convenience function to create binary data for both const and non const pointers
-  /*! @param data Pointer to beginning of the data
+    // ######################################################################
+    //! Convenience function to create binary data for both const and non const pointers
+    /*! @param data Pointer to beginning of the data
       @param size The size in bytes of the data
       @relates BinaryData
       @ingroup Utility */
-  template <class T> inline
-  BinaryData<T> binary_data( T && data, size_t size )
-  {
-    return {std::forward<T>(data), size};
-  }
+    template<class T>
+    inline BinaryData<T> binary_data(T &&data, size_t size)
+    {
+        return {std::forward<T>(data), size};
+    }
 
-  // ######################################################################
-  //! Creates a size tag from some variable.
-  /*! Will normally be used to serialize size (e.g. size()) information for
+    // ######################################################################
+    //! Creates a size tag from some variable.
+    /*! Will normally be used to serialize size (e.g. size()) information for
       variable size containers.  If you have a variable sized container,
       the very first thing it serializes should be its size, wrapped in
       a SizeTag.
 
       @relates SizeTag
       @ingroup Utility */
-  template <class T> inline
-  SizeTag<T> make_size_tag( T && sz )
-  {
-    return {std::forward<T>(sz)};
-  }
+    template<class T>
+    inline SizeTag<T> make_size_tag(T &&sz)
+    {
+        return {std::forward<T>(sz)};
+    }
 
-  // ######################################################################
-  //! Called before a type is serialized to set up any special archive state
-  //! for processing some type
-  /*! If designing a serializer that needs to set up any kind of special
+    // ######################################################################
+    //! Called before a type is serialized to set up any special archive state
+    //! for processing some type
+    /*! If designing a serializer that needs to set up any kind of special
       state or output extra information for a type, specialize this function
       for the archive type and the types that require the extra information.
       @ingroup Internal */
-  template <class Archive, class T> inline
-  void prologue( Archive & /* archive */, T const & /* data */)
-  { }
+    template<class Archive, class T>
+    inline void prologue(Archive & /* archive */, T const & /* data */)
+    {
+    }
 
-  //! Called after a type is serialized to tear down any special archive state
-  //! for processing some type
-  /*! @ingroup Internal */
-  template <class Archive, class T> inline
-  void epilogue( Archive & /* archive */, T const & /* data */)
-  { }
+    //! Called after a type is serialized to tear down any special archive state
+    //! for processing some type
+    /*! @ingroup Internal */
+    template<class Archive, class T>
+    inline void epilogue(Archive & /* archive */, T const & /* data */)
+    {
+    }
 
-  // ######################################################################
-  //! Special flags for archives
-  /*! AllowEmptyClassElision
+    // ######################################################################
+    //! Special flags for archives
+    /*! AllowEmptyClassElision
         This allows for empty classes to be serialized even if they do not provide
         a serialization function.  Classes with no data members are considered to be
         empty.  Be warned that if this is enabled and you attempt to serialize an
@@ -128,26 +130,33 @@ namespace cereal
         by using the traits is_output_serializable and is_input_serializable
         in cereal/details/traits.hpp.
       @ingroup Internal */
-  enum Flags { AllowEmptyClassElision = 1 };
+    enum Flags
+    {
+        AllowEmptyClassElision = 1
+    };
 
-  // ######################################################################
-  //! Registers a specific Archive type with cereal
-  /*! This registration should be done once per archive.  A good place to
+// ######################################################################
+//! Registers a specific Archive type with cereal
+/*! This registration should be done once per archive.  A good place to
       put this is immediately following the definition of your archive.
       Archive registration is only strictly necessary if you wish to
       support pointers to polymorphic data types.  All archives that
       come with cereal are already registered.
       @ingroup Internal */
-  #define CEREAL_REGISTER_ARCHIVE(Archive)                              \
-  namespace cereal { namespace detail {                                 \
-  template <class T, class BindingTag>                                  \
-  typename polymorphic_serialization_support<Archive, T>::type          \
-  instantiate_polymorphic_binding( T*, Archive*, BindingTag, adl_tag ); \
-  } } /* end namespaces */
+#define CEREAL_REGISTER_ARCHIVE(Archive)                                          \
+    namespace cereal                                                              \
+    {                                                                             \
+        namespace detail                                                          \
+        {                                                                         \
+            template<class T, class BindingTag>                                   \
+            typename polymorphic_serialization_support<Archive, T>::type          \
+            instantiate_polymorphic_binding(T *, Archive *, BindingTag, adl_tag); \
+        }                                                                         \
+    } /* end namespaces */
 
-  // ######################################################################
-  //! Defines a class version for some type
-  /*! Versioning information is optional and adds some small amount of
+// ######################################################################
+//! Defines a class version for some type
+/*! Versioning information is optional and adds some small amount of
       overhead to serialization.  This overhead will occur both in terms of
       space in the archive (the version information for each class will be
       stored exactly once) as well as runtime (versioned serialization functions
@@ -196,26 +205,34 @@ namespace cereal
       Interfaces for other forms of serialization functions is similar.  This
       macro should be placed at global scope.
       @ingroup Utility */
-  #define CEREAL_CLASS_VERSION(TYPE, VERSION_NUMBER)                             \
-  namespace cereal { namespace detail {                                          \
-    template <> struct Version<TYPE>                                             \
-    {                                                                            \
-      static const std::uint32_t version;                                        \
-      static std::uint32_t registerVersion()                                     \
-      {                                                                          \
-        ::cereal::detail::StaticObject<Versions>::getInstance().mapping.emplace( \
-             std::type_index(typeid(TYPE)).hash_code(), VERSION_NUMBER );        \
-        return VERSION_NUMBER;                                                   \
-      }                                                                          \
-      static void unused() { (void)version; }                                    \
-    }; /* end Version */                                                         \
-    const std::uint32_t Version<TYPE>::version =                                 \
-      Version<TYPE>::registerVersion();                                          \
-  } } // end namespaces
+#define CEREAL_CLASS_VERSION(TYPE, VERSION_NUMBER)                                           \
+    namespace cereal                                                                         \
+    {                                                                                        \
+        namespace detail                                                                     \
+        {                                                                                    \
+            template<>                                                                       \
+            struct Version<TYPE>                                                             \
+            {                                                                                \
+                static const std::uint32_t version;                                          \
+                static std::uint32_t registerVersion()                                       \
+                {                                                                            \
+                    ::cereal::detail::StaticObject<Versions>::getInstance().mapping.emplace( \
+                    std::type_index(typeid(TYPE)).hash_code(), VERSION_NUMBER);              \
+                    return VERSION_NUMBER;                                                   \
+                }                                                                            \
+                static void unused()                                                         \
+                {                                                                            \
+                    (void)version;                                                           \
+                }                                                                            \
+            }; /* end Version */                                                             \
+            const std::uint32_t Version<TYPE>::version =                                     \
+            Version<TYPE>::registerVersion();                                                \
+        }                                                                                    \
+    } // end namespaces
 
-  // ######################################################################
-  //! The base output archive class
-  /*! This is the base output archive for all output archives.  If you create
+    // ######################################################################
+    //! The base output archive class
+    /*! This is the base output archive for all output archives.  If you create
       a custom archive class, it should derive from this, passing itself as
       a template parameter for the ArchiveType.
 
@@ -230,342 +247,341 @@ namespace cereal
       @tparam Flags Flags to control advanced functionality.  See the Flags
                     enum for more information.
       @ingroup Internal */
-  template<class ArchiveType, std::uint32_t Flags = 0>
-  class OutputArchive : public detail::OutputArchiveBase
-  {
-    public:
-      //! Construct the output archive
-      /*! @param derived A pointer to the derived ArchiveType (pass this from the derived archive) */
-      OutputArchive(ArchiveType * const derived) : self(derived), itsCurrentPointerId(1), itsCurrentPolymorphicTypeId(1)
-      { }
+    template<class ArchiveType, std::uint32_t Flags = 0>
+    class OutputArchive : public detail::OutputArchiveBase
+    {
+        public:
+        //! Construct the output archive
+        /*! @param derived A pointer to the derived ArchiveType (pass this from the derived archive) */
+        OutputArchive(ArchiveType *const derived)
+        : self(derived), itsCurrentPointerId(1), itsCurrentPolymorphicTypeId(1)
+        {
+        }
 
-      OutputArchive & operator=( OutputArchive const & ) = delete;
+        OutputArchive &operator=(OutputArchive const &) = delete;
 
-      //! Serializes all passed in data
-      /*! This is the primary interface for serializing data with an archive */
-      template <class ... Types> inline
-      ArchiveType & operator()( Types && ... args )
-      {
-        self->process( std::forward<Types>( args )... );
-        return *self;
-      }
+        //! Serializes all passed in data
+        /*! This is the primary interface for serializing data with an archive */
+        template<class... Types>
+        inline ArchiveType &operator()(Types &&... args)
+        {
+            self->process(std::forward<Types>(args)...);
+            return *self;
+        }
 
-      /*! @name Boost Transition Layer
+        /*! @name Boost Transition Layer
           Functionality that mirrors the syntax for Boost.  This is useful if you are transitioning
           a large project from Boost to cereal.  The preferred interface for cereal is using operator(). */
-      //! @{
+        //! @{
 
-      //! Serializes passed in data
-      /*! This is a boost compatability layer and is not the preferred way of using
+        //! Serializes passed in data
+        /*! This is a boost compatability layer and is not the preferred way of using
           cereal.  If you are transitioning from boost, use this until you can
           transition to the operator() overload */
-      template <class T> inline
-      ArchiveType & operator&( T && arg )
-      {
-        self->process( std::forward<T>( arg ) );
-        return *self;
-      }
+        template<class T>
+        inline ArchiveType &operator&(T &&arg)
+        {
+            self->process(std::forward<T>(arg));
+            return *self;
+        }
 
-      //! Serializes passed in data
-      /*! This is a boost compatability layer and is not the preferred way of using
+        //! Serializes passed in data
+        /*! This is a boost compatability layer and is not the preferred way of using
           cereal.  If you are transitioning from boost, use this until you can
           transition to the operator() overload */
-      template <class T> inline
-      ArchiveType & operator<<( T && arg )
-      {
-        self->process( std::forward<T>( arg ) );
-        return *self;
-      }
+        template<class T>
+        inline ArchiveType &operator<<(T &&arg)
+        {
+            self->process(std::forward<T>(arg));
+            return *self;
+        }
 
-      //! @}
+        //! @}
 
-      //! Registers a shared pointer with the archive
-      /*! This function is used to track shared pointer targets to prevent
+        //! Registers a shared pointer with the archive
+        /*! This function is used to track shared pointer targets to prevent
           unnecessary saves from taking place if multiple shared pointers
           point to the same data.
 
           @internal
           @param addr The address (see shared_ptr get()) pointed to by the shared pointer
           @return A key that uniquely identifies the pointer */
-      inline std::uint32_t registerSharedPointer( void const * addr )
-      {
-        // Handle null pointers by just returning 0
-        if(addr == 0) return 0;
-
-        auto id = itsSharedPointerMap.find( addr );
-        if( id == itsSharedPointerMap.end() )
+        inline std::uint32_t registerSharedPointer(void const *addr)
         {
-          auto ptrId = itsCurrentPointerId++;
-          itsSharedPointerMap.insert( {addr, ptrId} );
-          return ptrId | detail::msb_32bit; // mask MSB to be 1
-        }
-        else
-          return id->second;
-      }
+            // Handle null pointers by just returning 0
+            if (addr == 0)
+                return 0;
 
-      //! Registers a polymorphic type name with the archive
-      /*! This function is used to track polymorphic types to prevent
+            auto id = itsSharedPointerMap.find(addr);
+            if (id == itsSharedPointerMap.end())
+            {
+                auto ptrId = itsCurrentPointerId++;
+                itsSharedPointerMap.insert({addr, ptrId});
+                return ptrId | detail::msb_32bit; // mask MSB to be 1
+            }
+            else
+                return id->second;
+        }
+
+        //! Registers a polymorphic type name with the archive
+        /*! This function is used to track polymorphic types to prevent
           unnecessary saves of identifying strings used by the polymorphic
           support functionality.
 
           @internal
           @param name The name to associate with a polymorphic type
           @return A key that uniquely identifies the polymorphic type name */
-      inline std::uint32_t registerPolymorphicType( char const * name )
-      {
-        auto id = itsPolymorphicTypeMap.find( name );
-        if( id == itsPolymorphicTypeMap.end() )
+        inline std::uint32_t registerPolymorphicType(char const *name)
         {
-          auto polyId = itsCurrentPolymorphicTypeId++;
-          itsPolymorphicTypeMap.insert( {name, polyId} );
-          return polyId | detail::msb_32bit; // mask MSB to be 1
+            auto id = itsPolymorphicTypeMap.find(name);
+            if (id == itsPolymorphicTypeMap.end())
+            {
+                auto polyId = itsCurrentPolymorphicTypeId++;
+                itsPolymorphicTypeMap.insert({name, polyId});
+                return polyId | detail::msb_32bit; // mask MSB to be 1
+            }
+            else
+                return id->second;
         }
-        else
-          return id->second;
-      }
 
-    private:
-      //! Serializes data after calling prologue, then calls epilogue
-      template <class T> inline
-      void process( T && head )
-      {
-        prologue( *self, head );
-        self->processImpl( head );
-        epilogue( *self, head );
-      }
-
-      //! Unwinds to process all data
-      template <class T, class ... Other> inline
-      void process( T && head, Other && ... tail )
-      {
-        self->process( std::forward<T>( head ) );
-        self->process( std::forward<Other>( tail )... );
-      }
-
-      //! Serialization of a virtual_base_class wrapper
-      /*! \sa virtual_base_class */
-      template <class T> inline
-      ArchiveType & processImpl(virtual_base_class<T> const & b)
-      {
-        traits::detail::base_class_id id(b.base_ptr);
-        if(itsBaseClassSet.count(id) == 0)
+        private:
+        //! Serializes data after calling prologue, then calls epilogue
+        template<class T>
+        inline void process(T &&head)
         {
-          itsBaseClassSet.insert(id);
-          self->processImpl( *b.base_ptr );
+            prologue(*self, head);
+            self->processImpl(head);
+            epilogue(*self, head);
         }
-        return *self;
-      }
 
-      //! Serialization of a base_class wrapper
-      /*! \sa base_class */
-      template <class T> inline
-      ArchiveType & processImpl(base_class<T> const & b)
-      {
-        self->processImpl( *b.base_ptr );
-        return *self;
-      }
+        //! Unwinds to process all data
+        template<class T, class... Other>
+        inline void process(T &&head, Other &&... tail)
+        {
+            self->process(std::forward<T>(head));
+            self->process(std::forward<Other>(tail)...);
+        }
 
-      //! Helper macro that expands the requirements for activating an overload
-      /*! Requirements:
+        //! Serialization of a virtual_base_class wrapper
+        /*! \sa virtual_base_class */
+        template<class T>
+        inline ArchiveType &processImpl(virtual_base_class<T> const &b)
+        {
+            traits::detail::base_class_id id(b.base_ptr);
+            if (itsBaseClassSet.count(id) == 0)
+            {
+                itsBaseClassSet.insert(id);
+                self->processImpl(*b.base_ptr);
+            }
+            return *self;
+        }
+
+        //! Serialization of a base_class wrapper
+        /*! \sa base_class */
+        template<class T>
+        inline ArchiveType &processImpl(base_class<T> const &b)
+        {
+            self->processImpl(*b.base_ptr);
+            return *self;
+        }
+
+//! Helper macro that expands the requirements for activating an overload
+/*! Requirements:
             Has the requested serialization function
             Does not have version and unversioned at the same time
             Is output serializable AND
               is specialized for this type of function OR
               has no specialization at all */
-      #define PROCESS_IF(name)                                                             \
-      traits::EnableIf<traits::has_##name<T, ArchiveType>::value,                          \
-                       !traits::has_invalid_output_versioning<T, ArchiveType>::value,      \
-                       (traits::is_output_serializable<T, ArchiveType>::value &&           \
-                        (traits::is_specialized_##name<T, ArchiveType>::value ||           \
-                         !traits::is_specialized<T, ArchiveType>::value))> = traits::sfinae
+#define PROCESS_IF(name)                                                            \
+    traits::EnableIf<traits::has_##name<T, ArchiveType>::value,                     \
+                     !traits::has_invalid_output_versioning<T, ArchiveType>::value, \
+                     (traits::is_output_serializable<T, ArchiveType>::value &&      \
+                      (traits::is_specialized_##name<T, ArchiveType>::value ||      \
+                       !traits::is_specialized<T, ArchiveType>::value))> = traits::sfinae
 
-      //! Member serialization
-      template <class T, PROCESS_IF(member_serialize)> inline
-      ArchiveType & processImpl(T const & t)
-      {
-        access::member_serialize(*self, const_cast<T &>(t));
-        return *self;
-      }
+        //! Member serialization
+        template<class T, PROCESS_IF(member_serialize)>
+        inline ArchiveType &processImpl(T const &t)
+        {
+            access::member_serialize(*self, const_cast<T &>(t));
+            return *self;
+        }
 
-      //! Non member serialization
-      template <class T, PROCESS_IF(non_member_serialize)> inline
-      ArchiveType & processImpl(T const & t)
-      {
-        CEREAL_SERIALIZE_FUNCTION_NAME(*self, const_cast<T &>(t));
-        return *self;
-      }
+        //! Non member serialization
+        template<class T, PROCESS_IF(non_member_serialize)>
+        inline ArchiveType &processImpl(T const &t)
+        {
+            CEREAL_SERIALIZE_FUNCTION_NAME(*self, const_cast<T &>(t));
+            return *self;
+        }
 
-      //! Member split (save)
-      template <class T, PROCESS_IF(member_save)> inline
-      ArchiveType & processImpl(T const & t)
-      {
-        access::member_save(*self, t);
-        return *self;
-      }
+        //! Member split (save)
+        template<class T, PROCESS_IF(member_save)>
+        inline ArchiveType &processImpl(T const &t)
+        {
+            access::member_save(*self, t);
+            return *self;
+        }
 
-      //! Non member split (save)
-      template <class T, PROCESS_IF(non_member_save)> inline
-      ArchiveType & processImpl(T const & t)
-      {
-        CEREAL_SAVE_FUNCTION_NAME(*self, t);
-        return *self;
-      }
+        //! Non member split (save)
+        template<class T, PROCESS_IF(non_member_save)>
+        inline ArchiveType &processImpl(T const &t)
+        {
+            CEREAL_SAVE_FUNCTION_NAME(*self, t);
+            return *self;
+        }
 
-      //! Member split (save_minimal)
-      template <class T, PROCESS_IF(member_save_minimal)> inline
-      ArchiveType & processImpl(T const & t)
-      {
-        self->process( access::member_save_minimal(*self, t) );
-        return *self;
-      }
+        //! Member split (save_minimal)
+        template<class T, PROCESS_IF(member_save_minimal)>
+        inline ArchiveType &processImpl(T const &t)
+        {
+            self->process(access::member_save_minimal(*self, t));
+            return *self;
+        }
 
-      //! Non member split (save_minimal)
-      template <class T, PROCESS_IF(non_member_save_minimal)> inline
-      ArchiveType & processImpl(T const & t)
-      {
-        self->process( CEREAL_SAVE_MINIMAL_FUNCTION_NAME(*self, t) );
-        return *self;
-      }
+        //! Non member split (save_minimal)
+        template<class T, PROCESS_IF(non_member_save_minimal)>
+        inline ArchiveType &processImpl(T const &t)
+        {
+            self->process(CEREAL_SAVE_MINIMAL_FUNCTION_NAME(*self, t));
+            return *self;
+        }
 
-      //! Empty class specialization
-      template <class T, traits::EnableIf<(Flags & AllowEmptyClassElision),
-                                          !traits::is_output_serializable<T, ArchiveType>::value,
-                                          std::is_empty<T>::value> = traits::sfinae> inline
-      ArchiveType & processImpl(T const &)
-      {
-        return *self;
-      }
+        //! Empty class specialization
+        template<class T, traits::EnableIf<(Flags & AllowEmptyClassElision), !traits::is_output_serializable<T, ArchiveType>::value, std::is_empty<T>::value> = traits::sfinae>
+        inline ArchiveType &processImpl(T const &)
+        {
+            return *self;
+        }
 
-      //! No matching serialization
-      /*! Invalid if we have invalid output versioning or
+        //! No matching serialization
+        /*! Invalid if we have invalid output versioning or
           we are not output serializable, and either
           don't allow empty class ellision or allow it but are not serializing an empty class */
-      template <class T, traits::EnableIf<traits::has_invalid_output_versioning<T, ArchiveType>::value ||
-                                          (!traits::is_output_serializable<T, ArchiveType>::value &&
-                                           (!(Flags & AllowEmptyClassElision) || ((Flags & AllowEmptyClassElision) && !std::is_empty<T>::value)))> = traits::sfinae> inline
-      ArchiveType & processImpl(T const &)
-      {
-        static_assert(traits::detail::count_output_serializers<T, ArchiveType>::value != 0,
-            "cereal could not find any output serialization functions for the provided type and archive combination. \n\n "
-            "Types must either have a serialize function, load/save pair, or load_minimal/save_minimal pair (you may not mix these). \n "
-            "Serialize functions generally have the following signature: \n\n "
-            "template<class Archive> \n "
-            "  void serialize(Archive & ar) \n "
-            "  { \n "
-            "    ar( member1, member2, member3 ); \n "
-            "  } \n\n " );
+        template<class T, traits::EnableIf<traits::has_invalid_output_versioning<T, ArchiveType>::value || (!traits::is_output_serializable<T, ArchiveType>::value && (!(Flags & AllowEmptyClassElision) || ((Flags & AllowEmptyClassElision) && !std::is_empty<T>::value)))> = traits::sfinae>
+        inline ArchiveType &processImpl(T const &)
+        {
+            static_assert(traits::detail::count_output_serializers<T, ArchiveType>::value != 0,
+                          "cereal could not find any output serialization functions for the provided type and archive combination. \n\n "
+                          "Types must either have a serialize function, load/save pair, or load_minimal/save_minimal pair (you may not mix these). \n "
+                          "Serialize functions generally have the following signature: \n\n "
+                          "template<class Archive> \n "
+                          "  void serialize(Archive & ar) \n "
+                          "  { \n "
+                          "    ar( member1, member2, member3 ); \n "
+                          "  } \n\n ");
 
-        static_assert(traits::detail::count_output_serializers<T, ArchiveType>::value < 2,
-            "cereal found more than one compatible output serialization function for the provided type and archive combination. \n\n "
-            "Types must either have a serialize function, load/save pair, or load_minimal/save_minimal pair (you may not mix these). \n "
-            "Use specialization (see access.hpp) if you need to disambiguate between serialize vs load/save functions.  \n "
-            "Note that serialization functions can be inherited which may lead to the aforementioned ambiguities. \n "
-            "In addition, you may not mix versioned with non-versioned serialization functions. \n\n ");
+            static_assert(traits::detail::count_output_serializers<T, ArchiveType>::value < 2,
+                          "cereal found more than one compatible output serialization function for the provided type and archive combination. \n\n "
+                          "Types must either have a serialize function, load/save pair, or load_minimal/save_minimal pair (you may not mix these). \n "
+                          "Use specialization (see access.hpp) if you need to disambiguate between serialize vs load/save functions.  \n "
+                          "Note that serialization functions can be inherited which may lead to the aforementioned ambiguities. \n "
+                          "In addition, you may not mix versioned with non-versioned serialization functions. \n\n ");
 
-        return *self;
-      }
+            return *self;
+        }
 
-      //! Registers a class version with the archive and serializes it if necessary
-      /*! If this is the first time this class has been serialized, we will record its
+        //! Registers a class version with the archive and serializes it if necessary
+        /*! If this is the first time this class has been serialized, we will record its
           version number and serialize that.
 
           @tparam T The type of the class being serialized */
-      template <class T> inline
-      std::uint32_t registerClassVersion()
-      {
-        static const auto hash = std::type_index(typeid(T)).hash_code();
-        const auto insertResult = itsVersionedTypes.insert( hash );
-        const auto lock = detail::StaticObject<detail::Versions>::lock();
-        const auto version =
-          detail::StaticObject<detail::Versions>::getInstance().find( hash, detail::Version<T>::version );
+        template<class T>
+        inline std::uint32_t registerClassVersion()
+        {
+            static const auto hash = std::type_index(typeid(T)).hash_code();
+            const auto insertResult = itsVersionedTypes.insert(hash);
+            const auto lock = detail::StaticObject<detail::Versions>::lock();
+            const auto version =
+            detail::StaticObject<detail::Versions>::getInstance().find(hash, detail::Version<T>::version);
 
-        if( insertResult.second ) // insertion took place, serialize the version number
-          process( make_nvp<ArchiveType>("cereal_class_version", version) );
+            if (insertResult.second) // insertion took place, serialize the version number
+                process(make_nvp<ArchiveType>("cereal_class_version", version));
 
-        return version;
-      }
+            return version;
+        }
 
-      //! Member serialization
-      /*! Versioning implementation */
-      template <class T, PROCESS_IF(member_versioned_serialize)> inline
-      ArchiveType & processImpl(T const & t)
-      {
-        access::member_serialize(*self, const_cast<T &>(t), registerClassVersion<T>());
-        return *self;
-      }
+        //! Member serialization
+        /*! Versioning implementation */
+        template<class T, PROCESS_IF(member_versioned_serialize)>
+        inline ArchiveType &processImpl(T const &t)
+        {
+            access::member_serialize(*self, const_cast<T &>(t), registerClassVersion<T>());
+            return *self;
+        }
 
-      //! Non member serialization
-      /*! Versioning implementation */
-      template <class T, PROCESS_IF(non_member_versioned_serialize)> inline
-      ArchiveType & processImpl(T const & t)
-      {
-        CEREAL_SERIALIZE_FUNCTION_NAME(*self, const_cast<T &>(t), registerClassVersion<T>());
-        return *self;
-      }
+        //! Non member serialization
+        /*! Versioning implementation */
+        template<class T, PROCESS_IF(non_member_versioned_serialize)>
+        inline ArchiveType &processImpl(T const &t)
+        {
+            CEREAL_SERIALIZE_FUNCTION_NAME(*self, const_cast<T &>(t), registerClassVersion<T>());
+            return *self;
+        }
 
-      //! Member split (save)
-      /*! Versioning implementation */
-      template <class T, PROCESS_IF(member_versioned_save)> inline
-      ArchiveType & processImpl(T const & t)
-      {
-        access::member_save(*self, t, registerClassVersion<T>());
-        return *self;
-      }
+        //! Member split (save)
+        /*! Versioning implementation */
+        template<class T, PROCESS_IF(member_versioned_save)>
+        inline ArchiveType &processImpl(T const &t)
+        {
+            access::member_save(*self, t, registerClassVersion<T>());
+            return *self;
+        }
 
-      //! Non member split (save)
-      /*! Versioning implementation */
-      template <class T, PROCESS_IF(non_member_versioned_save)> inline
-      ArchiveType & processImpl(T const & t)
-      {
-        CEREAL_SAVE_FUNCTION_NAME(*self, t, registerClassVersion<T>());
-        return *self;
-      }
+        //! Non member split (save)
+        /*! Versioning implementation */
+        template<class T, PROCESS_IF(non_member_versioned_save)>
+        inline ArchiveType &processImpl(T const &t)
+        {
+            CEREAL_SAVE_FUNCTION_NAME(*self, t, registerClassVersion<T>());
+            return *self;
+        }
 
-      //! Member split (save_minimal)
-      /*! Versioning implementation */
-      template <class T, PROCESS_IF(member_versioned_save_minimal)> inline
-      ArchiveType & processImpl(T const & t)
-      {
-        self->process( access::member_save_minimal(*self, t, registerClassVersion<T>()) );
-        return *self;
-      }
+        //! Member split (save_minimal)
+        /*! Versioning implementation */
+        template<class T, PROCESS_IF(member_versioned_save_minimal)>
+        inline ArchiveType &processImpl(T const &t)
+        {
+            self->process(access::member_save_minimal(*self, t, registerClassVersion<T>()));
+            return *self;
+        }
 
-      //! Non member split (save_minimal)
-      /*! Versioning implementation */
-      template <class T, PROCESS_IF(non_member_versioned_save_minimal)> inline
-      ArchiveType & processImpl(T const & t)
-      {
-        self->process( CEREAL_SAVE_MINIMAL_FUNCTION_NAME(*self, t, registerClassVersion<T>()) );
-        return *self;
-      }
+        //! Non member split (save_minimal)
+        /*! Versioning implementation */
+        template<class T, PROCESS_IF(non_member_versioned_save_minimal)>
+        inline ArchiveType &processImpl(T const &t)
+        {
+            self->process(CEREAL_SAVE_MINIMAL_FUNCTION_NAME(*self, t, registerClassVersion<T>()));
+            return *self;
+        }
 
-    #undef PROCESS_IF
+#undef PROCESS_IF
 
-    private:
-      ArchiveType * const self;
+        private:
+        ArchiveType *const self;
 
-      //! A set of all base classes that have been serialized
-      std::unordered_set<traits::detail::base_class_id, traits::detail::base_class_id_hash> itsBaseClassSet;
+        //! A set of all base classes that have been serialized
+        std::unordered_set<traits::detail::base_class_id, traits::detail::base_class_id_hash> itsBaseClassSet;
 
-      //! Maps from addresses to pointer ids
-      std::unordered_map<void const *, std::uint32_t> itsSharedPointerMap;
+        //! Maps from addresses to pointer ids
+        std::unordered_map<void const *, std::uint32_t> itsSharedPointerMap;
 
-      //! The id to be given to the next pointer
-      std::uint32_t itsCurrentPointerId;
+        //! The id to be given to the next pointer
+        std::uint32_t itsCurrentPointerId;
 
-      //! Maps from polymorphic type name strings to ids
-      std::unordered_map<char const *, std::uint32_t> itsPolymorphicTypeMap;
+        //! Maps from polymorphic type name strings to ids
+        std::unordered_map<char const *, std::uint32_t> itsPolymorphicTypeMap;
 
-      //! The id to be given to the next polymorphic type name
-      std::uint32_t itsCurrentPolymorphicTypeId;
+        //! The id to be given to the next polymorphic type name
+        std::uint32_t itsCurrentPolymorphicTypeId;
 
-      //! Keeps track of classes that have versioning information associated with them
-      std::unordered_set<size_type> itsVersionedTypes;
-  }; // class OutputArchive
+        //! Keeps track of classes that have versioning information associated with them
+        std::unordered_set<size_type> itsVersionedTypes;
+    }; // class OutputArchive
 
-  // ######################################################################
-  //! The base input archive class
-  /*! This is the base input archive for all input archives.  If you create
+    // ######################################################################
+    //! The base input archive class
+    /*! This is the base input archive for all input archives.  If you create
       a custom archive class, it should derive from this, passing itself as
       a template parameter for the ArchiveType.
 
@@ -580,375 +596,374 @@ namespace cereal
       @tparam Flags Flags to control advanced functionality.  See the Flags
                     enum for more information.
       @ingroup Internal */
-  template<class ArchiveType, std::uint32_t Flags = 0>
-  class InputArchive : public detail::InputArchiveBase
-  {
-    public:
-      //! Construct the output archive
-      /*! @param derived A pointer to the derived ArchiveType (pass this from the derived archive) */
-      InputArchive(ArchiveType * const derived) :
-        self(derived),
-        itsBaseClassSet(),
-        itsSharedPointerMap(),
-        itsPolymorphicTypeMap(),
-        itsVersionedTypes()
-      { }
+    template<class ArchiveType, std::uint32_t Flags = 0>
+    class InputArchive : public detail::InputArchiveBase
+    {
+        public:
+        //! Construct the output archive
+        /*! @param derived A pointer to the derived ArchiveType (pass this from the derived archive) */
+        InputArchive(ArchiveType *const derived)
+        : self(derived),
+          itsBaseClassSet(),
+          itsSharedPointerMap(),
+          itsPolymorphicTypeMap(),
+          itsVersionedTypes()
+        {
+        }
 
-      InputArchive & operator=( InputArchive const & ) = delete;
+        InputArchive &operator=(InputArchive const &) = delete;
 
-      //! Serializes all passed in data
-      /*! This is the primary interface for serializing data with an archive */
-      template <class ... Types> inline
-      ArchiveType & operator()( Types && ... args )
-      {
-        process( std::forward<Types>( args )... );
-        return *self;
-      }
+        //! Serializes all passed in data
+        /*! This is the primary interface for serializing data with an archive */
+        template<class... Types>
+        inline ArchiveType &operator()(Types &&... args)
+        {
+            process(std::forward<Types>(args)...);
+            return *self;
+        }
 
-      /*! @name Boost Transition Layer
+        /*! @name Boost Transition Layer
           Functionality that mirrors the syntax for Boost.  This is useful if you are transitioning
           a large project from Boost to cereal.  The preferred interface for cereal is using operator(). */
-      //! @{
+        //! @{
 
-      //! Serializes passed in data
-      /*! This is a boost compatability layer and is not the preferred way of using
+        //! Serializes passed in data
+        /*! This is a boost compatability layer and is not the preferred way of using
           cereal.  If you are transitioning from boost, use this until you can
           transition to the operator() overload */
-      template <class T> inline
-      ArchiveType & operator&( T && arg )
-      {
-        self->process( std::forward<T>( arg ) );
-        return *self;
-      }
+        template<class T>
+        inline ArchiveType &operator&(T &&arg)
+        {
+            self->process(std::forward<T>(arg));
+            return *self;
+        }
 
-      //! Serializes passed in data
-      /*! This is a boost compatability layer and is not the preferred way of using
+        //! Serializes passed in data
+        /*! This is a boost compatability layer and is not the preferred way of using
           cereal.  If you are transitioning from boost, use this until you can
           transition to the operator() overload */
-      template <class T> inline
-      ArchiveType & operator>>( T && arg )
-      {
-        self->process( std::forward<T>( arg ) );
-        return *self;
-      }
+        template<class T>
+        inline ArchiveType &operator>>(T &&arg)
+        {
+            self->process(std::forward<T>(arg));
+            return *self;
+        }
 
-      //! @}
+        //! @}
 
-      //! Retrieves a shared pointer given a unique key for it
-      /*! This is used to retrieve a previously registered shared_ptr
+        //! Retrieves a shared pointer given a unique key for it
+        /*! This is used to retrieve a previously registered shared_ptr
           which has already been loaded.
 
           @param id The unique id that was serialized for the pointer
           @return A shared pointer to the data
           @throw Exception if the id does not exist */
-      inline std::shared_ptr<void> getSharedPointer(std::uint32_t const id)
-      {
-        if(id == 0) return std::shared_ptr<void>(nullptr);
+        inline std::shared_ptr<void> getSharedPointer(std::uint32_t const id)
+        {
+            if (id == 0)
+                return std::shared_ptr<void>(nullptr);
 
-        auto iter = itsSharedPointerMap.find( id );
-        if(iter == itsSharedPointerMap.end())
-          throw Exception("Error while trying to deserialize a smart pointer. Could not find id " + std::to_string(id));
+            auto iter = itsSharedPointerMap.find(id);
+            if (iter == itsSharedPointerMap.end())
+                throw Exception("Error while trying to deserialize a smart pointer. Could not find id " + std::to_string(id));
 
-        return iter->second;
-      }
+            return iter->second;
+        }
 
-      //! Registers a shared pointer to its unique identifier
-      /*! After a shared pointer has been allocated for the first time, it should
+        //! Registers a shared pointer to its unique identifier
+        /*! After a shared pointer has been allocated for the first time, it should
           be registered with its loaded id for future references to it.
 
           @param id The unique identifier for the shared pointer
           @param ptr The actual shared pointer */
-      inline void registerSharedPointer(std::uint32_t const id, std::shared_ptr<void> ptr)
-      {
-        std::uint32_t const stripped_id = id & ~detail::msb_32bit;
-        itsSharedPointerMap[stripped_id] = ptr;
-      }
+        inline void registerSharedPointer(std::uint32_t const id, std::shared_ptr<void> ptr)
+        {
+            std::uint32_t const stripped_id = id & ~detail::msb_32bit;
+            itsSharedPointerMap[stripped_id] = ptr;
+        }
 
-      //! Retrieves the string for a polymorphic type given a unique key for it
-      /*! This is used to retrieve a string previously registered during
+        //! Retrieves the string for a polymorphic type given a unique key for it
+        /*! This is used to retrieve a string previously registered during
           a polymorphic load.
 
           @param id The unique id that was serialized for the polymorphic type
           @return The string identifier for the tyep */
-      inline std::string getPolymorphicName(std::uint32_t const id)
-      {
-        auto name = itsPolymorphicTypeMap.find( id );
-        if(name == itsPolymorphicTypeMap.end())
+        inline std::string getPolymorphicName(std::uint32_t const id)
         {
-          throw Exception("Error while trying to deserialize a polymorphic pointer. Could not find type id " + std::to_string(id));
+            auto name = itsPolymorphicTypeMap.find(id);
+            if (name == itsPolymorphicTypeMap.end())
+            {
+                throw Exception("Error while trying to deserialize a polymorphic pointer. Could not find type id " + std::to_string(id));
+            }
+            return name->second;
         }
-        return name->second;
-      }
 
-      //! Registers a polymorphic name string to its unique identifier
-      /*! After a polymorphic type has been loaded for the first time, it should
+        //! Registers a polymorphic name string to its unique identifier
+        /*! After a polymorphic type has been loaded for the first time, it should
           be registered with its loaded id for future references to it.
 
           @param id The unique identifier for the polymorphic type
           @param name The name associated with the tyep */
-      inline void registerPolymorphicName(std::uint32_t const id, std::string const & name)
-      {
-        std::uint32_t const stripped_id = id & ~detail::msb_32bit;
-        itsPolymorphicTypeMap.insert( {stripped_id, name} );
-      }
-
-    private:
-      //! Serializes data after calling prologue, then calls epilogue
-      template <class T> inline
-      void process( T && head )
-      {
-        prologue( *self, head );
-        self->processImpl( head );
-        epilogue( *self, head );
-      }
-
-      //! Unwinds to process all data
-      template <class T, class ... Other> inline
-      void process( T && head, Other && ... tail )
-      {
-        process( std::forward<T>( head ) );
-        process( std::forward<Other>( tail )... );
-      }
-
-      //! Serialization of a virtual_base_class wrapper
-      /*! \sa virtual_base_class */
-      template <class T> inline
-      ArchiveType & processImpl(virtual_base_class<T> & b)
-      {
-        traits::detail::base_class_id id(b.base_ptr);
-        if(itsBaseClassSet.count(id) == 0)
+        inline void registerPolymorphicName(std::uint32_t const id, std::string const &name)
         {
-          itsBaseClassSet.insert(id);
-          self->processImpl( *b.base_ptr );
+            std::uint32_t const stripped_id = id & ~detail::msb_32bit;
+            itsPolymorphicTypeMap.insert({stripped_id, name});
         }
-        return *self;
-      }
 
-      //! Serialization of a base_class wrapper
-      /*! \sa base_class */
-      template <class T> inline
-      ArchiveType & processImpl(base_class<T> & b)
-      {
-        self->processImpl( *b.base_ptr );
-        return *self;
-      }
+        private:
+        //! Serializes data after calling prologue, then calls epilogue
+        template<class T>
+        inline void process(T &&head)
+        {
+            prologue(*self, head);
+            self->processImpl(head);
+            epilogue(*self, head);
+        }
 
-      //! Helper macro that expands the requirements for activating an overload
-      /*! Requirements:
+        //! Unwinds to process all data
+        template<class T, class... Other>
+        inline void process(T &&head, Other &&... tail)
+        {
+            process(std::forward<T>(head));
+            process(std::forward<Other>(tail)...);
+        }
+
+        //! Serialization of a virtual_base_class wrapper
+        /*! \sa virtual_base_class */
+        template<class T>
+        inline ArchiveType &processImpl(virtual_base_class<T> &b)
+        {
+            traits::detail::base_class_id id(b.base_ptr);
+            if (itsBaseClassSet.count(id) == 0)
+            {
+                itsBaseClassSet.insert(id);
+                self->processImpl(*b.base_ptr);
+            }
+            return *self;
+        }
+
+        //! Serialization of a base_class wrapper
+        /*! \sa base_class */
+        template<class T>
+        inline ArchiveType &processImpl(base_class<T> &b)
+        {
+            self->processImpl(*b.base_ptr);
+            return *self;
+        }
+
+//! Helper macro that expands the requirements for activating an overload
+/*! Requirements:
             Has the requested serialization function
             Does not have version and unversioned at the same time
             Is input serializable AND
               is specialized for this type of function OR
               has no specialization at all */
-      #define PROCESS_IF(name)                                                              \
-      traits::EnableIf<traits::has_##name<T, ArchiveType>::value,                           \
-                       !traits::has_invalid_input_versioning<T, ArchiveType>::value,        \
-                       (traits::is_input_serializable<T, ArchiveType>::value &&             \
-                        (traits::is_specialized_##name<T, ArchiveType>::value ||            \
-                         !traits::is_specialized<T, ArchiveType>::value))> = traits::sfinae
+#define PROCESS_IF(name)                                                           \
+    traits::EnableIf<traits::has_##name<T, ArchiveType>::value,                    \
+                     !traits::has_invalid_input_versioning<T, ArchiveType>::value, \
+                     (traits::is_input_serializable<T, ArchiveType>::value &&      \
+                      (traits::is_specialized_##name<T, ArchiveType>::value ||     \
+                       !traits::is_specialized<T, ArchiveType>::value))> = traits::sfinae
 
-      //! Member serialization
-      template <class T, PROCESS_IF(member_serialize)> inline
-      ArchiveType & processImpl(T & t)
-      {
-        access::member_serialize(*self, t);
-        return *self;
-      }
+        //! Member serialization
+        template<class T, PROCESS_IF(member_serialize)>
+        inline ArchiveType &processImpl(T &t)
+        {
+            access::member_serialize(*self, t);
+            return *self;
+        }
 
-      //! Non member serialization
-      template <class T, PROCESS_IF(non_member_serialize)> inline
-      ArchiveType & processImpl(T & t)
-      {
-        CEREAL_SERIALIZE_FUNCTION_NAME(*self, t);
-        return *self;
-      }
+        //! Non member serialization
+        template<class T, PROCESS_IF(non_member_serialize)>
+        inline ArchiveType &processImpl(T &t)
+        {
+            CEREAL_SERIALIZE_FUNCTION_NAME(*self, t);
+            return *self;
+        }
 
-      //! Member split (load)
-      template <class T, PROCESS_IF(member_load)> inline
-      ArchiveType & processImpl(T & t)
-      {
-        access::member_load(*self, t);
-        return *self;
-      }
+        //! Member split (load)
+        template<class T, PROCESS_IF(member_load)>
+        inline ArchiveType &processImpl(T &t)
+        {
+            access::member_load(*self, t);
+            return *self;
+        }
 
-      //! Non member split (load)
-      template <class T, PROCESS_IF(non_member_load)> inline
-      ArchiveType & processImpl(T & t)
-      {
-        CEREAL_LOAD_FUNCTION_NAME(*self, t);
-        return *self;
-      }
+        //! Non member split (load)
+        template<class T, PROCESS_IF(non_member_load)>
+        inline ArchiveType &processImpl(T &t)
+        {
+            CEREAL_LOAD_FUNCTION_NAME(*self, t);
+            return *self;
+        }
 
-      //! Member split (load_minimal)
-      template <class T, PROCESS_IF(member_load_minimal)> inline
-      ArchiveType & processImpl(T & t)
-      {
-        using OutArchiveType = typename traits::detail::get_output_from_input<ArchiveType>::type;
-        typename traits::has_member_save_minimal<T, OutArchiveType>::type value;
-        self->process( value );
-        access::member_load_minimal(*self, t, value);
-        return *self;
-      }
+        //! Member split (load_minimal)
+        template<class T, PROCESS_IF(member_load_minimal)>
+        inline ArchiveType &processImpl(T &t)
+        {
+            using OutArchiveType = typename traits::detail::get_output_from_input<ArchiveType>::type;
+            typename traits::has_member_save_minimal<T, OutArchiveType>::type value;
+            self->process(value);
+            access::member_load_minimal(*self, t, value);
+            return *self;
+        }
 
-      //! Non member split (load_minimal)
-      template <class T, PROCESS_IF(non_member_load_minimal)> inline
-      ArchiveType & processImpl(T & t)
-      {
-        using OutArchiveType = typename traits::detail::get_output_from_input<ArchiveType>::type;
-        typename traits::has_non_member_save_minimal<T, OutArchiveType>::type value;
-        self->process( value );
-        CEREAL_LOAD_MINIMAL_FUNCTION_NAME(*self, t, value);
-        return *self;
-      }
+        //! Non member split (load_minimal)
+        template<class T, PROCESS_IF(non_member_load_minimal)>
+        inline ArchiveType &processImpl(T &t)
+        {
+            using OutArchiveType = typename traits::detail::get_output_from_input<ArchiveType>::type;
+            typename traits::has_non_member_save_minimal<T, OutArchiveType>::type value;
+            self->process(value);
+            CEREAL_LOAD_MINIMAL_FUNCTION_NAME(*self, t, value);
+            return *self;
+        }
 
-      //! Empty class specialization
-      template <class T, traits::EnableIf<(Flags & AllowEmptyClassElision),
-                                          !traits::is_input_serializable<T, ArchiveType>::value,
-                                          std::is_empty<T>::value> = traits::sfinae> inline
-      ArchiveType & processImpl(T const &)
-      {
-        return *self;
-      }
+        //! Empty class specialization
+        template<class T, traits::EnableIf<(Flags & AllowEmptyClassElision), !traits::is_input_serializable<T, ArchiveType>::value, std::is_empty<T>::value> = traits::sfinae>
+        inline ArchiveType &processImpl(T const &)
+        {
+            return *self;
+        }
 
-      //! No matching serialization
-      /*! Invalid if we have invalid input versioning or
+        //! No matching serialization
+        /*! Invalid if we have invalid input versioning or
           we are not input serializable, and either
           don't allow empty class ellision or allow it but are not serializing an empty class */
-      template <class T, traits::EnableIf<traits::has_invalid_input_versioning<T, ArchiveType>::value ||
-                                          (!traits::is_input_serializable<T, ArchiveType>::value &&
-                                           (!(Flags & AllowEmptyClassElision) || ((Flags & AllowEmptyClassElision) && !std::is_empty<T>::value)))> = traits::sfinae> inline
-      ArchiveType & processImpl(T const &)
-      {
-        static_assert(traits::detail::count_input_serializers<T, ArchiveType>::value != 0,
-            "cereal could not find any input serialization functions for the provided type and archive combination. \n\n "
-            "Types must either have a serialize function, load/save pair, or load_minimal/save_minimal pair (you may not mix these). \n "
-            "Serialize functions generally have the following signature: \n\n "
-            "template<class Archive> \n "
-            "  void serialize(Archive & ar) \n "
-            "  { \n "
-            "    ar( member1, member2, member3 ); \n "
-            "  } \n\n " );
+        template<class T, traits::EnableIf<traits::has_invalid_input_versioning<T, ArchiveType>::value || (!traits::is_input_serializable<T, ArchiveType>::value && (!(Flags & AllowEmptyClassElision) || ((Flags & AllowEmptyClassElision) && !std::is_empty<T>::value)))> = traits::sfinae>
+        inline ArchiveType &processImpl(T const &)
+        {
+            static_assert(traits::detail::count_input_serializers<T, ArchiveType>::value != 0,
+                          "cereal could not find any input serialization functions for the provided type and archive combination. \n\n "
+                          "Types must either have a serialize function, load/save pair, or load_minimal/save_minimal pair (you may not mix these). \n "
+                          "Serialize functions generally have the following signature: \n\n "
+                          "template<class Archive> \n "
+                          "  void serialize(Archive & ar) \n "
+                          "  { \n "
+                          "    ar( member1, member2, member3 ); \n "
+                          "  } \n\n ");
 
-        static_assert(traits::detail::count_input_serializers<T, ArchiveType>::value < 2,
-            "cereal found more than one compatible input serialization function for the provided type and archive combination. \n\n "
-            "Types must either have a serialize function, load/save pair, or load_minimal/save_minimal pair (you may not mix these). \n "
-            "Use specialization (see access.hpp) if you need to disambiguate between serialize vs load/save functions.  \n "
-            "Note that serialization functions can be inherited which may lead to the aforementioned ambiguities. \n "
-            "In addition, you may not mix versioned with non-versioned serialization functions. \n\n ");
+            static_assert(traits::detail::count_input_serializers<T, ArchiveType>::value < 2,
+                          "cereal found more than one compatible input serialization function for the provided type and archive combination. \n\n "
+                          "Types must either have a serialize function, load/save pair, or load_minimal/save_minimal pair (you may not mix these). \n "
+                          "Use specialization (see access.hpp) if you need to disambiguate between serialize vs load/save functions.  \n "
+                          "Note that serialization functions can be inherited which may lead to the aforementioned ambiguities. \n "
+                          "In addition, you may not mix versioned with non-versioned serialization functions. \n\n ");
 
-        return *self;
-      }
+            return *self;
+        }
 
-      //! Befriend for versioning in load_and_construct
-      template <class A, class B, bool C, bool D, bool E, bool F> friend struct detail::Construct;
+        //! Befriend for versioning in load_and_construct
+        template<class A, class B, bool C, bool D, bool E, bool F>
+        friend struct detail::Construct;
 
-      //! Registers a class version with the archive and serializes it if necessary
-      /*! If this is the first time this class has been serialized, we will record its
+        //! Registers a class version with the archive and serializes it if necessary
+        /*! If this is the first time this class has been serialized, we will record its
           version number and serialize that.
 
           @tparam T The type of the class being serialized */
-      template <class T> inline
-      std::uint32_t loadClassVersion()
-      {
-        static const auto hash = std::type_index(typeid(T)).hash_code();
-        auto lookupResult = itsVersionedTypes.find( hash );
-
-        if( lookupResult != itsVersionedTypes.end() ) // already exists
-          return lookupResult->second;
-        else // need to load
+        template<class T>
+        inline std::uint32_t loadClassVersion()
         {
-          std::uint32_t version;
+            static const auto hash = std::type_index(typeid(T)).hash_code();
+            auto lookupResult = itsVersionedTypes.find(hash);
 
-          process( make_nvp<ArchiveType>("cereal_class_version", version) );
-          itsVersionedTypes.emplace_hint( lookupResult, hash, version );
+            if (lookupResult != itsVersionedTypes.end()) // already exists
+                return lookupResult->second;
+            else // need to load
+            {
+                std::uint32_t version;
 
-          return version;
+                process(make_nvp<ArchiveType>("cereal_class_version", version));
+                itsVersionedTypes.emplace_hint(lookupResult, hash, version);
+
+                return version;
+            }
         }
-      }
 
-      //! Member serialization
-      /*! Versioning implementation */
-      template <class T, PROCESS_IF(member_versioned_serialize)> inline
-      ArchiveType & processImpl(T & t)
-      {
-        const auto version = loadClassVersion<T>();
-        access::member_serialize(*self, t, version);
-        return *self;
-      }
+        //! Member serialization
+        /*! Versioning implementation */
+        template<class T, PROCESS_IF(member_versioned_serialize)>
+        inline ArchiveType &processImpl(T &t)
+        {
+            const auto version = loadClassVersion<T>();
+            access::member_serialize(*self, t, version);
+            return *self;
+        }
 
-      //! Non member serialization
-      /*! Versioning implementation */
-      template <class T, PROCESS_IF(non_member_versioned_serialize)> inline
-      ArchiveType & processImpl(T & t)
-      {
-        const auto version = loadClassVersion<T>();
-        CEREAL_SERIALIZE_FUNCTION_NAME(*self, t, version);
-        return *self;
-      }
+        //! Non member serialization
+        /*! Versioning implementation */
+        template<class T, PROCESS_IF(non_member_versioned_serialize)>
+        inline ArchiveType &processImpl(T &t)
+        {
+            const auto version = loadClassVersion<T>();
+            CEREAL_SERIALIZE_FUNCTION_NAME(*self, t, version);
+            return *self;
+        }
 
-      //! Member split (load)
-      /*! Versioning implementation */
-      template <class T, PROCESS_IF(member_versioned_load)> inline
-      ArchiveType & processImpl(T & t)
-      {
-        const auto version = loadClassVersion<T>();
-        access::member_load(*self, t, version);
-        return *self;
-      }
+        //! Member split (load)
+        /*! Versioning implementation */
+        template<class T, PROCESS_IF(member_versioned_load)>
+        inline ArchiveType &processImpl(T &t)
+        {
+            const auto version = loadClassVersion<T>();
+            access::member_load(*self, t, version);
+            return *self;
+        }
 
-      //! Non member split (load)
-      /*! Versioning implementation */
-      template <class T, PROCESS_IF(non_member_versioned_load)> inline
-      ArchiveType & processImpl(T & t)
-      {
-        const auto version = loadClassVersion<T>();
-        CEREAL_LOAD_FUNCTION_NAME(*self, t, version);
-        return *self;
-      }
+        //! Non member split (load)
+        /*! Versioning implementation */
+        template<class T, PROCESS_IF(non_member_versioned_load)>
+        inline ArchiveType &processImpl(T &t)
+        {
+            const auto version = loadClassVersion<T>();
+            CEREAL_LOAD_FUNCTION_NAME(*self, t, version);
+            return *self;
+        }
 
-      //! Member split (load_minimal)
-      /*! Versioning implementation */
-      template <class T, PROCESS_IF(member_versioned_load_minimal)> inline
-      ArchiveType & processImpl(T & t)
-      {
-        using OutArchiveType = typename traits::detail::get_output_from_input<ArchiveType>::type;
-        const auto version = loadClassVersion<T>();
-        typename traits::has_member_versioned_save_minimal<T, OutArchiveType>::type value;
-        self->process(value);
-        access::member_load_minimal(*self, t, value, version);
-        return *self;
-      }
+        //! Member split (load_minimal)
+        /*! Versioning implementation */
+        template<class T, PROCESS_IF(member_versioned_load_minimal)>
+        inline ArchiveType &processImpl(T &t)
+        {
+            using OutArchiveType = typename traits::detail::get_output_from_input<ArchiveType>::type;
+            const auto version = loadClassVersion<T>();
+            typename traits::has_member_versioned_save_minimal<T, OutArchiveType>::type value;
+            self->process(value);
+            access::member_load_minimal(*self, t, value, version);
+            return *self;
+        }
 
-      //! Non member split (load_minimal)
-      /*! Versioning implementation */
-      template <class T, PROCESS_IF(non_member_versioned_load_minimal)> inline
-      ArchiveType & processImpl(T & t)
-      {
-        using OutArchiveType = typename traits::detail::get_output_from_input<ArchiveType>::type;
-        const auto version = loadClassVersion<T>();
-        typename traits::has_non_member_versioned_save_minimal<T, OutArchiveType>::type value;
-        self->process(value);
-        CEREAL_LOAD_MINIMAL_FUNCTION_NAME(*self, t, value, version);
-        return *self;
-      }
+        //! Non member split (load_minimal)
+        /*! Versioning implementation */
+        template<class T, PROCESS_IF(non_member_versioned_load_minimal)>
+        inline ArchiveType &processImpl(T &t)
+        {
+            using OutArchiveType = typename traits::detail::get_output_from_input<ArchiveType>::type;
+            const auto version = loadClassVersion<T>();
+            typename traits::has_non_member_versioned_save_minimal<T, OutArchiveType>::type value;
+            self->process(value);
+            CEREAL_LOAD_MINIMAL_FUNCTION_NAME(*self, t, value, version);
+            return *self;
+        }
 
-      #undef PROCESS_IF
+#undef PROCESS_IF
 
-    private:
-      ArchiveType * const self;
+        private:
+        ArchiveType *const self;
 
-      //! A set of all base classes that have been serialized
-      std::unordered_set<traits::detail::base_class_id, traits::detail::base_class_id_hash> itsBaseClassSet;
+        //! A set of all base classes that have been serialized
+        std::unordered_set<traits::detail::base_class_id, traits::detail::base_class_id_hash> itsBaseClassSet;
 
-      //! Maps from pointer ids to metadata
-      std::unordered_map<std::uint32_t, std::shared_ptr<void>> itsSharedPointerMap;
+        //! Maps from pointer ids to metadata
+        std::unordered_map<std::uint32_t, std::shared_ptr<void>> itsSharedPointerMap;
 
-      //! Maps from name ids to names
-      std::unordered_map<std::uint32_t, std::string> itsPolymorphicTypeMap;
+        //! Maps from name ids to names
+        std::unordered_map<std::uint32_t, std::string> itsPolymorphicTypeMap;
 
-      //! Maps from type hash codes to version numbers
-      std::unordered_map<std::size_t, std::uint32_t> itsVersionedTypes;
-  }; // class InputArchive
+        //! Maps from type hash codes to version numbers
+        std::unordered_map<std::size_t, std::uint32_t> itsVersionedTypes;
+    }; // class InputArchive
 } // namespace cereal
 
 // This include needs to come after things such as binary_data, make_nvp, etc

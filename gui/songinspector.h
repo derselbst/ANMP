@@ -6,25 +6,26 @@
 class Song;
 struct SongInfo;
 
-namespace Ui {
-class SongInspector;
+namespace Ui
+{
+    class SongInspector;
 }
 
 class SongInspector : public QDialog
 {
     Q_OBJECT
 
-public:
-    explicit SongInspector(const Song*, QWidget *parent = 0);
+    public:
+    explicit SongInspector(const Song *, QWidget *parent = 0);
     ~SongInspector();
 
-    void FillView(const Song* s);
+    void FillView(const Song *s);
 
-private:
+    private:
     Ui::SongInspector *ui;
 
-    void fillGeneral(const Song* s);
-    void fillMetadata(const SongInfo& m);
+    void fillGeneral(const Song *s);
+    void fillMetadata(const SongInfo &m);
 };
 
 #endif // SONGINSPECTOR_H

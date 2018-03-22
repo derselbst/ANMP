@@ -13,36 +13,36 @@
   */
 class LibMadWrapper : public StandardWrapper<int32_t>
 {
-public:
+    public:
     LibMadWrapper(string filename);
     LibMadWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
     void initAttr();
 
     // forbid copying
-    LibMadWrapper(LibMadWrapper const&) = delete;
-    LibMadWrapper& operator=(LibMadWrapper const&) = delete;
+    LibMadWrapper(LibMadWrapper const &) = delete;
+    LibMadWrapper &operator=(LibMadWrapper const &) = delete;
 
-    virtual ~LibMadWrapper ();
+    virtual ~LibMadWrapper();
 
     // interface methods declaration
 
-    void open () override;
+    void open() override;
 
-    void close () noexcept override;
+    void close() noexcept override;
 
-    void fillBuffer () override;
+    void fillBuffer() override;
 
-    frame_t getFrames () const override;
+    frame_t getFrames() const override;
 
-    void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
+    void render(pcm_t *bufferToFill, frame_t framesToRender = 0) override;
 
     void buildMetadata() noexcept override;
 
-private:
-    FILE* infile = nullptr;
-    unsigned char * mpegbuf = nullptr;
+    private:
+    FILE *infile = nullptr;
+    unsigned char *mpegbuf = nullptr;
     int mpeglen = 0;
-    struct mad_stream* stream = nullptr;
+    struct mad_stream *stream = nullptr;
 
     // these two are only really needed inside this->render()
     // however, we need to preserve these two across subsequent calls to this->render(), since they are somewhat interdependent
@@ -55,12 +55,11 @@ private:
 
     vector<int32_t> tempBuf;
 
-    frame_t numFrames=0;
+    frame_t numFrames = 0;
     static signed int toInt24Sample(mad_fixed_t sample);
-    static string id3_get_tag (struct id3_tag const *tag, char const *what);
+    static string id3_get_tag(struct id3_tag const *tag, char const *what);
 
-    int findValidHeader(struct mad_header& header);
-
+    int findValidHeader(struct mad_header &header);
 };
 
 #endif // LIBSNDWRAPPER_H

@@ -1,14 +1,14 @@
 #ifndef PLAYLISTMODEL_H
 #define PLAYLISTMODEL_H
 
-#include <QModelIndex>
 #include <QAbstractTableModel>
 #include <QColor>
+#include <QModelIndex>
 
-#include <mutex>
 #include <condition_variable>
-#include <future>
 #include <deque>
+#include <future>
+#include <mutex>
 #include <string>
 
 class Playlist;
@@ -19,7 +19,7 @@ class PlaylistModel : public QAbstractTableModel
 {
     Q_OBJECT
 
-public:
+    public:
     PlaylistModel(Playlist *playlist, QObject *parent = 0);
     ~PlaylistModel() override;
 
@@ -33,38 +33,41 @@ public:
 
     // *** MODEL WRITE SUPPORT ***
     Qt::ItemFlags flags(const QModelIndex &index) const override;
-    bool removeRows(int row, int count, const QModelIndex & parent = QModelIndex()) override;
+    bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
     bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count, const QModelIndex &destinationParent, int destinationRow) override;
 
     // *** DRAG + DROP ***
     Qt::DropActions supportedDropActions() const override;
     QStringList mimeTypes() const override;
-    QMimeData* mimeData(const QModelIndexList &indexes) const override;
+    QMimeData *mimeData(const QModelIndexList &indexes) const override;
     bool canDropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) const override;
     bool dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent) override;
 
     void clear();
     void shuffle(size_t, size_t);
-    const Playlist* getPlaylist() {return this->playlist;};
+    const Playlist *getPlaylist()
+    {
+        return this->playlist;
+    };
 
 
     template<typename T>
-    void asyncAdd(const QList<T>&);
+    void asyncAdd(const QList<T> &);
 
-signals:
+    signals:
     void SongAdded(QString file, int cur, int total);
 
     // emitted, if the song currently played back gets deleted
     void UnloadCurrentSong();
 
-public slots:
-    void slotCurrentSongChanged(const Song* s);
-    bool insertRows(int row, int count, const QModelIndex & parent = QModelIndex()) override;
-    
-private:
+    public slots:
+    void slotCurrentSongChanged(const Song *s);
+    bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+
+    private:
     Playlist *playlist;
     int oldSongId = 0;
-    
+
     struct
     {
         // a queue to be filled with filepaths for songs that shall be added
@@ -93,26 +96,25 @@ private:
     std::future<void> songAdderWorker;
 
     QColor calculateRowColor(int row) const;
-    
-    static QString __toQString(const QFileInfo& fi);
-    static QString __toQString(const QString& str);
-    static QString __toQString(const QUrl& url);
 
+    static QString __toQString(const QFileInfo &fi);
+    static QString __toQString(const QString &str);
+    static QString __toQString(const QUrl &url);
 };
 
 #include <QDir>
 template<typename T>
-void PlaylistModel::asyncAdd(const QList<T>& files)
+void PlaylistModel::asyncAdd(const QList<T> &files)
 {
     std::unique_lock<std::mutex> lck(this->songsToAdd.mtx);
-    this->songsToAdd.cv.wait(lck, [this]{return !this->songsToAdd.ready;});
+    this->songsToAdd.cv.wait(lck, [this] { return !this->songsToAdd.ready; });
 
-    for(int i=0; i<files.count() && !this->songsToAdd.shutDown; i++)
-    {        
+    for (int i = 0; i < files.count() && !this->songsToAdd.shutDown; i++)
+    {
         QString file = this->__toQString(files.at(i));
         QFileInfo info(file);
-        
-        if(info.isDir())
+
+        if (info.isDir())
         {
             QDir dir(file);
             lck.unlock();
@@ -126,7 +128,7 @@ void PlaylistModel::asyncAdd(const QList<T>& files)
     }
     this->songsToAdd.ready = true;
 
-    if(this->songsToAdd.processed && !this->songsToAdd.shutDown)
+    if (this->songsToAdd.processed && !this->songsToAdd.shutDown)
     {
         this->songAdderWorker = std::async(std::launch::async, &PlaylistModel::workerLoop, this);
         this->songsToAdd.processed = false;

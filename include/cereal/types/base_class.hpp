@@ -30,35 +30,38 @@
 #ifndef CEREAL_TYPES_BASE_CLASS_HPP_
 #define CEREAL_TYPES_BASE_CLASS_HPP_
 
-#include <cereal/details/traits.hpp>
 #include <cereal/details/polymorphic_impl_fwd.hpp>
+#include <cereal/details/traits.hpp>
 
 namespace cereal
 {
-  namespace base_class_detail
-  {
-    //! Used to register polymorphic relations and avoid the need to include
-    //! polymorphic.hpp when no polymorphism is used
-    /*! @internal */
-    template <class Base, class Derived, bool IsPolymorphic = std::is_polymorphic<Base>::value>
-    struct RegisterPolymorphicBaseClass
+    namespace base_class_detail
     {
-      static void bind()
-      { }
-    };
+        //! Used to register polymorphic relations and avoid the need to include
+        //! polymorphic.hpp when no polymorphism is used
+        /*! @internal */
+        template<class Base, class Derived, bool IsPolymorphic = std::is_polymorphic<Base>::value>
+        struct RegisterPolymorphicBaseClass
+        {
+            static void bind()
+            {
+            }
+        };
 
-    //! Polymorphic version
-    /*! @internal */
-    template <class Base, class Derived>
-    struct RegisterPolymorphicBaseClass<Base, Derived, true>
-    {
-      static void bind()
-      { detail::RegisterPolymorphicCaster<Base, Derived>::bind(); }
-    };
-  }
+        //! Polymorphic version
+        /*! @internal */
+        template<class Base, class Derived>
+        struct RegisterPolymorphicBaseClass<Base, Derived, true>
+        {
+            static void bind()
+            {
+                detail::RegisterPolymorphicCaster<Base, Derived>::bind();
+            }
+        };
+    }
 
-  //! Casts a derived class to its non-virtual base class in a way that safely supports abstract classes
-  /*! This should be used in cases when a derived type needs to serialize its base type. This is better than directly
+    //! Casts a derived class to its non-virtual base class in a way that safely supports abstract classes
+    /*! This should be used in cases when a derived type needs to serialize its base type. This is better than directly
       using static_cast, as it allows for serialization of pure virtual (abstract) base classes.
 
       This also automatically registers polymorphic relation between the base and derived class, assuming they
@@ -95,22 +98,22 @@ namespace cereal
         }
       };
       @endcode */
-  template<class Base>
+    template<class Base>
     struct base_class : private traits::detail::BaseCastBase
     {
-      template<class Derived>
-        base_class(Derived const * derived) :
-          base_ptr(const_cast<Base*>(static_cast<Base const *>(derived)))
-      {
-        static_assert( std::is_base_of<Base, Derived>::value, "Can only use base_class on a valid base class" );
-        base_class_detail::RegisterPolymorphicBaseClass<Base, Derived>::bind();
-      }
+        template<class Derived>
+        base_class(Derived const *derived)
+        : base_ptr(const_cast<Base *>(static_cast<Base const *>(derived)))
+        {
+            static_assert(std::is_base_of<Base, Derived>::value, "Can only use base_class on a valid base class");
+            base_class_detail::RegisterPolymorphicBaseClass<Base, Derived>::bind();
+        }
 
-        Base * base_ptr;
+        Base *base_ptr;
     };
 
-  //! Casts a derived class to its virtual base class in a way that allows cereal to track inheritance
-  /*! This should be used in cases when a derived type features virtual inheritance from some
+    //! Casts a derived class to its virtual base class in a way that allows cereal to track inheritance
+    /*! This should be used in cases when a derived type features virtual inheritance from some
       base type.  This allows cereal to track the inheritance and to avoid making duplicate copies
       during serialization.
 
@@ -182,18 +185,18 @@ namespace cereal
       };
      }
      @endcode */
-  template<class Base>
+    template<class Base>
     struct virtual_base_class : private traits::detail::BaseCastBase
     {
-      template<class Derived>
-        virtual_base_class(Derived const * derived) :
-          base_ptr(const_cast<Base*>(static_cast<Base const *>(derived)))
-      {
-        static_assert( std::is_base_of<Base, Derived>::value, "Can only use virtual_base_class on a valid base class" );
-        base_class_detail::RegisterPolymorphicBaseClass<Base, Derived>::bind();
-      }
+        template<class Derived>
+        virtual_base_class(Derived const *derived)
+        : base_ptr(const_cast<Base *>(static_cast<Base const *>(derived)))
+        {
+            static_assert(std::is_base_of<Base, Derived>::value, "Can only use virtual_base_class on a valid base class");
+            base_class_detail::RegisterPolymorphicBaseClass<Base, Derived>::bind();
+        }
 
-        Base * base_ptr;
+        Base *base_ptr;
     };
 
 } // namespace cereal

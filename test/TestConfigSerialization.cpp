@@ -1,7 +1,7 @@
 
-#include <iostream>
-#include <fstream>
 #include <cereal/archives/json.hpp>
+#include <fstream>
+#include <iostream>
 
 #include "Config.h"
 #include "Test.h"
@@ -21,6 +21,6 @@ int main()
         cereal::JSONInputArchive archive(is);
         gConfig.serialize(ar);
     }*/
-  
+
     return 0;
 }

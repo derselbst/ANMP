@@ -1,21 +1,23 @@
 #ifndef STANDARDWRAPPER_IMPL_H
 #define STANDARDWRAPPER_IMPL_H
 
+#include "AtomicWrite.h"
 #include "Common.h"
 #include "Config.h"
-#include "AtomicWrite.h"
 #include "LoudnessFile.h"
 
 #include <utility> // std::swap
 
 template<typename SAMPLEFORMAT>
-StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename) : Song(filename)
+StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename)
+: Song(filename)
 {
     this->init();
 }
 
 template<typename SAMPLEFORMAT>
-StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len) : Song(filename, offset, len)
+StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
+: Song(filename, offset, len)
 {
     this->init();
 }
@@ -27,7 +29,7 @@ void StandardWrapper<SAMPLEFORMAT>::init() noexcept
 }
 
 template<typename SAMPLEFORMAT>
-StandardWrapper<SAMPLEFORMAT>::~StandardWrapper ()
+StandardWrapper<SAMPLEFORMAT>::~StandardWrapper()
 {
 }
 
@@ -44,16 +46,16 @@ StandardWrapper<SAMPLEFORMAT>::~StandardWrapper ()
  */
 template<typename SAMPLEFORMAT>
 template<typename WRAPPERCLASS>
-void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
+void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS *context)
 {
-    if(this->count == static_cast<size_t>(this->getFrames()) * this->Format.Channels())
+    if (this->count == static_cast<size_t>(this->getFrames()) * this->Format.Channels())
     {
         // Song::data already filled up with all the audiofile's PCM, nothing to do here (most likely case)
         return;
     }
-    else if(this->count == 0) // no buffer allocated?
+    else if (this->count == 0) // no buffer allocated?
     {
-        if(!this->Format.IsValid())
+        if (!this->Format.IsValid())
         {
             THROW_RUNTIME_ERROR("Failed to allocate buffer: SongFormat not valid!");
         }
@@ -61,15 +63,15 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
         // usually this shouldnt block at all, since we only end up here after releaseBuffer() was called
         // and releaseBuffer already waits for the render thread to finish... however it doesnt hurt
         WAIT(this->futureFillBuffer);
-        
+
         size_t itemsToAlloc = 0;
-        if(gConfig.RenderWholeSong)
+        if (gConfig.RenderWholeSong)
         {
             itemsToAlloc = this->getFrames() * this->Format.Channels();
 
             // try to alloc a buffer to hold the whole song's pcm in memory
             this->data = new (std::nothrow) SAMPLEFORMAT[itemsToAlloc];
-            if(this->data != nullptr) // buffer successfully allocated, fill it asynchronously
+            if (this->data != nullptr) // buffer successfully allocated, fill it asynchronously
             {
                 this->count = itemsToAlloc;
 
@@ -77,7 +79,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
                 this->render(this->data, msToFrames(gConfig.PreRenderTime, this->Format.SampleRate));
 
                 // immediatly start filling the rest of the pcm buffer
-                this->futureFillBuffer = async(launch::async, &WRAPPERCLASS::render, context/*==this*/, context->data, 0/*render everything*/);
+                this->futureFillBuffer = async(launch::async, &WRAPPERCLASS::render, context /*==this*/, context->data, 0 /*render everything*/);
 
                 // allow the render thread to do his work
                 this_thread::yield();
@@ -97,12 +99,12 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
             this->preRenderBuf = new SAMPLEFORMAT[itemsToAlloc];
             this->count = itemsToAlloc;
         }
-        catch(const std::bad_alloc& e)
+        catch (const std::bad_alloc &e)
         {
             this->releaseBuffer();
             throw;
         }
-        
+
         this->render(this->data, gConfig.FramesToRender);
     }
     else // only small buffer allocated, i.e. this->count == gConfig.FramesToRender * this->Format.Channels
@@ -113,25 +115,25 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS* context)
         std::swap(this->data, this->preRenderBuf);
     }
 
-    this->futureFillBuffer = async(launch::async, &WRAPPERCLASS::render, context/*==this*/, context->preRenderBuf, gConfig.FramesToRender);
+    this->futureFillBuffer = async(launch::async, &WRAPPERCLASS::render, context /*==this*/, context->preRenderBuf, gConfig.FramesToRender);
 }
 
 template<typename SAMPLEFORMAT>
 void StandardWrapper<SAMPLEFORMAT>::releaseBuffer() noexcept
 {
-    this->stopFillBuffer=true;
+    this->stopFillBuffer = true;
     WAIT(this->futureFillBuffer);
 
-    delete [] static_cast<SAMPLEFORMAT*>(this->data);
-    this->data=nullptr;
+    delete[] static_cast<SAMPLEFORMAT *>(this->data);
+    this->data = nullptr;
 
-    delete [] static_cast<SAMPLEFORMAT*>(this->preRenderBuf);
-    this->preRenderBuf=nullptr;
+    delete[] static_cast<SAMPLEFORMAT *>(this->preRenderBuf);
+    this->preRenderBuf = nullptr;
 
     this->count = 0;
-    this->framesAlreadyRendered=0;
+    this->framesAlreadyRendered = 0;
 
-    this->stopFillBuffer=false;
+    this->stopFillBuffer = false;
 }
 
 template<typename SAMPLEFORMAT>
@@ -142,20 +144,20 @@ frame_t StandardWrapper<SAMPLEFORMAT>::getFramesRendered()
 
 template<typename IGNORE>
 template<typename SAMPLEFORMAT>
-void StandardWrapper<IGNORE>::doAudioNormalization(SAMPLEFORMAT* pcm, const frame_t framesToProcess)
+void StandardWrapper<IGNORE>::doAudioNormalization(SAMPLEFORMAT *pcm, const frame_t framesToProcess)
 {
-    if(!gConfig.useAudioNormalization)
+    if (!gConfig.useAudioNormalization)
     {
         return;
     }
-    
+
     const uint32_t Channels = this->Format.Channels();
-    const unsigned int itemsToProcess = framesToProcess*Channels;
-    
+    const unsigned int itemsToProcess = framesToProcess * Channels;
+
     /* audio normalization factor */
     const float AbsoluteGain = (numeric_limits<SAMPLEFORMAT>::max()) / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);
-    #pragma omp parallel for default(none) firstprivate(pcm) shared(itemsToProcess, AbsoluteGain) schedule(static)
-    for(unsigned int i=0; i<itemsToProcess && !this->stopFillBuffer; i++)
+#pragma omp parallel for default(none) firstprivate(pcm) shared(itemsToProcess, AbsoluteGain) schedule(static)
+    for (unsigned int i = 0; i < itemsToProcess && !this->stopFillBuffer; i++)
     {
         pcm[i] = static_cast<SAMPLEFORMAT>(pcm[i] * AbsoluteGain);
     }

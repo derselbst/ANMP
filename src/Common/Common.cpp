@@ -1,16 +1,16 @@
 #include "Common.h"
-#include "CommonExceptions.h"
 #include "AtomicWrite.h"
+#include "CommonExceptions.h"
 
 
-#include <iostream>
-#include <cctype>
-#include <string>
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <cstring>
-#include <sstream>
 #include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 // #include <filesystem>
 
@@ -19,13 +19,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-extern "C"
-{
+extern "C" {
 #include <libgen.h> // basename, dirname
 }
 
-#include <unistd.h>
 #include <pwd.h>
+#include <unistd.h>
 #endif
 
 using namespace std;
@@ -37,12 +36,10 @@ using namespace std;
 bool iEqualsUgly(string strFirst, string strSecond)
 {
     // convert strings to upper case before compare
-    transform(strFirst.begin(), strFirst.end(), strFirst.begin(), [](unsigned char c)
-    {
+    transform(strFirst.begin(), strFirst.end(), strFirst.begin(), [](unsigned char c) {
         return std::toupper(c);
     });
-    transform(strSecond.begin(), strSecond.end(), strSecond.begin(), [](unsigned char c)
-    {
+    transform(strSecond.begin(), strSecond.end(), strSecond.begin(), [](unsigned char c) {
         return std::toupper(c);
     });
     return strFirst == strSecond;
@@ -50,10 +47,10 @@ bool iEqualsUgly(string strFirst, string strSecond)
 #endif
 
 // helper function for case insensitive string compare
-bool iEquals(const string& str1, const string& str2)
+bool iEquals(const string &str1, const string &str2)
 {
 #ifdef _POSIX_SOURCE
-    if(str1.size() != str2.size())
+    if (str1.size() != str2.size())
     {
         return false;
     }
@@ -63,7 +60,7 @@ bool iEquals(const string& str1, const string& str2)
 #endif
 }
 
-string getFileExtension(const string& filePath)
+string getFileExtension(const string &filePath)
 {
     return filePath.substr(filePath.find_last_of(".") + 1);
 }
@@ -77,7 +74,7 @@ unsigned long parse_time_crap(const char *input)
 {
     unsigned long value = 0;
     unsigned long multiplier = 1000;
-    const char * ptr = input;
+    const char *ptr = input;
     unsigned long colon_count = 0;
 
     while (*ptr && ((*ptr >= '0' && *ptr <= '9') || *ptr == ':'))
@@ -113,7 +110,7 @@ unsigned long parse_time_crap(const char *input)
     }
     for (;;)
     {
-        char * end;
+        char *end;
         if (ptr != input)
         {
             ++ptr;
@@ -151,9 +148,9 @@ unsigned long parse_time_crap(const char *input)
     return value;
 }
 
-string framesToTimeStr(frame_t frames, const unsigned int& sampleRate)
+string framesToTimeStr(frame_t frames, const unsigned int &sampleRate)
 {
-    int sec = frames/sampleRate;
+    int sec = frames / sampleRate;
     int min = sec / 60;
     sec %= 60;
 
@@ -172,9 +169,9 @@ string framesToTimeStr(frame_t frames, const unsigned int& sampleRate)
  *
  * @return position in audiofile in frames (i.e. samples)
  */
-frame_t msToFrames(const size_t& ms, const unsigned int& sampleRate)
+frame_t msToFrames(const size_t &ms, const unsigned int &sampleRate)
 {
-    return (ms*sampleRate)/1000;
+    return (ms * sampleRate) / 1000;
 }
 
 /**
@@ -183,9 +180,9 @@ frame_t msToFrames(const size_t& ms, const unsigned int& sampleRate)
  *
  * @return position in audiofile in frames (i.e. samples)
  */
-size_t framesToMs(const frame_t& frames, const unsigned int& sampleRate)
+size_t framesToMs(const frame_t &frames, const unsigned int &sampleRate)
 {
-    return static_cast<size_t>((frames*1000.0/sampleRate) + .5);
+    return static_cast<size_t>((frames * 1000.0 / sampleRate) + .5);
 }
 
 #ifdef _WIN32
@@ -197,12 +194,12 @@ char fnameBuf[_MAX_FNAME];
 char extBuf[_MAX_EXT];
 #endif
 
-string mybasename(const string& path)
+string mybasename(const string &path)
 {
     string s = string(path.c_str());
 
 #if defined(_POSIX_SOURCE)
-    return string(basename( const_cast<char*>(s.c_str()) ));
+    return string(basename(const_cast<char *>(s.c_str())));
 #elif defined(_WIN32)
     _splitpath(s.c_str(),
                nullptr, // drive
@@ -210,7 +207,7 @@ string mybasename(const string& path)
                fnameBuf, // filename
                extBuf);
 
-    if(fnameBuf[0] = '\0')
+    if (fnameBuf[0] = '\0')
     {
         throw NotImplementedException();
     }
@@ -226,44 +223,44 @@ string mybasename(const string& path)
 #endif
 }
 
-string mydirname(const string& path)
+string mydirname(const string &path)
 {
     string s = string(path.c_str());
-    return string(dirname( const_cast<char*>(s.c_str()) ));
+    return string(dirname(const_cast<char *>(s.c_str())));
 }
 
-string getUniqueFilename(const string& path)
+string getUniqueFilename(const string &path)
 {
     constexpr int Max = 1000;
     const string ext = getFileExtension(path);
     int i = 0;
-    
+
     string unique = path;
-    while(myExists(unique) && i<Max)
+    while (myExists(unique) && i < Max)
     {
         unique = string(path.c_str());
-        
+
         // remove the extension
-        unique.erase(unique.find_last_of(".")+1);
-        
+        unique.erase(unique.find_last_of(".") + 1);
+
         // add a unique number with leading zeros
         unique += string(log10(Max) - to_string(i).length(), '0') + to_string(i);
-        
+
         // readd the extension
         unique += "." + ext;
-        
+
         i++;
     }
-    
-    if(i>=Max)
+
+    if (i >= Max)
     {
         throw runtime_error("failed to get unique filename, max try count exceeded");
     }
-    
-     return unique;
+
+    return unique;
 }
 
-size_t getFileSize(FILE* f)
+size_t getFileSize(FILE *f)
 {
     int fd = fileno(f);
     return getFileSize(fd);
@@ -280,13 +277,13 @@ size_t getFileSize(int fd)
     return stat.st_size;
 }
 
-bool myExists(const string& name)
+bool myExists(const string &name)
 {
-    if(name.empty())
+    if (name.empty())
     {
         return false;
     }
-    
+
 #ifdef _POSIX_SOURCE
     struct stat buffer;
     int ret = stat(name.c_str(), &buffer);
@@ -307,40 +304,40 @@ bool myExists(const string& name)
 string myHomeDir()
 {
     string home;
-    
+
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-    
-    char* drive = getenv ("HOMEDRIVE");
-    char* path = getenv("HOMEPATH");
-    
-    if(drive == nullptr || *drive == '\0' || path == nullptr || *path == '\0')
+
+    char *drive = getenv("HOMEDRIVE");
+    char *path = getenv("HOMEPATH");
+
+    if (drive == nullptr || *drive == '\0' || path == nullptr || *path == '\0')
     {
         THROW_RUNTIME_ERROR("failed to get home directory")
     }
-    
+
     home = string(drive) + string(path);
-    
+
 #elif defined(_POSIX_SOURCE)
-        
-    const char* path = getenv("HOME");
-    
-    if(path == nullptr || *path == '\0')
+
+    const char *path = getenv("HOME");
+
+    if (path == nullptr || *path == '\0')
     {
         struct passwd *pw = getpwuid(getuid());
         path = pw->pw_dir;
-        
-        if(path == nullptr || *path == '\0')
+
+        if (path == nullptr || *path == '\0')
         {
             THROW_RUNTIME_ERROR("failed to get home directory")
         }
     }
-    
+
     home = string(path);
-    
+
 #else
-    #error "Dont know how to determine the home directory on your platform"
+#error "Dont know how to determine the home directory on your platform"
 #endif
-    
+
     return home;
 }
 
@@ -351,8 +348,8 @@ Nullable<string> findSoundfont(string midFile)
 
     string soundffile = midFile + ".sf2";
 
-//     if(fs::exists(midFile + ".sf2"))
-    if(myExists(soundffile))
+    //     if(fs::exists(midFile + ".sf2"))
+    if (myExists(soundffile))
     {
         // a soundfont named like midi file, but with sf2 extension
         return Nullable<string>(soundffile);
@@ -365,22 +362,22 @@ Nullable<string> findSoundfont(string midFile)
     soundffile += mybasename(dir); // bare name of that soundfont
     soundffile += ".sf2"; // extension
 
-//     if(fs::exists(dir + ".sf2"))
-    if(myExists(soundffile))
+    //     if(fs::exists(dir + ".sf2"))
+    if (myExists(soundffile))
     {
         return Nullable<string>(soundffile);
     }
 
-//     for(directory_entry& dirEntry : fs::directory_iterator("sandbox"))
-//     {
-//         string ext = getFileExtension(dirEntry.path());
-//
-//         if(iEquals(ext, "sf2"))
-//         {
-//             // a soundfont in that directory
-//             return Nullable<string>(dirEntry.path());
-//         }
-//     }
+    //     for(directory_entry& dirEntry : fs::directory_iterator("sandbox"))
+    //     {
+    //         string ext = getFileExtension(dirEntry.path());
+    //
+    //         if(iEquals(ext, "sf2"))
+    //         {
+    //             // a soundfont in that directory
+    //             return Nullable<string>(dirEntry.path());
+    //         }
+    //     }
 
     return Nullable<string>(nullptr);
 }

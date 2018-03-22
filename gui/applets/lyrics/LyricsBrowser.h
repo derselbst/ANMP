@@ -21,19 +21,19 @@
 
 namespace Plasma
 {
-class SvgWidget;
+    class SvgWidget;
 }
 
 class LyricsBrowser : public Plasma::TextBrowser
 {
     Q_OBJECT
-    Q_PROPERTY( Qt::Alignment alignment READ alignment WRITE setAlignment )
-    Q_PROPERTY( bool isReadOnly READ isReadOnly WRITE setReadOnly )
-    Q_PROPERTY( bool isRichText READ isRichText WRITE setRichText )
-    Q_PROPERTY( QString lyrics READ lyrics WRITE setLyrics )
+    Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment)
+    Q_PROPERTY(bool isReadOnly READ isReadOnly WRITE setReadOnly)
+    Q_PROPERTY(bool isRichText READ isRichText WRITE setRichText)
+    Q_PROPERTY(QString lyrics READ lyrics WRITE setLyrics)
 
-public:
-    explicit LyricsBrowser( QGraphicsWidget *parent = 0 );
+    public:
+    explicit LyricsBrowser(QGraphicsWidget *parent = 0);
     ~LyricsBrowser();
 
     Qt::Alignment alignment() const;
@@ -43,19 +43,19 @@ public:
 
     void clear();
 
-    void setAlignment( Qt::Alignment alignment );
-    void setLyrics( const QString &lyrics );
-    void setReadOnly( bool readOnly );
-    void setRichText( bool richText );
+    void setAlignment(Qt::Alignment alignment);
+    void setLyrics(const QString &lyrics);
+    void setReadOnly(bool readOnly);
+    void setRichText(bool richText);
 
-protected:
-    void resizeEvent( QGraphicsSceneResizeEvent *event );
+    protected:
+    void resizeEvent(QGraphicsSceneResizeEvent *event);
 
-private slots:
-    void paletteChanged( const QPalette &palette );
+    private slots:
+    void paletteChanged(const QPalette &palette);
     void updateAlignment();
 
-private:
+    private:
     bool m_isRichText;
     Qt::Alignment m_alignment;
     Plasma::SvgWidget *m_topBorder;

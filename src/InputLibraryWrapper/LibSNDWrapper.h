@@ -10,7 +10,7 @@ union sndfile_sample_t
 {
     // classes from the outside will either see an int32 or a float here. they dont see this union. they cant acces the members via f and i members. there require float to be 32 bits, to avoid having any padding bits that would be treated as audio.
     static_assert(sizeof(float) == sizeof(int32_t), "sizeof(float) != sizeof(int32_t), sry, this code wont work");
-    
+
     float f;
     int32_t i;
 };
@@ -22,33 +22,34 @@ union sndfile_sample_t
   */
 class LibSNDWrapper : public StandardWrapper<sndfile_sample_t>
 {
-public:
+    public:
     LibSNDWrapper(string filename);
     LibSNDWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
 
     // forbid copying
-    LibSNDWrapper(LibSNDWrapper const&) = delete;
-    LibSNDWrapper& operator=(LibSNDWrapper const&) = delete;
+    LibSNDWrapper(LibSNDWrapper const &) = delete;
+    LibSNDWrapper &operator=(LibSNDWrapper const &) = delete;
 
-    virtual ~LibSNDWrapper ();
+    virtual ~LibSNDWrapper();
 
     // interface methods declaration
 
-    void open () override;
+    void open() override;
 
-    void close () noexcept override;
+    void close() noexcept override;
 
-    void fillBuffer () override;
+    void fillBuffer() override;
 
-    vector<loop_t> getLoopArray () const noexcept override;
+    vector<loop_t> getLoopArray() const noexcept override;
 
-    frame_t getFrames () const override;
+    frame_t getFrames() const override;
 
-    void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
+    void render(pcm_t *bufferToFill, frame_t framesToRender = 0) override;
 
     void buildMetadata() noexcept override;
-private:
-    SNDFILE* sndfile = nullptr;
+
+    private:
+    SNDFILE *sndfile = nullptr;
     SF_INFO sfinfo;
 };
 

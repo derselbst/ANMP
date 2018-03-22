@@ -1,31 +1,32 @@
 #include "ChannelConfigView.h"
 #include "mainwindow.h"
 
-#include <QStandardItemModel>
-#include <QContextMenuEvent>
 #include <QAction>
+#include <QContextMenuEvent>
 #include <QMenu>
+#include <QStandardItemModel>
 
-ChannelConfigView::ChannelConfigView(QWidget * parent)
-    : QTableView(parent)
-{}
+ChannelConfigView::ChannelConfigView(QWidget *parent)
+: QTableView(parent)
+{
+}
 
 void ChannelConfigView::Select(Qt::CheckState state)
 {
-    QStandardItemModel* model = dynamic_cast<QStandardItemModel*>(this->model());
-    if(model==nullptr)
+    QStandardItemModel *model = dynamic_cast<QStandardItemModel *>(this->model());
+    if (model == nullptr)
     {
         return;
     }
 
-    QItemSelectionModel* sel = this->selectionModel();
+    QItemSelectionModel *sel = this->selectionModel();
     sel->clearSelection();
-    for(int i=0; i<model->rowCount(); i++)
+    for (int i = 0; i < model->rowCount(); i++)
     {
-        QStandardItem* item = model->item(i,0);
-        if(item->checkState() == state)
+        QStandardItem *item = model->item(i, 0);
+        if (item->checkState() == state)
         {
-            sel->select(model->index(i,0), QItemSelectionModel::Select);
+            sel->select(model->index(i, 0), QItemSelectionModel::Select);
         }
     }
 }
@@ -40,7 +41,6 @@ void ChannelConfigView::contextMenuEvent(QContextMenuEvent *event)
     // open the context menu slightly below where user clicked, else he might accidently trigger first menu element
     QPoint offset(0, 7);
     QPoint p = event->globalPos();
-    p+=offset;
+    p += offset;
     this->contextMenu->exec(p);
-
 }

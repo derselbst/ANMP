@@ -3,12 +3,12 @@
 // declares commonly used types
 
 #if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
-    #define restrict __restrict__
+#define restrict __restrict__
 #elif defined(_MSC_VER)
-    #define restrict __restrict
+#define restrict __restrict
 #else
-    #warning "Dont know how this compiler handles restrict pointers, refuse using them."
-    #define restrict 
+#warning "Dont know how this compiler handles restrict pointers, refuse using them."
+#define restrict
 #endif
 
 
@@ -16,10 +16,10 @@
 
 // includes all headers with no corresponding cpp file
 #include "AudioDriver.h"
-#include "SampleFormat.h"
 #include "CommonExceptions.h"
 #include "Event.h"
 #include "Nullable.h"
+#include "SampleFormat.h"
 #include "tree.h"
 
 // type used for all pcm buffers
@@ -55,18 +55,17 @@ typedef struct loop
     // as of 2015-08-01 never evaluated
     LoopType_t type = LoopType_t::Forward;
 
-    friend bool operator < (struct loop const& lhs, struct loop const& rhs)
+    friend bool operator<(struct loop const &lhs, struct loop const &rhs)
     {
         return lhs.start < rhs.start && lhs.stop <= rhs.start;
     }
 
-    friend bool operator == (struct loop const& lhs, struct loop const& rhs)
+    friend bool operator==(struct loop const &lhs, struct loop const &rhs)
     {
         return lhs.start == rhs.start &&
-               lhs.stop  == rhs.stop  &&
+               lhs.stop == rhs.stop &&
                lhs.count == rhs.count &&
-               lhs.type  == rhs.type;
+               lhs.type == rhs.type;
     }
 
 } loop_t;
-

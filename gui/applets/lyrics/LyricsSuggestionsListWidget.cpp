@@ -31,89 +31,87 @@
 #include <QGraphicsLinearLayout>
 #include <QGraphicsProxyWidget>
 
-LyricsSuggestionsListWidget::LyricsSuggestionsListWidget( QGraphicsWidget *parent )
-    : Plasma::ScrollWidget( parent )
+LyricsSuggestionsListWidget::LyricsSuggestionsListWidget(QGraphicsWidget *parent)
+: Plasma::ScrollWidget(parent)
 {
-    QGraphicsWidget *viewport = new QGraphicsWidget( this );
-    m_layout = new QGraphicsLinearLayout( Qt::Vertical, viewport );
-    setWidget( viewport );
+    QGraphicsWidget *viewport = new QGraphicsWidget(this);
+    m_layout = new QGraphicsLinearLayout(Qt::Vertical, viewport);
+    setWidget(viewport);
 }
 
 LyricsSuggestionsListWidget::~LyricsSuggestionsListWidget()
-{}
-
-void
-LyricsSuggestionsListWidget::add( const LyricsSuggestion &suggestion )
 {
-    QGraphicsWidget *sep = new Plasma::Separator;
-    LyricsSuggestionItem *item = new LyricsSuggestionItem( suggestion );
-    item->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Maximum );
-    m_layout->addItem( item );
-    m_layout->addItem( sep );
-    m_items.append( item );
-    m_separators.append( sep );
-    connect( item, SIGNAL(selected(LyricsSuggestion)), SIGNAL(selected(LyricsSuggestion)) );
 }
 
-void
-LyricsSuggestionsListWidget::clear()
+void LyricsSuggestionsListWidget::add(const LyricsSuggestion &suggestion)
 {
-    qDeleteAll( m_items );
-    qDeleteAll( m_separators );
+    QGraphicsWidget *sep = new Plasma::Separator;
+    LyricsSuggestionItem *item = new LyricsSuggestionItem(suggestion);
+    item->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+    m_layout->addItem(item);
+    m_layout->addItem(sep);
+    m_items.append(item);
+    m_separators.append(sep);
+    connect(item, SIGNAL(selected(LyricsSuggestion)), SIGNAL(selected(LyricsSuggestion)));
+}
+
+void LyricsSuggestionsListWidget::clear()
+{
+    qDeleteAll(m_items);
+    qDeleteAll(m_separators);
     m_items.clear();
     m_separators.clear();
 }
 
-LyricsSuggestionItem::LyricsSuggestionItem( const LyricsSuggestion &suggestion, QGraphicsItem *parent )
-    : QGraphicsWidget( parent )
-    , m_data( suggestion )
+LyricsSuggestionItem::LyricsSuggestionItem(const LyricsSuggestion &suggestion, QGraphicsItem *parent)
+: QGraphicsWidget(parent), m_data(suggestion)
 {
-    QGraphicsProxyWidget *titleProxy = new QGraphicsProxyWidget( this );
-    KSqueezedTextLabel *titleLabel = new KSqueezedTextLabel( m_data.title );
-    titleLabel->setTextElideMode( Qt::ElideRight );
-    titleLabel->setAttribute( Qt::WA_NoSystemBackground );
-    titleLabel->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Preferred );
-    titleProxy->setWidget( titleLabel );
+    QGraphicsProxyWidget *titleProxy = new QGraphicsProxyWidget(this);
+    KSqueezedTextLabel *titleLabel = new KSqueezedTextLabel(m_data.title);
+    titleLabel->setTextElideMode(Qt::ElideRight);
+    titleLabel->setAttribute(Qt::WA_NoSystemBackground);
+    titleLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    titleProxy->setWidget(titleLabel);
     QFont font = titleLabel->font();
-    font.setBold( true );
-    titleLabel->setFont( font );
+    font.setBold(true);
+    titleLabel->setFont(font);
 
     const KUrl &url = m_data.url;
     QString urlText = QString("<a href=\"%1\">%2</a>").arg(url.url(), url.host());
-    Plasma::Label *urlLabel = new Plasma::Label( this );
-    urlLabel->setText( urlText );
-    urlLabel->setSizePolicy( QSizePolicy::Maximum, QSizePolicy::Preferred );
-    urlLabel->nativeWidget()->setOpenExternalLinks( true );
-    urlLabel->nativeWidget()->setTextInteractionFlags( Qt::TextBrowserInteraction );
-    urlLabel->nativeWidget()->setToolTip( url.url() );
+    Plasma::Label *urlLabel = new Plasma::Label(this);
+    urlLabel->setText(urlText);
+    urlLabel->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
+    urlLabel->nativeWidget()->setOpenExternalLinks(true);
+    urlLabel->nativeWidget()->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    urlLabel->nativeWidget()->setToolTip(url.url());
 
-    QString artist = i18n( "artist: %1", m_data.artist );
-    QGraphicsProxyWidget *artistProxy = new QGraphicsProxyWidget( this );
-    KSqueezedTextLabel *artistLabel = new KSqueezedTextLabel( artist );
-    artistLabel->setTextElideMode( Qt::ElideRight );
-    artistLabel->setAttribute( Qt::WA_NoSystemBackground );
-    artistLabel->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Preferred );
-    artistProxy->setWidget( artistLabel );
+    QString artist = i18n("artist: %1", m_data.artist);
+    QGraphicsProxyWidget *artistProxy = new QGraphicsProxyWidget(this);
+    KSqueezedTextLabel *artistLabel = new KSqueezedTextLabel(artist);
+    artistLabel->setTextElideMode(Qt::ElideRight);
+    artistLabel->setAttribute(Qt::WA_NoSystemBackground);
+    artistLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    artistProxy->setWidget(artistLabel);
 
-    Plasma::IconWidget *lyricsIcon( new Plasma::IconWidget(KIcon("amarok_lyrics"), QString(), this) );
-    lyricsIcon->setDrawBackground( true );
-    connect( lyricsIcon, SIGNAL(clicked()), SLOT(onClicked()) );
+    Plasma::IconWidget *lyricsIcon(new Plasma::IconWidget(KIcon("amarok_lyrics"), QString(), this));
+    lyricsIcon->setDrawBackground(true);
+    connect(lyricsIcon, SIGNAL(clicked()), SLOT(onClicked()));
 
-    QGraphicsGridLayout *layout = new QGraphicsGridLayout( this );
-    layout->setVerticalSpacing( 0 );
-    layout->addItem( lyricsIcon, 0, 0, 3, 1, Qt::AlignCenter );
-    layout->addItem( titleProxy, 0, 1, Qt::AlignLeft );
-    layout->addItem( artistProxy, 1, 1, Qt::AlignLeft );
-    layout->addItem( urlLabel, 2, 1, Qt::AlignLeft );
+    QGraphicsGridLayout *layout = new QGraphicsGridLayout(this);
+    layout->setVerticalSpacing(0);
+    layout->addItem(lyricsIcon, 0, 0, 3, 1, Qt::AlignCenter);
+    layout->addItem(titleProxy, 0, 1, Qt::AlignLeft);
+    layout->addItem(artistProxy, 1, 1, Qt::AlignLeft);
+    layout->addItem(urlLabel, 2, 1, Qt::AlignLeft);
 }
 
 LyricsSuggestionItem::~LyricsSuggestionItem()
-{}
-
-void
-LyricsSuggestionItem::onClicked()
 {
-    emit selected( m_data );
+}
+
+void LyricsSuggestionItem::onClicked()
+{
+    emit selected(m_data);
 }
 
 #include "LyricsSuggestionsListWidget.moc"

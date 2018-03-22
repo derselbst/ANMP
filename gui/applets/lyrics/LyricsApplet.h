@@ -29,40 +29,40 @@ class LyricsApplet : public Context::Applet
 {
     Q_OBJECT
 
-public:
-    LyricsApplet( QObject* parent, const QVariantList& args );
+    public:
+    LyricsApplet(QObject *parent, const QVariantList &args);
     ~LyricsApplet();
 
     bool hasHeightForWidth() const;
 
-public slots:
+    public slots:
     virtual void init();
-    void connectSource( const QString& source );
-    void dataUpdated( const QString& name, const Plasma::DataEngine::Data& data );
+    void connectSource(const QString &source);
+    void dataUpdated(const QString &name, const Plasma::DataEngine::Data &data);
     void refreshLyrics();
 
-protected:
-    void createConfigurationInterface( KConfigDialog *parent );
-    void keyPressEvent( QKeyEvent *e );
+    protected:
+    void createConfigurationInterface(KConfigDialog *parent);
+    void keyPressEvent(QKeyEvent *e);
 
-private:
+    private:
     LyricsAppletPrivate *const d_ptr;
-    Q_DECLARE_PRIVATE( LyricsApplet )
+    Q_DECLARE_PRIVATE(LyricsApplet)
 
-    Q_PRIVATE_SLOT( d_ptr, void _editLyrics() )
-    Q_PRIVATE_SLOT( d_ptr, void _changeLyricsFont() )
-    Q_PRIVATE_SLOT( d_ptr, void _changeLyricsAlignment() )
-    Q_PRIVATE_SLOT( d_ptr, void _closeLyrics() )
-    Q_PRIVATE_SLOT( d_ptr, void _saveLyrics() )
-    Q_PRIVATE_SLOT( d_ptr, void _toggleAutoScroll() )
-    Q_PRIVATE_SLOT( d_ptr, void _suggestionChosen(LyricsSuggestion) )
-    Q_PRIVATE_SLOT( d_ptr, void _unsetCursor() )
-    Q_PRIVATE_SLOT( d_ptr, void _trackDataChanged( Meta::TrackPtr ) )
-    Q_PRIVATE_SLOT( d_ptr, void _trackPositionChanged( qint64 position, bool userSeek ) )
-    Q_PRIVATE_SLOT( d_ptr, void _lyricsChangedMessageButtonPressed(const Plasma::MessageButton) )
-    Q_PRIVATE_SLOT( d_ptr, void _refetchMessageButtonPressed(const Plasma::MessageButton) )
+    Q_PRIVATE_SLOT(d_ptr, void _editLyrics())
+    Q_PRIVATE_SLOT(d_ptr, void _changeLyricsFont())
+    Q_PRIVATE_SLOT(d_ptr, void _changeLyricsAlignment())
+    Q_PRIVATE_SLOT(d_ptr, void _closeLyrics())
+    Q_PRIVATE_SLOT(d_ptr, void _saveLyrics())
+    Q_PRIVATE_SLOT(d_ptr, void _toggleAutoScroll())
+    Q_PRIVATE_SLOT(d_ptr, void _suggestionChosen(LyricsSuggestion))
+    Q_PRIVATE_SLOT(d_ptr, void _unsetCursor())
+    Q_PRIVATE_SLOT(d_ptr, void _trackDataChanged(Meta::TrackPtr))
+    Q_PRIVATE_SLOT(d_ptr, void _trackPositionChanged(qint64 position, bool userSeek))
+    Q_PRIVATE_SLOT(d_ptr, void _lyricsChangedMessageButtonPressed(const Plasma::MessageButton))
+    Q_PRIVATE_SLOT(d_ptr, void _refetchMessageButtonPressed(const Plasma::MessageButton))
 };
 
-AMAROK_EXPORT_APPLET( lyrics, LyricsApplet )
+AMAROK_EXPORT_APPLET(lyrics, LyricsApplet)
 
 #endif

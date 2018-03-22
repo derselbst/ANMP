@@ -1,9 +1,9 @@
 #ifndef PLAYLISTFACTORY_H
 #define PLAYLISTFACTORY_H
 
-#include <string>
 #include "Nullable.h"
 #include "SongInfo.h"
+#include <string>
 
 using namespace std;
 
@@ -19,14 +19,13 @@ class IPlaylist;
 
 class PlaylistFactory
 {
-public:
-
+    public:
     // no object
     PlaylistFactory() = delete;
     // no copy
-    PlaylistFactory(const PlaylistFactory&) = delete;
+    PlaylistFactory(const PlaylistFactory &) = delete;
     // no assign
-    PlaylistFactory& operator=(const PlaylistFactory&) = delete;
+    PlaylistFactory &operator=(const PlaylistFactory &) = delete;
 
 
     /**
@@ -38,18 +37,18 @@ public:
      * @param  len see Song::fileLen
      * @param  overridingMetadata not the metadata from Song::buildMetadata() but the metadata specified here will be used
      */
-    static bool addSong (IPlaylist& playlist,
-                         const string filePath,
-                         Nullable<size_t> offset = Nullable<size_t>(),
-                         Nullable<size_t> len = Nullable<size_t>(),
-                         Nullable<SongInfo> overridingMetadata = Nullable<SongInfo>());
+    static bool addSong(IPlaylist &playlist,
+                        const string filePath,
+                        Nullable<size_t> offset = Nullable<size_t>(),
+                        Nullable<size_t> len = Nullable<size_t>(),
+                        Nullable<SongInfo> overridingMetadata = Nullable<SongInfo>());
 
 #ifdef USE_CUE
-    static void parseCue (IPlaylist& playlist, const string&filePath);
+    static void parseCue(IPlaylist &playlist, const string &filePath);
 #endif
 
-    template<typename T> 
-    static void tryWith(Song* (&pcm), const string& filePath, Nullable<size_t> offset, Nullable<size_t> len);
+    template<typename T>
+    static void tryWith(Song *(&pcm), const string &filePath, Nullable<size_t> offset, Nullable<size_t> len);
 };
 
 

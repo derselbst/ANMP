@@ -16,46 +16,44 @@ typedef struct _snd_pcm snd_pcm_t;
   */
 class ALSAOutput : public IAudioOutput
 {
-public:
-
-    ALSAOutput ();
+    public:
+    ALSAOutput();
 
     // forbid copying
-    ALSAOutput(ALSAOutput const&) = delete;
-    ALSAOutput& operator=(ALSAOutput const&) = delete;
+    ALSAOutput(ALSAOutput const &) = delete;
+    ALSAOutput &operator=(ALSAOutput const &) = delete;
 
-    virtual ~ALSAOutput ();
+    virtual ~ALSAOutput();
 
 
     // interface methods declaration
 
-    void open () override;
+    void open() override;
 
-    void init (SongFormat& format, bool realtime = false) override;
+    void init(SongFormat &format, bool realtime = false) override;
 
-    void close () override;
+    void close() override;
 
-    int write (const float* buffer, frame_t frames) override;
+    int write(const float *buffer, frame_t frames) override;
 
-    int write (const int16_t* buffer, frame_t frames) override;
+    int write(const int16_t *buffer, frame_t frames) override;
 
-    int write (const int32_t* buffer, frame_t frames) override;
+    int write(const int32_t *buffer, frame_t frames) override;
 
-    void start () override;
-    void stop () override;
-    
+    void start() override;
+    void stop() override;
+
     void SetOutputChannels(Nullable<uint16_t>) override;
 
-private:
-
+    private:
     int epipe_count = 0;
-    snd_pcm_t* alsa_dev = nullptr;
+    snd_pcm_t *alsa_dev = nullptr;
 
-    void _init (SongFormat& format, bool realtime = false);
-    template<typename T> int write(const T* buffer, frame_t frames);
-    void drain ();
-    void drop ();
-
+    void _init(SongFormat &format, bool realtime = false);
+    template<typename T>
+    int write(const T *buffer, frame_t frames);
+    void drain();
+    void drop();
 };
 
 #endif // ALSAOUTPUT_H

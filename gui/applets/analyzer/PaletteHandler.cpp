@@ -23,72 +23,72 @@
 
 namespace The
 {
-PaletteHandler* paletteHandler()
+    PaletteHandler *paletteHandler()
+    {
+        static PaletteHandler s_PaletteHandler_instance;
+
+        return &s_PaletteHandler_instance;
+    }
+}
+
+
+PaletteHandler::PaletteHandler(QObject *parent)
+: QObject(parent)
 {
-    static PaletteHandler s_PaletteHandler_instance;
-    
-    return &s_PaletteHandler_instance;
 }
-}
-
-
-PaletteHandler::PaletteHandler( QObject* parent )
-    : QObject( parent )
-{}
 
 
 PaletteHandler::~PaletteHandler()
-{}
-
-void
-PaletteHandler::setPalette( const QPalette & palette )
 {
-    m_palette = palette;
-    emit( newPalette( m_palette ) );
 }
 
-void
-PaletteHandler::updateItemView( QAbstractItemView * view )
+void PaletteHandler::setPalette(const QPalette &palette)
+{
+    m_palette = palette;
+    emit(newPalette(m_palette));
+}
+
+void PaletteHandler::updateItemView(QAbstractItemView *view)
 {
     QPalette p = m_palette;
     QColor c;
 
     // Widgets with keyboard focus become slightly transparent
-    c = p.color( QPalette::Active, QPalette::AlternateBase );
-    c.setAlpha( 95 );
-    p.setColor( QPalette::Active, QPalette::AlternateBase, c );
+    c = p.color(QPalette::Active, QPalette::AlternateBase);
+    c.setAlpha(95);
+    p.setColor(QPalette::Active, QPalette::AlternateBase, c);
 
     // For widgets that don't have keyboard focus reduce the opacity further
-    c = p.color( QPalette::Inactive, QPalette::AlternateBase );
-    c.setAlpha( 75 );
-    p.setColor( QPalette::Inactive, QPalette::AlternateBase, c );
+    c = p.color(QPalette::Inactive, QPalette::AlternateBase);
+    c.setAlpha(75);
+    p.setColor(QPalette::Inactive, QPalette::AlternateBase, c);
 
     // Base color is used during the expand/shrink animation. We set it
     // to transparent so that it won't interfere with our custom colors.
-    p.setColor( QPalette::Active, QPalette::Base, Qt::transparent );
-    p.setColor( QPalette::Inactive, QPalette::Base, Qt::transparent );
+    p.setColor(QPalette::Active, QPalette::Base, Qt::transparent);
+    p.setColor(QPalette::Inactive, QPalette::Base, Qt::transparent);
 
-    view->setPalette( p );
+    view->setPalette(p);
 
-    if ( QWidget *vp = view->viewport() )
+    if (QWidget *vp = view->viewport())
     {
         // don't paint background - do NOT use Qt::transparent etc.
-        vp->setAutoFillBackground( false );
-        vp->setBackgroundRole( QPalette::Window );
-        vp->setForegroundRole( QPalette::WindowText );
+        vp->setAutoFillBackground(false);
+        vp->setBackgroundRole(QPalette::Window);
+        vp->setForegroundRole(QPalette::WindowText);
         // erase custom viewport palettes, shall be "transparent"
         vp->setPalette(QPalette());
     }
 }
 
 QColor
-PaletteHandler::foregroundColor( const QPainter *p, bool selected )
+PaletteHandler::foregroundColor(const QPainter *p, bool selected)
 {
     QPalette pal;
     QPalette::ColorRole fg = QPalette::WindowText;
-    if ( p->device() && p->device()->devType() == QInternal::Widget)
+    if (p->device() && p->device()->devType() == QInternal::Widget)
     {
-        QWidget *w = static_cast<QWidget*>( p->device() );
+        QWidget *w = static_cast<QWidget *>(p->device());
         fg = w->foregroundRole();
         pal = w->palette();
     }
@@ -97,12 +97,12 @@ PaletteHandler::foregroundColor( const QPainter *p, bool selected )
         pal = palette();
     }
 
-    if( !selected )
+    if (!selected)
     {
-        return pal.color( QPalette::Active, fg );
+        return pal.color(QPalette::Active, fg);
     }
 
-    return pal.color( QPalette::Active, QPalette::HighlightedText );
+    return pal.color(QPalette::Active, QPalette::HighlightedText);
 }
 
 QPalette
@@ -112,18 +112,18 @@ PaletteHandler::palette() const
 }
 
 QColor
-PaletteHandler::highlightColor( qreal saturationPercent, qreal valuePercent )
+PaletteHandler::highlightColor(qreal saturationPercent, qreal valuePercent)
 {
-    QColor highlight = The::paletteHandler()->palette().color( QPalette::Active, QPalette::Highlight );
+    QColor highlight = The::paletteHandler()->palette().color(QPalette::Active, QPalette::Highlight);
     qreal saturation = highlight.saturationF();
     saturation *= saturationPercent;
     qreal value = highlight.valueF();
     value *= valuePercent;
-    if( value > 1.0 )
+    if (value > 1.0)
     {
         value = 1.0;
     }
-    highlight.setHsvF( highlight.hueF(), saturation, value, highlight.alphaF() );
+    highlight.setHsvF(highlight.hueF(), saturation, value, highlight.alphaF());
 
     return highlight;
 }
@@ -131,23 +131,23 @@ PaletteHandler::highlightColor( qreal saturationPercent, qreal valuePercent )
 QColor
 PaletteHandler::backgroundColor()
 {
-    QColor base = The::paletteHandler()->palette().color( QPalette::Active, QPalette::Base );
-    base.setHsvF( highlightColor().hueF(), base.saturationF(), base.valueF() );
+    QColor base = The::paletteHandler()->palette().color(QPalette::Active, QPalette::Base);
+    base.setHsvF(highlightColor().hueF(), base.saturationF(), base.valueF());
     return base;
 }
 
 QColor
 PaletteHandler::alternateBackgroundColor()
 {
-    const QColor alternate = The::paletteHandler()->palette().color( QPalette::Active, QPalette::AlternateBase );
-    const QColor window    = The::paletteHandler()->palette().color( QPalette::Active, QPalette::Window );
-    const QColor base      = backgroundColor();
+    const QColor alternate = The::paletteHandler()->palette().color(QPalette::Active, QPalette::AlternateBase);
+    const QColor window = The::paletteHandler()->palette().color(QPalette::Active, QPalette::Window);
+    const QColor base = backgroundColor();
 
-    const int alternateDist = abs( alternate.value() - base.value() );
-    const int windowDist    = abs( window.value()    - base.value() );
+    const int alternateDist = abs(alternate.value() - base.value());
+    const int windowDist = abs(window.value() - base.value());
 
     QColor result = alternateDist > windowDist ? alternate : window;
-    result.setHsvF( highlightColor().hueF(), highlightColor().saturationF(), result.valueF() );
+    result.setHsvF(highlightColor().hueF(), highlightColor().saturationF(), result.valueF());
     return result;
 }
 

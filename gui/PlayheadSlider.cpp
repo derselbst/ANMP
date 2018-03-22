@@ -3,10 +3,12 @@
 
 #include <QMouseEvent>
 
-PlayheadSlider::PlayheadSlider( QWidget *parent ) : QSlider(parent)
-{}
+PlayheadSlider::PlayheadSlider(QWidget *parent)
+: QSlider(parent)
+{
+}
 
-void PlayheadSlider::mousePressEvent(QMouseEvent * event)
+void PlayheadSlider::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton)
     {
@@ -17,17 +19,17 @@ void PlayheadSlider::mousePressEvent(QMouseEvent * event)
 
         if (this->orientation() == Qt::Vertical)
         {
-            emit this->sliderMoved(min + ((max-min) * (height - event->y())) / height);
+            emit this->sliderMoved(min + ((max - min) * (height - event->y())) / height);
         }
         else
         {
-            int newVal = static_cast<int>(min + ((max-min) * 1.0 * event->x()) / width);
+            int newVal = static_cast<int>(min + ((max - min) * 1.0 * event->x()) / width);
             emit this->sliderMoved(newVal);
         }
 
         event->accept();
     }
-    
+
     QSlider::mousePressEvent(event);
 }
 

@@ -13,40 +13,38 @@ class StringFormatter
 {
     // Constructors/Destructors
     //
-  
+
     StringFormatter();
-    
+
     // no copy
-    StringFormatter(const StringFormatter&) = delete;
+    StringFormatter(const StringFormatter &) = delete;
     // no assign
-    StringFormatter& operator=(const StringFormatter&) = delete;
+    StringFormatter &operator=(const StringFormatter &) = delete;
 
     string pattern;
-    
-    void UpdateReplacements(const SongInfo& info);
-    
-public:
-    
+
+    void UpdateReplacements(const SongInfo &info);
+
+    public:
     struct wildcard_t
     {
         string wildcard;
-        const string* replacement;
-    };    
+        const string *replacement;
+    };
     std::vector<StringFormatter::wildcard_t> wildcards;
 
-    
-    static StringFormatter& Singleton();
-    
+
+    static StringFormatter &Singleton();
+
     /**
      * based on the pattern set by SetFormat(), returns a unique filename suitable for exporting the given Song to
      * 
      * if no such pattern was specified, returns a unique string based on Song->Filename
      */
-    string GetFilename(const Song* song, string extension="");
-    
+    string GetFilename(const Song *song, string extension = "");
+
     /**
      * sets the format pattern to be applied for GetFilename()
      */
     void SetFormat(string pattern) noexcept;
-
 };

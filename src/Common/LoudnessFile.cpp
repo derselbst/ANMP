@@ -18,14 +18,14 @@ string LoudnessFile::toebur128Filename(string filePath)
 
 static const double Target = 1.0f;
 
-void LoudnessFile::write(string filePath, const float& gainCorrection) noexcept
+void LoudnessFile::write(string filePath, const float &gainCorrection) noexcept
 {
     filePath = toebur128Filename(filePath);
-    
+
     std::lock_guard<std::mutex> lock(LoudnessFile::mtx);
-    
-    FILE* f = fopen(filePath.c_str(), "wb");
-    if(f==nullptr)
+
+    FILE *f = fopen(filePath.c_str(), "wb");
+    if (f == nullptr)
     {
         // TODO: log
         return;
@@ -45,11 +45,11 @@ float LoudnessFile::read(string filePath) noexcept
     filePath = toebur128Filename(filePath);
 
     std::lock_guard<std::mutex> lock(LoudnessFile::mtx);
-    
-    FILE* f = fopen(filePath.c_str(), "rb");
-    
+
+    FILE *f = fopen(filePath.c_str(), "rb");
+
     float gain = Target;
-    if(f!=nullptr)
+    if (f != nullptr)
     {
         fread(&gain, 1, sizeof(float), f);
 

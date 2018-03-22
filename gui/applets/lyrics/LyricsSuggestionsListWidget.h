@@ -34,48 +34,48 @@ class LyricsSuggestionsListWidget : public Plasma::ScrollWidget
 {
     Q_OBJECT
 
-public:
-    explicit LyricsSuggestionsListWidget( QGraphicsWidget *parent = 0 );
+    public:
+    explicit LyricsSuggestionsListWidget(QGraphicsWidget *parent = 0);
     ~LyricsSuggestionsListWidget();
 
-    void add( const LyricsSuggestion &suggestion );
+    void add(const LyricsSuggestion &suggestion);
 
     void clear();
 
-signals:
-    void selected( const LyricsSuggestion &suggestion );
+    signals:
+    void selected(const LyricsSuggestion &suggestion);
 
-private:
-    QList<LyricsSuggestionItem*> m_items;
-    QList<QGraphicsWidget*> m_separators;
+    private:
+    QList<LyricsSuggestionItem *> m_items;
+    QList<QGraphicsWidget *> m_separators;
     QGraphicsLinearLayout *m_layout;
-    Q_DISABLE_COPY( LyricsSuggestionsListWidget )
+    Q_DISABLE_COPY(LyricsSuggestionsListWidget)
 };
 
 class LyricsSuggestionItem : public QGraphicsWidget
 {
     Q_OBJECT
-    Q_PROPERTY( KUrl url READ url )
-    Q_PROPERTY( QString title READ title )
-    Q_PROPERTY( QString artist READ artist )
+    Q_PROPERTY(KUrl url READ url)
+    Q_PROPERTY(QString title READ title)
+    Q_PROPERTY(QString artist READ artist)
 
-public:
-    LyricsSuggestionItem( const LyricsSuggestion &suggestion, QGraphicsItem *parent = 0 );
+    public:
+    LyricsSuggestionItem(const LyricsSuggestion &suggestion, QGraphicsItem *parent = 0);
     ~LyricsSuggestionItem();
 
     QString artist() const;
     QString title() const;
     KUrl url() const;
 
-signals:
-    void selected( const LyricsSuggestion &suggestion );
+    signals:
+    void selected(const LyricsSuggestion &suggestion);
 
-private slots:
+    private slots:
     void onClicked();
 
-private:
+    private:
     LyricsSuggestion m_data;
-    Q_DISABLE_COPY( LyricsSuggestionItem )
+    Q_DISABLE_COPY(LyricsSuggestionItem)
 };
 
 inline QString LyricsSuggestionItem::title() const
@@ -93,6 +93,6 @@ inline KUrl LyricsSuggestionItem::url() const
     return m_data.url;
 }
 
-Q_DECLARE_METATYPE( LyricsSuggestion )
+Q_DECLARE_METATYPE(LyricsSuggestion)
 
 #endif // LYRICS_SUGGESTIONS_LIST_WIDGET_H

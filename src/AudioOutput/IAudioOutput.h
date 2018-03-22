@@ -1,7 +1,7 @@
 #pragma once
 
-#include "types.h"
 #include "SongFormat.h"
+#include "types.h"
 
 #include <cstdint>
 
@@ -24,16 +24,15 @@ using namespace std;
   */
 class IAudioOutput
 {
-protected:
+    protected:
     // this is an interface, even if there were no pure virtual methods, allow
     // construction for child classes only
     IAudioOutput();
 
-public:
-
+    public:
     // no copy or assignment
-    IAudioOutput(IAudioOutput const&) = delete;
-    IAudioOutput& operator=(IAudioOutput const&) = delete;
+    IAudioOutput(IAudioOutput const &) = delete;
+    IAudioOutput &operator=(IAudioOutput const &) = delete;
 
     // virtual destructor for proper cleanup
     virtual ~IAudioOutput();
@@ -44,7 +43,7 @@ public:
      *
      * can and shall be called initially (i.e. after object creation). can only be called again after a call to close()
      */
-    virtual void open () = 0;
+    virtual void open() = 0;
 
     /**
      * initializes a sound device, e.g. set samplerate, channels, i.e. settings that can change while running ANMP
@@ -53,14 +52,14 @@ public:
      * 
      * a succeding call shall leave the PCM stream in a state in which it is possible to call this->write(). else an exception shall be thrown.
      */
-    virtual void init (SongFormat& format, bool realtime=false) = 0;
+    virtual void init(SongFormat &format, bool realtime = false) = 0;
 
     /**
      * Starts the PCM stream. Called only when "Play" button is pressed (i.e. playback shall start)
      *
      * If the stream is already started, no error shall be risen.
      */
-    virtual void start () = 0;
+    virtual void start() = 0;
 
     /**
      * Stops the PCM stream immediately, i.e. when returning from this->stop() all pcm must have been processed, favourably by dropping them at once, leaving no thread residing within this->write()
@@ -69,28 +68,28 @@ public:
      *
      * If the stream is already stopped, no error shall be risen.
      */
-    virtual void stop () = 0;
+    virtual void stop() = 0;
 
     /**
      * closes the device, frees all ressources allocated by this->open()
      *
      * Multiple calls to this->close() without corresponding calls to this->open() shall raise no error.
      */
-    virtual void close () = 0;
+    virtual void close() = 0;
 
     /**
      * sets the playback volume
      * @param vol volume usually ranged [0.0,1.0]
      */
     void setVolume(float vol);
-    
+
     // gets and sets the number of mixdown channels, all non muted voices of a song get mixed to
     Nullable<uint16_t> GetOutputChannels();
     // only call this when playback is paused, i.e. no call to this->write() is pending
     virtual void SetOutputChannels(Nullable<uint16_t>);
-    
-    void SetVoiceConfig(decltype(SongFormat::Voices) voices, decltype(SongFormat::VoiceChannels)& voiceChannels);
-    void SetMuteMask(decltype(SongFormat::VoiceIsMuted)& mask);
+
+    void SetVoiceConfig(decltype(SongFormat::Voices) voices, decltype(SongFormat::VoiceChannels) &voiceChannels);
+    void SetMuteMask(decltype(SongFormat::VoiceIsMuted) &mask);
 
     /**
      * pushes the pcm pointed to by frameBuffer to the underlying audio driver (or at least schedules it for pushing/playing)
@@ -110,19 +109,19 @@ public:
      *
      * @return see private write()
      */
-    int write (const pcm_t* frameBuffer, frame_t frames, int offset);
+    int write(const pcm_t *frameBuffer, frame_t frames, int offset);
 
 
-protected:
+    protected:
     SongFormat currentFormat;
-    
+
     // number of audio channels all the different song's voices will be mixed to (by this->Mix())
     // if it has no value, no mixing takes place
     Nullable<uint16_t> outputChannels;
 
     // the current volume [0,1.0] to use, i.e. a factor by that the PCM gets amplified.
     float volume = 1.0f;
-    
+
     /**
      * mixes all the available audio channels of pcm provided by @p in into the @p out pcm buffer
      * 
@@ -132,8 +131,8 @@ protected:
      * @param out mixed, amplified and interleaved output pcm buffer.
      * @param outChannels number of audio channels in @p out buffer
      */
-    template<typename TIN, typename TOUT=TIN>
-    void Mix(const frame_t frames, const TIN *restrict in, const SongFormat& inputFormat, TOUT *restrict out, const uint16_t outChannels) noexcept;
+    template<typename TIN, typename TOUT = TIN>
+    void Mix(const frame_t frames, const TIN *restrict in, const SongFormat &inputFormat, TOUT *restrict out, const uint16_t outChannels) noexcept;
 
     /**
      * pushes the pcm pointed to by buffer to the underlying audio driver and by that causes it to play
@@ -149,7 +148,7 @@ protected:
      *
      * @warning you can return a number smaller "frames" (but greater 0), however this case can only berecovered, if the whole song is hold in memory. you should better return 0 and play nothing, if you face such a problem.
      */
-    virtual int write (const float* buffer, frame_t frames) = 0;
-    virtual int write (const int16_t* buffer, frame_t frames) = 0;
-    virtual int write (const int32_t* buffer, frame_t frames) = 0;
+    virtual int write(const float *buffer, frame_t frames) = 0;
+    virtual int write(const int16_t *buffer, frame_t frames) = 0;
+    virtual int write(const int32_t *buffer, frame_t frames) = 0;
 };

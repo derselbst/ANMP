@@ -11,14 +11,14 @@ class Config;
 
 namespace Ui
 {
-class ConfigDialog;
+    class ConfigDialog;
 }
 
 class ConfigDialog : public QDialog
 {
     Q_OBJECT
 
-public:
+    public:
     explicit ConfigDialog(QWidget *parent = 0);
     ~ConfigDialog();
 
@@ -26,22 +26,22 @@ public:
     // once the dialog gets accepted: holds the old settings from gConfig
     Config newConfig;
 
-protected:
-    void showEvent(QShowEvent* event) override;
-    void closeEvent(QCloseEvent* event) override;
+    protected:
+    void showEvent(QShowEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
-private slots:
+    private slots:
 
     void on_comboBoxAudioDriver_currentIndexChanged(int index);
 
     void on_browseSF2_clicked();
 
-    void buttonBoxClicked(QAbstractButton* btn);
+    void buttonBoxClicked(QAbstractButton *btn);
 
     void accept() override;
     void done(int r) override;
 
-private:
+    private:
     // whether this dialog is currently shown
     bool isShown = false;
     Ui::ConfigDialog *ui = nullptr;

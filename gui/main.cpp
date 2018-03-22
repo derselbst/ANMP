@@ -1,5 +1,5 @@
-#include "mainwindow.h"
 #include "anmp.hpp"
+#include "mainwindow.h"
 
 #include <QApplication>
 #include <QMessageBox>
@@ -8,23 +8,24 @@
 int main(int argc, char *argv[])
 {
     gConfig.Load();
-    
+
     QApplication a(argc, argv);
-    
+
     if (!QDBusConnection::sessionBus().isConnected())
     {
-        CLOG(LogLevel_t::Warning, "Cannot connect to the D-Bus session bus.\n""Please check your system settings and try again.\n");
+        CLOG(LogLevel_t::Warning, "Cannot connect to the D-Bus session bus.\n"
+                                  "Please check your system settings and try again.\n");
     }
-    
+
     MainWindow w;
     w.show();
 
-    int ret=-1;
+    int ret = -1;
     try
     {
         ret = a.exec();
     }
-    catch(const logic_error& e)
+    catch (const logic_error &e)
     {
         w.hide();
 
@@ -36,7 +37,7 @@ int main(int argc, char *argv[])
         msgBox.setDetailedText(e.what());
         msgBox.exec();
     }
-    catch(const runtime_error& e)
+    catch (const runtime_error &e)
     {
         w.hide();
 
@@ -48,7 +49,7 @@ int main(int argc, char *argv[])
         msgBox.setDetailedText(e.what());
         msgBox.exec();
     }
-    catch(const exception& e)
+    catch (const exception &e)
     {
         w.hide();
 
@@ -60,7 +61,7 @@ int main(int argc, char *argv[])
         msgBox.setDetailedText(e.what());
         msgBox.exec();
     }
-    catch(...) // for proper stack unwinding
+    catch (...) // for proper stack unwinding
     {
         w.hide();
 

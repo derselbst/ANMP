@@ -11,35 +11,34 @@
   */
 class ModPlugWrapper : public StandardWrapper<int32_t>
 {
-public:
+    public:
     ModPlugWrapper(string filename);
     ModPlugWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
     void initAttr();
 
     // forbid copying
-    ModPlugWrapper(ModPlugWrapper const&) = delete;
-    ModPlugWrapper& operator=(ModPlugWrapper const&) = delete;
+    ModPlugWrapper(ModPlugWrapper const &) = delete;
+    ModPlugWrapper &operator=(ModPlugWrapper const &) = delete;
 
-    virtual ~ModPlugWrapper ();
+    virtual ~ModPlugWrapper();
 
     // interface methods declaration
 
-    void open () override;
+    void open() override;
 
-    void close () noexcept override;
+    void close() noexcept override;
 
-    void fillBuffer () override;
+    void fillBuffer() override;
 
-    frame_t getFrames () const override;
+    frame_t getFrames() const override;
 
-    void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
+    void render(pcm_t *bufferToFill, frame_t framesToRender = 0) override;
 
-private:
+    private:
     static ModPlug_Settings settings;
-    
-    FILE* infile = nullptr;
-    unsigned char * infilebuf = nullptr;
-    int infilelen = 0;
-    ModPlugFile* handle = nullptr;
-};
 
+    FILE *infile = nullptr;
+    unsigned char *infilebuf = nullptr;
+    int infilelen = 0;
+    ModPlugFile *handle = nullptr;
+};

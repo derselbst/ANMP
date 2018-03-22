@@ -43,21 +43,21 @@
 template<typename... Args>
 class Event
 {
-    std::map<void*, void(*)(void*, Args...)> callbacks;
+    std::map<void *, void (*)(void *, Args...)> callbacks;
 
-public:
-    Event<Args...>& operator+=(std::pair<void*, void(*)(void*, Args...)>);
-    Event<Args...>& operator-=(std::pair<void*, void(*)(void*, Args...)>);
-    Event<Args...>& operator-=(void*obj);
-    
-    Event<Args...>& operator()(Args... args);
+    public:
+    Event<Args...> &operator+=(std::pair<void *, void (*)(void *, Args...)>);
+    Event<Args...> &operator-=(std::pair<void *, void (*)(void *, Args...)>);
+    Event<Args...> &operator-=(void *obj);
 
-private:
+    Event<Args...> &operator()(Args... args);
+
+    private:
     mutable std::mutex mtx;
 };
 
 template<typename... Args>
-Event<Args...>& Event<Args...>::operator+=(std::pair<void*, void(*)(void*, Args...)> t)
+Event<Args...> &Event<Args...>::operator+=(std::pair<void *, void (*)(void *, Args...)> t)
 {
     std::lock_guard<std::mutex> lock(this->mtx);
 
@@ -67,14 +67,14 @@ Event<Args...>& Event<Args...>::operator+=(std::pair<void*, void(*)(void*, Args.
 }
 
 template<typename... Args>
-Event<Args...>& Event<Args...>::operator-=(std::pair<void*, void(*)(void*, Args...)> t)
+Event<Args...> &Event<Args...>::operator-=(std::pair<void *, void (*)(void *, Args...)> t)
 {
     std::lock_guard<std::mutex> lock(this->mtx);
 
-    void* obj = t.first;
+    void *obj = t.first;
 
-    typename std::map<void*, void(*)(void*, Args...)>::iterator it = this->callbacks.find(obj);
-    if(it != this->callbacks.end() && it->second == t.second)
+    typename std::map<void *, void (*)(void *, Args...)>::iterator it = this->callbacks.find(obj);
+    if (it != this->callbacks.end() && it->second == t.second)
     {
         this->callbacks.erase(it);
     }
@@ -83,7 +83,7 @@ Event<Args...>& Event<Args...>::operator-=(std::pair<void*, void(*)(void*, Args.
 }
 
 template<typename... Args>
-Event<Args...>& Event<Args...>::operator-=(void* obj)
+Event<Args...> &Event<Args...>::operator-=(void *obj)
 {
     std::lock_guard<std::mutex> lock(this->mtx);
 
@@ -93,13 +93,13 @@ Event<Args...>& Event<Args...>::operator-=(void* obj)
 }
 
 template<typename... Args>
-Event<Args...>& Event<Args...>::operator()(Args... args)
+Event<Args...> &Event<Args...>::operator()(Args... args)
 {
     std::lock_guard<std::mutex> lock(this->mtx);
 
-    typename std::map<void*, void(*)(void*, Args...)>::iterator it;
+    typename std::map<void *, void (*)(void *, Args...)>::iterator it;
 
-    for(it = this->callbacks.begin(); it!=this->callbacks.end(); it++)
+    for (it = this->callbacks.begin(); it != this->callbacks.end(); it++)
     {
         it->second(it->first, args...);
     }

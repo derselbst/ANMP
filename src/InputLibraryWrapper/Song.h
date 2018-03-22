@@ -2,14 +2,14 @@
 #ifndef PCMHOLDER_H
 #define PCMHOLDER_H
 
-#include <vector>
 #include <string>
+#include <vector>
 
-#include "types.h"
 #include "Nullable.h"
-#include "tree.h"
 #include "SongFormat.h"
 #include "SongInfo.h"
+#include "tree.h"
+#include "types.h"
 
 using namespace std;
 
@@ -27,24 +27,23 @@ using namespace std;
   */
 class Song
 {
-protected:
+    protected:
     // even if there were no pure virtual methods, allow
     // construction for child classes only
     Song(string filename);
     Song(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
 
-public:
-
+    public:
     // empty virtual destructor for proper cleanup
     virtual ~Song() = default;
 
     // forbid copying
-    Song(Song const&) = delete;
-    Song& operator=(Song const&) = delete;
+    Song(Song const &) = delete;
+    Song &operator=(Song const &) = delete;
 
-//--------------------------------------------------------------------
-// File specific level
-//--------------------------------------------------------------------
+    //--------------------------------------------------------------------
+    // File specific level
+    //--------------------------------------------------------------------
     // fullpath to underlying audio file
     string Filename = "";
 
@@ -57,22 +56,22 @@ public:
 
     // how many milliseconds following "fileOffset" shall be used for playing
     Nullable<size_t> fileLen;
-//--------------------------------------------------------------------
+    //--------------------------------------------------------------------
 
-//--------------------------------------------------------------------
-// RAW PCM Buffer specific area
-//--------------------------------------------------------------------
+    //--------------------------------------------------------------------
+    // RAW PCM Buffer specific area
+    //--------------------------------------------------------------------
     // points to at least "gConfig.FramesToRender" freshly rendered PCM frames,
     // but usually contains as many as "this->getFrames()" frames of PCM
-    // 
+    //
     // PCM will have its channels interleaved, i.e.:
     //    __________________________________________________________________
-    //    ||                      FRAME 0                  ||    FRAME 1   ||   
+    //    ||                      FRAME 0                  ||    FRAME 1   ||
     //    ||  Item for   |  Item  for  | ... |  Item  for  ||   (...dito)  ||
     //    ||  channel 0  |  channel 1  | ... |  channel n  ||              ||
     //
     // item is an alias for sample
-    pcm_t* data = nullptr;
+    pcm_t *data = nullptr;
 
     // indicates the data type of the raw decoded pcm
     SongFormat Format;
@@ -123,7 +122,7 @@ public:
      *
      * @note everytime this function returns (i.e. by NOT throwing an exception), it is assumed that the file tried to open can be decoded with that specific wrapper class
      */
-    virtual void open () = 0;
+    virtual void open() = 0;
 
     /**
      * frees all ressources acquired by this->open()
@@ -134,33 +133,33 @@ public:
      *
      * thus this method should at least be called by the destructor
      */
-    virtual void close () noexcept = 0 ;
+    virtual void close() noexcept = 0;
 
     /** fills the pcm buffer this->data, preparing atleast "gConfig.FramesToRender" PCM frames
      *
      * synchronous part: allocates the pcm buffer and fills it up to have enough for gConfig.PreRenderTime time of playback
      * asynchronous part: fills rest of pcm buffer
      */
-    virtual void fillBuffer () = 0;
+    virtual void fillBuffer() = 0;
 
     /**
      * frees all ressources acquired by this->fillBuffer()
      *
      * multiple calls to this method (i.e. without corresponding calls to this->fillBuffer()) shall be possible, leading to no error
      */
-    virtual void releaseBuffer () noexcept = 0;
+    virtual void releaseBuffer() noexcept = 0;
 
     /**
      * gathers the song metadata and populates this->Metadata
      */
-    virtual void buildMetadata () noexcept;
+    virtual void buildMetadata() noexcept;
 
     /**
      * returns an unsorted array of loops that could be found in this->Filename. Its only valid to call this method while the song is this->open(). Though it may work after calling this->close().
      * 
      * the song has no loops? --> return an empty vector
      */
-    virtual vector<loop_t> getLoopArray () const noexcept;
+    virtual vector<loop_t> getLoopArray() const noexcept;
 
 
     /**
@@ -172,7 +171,7 @@ public:
      *
      * @return an unsigned integer (even if frame_t is signed) greater 1
      */
-    virtual frame_t getFrames () const = 0;
+    virtual frame_t getFrames() const = 0;
 
 
     /**
@@ -183,11 +182,10 @@ public:
     // TODO: REMOVE ME? or better really implement and use me?
     bool isPlayable() noexcept;
 
-private:
-    static bool myLoopSort(loop_t i,loop_t j);
-    static bool loopsMatch(const loop_t& parent, const loop_t& child);
-    static core::tree<loop_t>& findRootLoopNode(core::tree<loop_t>& loopTree, const loop_t& subLoop);
-
+    private:
+    static bool myLoopSort(loop_t i, loop_t j);
+    static bool loopsMatch(const loop_t &parent, const loop_t &child);
+    static core::tree<loop_t> &findRootLoopNode(core::tree<loop_t> &loopTree, const loop_t &subLoop);
 };
 
 #endif // PCMHOLDER_H

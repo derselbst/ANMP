@@ -3,8 +3,7 @@
 
 #include "StandardWrapper.h"
 
-extern "C"
-{
+extern "C" {
 #include <vgmstream.h>
 }
 
@@ -16,38 +15,36 @@ extern "C"
 
 class VGMStreamWrapper : public StandardWrapper<int16_t>
 {
-public:
-
+    public:
     VGMStreamWrapper(string filename);
     VGMStreamWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
     void initAttr();
 
     // forbid copying
-    VGMStreamWrapper(VGMStreamWrapper const&) = delete;
-    VGMStreamWrapper& operator=(VGMStreamWrapper const&) = delete;
+    VGMStreamWrapper(VGMStreamWrapper const &) = delete;
+    VGMStreamWrapper &operator=(VGMStreamWrapper const &) = delete;
 
-    virtual ~VGMStreamWrapper ();
+    virtual ~VGMStreamWrapper();
 
 
     // interface methods declaration
 
-    void open () override;
+    void open() override;
 
-    void close () noexcept override;
+    void close() noexcept override;
 
-    void fillBuffer () override;
+    void fillBuffer() override;
 
-    vector<loop_t> getLoopArray () const noexcept override;
+    vector<loop_t> getLoopArray() const noexcept override;
 
-    frame_t getFrames () const override;
+    frame_t getFrames() const override;
 
-    void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
+    void render(pcm_t *bufferToFill, frame_t framesToRender = 0) override;
 
     void buildMetadata() noexcept override;
 
-private:
-    VGMSTREAM * handle=nullptr;
-
+    private:
+    VGMSTREAM *handle = nullptr;
 };
 
 #endif // VGMSTREAMWRAPPER_H

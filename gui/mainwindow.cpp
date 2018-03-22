@@ -3,49 +3,49 @@
  */
 
 #include "mainwindow.h"
+#include "ChannelConfigView.h"
+#include "PlayheadSlider.h"
+#include "PlaylistModel.h"
+#include "applets/analyzer/AnalyzerApplet.h"
+#include "configdialog.h"
 #include "mainwindow_adaptor.h"
 #include "ui_mainwindow.h"
 #include "ui_playcontrol.h"
-#include "PlayheadSlider.h"
-#include "applets/analyzer/AnalyzerApplet.h"
-#include "configdialog.h"
-#include "PlaylistModel.h"
-#include "ChannelConfigView.h"
 
 #include <anmp.hpp>
 
-#include <QFileSystemModel>
-#include <QStandardItemModel>
-#include <QShortcut>
 #include <QFileDialog>
-#include <QMessageBox>
-#include <QTableView>
+#include <QFileSystemModel>
 #include <QListView>
+#include <QMessageBox>
+#include <QShortcut>
+#include <QStandardItemModel>
+#include <QTableView>
 #include <QTreeView>
 
-#include <thread>         // std::this_thread::sleep_for
 #include <chrono>
-#include <utility>      // std::pair
 #include <cmath>
+#include <thread> // std::this_thread::sleep_for
+#include <utility> // std::pair
 
 
-MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    playctrl(new Ui::PlayControl),
-    drivesModel(new QFileSystemModel(this)),
-    filesModel(new QFileSystemModel(this)),
-    playlist(new Playlist()),
-    playlistModel(new PlaylistModel(playlist, this)),
-    player(new Player(this->playlist)),
-    channelConfigModel(new QStandardItemModel(0, 1, this)),
+MainWindow::MainWindow(QWidget *parent)
+: QMainWindow(parent),
+  ui(new Ui::MainWindow),
+  playctrl(new Ui::PlayControl),
+  drivesModel(new QFileSystemModel(this)),
+  filesModel(new QFileSystemModel(this)),
+  playlist(new Playlist()),
+  playlistModel(new PlaylistModel(playlist, this)),
+  player(new Player(this->playlist)),
+  channelConfigModel(new QStandardItemModel(0, 1, this)),
 #ifdef USE_VISUALIZER
-    analyzerWindow(new AnalyzerApplet(this->player, this)),
+  analyzerWindow(new AnalyzerApplet(this->player, this)),
 #endif
-    settingsView(new ConfigDialog(this))
+  settingsView(new ConfigDialog(this))
 {
-    qRegisterMetaType<const Song*>("const Song*");
-/*    
+    qRegisterMetaType<const Song *>("const Song*");
+    /*    
     // add our D-Bus interface and connect to D-Bus
     new AnmpAdaptor(this);
     QDBusConnection::sessionBus().registerObject("/ANMP", this);
@@ -65,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->ui->setupUi(this);
     this->setWindowTitleCustom("");
 
-    QWidget* dockwid = new QWidget(this->ui->dockControl);
+    QWidget *dockwid = new QWidget(this->ui->dockControl);
     this->playctrl->setupUi(dockwid);
     this->ui->dockControl->setWidget(dockwid);
 
@@ -74,86 +74,84 @@ MainWindow::MainWindow(QWidget *parent) :
     this->buildChannelConfig();
 
     // connect main buttons
-    connect(this->playctrl->playButton,       &QPushButton::toggled, this, [this](bool){this->MainWindow::TogglePlayPause();});
-    connect(this->playctrl->stopButton,       &QPushButton::clicked, this, &MainWindow::Stop);
+    connect(this->playctrl->playButton, &QPushButton::toggled, this, [this](bool) { this->MainWindow::TogglePlayPause(); });
+    connect(this->playctrl->stopButton, &QPushButton::clicked, this, &MainWindow::Stop);
 
-    connect(this->playctrl->forwardButton,    &QPushButton::clicked, this, &MainWindow::SeekForward);
-    connect(this->playctrl->backwardButton,   &QPushButton::clicked, this, &MainWindow::SeekBackward);
-    connect(this->playctrl->fforwardButton,   &QPushButton::clicked, this, &MainWindow::FastSeekForward);
-    connect(this->playctrl->fbackwardButton,  &QPushButton::clicked, this, &MainWindow::FastSeekBackward);
+    connect(this->playctrl->forwardButton, &QPushButton::clicked, this, &MainWindow::SeekForward);
+    connect(this->playctrl->backwardButton, &QPushButton::clicked, this, &MainWindow::SeekBackward);
+    connect(this->playctrl->fforwardButton, &QPushButton::clicked, this, &MainWindow::FastSeekForward);
+    connect(this->playctrl->fbackwardButton, &QPushButton::clicked, this, &MainWindow::FastSeekBackward);
 
-    connect(this->playctrl->nextButton,       &QPushButton::clicked, this, &MainWindow::Next);
-    connect(this->playctrl->previousButton,   &QPushButton::clicked, this, &MainWindow::Previous);
+    connect(this->playctrl->nextButton, &QPushButton::clicked, this, &MainWindow::Next);
+    connect(this->playctrl->previousButton, &QPushButton::clicked, this, &MainWindow::Previous);
 
 
     // connect menu actions
-    connect(this->ui->actionPlay,       &QAction::triggered, this, &MainWindow::Play);
-    connect(this->ui->actionPause,      &QAction::triggered, this, &MainWindow::Pause);
-    connect(this->ui->actionStop,       &QAction::triggered, this, &MainWindow::Stop);
+    connect(this->ui->actionPlay, &QAction::triggered, this, &MainWindow::Play);
+    connect(this->ui->actionPause, &QAction::triggered, this, &MainWindow::Pause);
+    connect(this->ui->actionStop, &QAction::triggered, this, &MainWindow::Stop);
 
-    connect(this->ui->actionNext,       &QAction::triggered, this, &MainWindow::Next);
-    connect(this->ui->actionPrevious,   &QAction::triggered, this, &MainWindow::Previous);
+    connect(this->ui->actionNext, &QAction::triggered, this, &MainWindow::Next);
+    connect(this->ui->actionPrevious, &QAction::triggered, this, &MainWindow::Previous);
 
     connect(this->ui->actionReinitAudioDriver, &QAction::triggered, this, &MainWindow::reinitAudioDriver);
 
 
-    connect(this->ui->actionAdd_Songs,        &QAction::triggered, this, [this]{this->playlistModel->asyncAdd(QFileDialog::getOpenFileNames(this, "Open Audio Files", QString(), ""));});
-    connect(this->ui->actionAdd_Playback_Stop,&QAction::triggered, this,
-            [this]
-            {
+    connect(this->ui->actionAdd_Songs, &QAction::triggered, this, [this] { this->playlistModel->asyncAdd(QFileDialog::getOpenFileNames(this, "Open Audio Files", QString(), "")); });
+    connect(this->ui->actionAdd_Playback_Stop, &QAction::triggered, this,
+            [this] {
                 long idxTarget = this->playlist->getCurrentSongId();
                 long idxAt = this->playlist->add(nullptr);
                 this->playlist->move(idxAt, 0, idxTarget - idxAt + 1);
                 this->playlistModel->insertRows(idxTarget, 1);
             });
-    connect(this->ui->actionAdd_Playback_Stop_At_End,&QAction::triggered, this,
-            [this]
-            {
+    connect(this->ui->actionAdd_Playback_Stop_At_End, &QAction::triggered, this,
+            [this] {
                 this->playlistModel->insertRows(this->playlist->add(nullptr), 1);
             });
-    connect(this->ui->actionShuffle_Playst,   &QAction::triggered, this, &MainWindow::shufflePlaylist);
-    connect(this->ui->actionClear_Playlist,   &QAction::triggered, this, &MainWindow::clearPlaylist);
+    connect(this->ui->actionShuffle_Playst, &QAction::triggered, this, &MainWindow::shufflePlaylist);
+    connect(this->ui->actionClear_Playlist, &QAction::triggered, this, &MainWindow::clearPlaylist);
 
-    connect(this->ui->actionASCII,      &QAction::triggered, this, [this]{this->showAnalyzer(AnalyzerApplet::AnalyzerType::Ascii);});
-    connect(this->ui->actionBlocky,     &QAction::triggered, this, [this]{this->showAnalyzer(AnalyzerApplet::AnalyzerType::Block);});
+    connect(this->ui->actionASCII, &QAction::triggered, this, [this] { this->showAnalyzer(AnalyzerApplet::AnalyzerType::Ascii); });
+    connect(this->ui->actionBlocky, &QAction::triggered, this, [this] { this->showAnalyzer(AnalyzerApplet::AnalyzerType::Block); });
 
-    connect(this->ui->actionSettings,   &QAction::triggered, this, [this]{this->settingsView->show();});
-    connect(this->settingsView,         &ConfigDialog::accepted, this, &MainWindow::settingsDialogAccepted);
+    connect(this->ui->actionSettings, &QAction::triggered, this, [this] { this->settingsView->show(); });
+    connect(this->settingsView, &ConfigDialog::accepted, this, &MainWindow::settingsDialogAccepted);
 
 
-    connect(this->ui->actionAbout_Qt,   &QAction::triggered, this, &MainWindow::aboutQt);
+    connect(this->ui->actionAbout_Qt, &QAction::triggered, this, &MainWindow::aboutQt);
     connect(this->ui->actionAbout_ANMP, &QAction::triggered, this, &MainWindow::aboutAnmp);
 
 
-    connect(this->playctrl->seekBar,          &PlayheadSlider::sliderMoved, this, [this](int position){this->player->seekTo(position);});
+    connect(this->playctrl->seekBar, &PlayheadSlider::sliderMoved, this, [this](int position) { this->player->seekTo(position); });
 
 
     // emitted double-clicking or pressing Enter
-    connect(this->ui->playlistView, &PlaylistView::activated,     this, &MainWindow::selectSong);
+    connect(this->ui->playlistView, &PlaylistView::activated, this, &MainWindow::selectSong);
 
     connect(this->playlistModel, &PlaylistModel::SongAdded, this, &MainWindow::slotSongAdded);
-    connect(this->playlistModel, &PlaylistModel::UnloadCurrentSong, this, [this]{this->player->stop(); this->player->setCurrentSong(nullptr);});
+    connect(this->playlistModel, &PlaylistModel::UnloadCurrentSong, this, [this] {this->player->stop(); this->player->setCurrentSong(nullptr); });
 
-    connect(this->treeView, &QTreeView::clicked,     this, &MainWindow::treeViewClicked);
+    connect(this->treeView, &QTreeView::clicked, this, &MainWindow::treeViewClicked);
 
-    connect(this->ui->actionSelect_Muted_Voices,    &QAction::triggered, this, [this]{this->channelView->Select(Qt::Unchecked);});
-    connect(this->ui->actionSelect_Unmuted_Voices,  &QAction::triggered, this, [this]{this->channelView->Select(Qt::Checked);});
-    connect(this->ui->actionMute_Selected_Voices,   &QAction::triggered, this, &MainWindow::MuteSelectedVoices);
+    connect(this->ui->actionSelect_Muted_Voices, &QAction::triggered, this, [this] { this->channelView->Select(Qt::Unchecked); });
+    connect(this->ui->actionSelect_Unmuted_Voices, &QAction::triggered, this, [this] { this->channelView->Select(Qt::Checked); });
+    connect(this->ui->actionMute_Selected_Voices, &QAction::triggered, this, &MainWindow::MuteSelectedVoices);
     connect(this->ui->actionUnmute_Selected_Voices, &QAction::triggered, this, &MainWindow::UnmuteSelectedVoices);
-    connect(this->ui->actionSolo_Selected_Voices, &QAction::triggered, this,   &MainWindow::SoloSelectedVoices);
-    connect(this->ui->actionMute_All_Voices,        &QAction::triggered, this, &MainWindow::MuteAllVoices);
-    connect(this->ui->actionUnmute_All_Voices,      &QAction::triggered, this, &MainWindow::UnmuteAllVoices);
-    connect(this->ui->actionToggle_All_Voices,      &QAction::triggered, this, &MainWindow::ToggleAllVoices);
+    connect(this->ui->actionSolo_Selected_Voices, &QAction::triggered, this, &MainWindow::SoloSelectedVoices);
+    connect(this->ui->actionMute_All_Voices, &QAction::triggered, this, &MainWindow::MuteAllVoices);
+    connect(this->ui->actionUnmute_All_Voices, &QAction::triggered, this, &MainWindow::UnmuteAllVoices);
+    connect(this->ui->actionToggle_All_Voices, &QAction::triggered, this, &MainWindow::ToggleAllVoices);
 
-    connect(this->channelView, &QTableView::activated,     this, &MainWindow::ToggleSelectedVoices);
+    connect(this->channelView, &QTableView::activated, this, &MainWindow::ToggleSelectedVoices);
     connect(this->channelView, &QTableView::doubleClicked, this, &MainWindow::ToggleSelectedVoices);
 
     this->setWindowState(Qt::WindowMaximized);
 
     // set callbacks for the underlying player
-    this->player->onPlayheadChanged    += make_pair(this, &MainWindow::callbackSeek);
+    this->player->onPlayheadChanged += make_pair(this, &MainWindow::callbackSeek);
     this->player->onCurrentSongChanged += make_pair(this, &MainWindow::callbackCurrentSongChanged);
-    this->player->onIsPlayingChanged   += make_pair(this, &MainWindow::callbackIsPlayingChanged);
+    this->player->onIsPlayingChanged += make_pair(this, &MainWindow::callbackIsPlayingChanged);
 
     this->createShortcuts();
 }
@@ -163,7 +161,7 @@ MainWindow::~MainWindow()
     this->player->onPlayheadChanged -= this;
     this->player->onCurrentSongChanged -= this;
     this->player->onIsPlayingChanged -= this;
-    
+
     delete this->ui;
 
     // manually delete applets before deleting player, since they hold this.player
@@ -244,7 +242,7 @@ void MainWindow::createShortcuts()
     this->playctrl->fbackwardButton->setToolTip(this->playctrl->fbackwardButton->toolTip() + " [F2]");
 
     QShortcut *settings = new SHORTCUT(QKeySequence(Qt::Key_F12));
-    connect(settings, &QShortcut::activated, this, [this]{this->settingsView->show();});
+    connect(settings, &QShortcut::activated, this, [this] { this->settingsView->show(); });
 
 #undef SHORTCUT
 }
@@ -256,7 +254,7 @@ void MainWindow::buildFileBrowser()
 
     QTreeView *treeView = this->treeView = new QTreeView(this->ui->dockDir);
     treeView->setModel(this->drivesModel);
-    treeView->setRootIndex(this->drivesModel->setRootPath(rootPath+"/../"));
+    treeView->setRootIndex(this->drivesModel->setRootPath(rootPath + "/../"));
     treeView->hideColumn(1);
     treeView->hideColumn(2);
     treeView->hideColumn(3);
@@ -292,7 +290,7 @@ void MainWindow::buildChannelConfig()
     channelView->setDragEnabled(false);
     channelView->setModel(this->channelConfigModel);
 
-    QMenu* m = new QMenu(channelView);
+    QMenu *m = new QMenu(channelView);
     m->addAction(this->ui->actionSelect_Muted_Voices);
     m->addAction(this->ui->actionSelect_Unmuted_Voices);
     m->addSeparator();
@@ -320,7 +318,7 @@ void MainWindow::buildPlaylistView()
 
 void MainWindow::setWindowTitleCustom(QString title)
 {
-    if(title.isEmpty())
+    if (title.isEmpty())
     {
         title.append("ANMP " ANMP_VERSION);
     }
@@ -356,20 +354,20 @@ void MainWindow::showNoVisualizer()
 
 void MainWindow::relativeSeek(int relpos)
 {
-    const Song* s = this->player->getCurrentSong();
-    if(s==nullptr)
+    const Song *s = this->player->getCurrentSong();
+    if (s == nullptr)
     {
         return;
     }
 
-    int pos = this->playctrl->seekBar->sliderPosition()+relpos;
-    if(pos < 0)
+    int pos = this->playctrl->seekBar->sliderPosition() + relpos;
+    if (pos < 0)
     {
-        pos=0;
+        pos = 0;
     }
-    else if(pos > this->playctrl->seekBar->maximum())
+    else if (pos > this->playctrl->seekBar->maximum())
     {
-        pos=this->playctrl->seekBar->maximum();
+        pos = this->playctrl->seekBar->maximum();
     }
     this->player->seekTo(pos);
 }
@@ -385,12 +383,12 @@ void MainWindow::enableSeekButtons(bool isEnabled)
     this->playctrl->fbackwardButton->setEnabled(isEnabled);
 }
 
-void MainWindow::updateChannelConfig(const SongFormat& currentFormat)
+void MainWindow::updateChannelConfig(const SongFormat &currentFormat)
 {
     this->channelConfigModel->setRowCount(currentFormat.Voices);
-    for(int i=0; i < currentFormat.Voices; i++)
+    for (int i = 0; i < currentFormat.Voices; i++)
     {
-        const string& voiceName = currentFormat.VoiceName[i];
+        const string &voiceName = currentFormat.VoiceName[i];
         QStandardItem *item = new QStandardItem(QString::fromStdString(voiceName));
 
         QBrush b(currentFormat.VoiceIsMuted[i] ? Qt::red : Qt::green);
@@ -406,7 +404,7 @@ void MainWindow::updateChannelConfig(const SongFormat& currentFormat)
     }
 }
 
-void MainWindow::showError(const QString& detail, const QString& general)
+void MainWindow::showError(const QString &detail, const QString &general)
 {
     QMessageBox msgBox;
     msgBox.setText(general);

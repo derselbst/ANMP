@@ -2,21 +2,22 @@
 #include "AtomicWrite.h"
 #include "Common.h"
 
-#include <fstream>
 #include <cereal/archives/json.hpp>
+#include <fstream>
 
 // definitions go here
 constexpr frame_t Config::FramesToRender;
 constexpr const char Config::UserDir[];
 constexpr const char Config::UserFile[];
 
-Config& gConfig = gConfig.Singleton();
+Config &gConfig = gConfig.Singleton();
 
 
 Config::Config()
-{}
+{
+}
 
-Config& Config::Singleton()
+Config &Config::Singleton()
 {
     // guaranteed to be destroyed
     static Config instance;
@@ -28,15 +29,15 @@ void Config::Load() noexcept
 {
     string file = ::myHomeDir() + "/" + this->UserDir + "/" + this->UserFile;
 
-    if(::myExists(file))
-    {    
+    if (::myExists(file))
+    {
         try
         {
             std::ifstream is(file);
             cereal::JSONInputArchive ar(is);
             ar(*this);
         }
-        catch(...)
+        catch (...)
         {
             CLOG(LogLevel_t::Error, "Something went wrong when reading settings (might contain garbage?)");
         }
@@ -48,32 +49,32 @@ void Config::Load() noexcept
 }
 
 // TODO wait for proper c++17 support and then write this mkdir() appropriately
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 
 void Config::Save() noexcept
 {
     string file = ::myHomeDir() + "/" + this->UserDir + "/";
-    
-    if(!::myExists(file))
+
+    if (!::myExists(file))
     {
         mkdir(file.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     }
-    
-    file += this->UserFile;    
+
+    file += this->UserFile;
     try
     {
         std::ofstream os(file);
-        
-        if(!os.good())
+
+        if (!os.good())
         {
-            throw -1;
+            throw - 1;
         }
-        
+
         cereal::JSONOutputArchive ar(os);
         ar(*this);
     }
-    catch(...)
+    catch (...)
     {
         CLOG(LogLevel_t::Error, "Something went wrong when writing settings (no permission?)");
     }

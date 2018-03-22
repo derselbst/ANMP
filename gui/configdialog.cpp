@@ -3,13 +3,13 @@
 
 #include <anmp.hpp>
 
-#include <QFileDialog>
 #include <QDialogButtonBox>
+#include <QFileDialog>
 #include <QShowEvent>
 
-ConfigDialog::ConfigDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::ConfigDialog)
+ConfigDialog::ConfigDialog(QWidget *parent)
+: QDialog(parent),
+  ui(new Ui::ConfigDialog)
 {
     this->ui->setupUi(this);
 
@@ -25,9 +25,9 @@ void ConfigDialog::fillProperties()
 {
     bool oldState = this->ui->comboBoxAudioDriver->blockSignals(true);
     this->ui->comboBoxAudioDriver->clear();
-    for(int i=static_cast<int>(AudioDriver_t::BEGIN); i<static_cast<int>(AudioDriver_t::END); i++)
+    for (int i = static_cast<int>(AudioDriver_t::BEGIN); i < static_cast<int>(AudioDriver_t::END); i++)
     {
-     this->ui->comboBoxAudioDriver->insertItem(i, AudioDriverName[i]);
+        this->ui->comboBoxAudioDriver->insertItem(i, AudioDriverName[i]);
     }
     this->ui->comboBoxAudioDriver->blockSignals(oldState);
     this->ui->comboBoxAudioDriver->setCurrentIndex(static_cast<int>(this->newConfig.audioDriver));
@@ -63,10 +63,10 @@ void ConfigDialog::fillProperties()
 }
 
 
-void ConfigDialog::showEvent(QShowEvent* event)
+void ConfigDialog::showEvent(QShowEvent *event)
 {
     // only do this if the dialog wasnt shown before, i.e. ignore minimize
-    if(!this->isShown)
+    if (!this->isShown)
     {
         this->newConfig = gConfig;
         this->fillProperties();
@@ -76,7 +76,7 @@ void ConfigDialog::showEvent(QShowEvent* event)
     this->QDialog::showEvent(event);
 }
 
-void ConfigDialog::closeEvent(QCloseEvent* event)
+void ConfigDialog::closeEvent(QCloseEvent *event)
 {
     this->isShown = false;
     this->QDialog::closeEvent(event);
@@ -118,41 +118,41 @@ void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
             this->ui->checkAudioNorm->setEnabled(true);
         }*/
 
-    switch(this->newConfig.audioDriver)
+    switch (this->newConfig.audioDriver)
     {
 #ifdef USE_EBUR128
-    case AudioDriver_t::Ebur128:
-        this->ui->checkAudioNorm->setEnabled(false);
-        this->ui->checkAudioNorm->setChecked(false);
+        case AudioDriver_t::Ebur128:
+            this->ui->checkAudioNorm->setEnabled(false);
+            this->ui->checkAudioNorm->setChecked(false);
 
-        this->ui->checkLoopInfo->setEnabled(false);
-        this->ui->checkLoopInfo->setChecked(false);
+            this->ui->checkLoopInfo->setEnabled(false);
+            this->ui->checkLoopInfo->setChecked(false);
 
-        this->ui->checkRenderWhole->setEnabled(false);
-        this->ui->checkRenderWhole->setChecked(false);
-        break;
+            this->ui->checkRenderWhole->setEnabled(false);
+            this->ui->checkRenderWhole->setChecked(false);
+            break;
 #endif
-    case AudioDriver_t::Wave:
-        this->ui->checkRenderWhole->setEnabled(false);
-        this->ui->checkRenderWhole->setChecked(false);
+        case AudioDriver_t::Wave:
+            this->ui->checkRenderWhole->setEnabled(false);
+            this->ui->checkRenderWhole->setChecked(false);
 
-        this->ui->checkAudioNorm->setEnabled(false);
-        this->ui->checkAudioNorm->setChecked(false);
+            this->ui->checkAudioNorm->setEnabled(false);
+            this->ui->checkAudioNorm->setChecked(false);
 
-        this->ui->checkLoopInfo->setEnabled(true);
-        this->ui->checkLoopInfo->setChecked(this->newConfig.useLoopInfo);
-        break;
+            this->ui->checkLoopInfo->setEnabled(true);
+            this->ui->checkLoopInfo->setChecked(this->newConfig.useLoopInfo);
+            break;
 
-    default:
-        this->ui->checkRenderWhole->setEnabled(true);
-        this->ui->checkRenderWhole->setChecked(this->newConfig.RenderWholeSong);
+        default:
+            this->ui->checkRenderWhole->setEnabled(true);
+            this->ui->checkRenderWhole->setChecked(this->newConfig.RenderWholeSong);
 
-        this->ui->checkAudioNorm->setEnabled(true);
-        this->ui->checkAudioNorm->setChecked(this->newConfig.useAudioNormalization);
+            this->ui->checkAudioNorm->setEnabled(true);
+            this->ui->checkAudioNorm->setChecked(this->newConfig.useAudioNormalization);
 
-        this->ui->checkLoopInfo->setEnabled(true);
-        this->ui->checkLoopInfo->setChecked(this->newConfig.useLoopInfo);
-        break;
+            this->ui->checkLoopInfo->setEnabled(true);
+            this->ui->checkLoopInfo->setChecked(this->newConfig.useLoopInfo);
+            break;
     }
 }
 
@@ -161,29 +161,29 @@ void ConfigDialog::on_browseSF2_clicked()
     QString selFilter = "SoundFont (*.sf2)";
     QString sf2 = QFileDialog::getOpenFileName(this, "Select Soundfont", this->ui->defaultSF2Path->text(), "SoundFont (*.sf2);;All files (*.*)", &selFilter);
 
-    if(!sf2.isNull())
+    if (!sf2.isNull())
     {
         this->ui->defaultSF2Path->setText(sf2);
     }
 }
 
-void ConfigDialog::buttonBoxClicked(QAbstractButton* btn)
+void ConfigDialog::buttonBoxClicked(QAbstractButton *btn)
 {
     QDialogButtonBox::StandardButton stdbtn = this->ui->buttonBox->standardButton(btn);
 
-    if(stdbtn == QDialogButtonBox::Cancel)
+    if (stdbtn == QDialogButtonBox::Cancel)
     {
         return;
     }
 
-    if(stdbtn == QDialogButtonBox::RestoreDefaults)
+    if (stdbtn == QDialogButtonBox::RestoreDefaults)
     {
         this->newConfig = Config();
         this->fillProperties();
         return;
     }
 
-    if(stdbtn == QDialogButtonBox::Save || stdbtn == QDialogButtonBox::Ok)
+    if (stdbtn == QDialogButtonBox::Save || stdbtn == QDialogButtonBox::Ok)
     {
         this->newConfig.RenderWholeSong = this->ui->checkRenderWhole->isChecked();
         this->newConfig.useAudioNormalization = this->ui->checkAudioNorm->isChecked();
@@ -214,7 +214,7 @@ void ConfigDialog::buttonBoxClicked(QAbstractButton* btn)
         this->newConfig.FluidsynthEnableChorus = this->ui->checkChorus->isChecked();
 
         std::swap(gConfig, this->newConfig);
-        if(stdbtn == QDialogButtonBox::Save)
+        if (stdbtn == QDialogButtonBox::Save)
         {
             gConfig.Save();
         }

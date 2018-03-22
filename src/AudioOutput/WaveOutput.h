@@ -1,7 +1,7 @@
 #pragma once
 
-#include "IAudioOutput.h"
 #include "CommonExceptions.h"
+#include "IAudioOutput.h"
 #include <cstdio>
 #include <mutex>
 
@@ -15,43 +15,44 @@ class Song;
   */
 class WaveOutput : public IAudioOutput
 {
-public:
-    static void onCurrentSongChanged(void* ctx, const Song* s);
+    public:
+    static void onCurrentSongChanged(void *ctx, const Song *s);
 
-    WaveOutput (Player*);
+    WaveOutput(Player *);
 
     // forbid copying
-    WaveOutput(WaveOutput const&) = delete;
-    WaveOutput& operator=(WaveOutput const&) = delete;
+    WaveOutput(WaveOutput const &) = delete;
+    WaveOutput &operator=(WaveOutput const &) = delete;
 
-    virtual ~WaveOutput ();
+    virtual ~WaveOutput();
 
     // interface methods declaration
 
-    void open () override;
+    void open() override;
 
-    void init (SongFormat& format, bool realtime = false) override;
+    void init(SongFormat &format, bool realtime = false) override;
 
-    void close () override;
+    void close() override;
 
-    int write (const float* buffer, frame_t frames) override;
+    int write(const float *buffer, frame_t frames) override;
 
-    int write (const int16_t* buffer, frame_t frames) override;
+    int write(const int16_t *buffer, frame_t frames) override;
 
-    int write (const int32_t* buffer, frame_t frames) override;
+    int write(const int32_t *buffer, frame_t frames) override;
 
-    void start () override;
-    void stop () override;
+    void start() override;
+    void stop() override;
 
-private:
+    private:
     // because this.stop() might be called concurrently to this.write()
     mutable recursive_mutex mtx;
-    
-    Player* player = nullptr;
-    FILE* handle = nullptr;
 
-    const Song* currentSong = nullptr;
+    Player *player = nullptr;
+    FILE *handle = nullptr;
+
+    const Song *currentSong = nullptr;
     frame_t framesWritten = 0;
 
-    template<typename T> int write(const T* buffer, frame_t frames);
+    template<typename T>
+    int write(const T *buffer, frame_t frames);
 };

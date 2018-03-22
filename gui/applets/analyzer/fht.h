@@ -31,31 +31,31 @@
  */
 class FHT
 {
-    int	m_exp2;
-    int	m_num;
-    float	*m_buf;
-    float	*m_tab;
-    int	*m_log;
+    int m_exp2;
+    int m_num;
+    float *m_buf;
+    float *m_tab;
+    int *m_log;
 
     /**
      * Create a table of "cas" (cosine and sine) values.
      * Has only to be done in the constructor and saves from
      * calculating the same values over and over while transforming.
      */
-    void	makeCasTable();
+    void makeCasTable();
 
     /**
      * Recursive in-place Hartley transform. For internal use only!
      */
-    void	_transform( float *, int, int );
+    void _transform(float *, int, int);
 
-public:
+    public:
     /**
     * Prepare transform for data sets with @f$2^n@f$ numbers, whereby @f$n@f$
     * should be at least 3. Values of more than 3 need a trigonometry table.
     * @see makeCasTable()
     */
-    FHT( int );
+    FHT(int);
 
     ~FHT();
     inline int sizeExp() const
@@ -66,9 +66,9 @@ public:
     {
         return m_num;
     }
-    float	*copy( float *, float * );
-    float	*clear( float * );
-    void	scale( float *, float );
+    float *copy(float *, float *);
+    float *clear(float *);
+    void scale(float *, float);
 
     /**
      * Exponentially Weighted Moving Average (EWMA) filter.
@@ -76,7 +76,7 @@ public:
      * @param s is fresh input.
      * @param w is the weighting factor.
      */
-    void	ewma( float *d, float *s, float w );
+    void ewma(float *d, float *s, float w);
 
     /**
      * Logarithmic audio spectrum. Maps semi-logarithmic spectrum
@@ -85,17 +85,17 @@ public:
      * @param p is the input array.
      * @param out is the spectrum.
      */
-    void	logSpectrum( float *out, float *p );
+    void logSpectrum(float *out, float *p);
 
     /**
      * Semi-logarithmic audio spectrum.
      */
-    void	semiLogSpectrum( float * );
+    void semiLogSpectrum(float *);
 
     /**
      * Fourier spectrum.
      */
-    void	spectrum( float * );
+    void spectrum(float *);
 
     /**
      * Calculates a mathematically correct FFT power spectrum.
@@ -103,7 +103,7 @@ public:
      * and factor the 0.5 in the final scaling factor.
      * @see FHT::power2()
      */
-    void	power( float * );
+    void power(float *);
 
     /**
      * Calculates an FFT power spectrum with doubled values as a
@@ -112,14 +112,14 @@ public:
      * of @f$2^n@f$ input values. This is the fastest transform.
      * @see FHT::power()
      */
-    void	power2( float * );
+    void power2(float *);
 
     /**
      * Discrete Hartley transform of data sets with 8 values.
      */
-    void	transform8( float * );
+    void transform8(float *);
 
-    void	transform( float * );
+    void transform(float *);
 };
 
 #endif

@@ -3,12 +3,11 @@
 
 #include "StandardWrapper.h"
 
-extern "C"
-{
-#include <libavformat/avformat.h>
+extern "C" {
 #include <libavcodec/avcodec.h>
-#include <libswresample/swresample.h>
+#include <libavformat/avformat.h>
 #include <libavutil/opt.h>
+#include <libswresample/swresample.h>
 }
 
 /**
@@ -18,8 +17,7 @@ extern "C"
 
 class FFMpegWrapper : public StandardWrapper<int16_t>
 {
-public:
-
+    public:
     // Constructors/Destructors
     //
 
@@ -32,32 +30,32 @@ public:
     void initAttr();
 
     // forbid copying
-    FFMpegWrapper(FFMpegWrapper const&) = delete;
-    FFMpegWrapper& operator=(FFMpegWrapper const&) = delete;
+    FFMpegWrapper(FFMpegWrapper const &) = delete;
+    FFMpegWrapper &operator=(FFMpegWrapper const &) = delete;
 
-    virtual ~FFMpegWrapper ();
+    virtual ~FFMpegWrapper();
 
     // interface methods declaration
 
-    void open () override;
+    void open() override;
 
-    void close () noexcept override;
+    void close() noexcept override;
 
-    void fillBuffer () override;
+    void fillBuffer() override;
 
-    frame_t getFrames () const override;
+    frame_t getFrames() const override;
 
-    void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
-    
+    void render(pcm_t *bufferToFill, frame_t framesToRender = 0) override;
+
     void buildMetadata() noexcept override;
 
-private:
+    private:
     AVFormatContext *handle = nullptr;
     SwrContext *swr = nullptr;
 
     int audioStreamID = -1;
 
-    int decode_packet(int16_t* (&pcm), int& framesToDo, int& got_frame, AVPacket& pkt, AVFrame * (&frame));
+    int decode_packet(int16_t *(&pcm), int &framesToDo, int &got_frame, AVPacket &pkt, AVFrame *(&frame));
 };
 
 #endif // FFMPEGWRAPPER_H

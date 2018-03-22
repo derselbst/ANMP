@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include <mutex>
+#include <string>
 
 using namespace std;
 
@@ -13,21 +13,20 @@ using namespace std;
 
 class LoudnessFile
 {
-public:
-
+    public:
     // no object
     LoudnessFile() = delete;
     // no copy
-    LoudnessFile(const LoudnessFile&) = delete;
+    LoudnessFile(const LoudnessFile &) = delete;
     // no assign
-    LoudnessFile& operator=(const LoudnessFile&) = delete;
+    LoudnessFile &operator=(const LoudnessFile &) = delete;
 
-    static void write(string filePath, const float& gain) noexcept;
+    static void write(string filePath, const float &gain) noexcept;
 
     static float read(string filePath) noexcept;
-    
-private:
+
+    private:
     static mutex mtx;
-    
+
     static string toebur128Filename(string file);
 };

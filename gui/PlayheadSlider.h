@@ -7,11 +7,11 @@ class PlayheadSlider : public QSlider
 {
     Q_OBJECT
 
-public:
-    PlayheadSlider( QWidget* parent );
+    public:
+    PlayheadSlider(QWidget *parent);
 
     void SilentReset();
-    
-protected:
-    void mousePressEvent(QMouseEvent * event) override;
+
+    protected:
+    void mousePressEvent(QMouseEvent *event) override;
 };

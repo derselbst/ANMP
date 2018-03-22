@@ -34,76 +34,75 @@
   * 
   * @warning modifies bufferToFill to point to the beginning, where the macro started filling up the PCM buffer, allowing \c StandardWrapper::doAudioNormalization() to directly take and use this pointer
   */
-#define STANDARDWRAPPER_RENDER(SAMPLEFORMAT, LIB_SPECIFIC_RENDER_FUNCTION) \
-{\
-    decltype(framesToRender) backup;\
-    if(framesToRender==0)\
-    {\
-        /* render rest of file */ \
-        backup = framesToRender = this->getFrames()-this->framesAlreadyRendered;\
-    }\
-    else\
-    {\
-        backup = framesToRender = min(framesToRender, this->getFrames()-this->framesAlreadyRendered);\
-    }\
-    const uint32_t Channels = this->Format.Channels(); \
-    SAMPLEFORMAT* pcm = static_cast<SAMPLEFORMAT*>(bufferToFill);\
-    /* advance the pcm pointer by that many items where we previously ended filling it */\
-    pcm += (this->framesAlreadyRendered * Channels) % this->count;\
-    bufferToFill = pcm;\
-\
-    while(framesToRender>0 && !this->stopFillBuffer)\
-    {\
-        /* render in chunks of gConfig.FramesToRender size */\
-        int framesToDoNow = (framesToRender/gConfig.FramesToRender)>0 ? gConfig.FramesToRender : framesToRender%gConfig.FramesToRender;\
-\
-        /* call the function whatever is responsible for decoding to raw pcm */\
-        LIB_SPECIFIC_RENDER_FUNCTION;\
-\
-        /* advance the pcm pointer by that many items that have just been rendered */\
-        pcm += (framesToDoNow * Channels) % this->count;\
-        this->framesAlreadyRendered += framesToDoNow;\
-\
-        framesToRender -= framesToDoNow;\
-    }\
-    framesToRender = backup;\
-}
+#define STANDARDWRAPPER_RENDER(SAMPLEFORMAT, LIB_SPECIFIC_RENDER_FUNCTION)                                                                        \
+    {                                                                                                                                             \
+        decltype(framesToRender) backup;                                                                                                          \
+        if (framesToRender == 0)                                                                                                                  \
+        {                                                                                                                                         \
+            /* render rest of file */                                                                                                             \
+            backup = framesToRender = this->getFrames() - this->framesAlreadyRendered;                                                            \
+        }                                                                                                                                         \
+        else                                                                                                                                      \
+        {                                                                                                                                         \
+            backup = framesToRender = min(framesToRender, this->getFrames() - this->framesAlreadyRendered);                                       \
+        }                                                                                                                                         \
+        const uint32_t Channels = this->Format.Channels();                                                                                        \
+        SAMPLEFORMAT *pcm = static_cast<SAMPLEFORMAT *>(bufferToFill);                                                                            \
+        /* advance the pcm pointer by that many items where we previously ended filling it */                                                     \
+        pcm += (this->framesAlreadyRendered * Channels) % this->count;                                                                            \
+        bufferToFill = pcm;                                                                                                                       \
+                                                                                                                                                  \
+        while (framesToRender > 0 && !this->stopFillBuffer)                                                                                       \
+        {                                                                                                                                         \
+            /* render in chunks of gConfig.FramesToRender size */                                                                                 \
+            int framesToDoNow = (framesToRender / gConfig.FramesToRender) > 0 ? gConfig.FramesToRender : framesToRender % gConfig.FramesToRender; \
+                                                                                                                                                  \
+            /* call the function whatever is responsible for decoding to raw pcm */                                                               \
+            LIB_SPECIFIC_RENDER_FUNCTION;                                                                                                         \
+                                                                                                                                                  \
+            /* advance the pcm pointer by that many items that have just been rendered */                                                         \
+            pcm += (framesToDoNow * Channels) % this->count;                                                                                      \
+            this->framesAlreadyRendered += framesToDoNow;                                                                                         \
+                                                                                                                                                  \
+            framesToRender -= framesToDoNow;                                                                                                      \
+        }                                                                                                                                         \
+        framesToRender = backup;                                                                                                                  \
+    }
 
 
 template<typename SAMPLEFORMAT>
 class StandardWrapper : public Song
 {
-public:
-
+    public:
     StandardWrapper(string filename);
     StandardWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
 
     // forbid copying
-    StandardWrapper(StandardWrapper const&) = delete;
-    StandardWrapper& operator=(StandardWrapper const&) = delete;
+    StandardWrapper(StandardWrapper const &) = delete;
+    StandardWrapper &operator=(StandardWrapper const &) = delete;
 
-    virtual ~StandardWrapper ();
+    virtual ~StandardWrapper();
 
-    void releaseBuffer () noexcept override;
+    void releaseBuffer() noexcept override;
 
     frame_t getFramesRendered();
 
-    virtual void render(pcm_t* bufferToFill, frame_t framesToRender=0) = 0;
+    virtual void render(pcm_t *bufferToFill, frame_t framesToRender = 0) = 0;
 
-protected:
+    protected:
     // used for double buffering, whenever we were unable to allocate a buffer big enough to hold the whole song in memory
-    pcm_t* preRenderBuf = nullptr;
+    pcm_t *preRenderBuf = nullptr;
 
     // a flag that indicates a prematurely abort of async buffer fill
     bool stopFillBuffer = false;
 
-    frame_t framesAlreadyRendered=0;
+    frame_t framesAlreadyRendered = 0;
 
     template<typename WRAPPERCLASS>
-    void fillBuffer(WRAPPERCLASS* context);
-    
+    void fillBuffer(WRAPPERCLASS *context);
+
     template<typename REAL_SAMPLEFORMAT>
-    void doAudioNormalization(REAL_SAMPLEFORMAT* bufferToFill, const frame_t framesToProcess);
+    void doAudioNormalization(REAL_SAMPLEFORMAT *bufferToFill, const frame_t framesToProcess);
 
     // used for sound normalization
     // usual range: (0,1]
@@ -112,12 +111,10 @@ protected:
     // 1.0 means 0 dbFS: no amplification needed in this case ;)
     float gainCorrection = 1.0f;
 
-private:
+    private:
     future<void> futureFillBuffer;
 
     void init() noexcept;
-
-
 };
 
 #endif // STANDARDWRAPPER_H

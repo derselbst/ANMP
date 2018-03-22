@@ -1,22 +1,23 @@
 #include "VGMStreamWrapper.h"
 
+#include "AtomicWrite.h"
 #include "Common.h"
 #include "Config.h"
-#include "AtomicWrite.h"
 
-extern "C"
-{
+extern "C" {
 #include <util.h>
 }
 // Constructors/Destructors
 //
 
-VGMStreamWrapper::VGMStreamWrapper(string filename) : StandardWrapper(filename)
+VGMStreamWrapper::VGMStreamWrapper(string filename)
+: StandardWrapper(filename)
 {
     this->initAttr();
 }
 
-VGMStreamWrapper::VGMStreamWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len) : StandardWrapper(filename, offset, len)
+VGMStreamWrapper::VGMStreamWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
+: StandardWrapper(filename, offset, len)
 {
     this->initAttr();
 }
@@ -26,7 +27,7 @@ void VGMStreamWrapper::initAttr()
     this->Format.SampleFormat = SampleFormat_t::int16;
 }
 
-VGMStreamWrapper::~VGMStreamWrapper ()
+VGMStreamWrapper::~VGMStreamWrapper()
 {
     this->releaseBuffer();
     this->close();
@@ -34,32 +35,32 @@ VGMStreamWrapper::~VGMStreamWrapper ()
 
 void VGMStreamWrapper::open()
 {
-    if(this->handle!=nullptr)
+    if (this->handle != nullptr)
     {
         return;
     }
 
     this->handle = init_vgmstream(this->Filename.c_str());
 
-    if (handle==nullptr)
+    if (handle == nullptr)
     {
         THROW_RUNTIME_ERROR("failed opening \"" << this->Filename << "\"");
     }
-    
+
     this->Format.SampleRate = this->handle->sample_rate;
     // group all available channels to individual stereo voices
     this->Format.ConfigureVoices(this->handle->channels, 2);
-    
+
     // hold a copy
-    this->fileLen = (this->handle->num_samples*1000.0) / this->Format.SampleRate;
+    this->fileLen = (this->handle->num_samples * 1000.0) / this->Format.SampleRate;
 }
 
 void VGMStreamWrapper::close() noexcept
 {
-    if(this->handle!=nullptr)
+    if (this->handle != nullptr)
     {
-        close_vgmstream (this->handle);
-        this->handle=nullptr;
+        close_vgmstream(this->handle);
+        this->handle = nullptr;
     }
 }
 
@@ -68,18 +69,18 @@ void VGMStreamWrapper::fillBuffer()
     StandardWrapper<int16_t>::fillBuffer(this);
 }
 
-void VGMStreamWrapper::render(pcm_t* bufferToFill, frame_t framesToRender)
+void VGMStreamWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
 {
     STANDARDWRAPPER_RENDER(int16_t, render_vgmstream(pcm, framesToDoNow, this->handle))
-    
-    this->doAudioNormalization(static_cast<int16_t*>(bufferToFill), framesToRender);
+
+    this->doAudioNormalization(static_cast<int16_t *>(bufferToFill), framesToRender);
 }
 
-vector<loop_t> VGMStreamWrapper::getLoopArray () const noexcept
+vector<loop_t> VGMStreamWrapper::getLoopArray() const noexcept
 {
     vector<loop_t> res;
 
-    if(this->handle!=nullptr && this->handle->loop_flag) // does stream contain loop information?
+    if (this->handle != nullptr && this->handle->loop_flag) // does stream contain loop information?
     {
         loop_t l;
         l.start = handle->loop_start_sample;
@@ -88,7 +89,7 @@ vector<loop_t> VGMStreamWrapper::getLoopArray () const noexcept
         // sanity check, for some reason many super smash bros brawl audio files (e.g. B02.brstm) may specify
         // end of loop past the actual song. in such a case use the last frame as loop.stop in hope that no
         // glitch will be hearable
-        if(l.stop > this->getFrames())
+        if (l.stop > this->getFrames())
         {
             l.stop = this->getFrames();
             CLOG(LogLevel_t::Warning, "\"" << this->Filename << "\" specifies the end of loop past the end of file. The loop was truncated to the last frame available." << endl)

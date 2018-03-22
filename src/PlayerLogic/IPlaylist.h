@@ -13,8 +13,7 @@ class Song;
 
 class IPlaylist
 {
-public:
-
+    public:
     // Empty virtual destructor for proper cleanup
     virtual ~IPlaylist() = default;
 
@@ -28,7 +27,7 @@ public:
      * 
      * @return a unique ID of the added song
      */
-    virtual size_t add (Song* song) = 0;
+    virtual size_t add(Song *song) = 0;
 
 
     /**
@@ -38,14 +37,14 @@ public:
      *
      * @param song the song to be removed
      */
-    virtual void remove (Song* song) = 0;
+    virtual void remove(Song *song) = 0;
 
     /**
      * @brief removes an element at the given index
      *
      * @param ID a zero-based index, specifying the element to be removed
      */
-    virtual void remove (size_t ID) = 0;
+    virtual void remove(size_t ID) = 0;
 
     /**
      * @brief clears the playlist
@@ -61,7 +60,7 @@ public:
      *
      * @return returns the song at the specified index, nullptr if song does not exist
      */
-    virtual Song* getSong(size_t ID) const = 0;
+    virtual Song *getSong(size_t ID) const = 0;
 
 
     /**
@@ -71,7 +70,7 @@ public:
      *
      * @return returns the new currently played back song, nullptr if there is no next song, which makes playback stop
      */
-    virtual Song* next () = 0;
+    virtual Song *next() = 0;
 
 
     /**
@@ -81,7 +80,7 @@ public:
      *
      * @return returns the new currently played back song, nullptr if there is no previous song, which makes playback stop
      */
-    virtual Song* previous () = 0;
+    virtual Song *previous() = 0;
 
 
     /**
@@ -89,8 +88,8 @@ public:
      *
      * @return returns the currently played back song, nullptr if there is no song set, which makes playback stop
      */
-    virtual Song*  getCurrentSong () = 0;
-    virtual size_t getCurrentSongId () = 0;
+    virtual Song *getCurrentSong() = 0;
+    virtual size_t getCurrentSongId() = 0;
 
     /**
      * @brief sets the song currently played back
@@ -101,8 +100,7 @@ public:
      *
      * @return returns the song at the specified index (same as this->getSong(ID))
      */
-    virtual Song* setCurrentSong(size_t ID) = 0;
-
+    virtual Song *setCurrentSong(size_t ID) = 0;
 };
 
 #endif // IPLAYLIST_H

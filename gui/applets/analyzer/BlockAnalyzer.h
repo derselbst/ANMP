@@ -29,65 +29,66 @@ class QPalette;
 
 class BlockAnalyzer : public AnalyzerBase
 {
-public:
-    BlockAnalyzer( QWidget* );
+    public:
+    BlockAnalyzer(QWidget *);
 
-    static GLuint createTexture( const QImage &image )
+    static GLuint createTexture(const QImage &image)
     {
-        return instance->bindTexture( image );
+        return instance->bindTexture(image);
     }
-    static void freeTexture( GLuint id )
+    static void freeTexture(GLuint id)
     {
-        instance->deleteTexture( id );
+        instance->deleteTexture(id);
     }
 
     // Signed ints because most of what we compare them against are ints
     static const int BLOCK_HEIGHT = 4;
-    static const int BLOCK_WIDTH  = 6;
-    static const int MIN_ROWS     = 30;  //arbitrary
-    static const int MIN_COLUMNS  = 32;  //arbitrary
-    static const int MAX_COLUMNS  = 512; //must be 2**n
-    static const int FADE_SIZE    = 90;
+    static const int BLOCK_WIDTH = 6;
+    static const int MIN_ROWS = 30; //arbitrary
+    static const int MIN_COLUMNS = 32; //arbitrary
+    static const int MAX_COLUMNS = 512; //must be 2**n
+    static const int FADE_SIZE = 90;
 
-protected:
+    protected:
     virtual void initializeGL();
     virtual void paintGL();
-    virtual void resizeGL( int w, int h );
-    virtual void analyze( const QVector<float>& );
-    virtual void paletteChange( const QPalette& );
+    virtual void resizeGL(int w, int h);
+    virtual void analyze(const QVector<float> &);
+    virtual void paletteChange(const QPalette &);
 
     void drawBackground();
     void determineStep();
 
-private:
+    private:
     struct Texture
     {
-        Texture( const QPixmap &pixmap ) :
-            id( BlockAnalyzer::createTexture( pixmap.toImage().mirrored() ) ), // Flip texture vertically for OpenGL bottom-left coordinate system
-            size( pixmap.size() )
-        {}
-        Texture( const Texture& texture )
+        Texture(const QPixmap &pixmap)
+        : id(BlockAnalyzer::createTexture(pixmap.toImage().mirrored())), // Flip texture vertically for OpenGL bottom-left coordinate system
+          size(pixmap.size())
+        {
+        }
+        Texture(const Texture &texture)
         {
             id = texture.id;
             size = texture.size;
         }
         ~Texture()
         {
-            BlockAnalyzer::freeTexture( id );
+            BlockAnalyzer::freeTexture(id);
         }
 
         GLuint id;
         QSize size;
     };
 
-    void drawTexture( Texture* texture, int x, int y, int sx, int sy );
+    void drawTexture(Texture *texture, int x, int y, int sx, int sy);
 
-    static BlockAnalyzer* instance;
+    static BlockAnalyzer *instance;
 
-    int m_columns, m_rows;      //number of rows and columns of blocks
+    int m_columns, m_rows; //number of rows and columns of blocks
     QPixmap m_barPixmap;
-    QVector<float> m_scope;      //so we don't create a vector every frame
-    QVector<float> m_store;  //current bar heights
+    QVector<float> m_scope; //so we don't create a vector every frame
+    QVector<float> m_store; //current bar heights
     QVector<float> m_yscale;
 
     QSharedPointer<Texture> m_barTexture;
@@ -95,8 +96,8 @@ private:
     QSharedPointer<Texture> m_background;
     QVector<QSharedPointer<Texture>> m_fade_bars;
 
-    QVector<uint>     m_fade_pos;
-    QVector<int>      m_fade_intensity;
+    QVector<uint> m_fade_pos;
+    QVector<int> m_fade_intensity;
 
     float m_step; //rows to fall per frame
 };

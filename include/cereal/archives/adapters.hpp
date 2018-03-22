@@ -35,13 +35,14 @@
 
 namespace cereal
 {
-  #ifdef CEREAL_FUTURE_EXPERIMENTAL
+#ifdef CEREAL_FUTURE_EXPERIMENTAL
 
-  // Forward declaration for friend access
-  template <class U, class A> U & get_user_data( A & );
+    // Forward declaration for friend access
+    template<class U, class A>
+    U &get_user_data(A &);
 
-  //! Wraps an archive and gives access to user data
-  /*! This adapter is useful if you require access to
+    //! Wraps an archive and gives access to user data
+    /*! This adapter is useful if you require access to
       either raw pointers or references within your
       serialization functions.
 
@@ -105,32 +106,35 @@ namespace cereal
 
       @tparam UserData The type to give the archive access to
       @tparam Archive The archive to wrap */
-  template <class UserData, class Archive>
-  class UserDataAdapter : public Archive
-  {
-    public:
-      //! Construct the archive with some user data struct
-      /*! This will forward all arguments (other than the user
+    template<class UserData, class Archive>
+    class UserDataAdapter : public Archive
+    {
+        public:
+        //! Construct the archive with some user data struct
+        /*! This will forward all arguments (other than the user
           data) to the wrapped archive type.  The UserDataAdapter
           can then be used identically to the wrapped archive type
 
           @tparam Args The arguments to pass to the constructor of
                        the archive. */
-      template <class ... Args>
-      UserDataAdapter( UserData & ud, Args && ... args ) :
-        Archive( std::forward<Args>( args )... ),
-        userdata( ud )
-      { }
+        template<class... Args>
+        UserDataAdapter(UserData &ud, Args &&... args)
+        : Archive(std::forward<Args>(args)...),
+          userdata(ud)
+        {
+        }
 
-    private:
-      //! Overload the rtti function to enable dynamic_cast
-      void rtti() {}
-      friend UserData & get_user_data<UserData>( Archive & ar );
-      UserData & userdata; //!< The actual user data
-  };
+        private:
+        //! Overload the rtti function to enable dynamic_cast
+        void rtti()
+        {
+        }
+        friend UserData &get_user_data<UserData>(Archive &ar);
+        UserData &userdata; //!< The actual user data
+    };
 
-  //! Retrieves user data from an archive wrapped by UserDataAdapter
-  /*! This will attempt to retrieve the user data associated with
+    //! Retrieves user data from an archive wrapped by UserDataAdapter
+    /*! This will attempt to retrieve the user data associated with
       some archive wrapped by UserDataAdapter.  If this is used on
       an archive that is not wrapped, a run-time exception will occur.
 
@@ -145,19 +149,19 @@ namespace cereal
       @param ar The archive
       @throws Exception if the archive this is used upon is not wrapped with
                         UserDataAdapter. */
-  template <class UserData, class Archive>
-  UserData & get_user_data( Archive & ar )
-  {
-    try
+    template<class UserData, class Archive>
+    UserData &get_user_data(Archive &ar)
     {
-      return dynamic_cast<UserDataAdapter<UserData, Archive> &>( ar ).userdata;
+        try
+        {
+            return dynamic_cast<UserDataAdapter<UserData, Archive> &>(ar).userdata;
+        }
+        catch (std::bad_cast const &)
+        {
+            throw ::cereal::Exception("Attempting to get user data from archive not wrapped in UserDataAdapter");
+        }
     }
-    catch( std::bad_cast const & )
-    {
-      throw ::cereal::Exception("Attempting to get user data from archive not wrapped in UserDataAdapter");
-    }
-  }
-  #endif // CEREAL_FUTURE_EXPERIMENTAL
+#endif // CEREAL_FUTURE_EXPERIMENTAL
 } // namespace cereal
 
 #endif // CEREAL_ARCHIVES_ADAPTERS_HPP_

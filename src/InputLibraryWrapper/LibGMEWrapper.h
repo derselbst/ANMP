@@ -13,8 +13,7 @@
   */
 class LibGMEWrapper : public StandardWrapper<int16_t>
 {
-public:
-
+    public:
     // Constructors/Destructors
     //
 
@@ -23,34 +22,32 @@ public:
     void initAttr();
 
     // forbid copying
-    LibGMEWrapper(LibGMEWrapper const&) = delete;
-    LibGMEWrapper& operator=(LibGMEWrapper const&) = delete;
+    LibGMEWrapper(LibGMEWrapper const &) = delete;
+    LibGMEWrapper &operator=(LibGMEWrapper const &) = delete;
 
     virtual ~LibGMEWrapper();
 
-    void open () override;
+    void open() override;
 
-    void close () noexcept override;
+    void close() noexcept override;
 
-    void fillBuffer () override;
-    
-    frame_t getFrames () const override;
+    void fillBuffer() override;
 
-    vector<loop_t> getLoopArray () const noexcept override;
+    frame_t getFrames() const override;
 
-    void render(pcm_t* bufferToFill, frame_t framesToRender=0) override;
+    vector<loop_t> getLoopArray() const noexcept override;
+
+    void render(pcm_t *bufferToFill, frame_t framesToRender = 0) override;
 
     void buildMetadata() noexcept override;
 
-private:
-    Music_Emu * handle = nullptr;
-    gme_info_t* info = nullptr;
+    private:
+    Music_Emu *handle = nullptr;
+    gme_info_t *info = nullptr;
 
-    static void printWarning( Music_Emu* emu );
+    static void printWarning(Music_Emu *emu);
 
     bool wholeSong() const;
-
-
 };
 
 #endif // LIBGMEWRAPPER_H

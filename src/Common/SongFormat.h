@@ -26,33 +26,32 @@ struct SongFormat
     // number of voices available for a song
     // voice == group of consecutive audio channels
     uint16_t Voices = 0;
-    
+
     vector<string> VoiceName;
-    
+
     mutable vector<bool> VoiceIsMuted;
-    
+
     mutable vector<uint16_t> VoiceChannels;
 
     void SetVoices(uint16_t nVoices);
 
-    
+
     /**
      * returns bitrate in bit/s
      */
-    int getBitrate () const;
+    int getBitrate() const;
 
     /**
      * whether this instance holds valid data
      */
     bool IsValid();
-    
+
     /**
      * from \c nChannels create voices and assign each as many as \c defaultChannelsPerVoice channels
      * 
      * will do nothing if this.IsValid()==true (unless update \c forced)
      */
-    void ConfigureVoices(const uint16_t nChannels, const uint16_t defaultChannelsPerVoice, bool force=false);
-
+    void ConfigureVoices(const uint16_t nChannels, const uint16_t defaultChannelsPerVoice, bool force = false);
 };
 
 #endif // SONGFORMAT_H

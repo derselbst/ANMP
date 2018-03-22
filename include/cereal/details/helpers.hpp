@@ -30,46 +30,54 @@
 #ifndef CEREAL_DETAILS_HELPERS_HPP_
 #define CEREAL_DETAILS_HELPERS_HPP_
 
-#include <type_traits>
 #include <cstdint>
-#include <utility>
 #include <memory>
-#include <unordered_map>
 #include <stdexcept>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
 
-#include <cereal/macros.hpp>
 #include <cereal/details/static_object.hpp>
+#include <cereal/macros.hpp>
 
 namespace cereal
 {
-  // ######################################################################
-  //! An exception class thrown when things go wrong at runtime
-  /*! @ingroup Utility */
-  struct Exception : public std::runtime_error
-  {
-    explicit Exception( const std::string & what_ ) : std::runtime_error(what_) {}
-    explicit Exception( const char * what_ ) : std::runtime_error(what_) {}
-  };
+    // ######################################################################
+    //! An exception class thrown when things go wrong at runtime
+    /*! @ingroup Utility */
+    struct Exception : public std::runtime_error
+    {
+        explicit Exception(const std::string &what_)
+        : std::runtime_error(what_)
+        {
+        }
+        explicit Exception(const char *what_)
+        : std::runtime_error(what_)
+        {
+        }
+    };
 
-  // ######################################################################
-  //! The size type used by cereal
-  /*! To ensure compatability between 32, 64, etc bit machines, we need to use
+    // ######################################################################
+    //! The size type used by cereal
+    /*! To ensure compatability between 32, 64, etc bit machines, we need to use
       a fixed size type instead of size_t, which may vary from machine to
       machine. */
-  using size_type = uint64_t;
+    using size_type = uint64_t;
 
-  // forward decls
-  class BinaryOutputArchive;
-  class BinaryInputArchive;
+    // forward decls
+    class BinaryOutputArchive;
+    class BinaryInputArchive;
 
-  // ######################################################################
-  namespace detail
-  {
-    struct NameValuePairCore {}; //!< Traits struct for NVPs
-  }
+    // ######################################################################
+    namespace detail
+    {
+        struct NameValuePairCore
+        {
+        }; //!< Traits struct for NVPs
+    }
 
-  //! For holding name value pairs
-  /*! This pairs a name (some string) with some value such that an archive
+    //! For holding name value pairs
+    /*! This pairs a name (some string) with some value such that an archive
       can potentially take advantage of the pairing.
 
       In serialization functions, NameValuePairs are usually created like so:
@@ -131,163 +139,187 @@ namespace cereal
       explicitly control whether they want to use NVPs or not.
 
       @internal */
-  template <class T>
-  class NameValuePair : detail::NameValuePairCore
-  {
-    private:
-      // If we get passed an array, keep the type as is, otherwise store
-      // a reference if we were passed an l value reference, else copy the value
-      using Type = typename std::conditional<std::is_array<typename std::remove_reference<T>::type>::value,
-                                             typename std::remove_cv<T>::type,
-                                             typename std::conditional<std::is_lvalue_reference<T>::value,
-                                                                       T,
-                                                                       typename std::decay<T>::type>::type>::type;
+    template<class T>
+    class NameValuePair : detail::NameValuePairCore
+    {
+        private:
+        // If we get passed an array, keep the type as is, otherwise store
+        // a reference if we were passed an l value reference, else copy the value
+        using Type = typename std::conditional<std::is_array<typename std::remove_reference<T>::type>::value,
+                                               typename std::remove_cv<T>::type,
+                                               typename std::conditional<std::is_lvalue_reference<T>::value,
+                                                                         T,
+                                                                         typename std::decay<T>::type>::type>::type;
 
-      // prevent nested nvps
-      static_assert( !std::is_base_of<detail::NameValuePairCore, T>::value,
-                     "Cannot pair a name to a NameValuePair" );
+        // prevent nested nvps
+        static_assert(!std::is_base_of<detail::NameValuePairCore, T>::value,
+                      "Cannot pair a name to a NameValuePair");
 
-      NameValuePair & operator=( NameValuePair const & ) = delete;
+        NameValuePair &operator=(NameValuePair const &) = delete;
 
-    public:
-      //! Constructs a new NameValuePair
-      /*! @param n The name of the pair
+        public:
+        //! Constructs a new NameValuePair
+        /*! @param n The name of the pair
           @param v The value to pair.  Ideally this should be an l-value reference so that
                    the value can be both loaded and saved to.  If you pass an r-value reference,
                    the NameValuePair will store a copy of it instead of a reference.  Thus you should
                    only pass r-values in cases where this makes sense, such as the result of some
                    size() call.
           @internal */
-      NameValuePair( char const * n, T && v ) : name(n), value(std::forward<T>(v)) {}
+        NameValuePair(char const *n, T &&v)
+        : name(n), value(std::forward<T>(v))
+        {
+        }
 
-      char const * name;
-      Type value;
-  };
+        char const *name;
+        Type value;
+    };
 
-  //! A specialization of make_nvp<> that simply forwards the value for binary archives
-  /*! @relates NameValuePair
+    //! A specialization of make_nvp<> that simply forwards the value for binary archives
+    /*! @relates NameValuePair
       @internal */
-  template<class Archive, class T> inline
-  typename
-  std::enable_if<std::is_same<Archive, ::cereal::BinaryInputArchive>::value ||
-                 std::is_same<Archive, ::cereal::BinaryOutputArchive>::value,
-  T && >::type
-  make_nvp( const char *, T && value )
-  {
-    return std::forward<T>(value);
-  }
+    template<class Archive, class T>
+    inline
+    typename std::enable_if<std::is_same<Archive, ::cereal::BinaryInputArchive>::value ||
+                            std::is_same<Archive, ::cereal::BinaryOutputArchive>::value,
+                            T &&>::type
+    make_nvp(const char *, T &&value)
+    {
+        return std::forward<T>(value);
+    }
 
-  //! A specialization of make_nvp<> that actually creates an nvp for non-binary archives
-  /*! @relates NameValuePair
+    //! A specialization of make_nvp<> that actually creates an nvp for non-binary archives
+    /*! @relates NameValuePair
       @internal */
-  template<class Archive, class T> inline
-  typename
-  std::enable_if<!std::is_same<Archive, ::cereal::BinaryInputArchive>::value &&
-                 !std::is_same<Archive, ::cereal::BinaryOutputArchive>::value,
-  NameValuePair<T> >::type
-  make_nvp( const char * name, T && value)
-  {
-    return {name, std::forward<T>(value)};
-  }
+    template<class Archive, class T>
+    inline
+    typename std::enable_if<!std::is_same<Archive, ::cereal::BinaryInputArchive>::value &&
+                            !std::is_same<Archive, ::cereal::BinaryOutputArchive>::value,
+                            NameValuePair<T>>::type
+    make_nvp(const char *name, T &&value)
+    {
+        return {name, std::forward<T>(value)};
+    }
 
-  //! Convenience for creating a templated NVP
-  /*! For use in internal generic typing functions which have an
+//! Convenience for creating a templated NVP
+/*! For use in internal generic typing functions which have an
       Archive type declared
       @internal */
-  #define CEREAL_NVP_(name, value) ::cereal::make_nvp<Archive>(name, value)
+#define CEREAL_NVP_(name, value) ::cereal::make_nvp<Archive>(name, value)
 
-  // ######################################################################
-  //! A wrapper around data that can be serialized in a binary fashion
-  /*! This class is used to demarcate data that can safely be serialized
+    // ######################################################################
+    //! A wrapper around data that can be serialized in a binary fashion
+    /*! This class is used to demarcate data that can safely be serialized
       as a binary chunk of data.  Individual archives can then choose how
       best represent this during serialization.
 
       @internal */
-  template <class T>
-  struct BinaryData
-  {
-    //! Internally store the pointer as a void *, keeping const if created with
-    //! a const pointer
-    using PT = typename std::conditional<std::is_const<typename std::remove_pointer<T>::type>::value,
-                                         const void *,
-                                         void *>::type;
+    template<class T>
+    struct BinaryData
+    {
+        //! Internally store the pointer as a void *, keeping const if created with
+        //! a const pointer
+        using PT = typename std::conditional<std::is_const<typename std::remove_pointer<T>::type>::value,
+                                             const void *,
+                                             void *>::type;
 
-    BinaryData( T && d, uint64_t s ) : data(std::forward<T>(d)), size(s) {}
+        BinaryData(T &&d, uint64_t s)
+        : data(std::forward<T>(d)), size(s)
+        {
+        }
 
-    PT data;       //!< pointer to beginning of data
-    uint64_t size; //!< size in bytes
-  };
+        PT data; //!< pointer to beginning of data
+        uint64_t size; //!< size in bytes
+    };
 
-  // ######################################################################
-  namespace detail
-  {
-    // base classes for type checking
-    /* The rtti virtual function only exists to enable an archive to
+    // ######################################################################
+    namespace detail
+    {
+        // base classes for type checking
+        /* The rtti virtual function only exists to enable an archive to
        be used in a polymorphic fashion, if necessary.  See the
        archive adapters for an example of this */
-    class OutputArchiveBase
-    {
-      public:
-        OutputArchiveBase() = default;
-        OutputArchiveBase( OutputArchiveBase && ) CEREAL_NOEXCEPT {}
-        OutputArchiveBase & operator=( OutputArchiveBase && ) CEREAL_NOEXCEPT { return *this; }
-        virtual ~OutputArchiveBase() CEREAL_NOEXCEPT = default;
+        class OutputArchiveBase
+        {
+            public:
+            OutputArchiveBase() = default;
+            OutputArchiveBase(OutputArchiveBase &&) CEREAL_NOEXCEPT
+            {
+            }
+            OutputArchiveBase &operator=(OutputArchiveBase &&) CEREAL_NOEXCEPT
+            {
+                return *this;
+            }
+            virtual ~OutputArchiveBase() CEREAL_NOEXCEPT = default;
 
-      private:
-        virtual void rtti() {}
-    };
+            private:
+            virtual void rtti()
+            {
+            }
+        };
 
-    class InputArchiveBase
-    {
-      public:
-        InputArchiveBase() = default;
-        InputArchiveBase( InputArchiveBase && ) CEREAL_NOEXCEPT {}
-        InputArchiveBase & operator=( InputArchiveBase && ) CEREAL_NOEXCEPT { return *this; }
-        virtual ~InputArchiveBase() CEREAL_NOEXCEPT = default;
+        class InputArchiveBase
+        {
+            public:
+            InputArchiveBase() = default;
+            InputArchiveBase(InputArchiveBase &&) CEREAL_NOEXCEPT
+            {
+            }
+            InputArchiveBase &operator=(InputArchiveBase &&) CEREAL_NOEXCEPT
+            {
+                return *this;
+            }
+            virtual ~InputArchiveBase() CEREAL_NOEXCEPT = default;
 
-      private:
-        virtual void rtti() {}
-    };
+            private:
+            virtual void rtti()
+            {
+            }
+        };
 
-    // forward decls for polymorphic support
-    template <class Archive, class T> struct polymorphic_serialization_support;
-    struct adl_tag;
+        // forward decls for polymorphic support
+        template<class Archive, class T>
+        struct polymorphic_serialization_support;
+        struct adl_tag;
 
-    // used during saving pointers
-    static const int32_t msb_32bit  = 0x80000000;
-    static const int32_t msb2_32bit = 0x40000000;
-  }
+        // used during saving pointers
+        static const int32_t msb_32bit = 0x80000000;
+        static const int32_t msb2_32bit = 0x40000000;
+    }
 
-  // ######################################################################
-  //! A wrapper around size metadata
-  /*! This class provides a way for archives to have more flexibility over how
+    // ######################################################################
+    //! A wrapper around size metadata
+    /*! This class provides a way for archives to have more flexibility over how
       they choose to serialize size metadata for containers.  For some archive
       types, the size may be implicitly encoded in the output (e.g. JSON) and
       not need an explicit entry.  Specializing serialize or load/save for
       your archive and SizeTags allows you to choose what happens.
 
       @internal */
-  template <class T>
-  class SizeTag
-  {
-    private:
-      // Store a reference if passed an lvalue reference, otherwise
-      // make a copy of the data
-      using Type = typename std::conditional<std::is_lvalue_reference<T>::value,
-                                             T,
-                                             typename std::decay<T>::type>::type;
+    template<class T>
+    class SizeTag
+    {
+        private:
+        // Store a reference if passed an lvalue reference, otherwise
+        // make a copy of the data
+        using Type = typename std::conditional<std::is_lvalue_reference<T>::value,
+                                               T,
+                                               typename std::decay<T>::type>::type;
 
-      SizeTag & operator=( SizeTag const & ) = delete;
+        SizeTag &operator=(SizeTag const &) = delete;
 
-    public:
-      SizeTag( T && sz ) : size(std::forward<T>(sz)) {}
+        public:
+        SizeTag(T &&sz)
+        : size(std::forward<T>(sz))
+        {
+        }
 
-      Type size;
-  };
+        Type size;
+    };
 
-  // ######################################################################
-  //! A wrapper around a key and value for serializing data into maps.
-  /*! This class just provides a grouping of keys and values into a struct for
+    // ######################################################################
+    //! A wrapper around a key and value for serializing data into maps.
+    /*! This class just provides a grouping of keys and values into a struct for
       human readable archives. For example, XML archives will use this wrapper
       to write maps like so:
 
@@ -306,76 +338,85 @@ namespace cereal
 
       \sa make_map_item
       @internal */
-  template <class Key, class Value>
-  struct MapItem
-  {
-    using KeyType = typename std::conditional<
-      std::is_lvalue_reference<Key>::value,
-      Key,
-      typename std::decay<Key>::type>::type;
-
-    using ValueType = typename std::conditional<
-      std::is_lvalue_reference<Value>::value,
-      Value,
-      typename std::decay<Value>::type>::type;
-
-    //! Construct a MapItem from a key and a value
-    /*! @internal */
-    MapItem( Key && key_, Value && value_ ) : key(std::forward<Key>(key_)), value(std::forward<Value>(value_)) {}
-
-    MapItem & operator=( MapItem const & ) = delete;
-
-    KeyType key;
-    ValueType value;
-
-    //! Serialize the MapItem with the NVPs "key" and "value"
-    template <class Archive> inline
-    void CEREAL_SERIALIZE_FUNCTION_NAME(Archive & archive)
+    template<class Key, class Value>
+    struct MapItem
     {
-      archive( make_nvp<Archive>("key",   key),
-               make_nvp<Archive>("value", value) );
-    }
-  };
+        using KeyType = typename std::conditional<
+        std::is_lvalue_reference<Key>::value,
+        Key,
+        typename std::decay<Key>::type>::type;
 
-  //! Create a MapItem so that human readable archives will group keys and values together
-  /*! @internal
-      @relates MapItem */
-  template <class KeyType, class ValueType> inline
-  MapItem<KeyType, ValueType> make_map_item(KeyType && key, ValueType && value)
-  {
-    return {std::forward<KeyType>(key), std::forward<ValueType>(value)};
-  }
+        using ValueType = typename std::conditional<
+        std::is_lvalue_reference<Value>::value,
+        Value,
+        typename std::decay<Value>::type>::type;
 
-  namespace detail
-  {
-    //! Tag for Version, which due to its anonymous namespace, becomes a different
-    //! type in each translation unit
-    /*! This allows CEREAL_CLASS_VERSION to be safely called in a header file */
-    namespace{ struct version_binding_tag {}; }
+        //! Construct a MapItem from a key and a value
+        /*! @internal */
+        MapItem(Key &&key_, Value &&value_)
+        : key(std::forward<Key>(key_)), value(std::forward<Value>(value_))
+        {
+        }
 
-    // ######################################################################
-    //! Version information class
-    /*! This is the base case for classes that have not been explicitly
-        registered */
-    template <class T, class BindingTag = version_binding_tag> struct Version
-    {
-      static const std::uint32_t version = 0;
-      // we don't need to explicitly register these types since they
-      // always get a version number of 0
+        MapItem &operator=(MapItem const &) = delete;
+
+        KeyType key;
+        ValueType value;
+
+        //! Serialize the MapItem with the NVPs "key" and "value"
+        template<class Archive>
+        inline void CEREAL_SERIALIZE_FUNCTION_NAME(Archive &archive)
+        {
+            archive(make_nvp<Archive>("key", key),
+                    make_nvp<Archive>("value", value));
+        }
     };
 
-    //! Holds all registered version information
-    struct Versions
+    //! Create a MapItem so that human readable archives will group keys and values together
+    /*! @internal
+      @relates MapItem */
+    template<class KeyType, class ValueType>
+    inline MapItem<KeyType, ValueType> make_map_item(KeyType &&key, ValueType &&value)
     {
-      std::unordered_map<std::size_t, std::uint32_t> mapping;
+        return {std::forward<KeyType>(key), std::forward<ValueType>(value)};
+    }
 
-      std::uint32_t find( std::size_t hash, std::uint32_t version )
-      {
-        const auto result = mapping.emplace( hash, version );
-        return result.first->second;
-      }
-    }; // struct Versions
-  } // namespace detail
+    namespace detail
+    {
+        //! Tag for Version, which due to its anonymous namespace, becomes a different
+        //! type in each translation unit
+        /*! This allows CEREAL_CLASS_VERSION to be safely called in a header file */
+        namespace
+        {
+            struct version_binding_tag
+            {
+            };
+        }
+
+        // ######################################################################
+        //! Version information class
+        /*! This is the base case for classes that have not been explicitly
+        registered */
+        template<class T, class BindingTag = version_binding_tag>
+        struct Version
+        {
+            static const std::uint32_t version = 0;
+            // we don't need to explicitly register these types since they
+            // always get a version number of 0
+        };
+
+        //! Holds all registered version information
+        struct Versions
+        {
+            std::unordered_map<std::size_t, std::uint32_t> mapping;
+
+            std::uint32_t find(std::size_t hash, std::uint32_t version)
+            {
+                const auto result = mapping.emplace(hash, version);
+                return result.first->second;
+            }
+        }; // struct Versions
+    } // namespace detail
 } // namespace cereal
 
 #endif // CEREAL_DETAILS_HELPERS_HPP_

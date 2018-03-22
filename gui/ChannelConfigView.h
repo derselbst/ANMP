@@ -10,14 +10,14 @@ class ChannelConfigView : public QTableView
 {
     Q_OBJECT
 
-public:
-    ChannelConfigView(QWidget * parent = 0);
+    public:
+    ChannelConfigView(QWidget *parent = 0);
     void Select(Qt::CheckState state);
-    void SetContextMenu(QMenu* menu);
+    void SetContextMenu(QMenu *menu);
 
-protected:
+    protected:
     void contextMenuEvent(QContextMenuEvent *event) override;
 
 
-    QMenu* contextMenu;
+    QMenu *contextMenu;
 };

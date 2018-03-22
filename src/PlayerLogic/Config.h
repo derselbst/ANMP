@@ -3,8 +3,8 @@
 
 #include "types.h"
 
-#include <string>
 #include <cereal/cereal.hpp>
+#include <string>
 
 /**
   * class Config
@@ -18,23 +18,23 @@
 
 class Config
 {
-public:
+    public:
     Config();
 
     // returns ANMP's currently active configuration
-    static Config& Singleton();
-    
+    static Config &Singleton();
+
     //**********************************
     //     GLOBAL INTERNAL SECTION     *
     //**********************************
-    
+
     static constexpr const char UserDir[] = ".anmp";
     static constexpr const char UserFile[] = "config.json";
 
     // number of frames that are pushed to audioDriver during each run AND minimum no. of frames
     // that have to be prepared (i.e. rendered) by a single call to Song::fillBuffer()
     static constexpr frame_t FramesToRender = 2048;
-    
+
     // indicates the default audio driver to use
     // you have to call Player::initAudio() for changes to take effect
     AudioDriver_t audioDriver = AudioDriver_t::Alsa;
@@ -96,7 +96,7 @@ public:
     float gmeEchoDepth = 0.2f;
 
     bool gmePlayForever = false;
-    
+
     bool gmeMultiChannel = false;
 
     //**********************************
@@ -108,7 +108,7 @@ public:
 
     // no. of the MIDI CC that indicates the stop of a looped section
     uint8_t MidiControllerLoopStop = 103;
-    
+
     // no. of the MIDI CC that indicates the loop count of looped sections
     uint8_t MidiControllerLoopCount = 104;
 
@@ -135,10 +135,10 @@ public:
     // always use the default soundfont
     bool FluidsynthForceDefaultSoundfont = false;
 
-    // package builders may define this, to default to a bundled soundfont
-    #ifndef FLUIDSYNTH_DEFAULT_SF2
-        #define FLUIDSYNTH_DEFAULT_SF2 ""
-    #endif
+// package builders may define this, to default to a bundled soundfont
+#ifndef FLUIDSYNTH_DEFAULT_SF2
+#define FLUIDSYNTH_DEFAULT_SF2 ""
+#endif
     // the soundfont to use, if there are no more suitable soundfonts found
     // this should be a GM Midi conform SF2
     string FluidsynthDefaultSoundfont = FLUIDSYNTH_DEFAULT_SF2;
@@ -148,112 +148,112 @@ public:
     double FluidsynthDamping = 0.01;
     int FluidsynthWidth = 0;
     double FluidsynthLevel = 0.8;
-    
+
     string FluidsynthBankSelect = "mma";
     bool FluidsynthChannel9IsDrum = false;
-    
-    
+
+
     //**********************************
     //   LIBMODPLUG-SPECIFIC SECTION   *
     //**********************************
-    
+
     bool ModPlugEnableNoiseRed = false;
-    
+
     bool ModPlugEnableReverb = false;
-    
+
     bool ModPlugEnableBass = false;
-    
+
     bool ModPlugEnableSurround = false;
-    
+
     int ModPlugSampleRate = 44100;
-    
+
     // Reverb level 0(quiet)-100(loud)
     int ModPlugReverbDepth = 50;
-    
+
     // Reverb delay in ms, usually 40-200ms
     int ModPlugReverbDelay = 100;
-    
+
     // XBass level 0(quiet)-100(loud)
     int ModPlugBassAmount = 25;
-    
+
     // XBass cutoff in Hz 10-100
     int ModPlugBassRange = 60;
-    
+
     // Surround level 0(quiet)-100(heavy)
     int ModPlugSurroundDepth = 50;
-    
+
     // Surround delay in ms, usually 5-40ms
     int ModPlugSurroundDelay = 10;
-    
+
     //**********************************
     //   LIBMAD-SPECIFIC SECTION   *
     //**********************************
     bool MadPermissive = false;
-    
-    
+
+
     void Load() noexcept;
     void Save() noexcept;
-    
+
     template<class Archive>
-    void serialize(Archive& archive, const uint32_t version)
+    void serialize(Archive &archive, const uint32_t version)
     {
-        switch(version)
+        switch (version)
         {
             case 4:
-                archive( CEREAL_NVP(this->MadPermissive) );
-                archive( CEREAL_NVP(this->FluidsynthBankSelect) );
-                archive( CEREAL_NVP(this->FluidsynthChannel9IsDrum) );
+                archive(CEREAL_NVP(this->MadPermissive));
+                archive(CEREAL_NVP(this->FluidsynthBankSelect));
+                archive(CEREAL_NVP(this->FluidsynthChannel9IsDrum));
                 [[fallthrough]];
             case 3: // added MidiControllerLoopCount
-                archive( CEREAL_NVP(this->MidiControllerLoopCount) );
+                archive(CEREAL_NVP(this->MidiControllerLoopCount));
                 [[fallthrough]];
             case 2: // only added modplug variables and gmeMultiChannel, rest is the same as in version 1
-                archive( CEREAL_NVP(this->gmeMultiChannel) );
-                
-                archive( CEREAL_NVP(this->ModPlugEnableNoiseRed) );
-                archive( CEREAL_NVP(this->ModPlugEnableReverb) );
-                archive( CEREAL_NVP(this->ModPlugEnableBass) );
-                archive( CEREAL_NVP(this->ModPlugEnableSurround) );
-                archive( CEREAL_NVP(this->ModPlugSampleRate) );
-                archive( CEREAL_NVP(this->ModPlugReverbDepth) );
-                archive( CEREAL_NVP(this->ModPlugReverbDelay) );
-                archive( CEREAL_NVP(this->ModPlugBassAmount) );
-                archive( CEREAL_NVP(this->ModPlugBassRange) );
-                archive( CEREAL_NVP(this->ModPlugSurroundDepth) );
-                archive( CEREAL_NVP(this->ModPlugSurroundDelay) );
+                archive(CEREAL_NVP(this->gmeMultiChannel));
+
+                archive(CEREAL_NVP(this->ModPlugEnableNoiseRed));
+                archive(CEREAL_NVP(this->ModPlugEnableReverb));
+                archive(CEREAL_NVP(this->ModPlugEnableBass));
+                archive(CEREAL_NVP(this->ModPlugEnableSurround));
+                archive(CEREAL_NVP(this->ModPlugSampleRate));
+                archive(CEREAL_NVP(this->ModPlugReverbDepth));
+                archive(CEREAL_NVP(this->ModPlugReverbDelay));
+                archive(CEREAL_NVP(this->ModPlugBassAmount));
+                archive(CEREAL_NVP(this->ModPlugBassRange));
+                archive(CEREAL_NVP(this->ModPlugSurroundDepth));
+                archive(CEREAL_NVP(this->ModPlugSurroundDelay));
                 [[fallthrough]];
             case 1:
-                archive( CEREAL_NVP(this->audioDriver) );
-                archive( CEREAL_NVP(this->useLoopInfo) );
-                archive( CEREAL_NVP(this->overridingGlobalLoopCount) );
-                archive( CEREAL_NVP(this->PreRenderTime) );
-                archive( CEREAL_NVP(this->RenderWholeSong) );
-                archive( CEREAL_NVP(this->useAudioNormalization) );
+                archive(CEREAL_NVP(this->audioDriver));
+                archive(CEREAL_NVP(this->useLoopInfo));
+                archive(CEREAL_NVP(this->overridingGlobalLoopCount));
+                archive(CEREAL_NVP(this->PreRenderTime));
+                archive(CEREAL_NVP(this->RenderWholeSong));
+                archive(CEREAL_NVP(this->useAudioNormalization));
 
-                archive( CEREAL_NVP(this->fadeTimeStop) );
-                archive( CEREAL_NVP(this->fadeTimePause) );
+                archive(CEREAL_NVP(this->fadeTimeStop));
+                archive(CEREAL_NVP(this->fadeTimePause));
 
-                archive( CEREAL_NVP(this->useHle) );
+                archive(CEREAL_NVP(this->useHle));
 
-                archive( CEREAL_NVP(this->gmeAccurateEmulation) );
-                archive( CEREAL_NVP(this->gmeSampleRate) );
-                archive( CEREAL_NVP(this->gmeEchoDepth) );
-                archive( CEREAL_NVP(this->gmePlayForever) );
+                archive(CEREAL_NVP(this->gmeAccurateEmulation));
+                archive(CEREAL_NVP(this->gmeSampleRate));
+                archive(CEREAL_NVP(this->gmeEchoDepth));
+                archive(CEREAL_NVP(this->gmePlayForever));
 
-                archive( CEREAL_NVP(this->MidiControllerLoopStart) );
-                archive( CEREAL_NVP(this->MidiControllerLoopStop) );
+                archive(CEREAL_NVP(this->MidiControllerLoopStart));
+                archive(CEREAL_NVP(this->MidiControllerLoopStop));
 
-                archive( CEREAL_NVP(this->FluidsynthPeriodSize) );
-                archive( CEREAL_NVP(this->FluidsynthEnableReverb) );
-                archive( CEREAL_NVP(this->FluidsynthEnableChorus) );
-                archive( CEREAL_NVP(this->FluidsynthMultiChannel) );
-                archive( CEREAL_NVP(this->FluidsynthSampleRate) );
-                archive( CEREAL_NVP(this->FluidsynthForceDefaultSoundfont) );
-                archive( CEREAL_NVP(this->FluidsynthDefaultSoundfont) );
-                archive( CEREAL_NVP(this->FluidsynthRoomSize) );
-                archive( CEREAL_NVP(this->FluidsynthDamping) );
-                archive( CEREAL_NVP(this->FluidsynthWidth) );
-                archive( CEREAL_NVP(this->FluidsynthLevel) );
+                archive(CEREAL_NVP(this->FluidsynthPeriodSize));
+                archive(CEREAL_NVP(this->FluidsynthEnableReverb));
+                archive(CEREAL_NVP(this->FluidsynthEnableChorus));
+                archive(CEREAL_NVP(this->FluidsynthMultiChannel));
+                archive(CEREAL_NVP(this->FluidsynthSampleRate));
+                archive(CEREAL_NVP(this->FluidsynthForceDefaultSoundfont));
+                archive(CEREAL_NVP(this->FluidsynthDefaultSoundfont));
+                archive(CEREAL_NVP(this->FluidsynthRoomSize));
+                archive(CEREAL_NVP(this->FluidsynthDamping));
+                archive(CEREAL_NVP(this->FluidsynthWidth));
+                archive(CEREAL_NVP(this->FluidsynthLevel));
                 break;
 
             default:
@@ -262,10 +262,10 @@ public:
     }
 };
 
-CEREAL_CLASS_VERSION( Config, 4 )
+CEREAL_CLASS_VERSION(Config, 4)
 
 // global var holding the singleton Config instance
 // just a nice little shortcut, so one doesnt always have to write Config::Singleton()
-extern Config& gConfig;
+extern Config &gConfig;
 
 #endif // CONFIG_H
