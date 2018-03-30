@@ -96,7 +96,6 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.8
-            - george-edison55-precise-backports
           packages:
             - clang-3.8
             - libc++-dev
@@ -126,7 +125,6 @@ matrix:
         apt:
           sources:
             - llvm-toolchain-trusty-3.9
-            - george-edison55-precise-backports
           packages:
             - clang-3.9
             - libc++-dev
@@ -156,7 +154,6 @@ matrix:
         apt:
           sources:
             - llvm-toolchain-trusty-4.0
-            - george-edison55-precise-backports
           packages:
             - clang-4.0
             - libc++-dev
