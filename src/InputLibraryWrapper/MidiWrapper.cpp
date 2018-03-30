@@ -196,7 +196,6 @@ void MidiWrapper::parseEvents()
                             break;
                         }
 
-                        int notesStillPlaying = 0;
                         smf_event_t *evt_of_loop;
                         // read in every single event following the position we currently are
                         while ((evt_of_loop = smf_get_next_event(this->smf)) != nullptr)
@@ -209,32 +208,12 @@ void MidiWrapper::parseEvents()
 
                                 if (evtTime >= info.stop.Value)
                                 {
-                                    if (notesStillPlaying == 0)
-                                    {
-                                        // all events of this loop handled, all started notes finished, stop here
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        // need to continue processing in order to catch note offs after loopstop
-                                        if ((evt_of_loop->midi_buffer[0] & 0xF0) != 0x80) // noteoff
-                                        {
-                                            continue;
-                                        }
-                                    }
+                                    // all events of this loop handled, stop here
+                                    break;
                                 }
-
-                                if ((evt_of_loop->midi_buffer[0] & 0xF0) == 0x80) // noteoff
-                                {
-                                    --notesStillPlaying;
-                                }
-                                else if ((evt_of_loop->midi_buffer[0] & 0xF0) == 0x90) // noteon
-                                {
-                                    ++notesStillPlaying;
-                                }
-
-                                int noOfInsertions = floor((endOfSong - evtTime * 1000) / ((info.stop.Value - info.start.Value) * 1000));
-                                if (info.count > 0)
+                                
+                                int noOfInsertions = floor((endOfSong - evtTime*1000) / ((info.stop.Value - info.start.Value)*1000));
+                                if(info.count > 0)
                                 {
                                     // trim finite loops
                                     noOfInsertions = min<int>(noOfInsertions, info.count);
@@ -243,8 +222,8 @@ void MidiWrapper::parseEvents()
                                 const double loopDur = (info.stop_tick.Value - info.start_tick.Value);
                                 for (int i = 1; i <= noOfInsertions; i++)
                                 {
-                                    smf_event_t *newEvt = smf_event_new_from_pointer(evt_of_loop->midi_buffer, evt_of_loop->midi_buffer_length);
-
+                                    smf_event_t* newEvt = smf_event_new_from_pointer(evt_of_loop->midi_buffer, evt_of_loop->midi_buffer_length);
+                                    
                                     int pulses = evt_of_loop->time_pulses + loopDur * i;
                                     smf_track_add_event_pulses(evt_of_loop->track, newEvt, pulses);
                                 }
