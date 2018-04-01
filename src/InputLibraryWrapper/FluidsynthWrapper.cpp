@@ -117,8 +117,12 @@ void FluidsynthWrapper::setupSynth(MidiWrapper &midi)
 
     // press the big red panic/reset button
     fluid_synth_system_reset(this->synth);
-    fluid_synth_set_channel_type(this->synth, 9, CHANNEL_TYPE_MELODIC);
-    fluid_synth_bank_select(this->synth, 9, 0); // try to force drum channel to bank 0
+    
+    if(!gConfig.FluidsynthChannel9IsDrum)
+    {
+        fluid_synth_set_channel_type(this->synth, 9, CHANNEL_TYPE_MELODIC);
+        fluid_synth_bank_select(this->synth, 9, 0); // try to force drum channel to bank 0
+    }
 
     // increase default polyphone
     fluid_synth_set_polyphony(this->synth, 1024 * 4);
@@ -242,7 +246,7 @@ void FluidsynthWrapper::setupSettings()
 
         fluid_settings_setint(this->settings, "synth.min-note-length", 1);
         // only in mma mode, bank high and bank low controllers are handled as specified by MIDI standard
-        fluid_settings_setstr(this->settings, "synth.midi-bank-select", "mma");
+        fluid_settings_setstr(this->settings, "synth.midi-bank-select", gConfig.FluidsynthBankSelect);
 
         // these maybe needed for fast renderer (even fluidsynth itself isnt sure about)
         fluid_settings_setstr(this->settings, "player.timing-source", "sample");
