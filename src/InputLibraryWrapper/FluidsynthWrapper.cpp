@@ -246,13 +246,14 @@ void FluidsynthWrapper::setupSettings()
 
         fluid_settings_setint(this->settings, "synth.min-note-length", 1);
         // only in mma mode, bank high and bank low controllers are handled as specified by MIDI standard
-        fluid_settings_setstr(this->settings, "synth.midi-bank-select", gConfig.FluidsynthBankSelect);
+        fluid_settings_setstr(this->settings, "synth.midi-bank-select", gConfig.FluidsynthBankSelect.c_str());
 
         // these maybe needed for fast renderer (even fluidsynth itself isnt sure about)
         fluid_settings_setstr(this->settings, "player.timing-source", "sample");
         fluid_settings_setint(this->settings, "synth.parallel-render", 0);
         fluid_settings_setint(this->settings, "synth.threadsafe-api", 1);
         fluid_settings_setint(this->settings, "synth.lock-memory", 0);
+        fluid_settings_setint(this->settings, "synth.dynamic-sample-loading", 1);
     }
 
     int stereoChannels = gConfig.FluidsynthMultiChannel ? NMidiChannels : 1;
