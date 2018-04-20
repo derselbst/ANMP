@@ -156,7 +156,6 @@ void StandardWrapper<IGNORE>::doAudioNormalization(SAMPLEFORMAT *pcm, const fram
 
     /* audio normalization factor */
     const float AbsoluteGain = (numeric_limits<SAMPLEFORMAT>::max()) / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);
-#pragma omp parallel for default(none) firstprivate(pcm) shared(itemsToProcess, AbsoluteGain) schedule(static)
     for (unsigned int i = 0; i < itemsToProcess && !this->stopFillBuffer; i++)
     {
         pcm[i] = static_cast<SAMPLEFORMAT>(pcm[i] * AbsoluteGain);
