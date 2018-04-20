@@ -78,7 +78,7 @@ template<typename T>
 void AnalyzerBase::prepareScope(const Song *s, frame_t playhead, QVector<float> &scope)
 {
     const unsigned int nVoices = s->Format.Voices;
-    const T *pcmBuf = static_cast<T *>(s->data) + playhead * s->Format.Channels();
+    const T *pcmBuf = static_cast<T *>(s->data) + (playhead * s->Format.Channels()) % s->count;
 
     for (unsigned int frame = 0; (frame < gConfig.FramesToRender) && ((playhead + frame) < s->getFrames()); frame++)
     {
