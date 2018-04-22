@@ -60,6 +60,8 @@ void ConfigDialog::fillProperties()
     this->ui->spinLevel->setValue(this->newConfig.FluidsynthLevel);
     this->ui->checkChorus->setChecked(this->newConfig.FluidsynthEnableChorus);
     this->ui->checkChorus->setChecked(this->newConfig.FluidsynthEnableChorus);
+    this->ui->checkChan9Drum->setChecked(this->newConfig.FluidsynthChannel9IsDrum);
+    this->ui->comboBankSelMode->setCurrentText(QString::fromStdString(this->newConfig.FluidsynthBankSelect));
 }
 
 
@@ -212,6 +214,8 @@ void ConfigDialog::buttonBoxClicked(QAbstractButton *btn)
         this->newConfig.FluidsynthWidth = this->ui->spinWidth->value();
         this->newConfig.FluidsynthLevel = this->ui->spinLevel->value();
         this->newConfig.FluidsynthEnableChorus = this->ui->checkChorus->isChecked();
+        this->newConfig.FluidsynthChannel9IsDrum = this->ui->checkChan9Drum->isChecked();
+        this->newConfig.FluidsynthBankSelect = this->ui->comboBankSelMode->currentText().toStdString();
 
         std::swap(gConfig, this->newConfig);
         if (stdbtn == QDialogButtonBox::Save)
