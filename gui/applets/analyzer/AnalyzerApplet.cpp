@@ -41,12 +41,14 @@ void AnalyzerApplet::closeEvent(QCloseEvent *e)
 void AnalyzerApplet::startGraphics()
 {
     this->player->onPlayheadChanged += make_pair(this, &AnalyzerApplet::redraw);
+    this->player->onIsPlayingChanged += make_pair(this, &AnalyzerApplet::reset);
     this->analyzerWidget->connectSignals();
 }
 
 void AnalyzerApplet::stopGraphics()
 {
     this->player->onPlayheadChanged -= this;
+    this->player->onIsPlayingChanged -= this;
 
     if (this->analyzerWidget != nullptr)
     {
@@ -104,4 +106,13 @@ void AnalyzerApplet::redraw(void *ctx, frame_t pos)
     AnalyzerApplet *context = static_cast<AnalyzerApplet *>(ctx);
 
     context->analyzerWidget->processData(context->player->getCurrentSong(), pos);
+}
+
+void AnalyzerApplet::reset(void *ctx, bool isPlaying, Nullable<string>)
+{
+    AnalyzerApplet *context = static_cast<AnalyzerApplet *>(ctx);
+    if(!isPlaying)
+    {
+        context->analyzerWidget->reset();
+    }
 }

@@ -172,5 +172,10 @@ void AnalyzerBase::setFps(int fps)
     m_renderTimer->setInterval(1000 / fps);
 }
 
+void AnalyzerBase::reset()
+{
+    m_fftData.fill(0);
+    analyze(m_fftData);
+}
 
 #include "AnalyzerBase.moc"

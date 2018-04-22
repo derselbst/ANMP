@@ -42,6 +42,7 @@ class AnalyzerApplet : public QMainWindow
     void closeEvent(QCloseEvent *e) override;
 
     static void redraw(void *ctx, frame_t pos);
+    static void reset(void *ctx, bool, Nullable<string>);
 };
 
 #endif // ANALYZERAPPLET_H
