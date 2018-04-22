@@ -78,7 +78,6 @@
      <addaction name="actionASCII"/>
      <addaction name="actionBlocky"/>
     </widget>
-    <addaction name="actionFileBrowser"/>
     <addaction name="menuVisualization"/>
     <addaction name="separator"/>
     <addaction name="actionSettings"/>

@@ -130,8 +130,6 @@ class MainWindow : public QMainWindow
 
     void slotSongAdded(const QString& file, int, int);
 
-    void on_actionFileBrowser_triggered(bool checked);
-
     void settingsDialogAccepted();
 };
 
