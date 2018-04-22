@@ -174,7 +174,7 @@ void PlaylistView::showInspector()
 
 int PlaylistView::sizeHintForColumn(int column) const
 {
-    if (column < this->colSizes.size() && this->colSizes[column] > 0)
+    if (column >= 0 && static_cast<unsigned int>(column) < this->colSizes.size() && this->colSizes[column] > 0)
     {
         return this->colSizes[column];
     }
@@ -191,12 +191,20 @@ void PlaylistView::resizeEvent(QResizeEvent *evt)
 
     // assign each column width equally
     std::vector<unsigned int> freeCols, fullCols;
+    std::vector<int> sizeHint;
+    freeCols.reserve(colCount);
+    fullCols.reserve(colCount);
+    sizeHint.resize(colCount);    
+    
     for (unsigned int i = 0; i < colCount; i++)
     {
         int w = newWidth / colCount;
 
+        int hint = this->QTableView::sizeHintForColumn(i);
+        // queue the size hint (calling it is expensive as the model get full)
+        sizeHint[i] = hint;
         // keep track how much free space there is avail for column and how much more space all columns need
-        int free = w - this->QTableView::sizeHintForColumn(i);
+        int free = w - hint;
         if (free >= 0) // this is a free column indeed
         {
             freeCols.push_back(i);
@@ -213,13 +221,13 @@ void PlaylistView::resizeEvent(QResizeEvent *evt)
     for (unsigned int i = 0; i < fullCols.size(); i++)
     {
         unsigned int fullColIdx = fullCols[i];
-        int needed = this->QTableView::sizeHintForColumn(fullColIdx) - this->colSizes[fullColIdx];
+        int needed = sizeHint[fullColIdx] - this->colSizes[fullColIdx];
 
         // go through free columns and steal width
         for (unsigned int j = 0; j < freeCols.size() && needed > 0; j++)
         {
             unsigned int freeColIdx = freeCols[j];
-            int free = this->colSizes[freeColIdx] - this->QTableView::sizeHintForColumn(freeColIdx);
+            int free = this->colSizes[freeColIdx] - sizeHint[freeColIdx];
             free /= fullCols.size();
 
             free = min(free, needed);
@@ -242,7 +250,7 @@ void PlaylistView::resizeEvent(QResizeEvent *evt)
     for (unsigned int j = freeCols.size(); j > 0 && diff > 0; j--)
     {
         unsigned int freeColIdx = freeCols[j - 1];
-        int free = max(0, this->colSizes[freeColIdx] - this->QTableView::sizeHintForColumn(freeColIdx));
+        int free = max(0, this->colSizes[freeColIdx] - sizeHint[freeColIdx]);
         free = min(diff, free);
 
         this->colSizes[freeColIdx] -= free;
