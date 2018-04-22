@@ -134,20 +134,6 @@ void MainWindow::selectSong(const QModelIndex &index)
     }
 }
 
-void MainWindow::on_actionFileBrowser_triggered(bool checked)
-{
-    if (checked)
-    {
-        this->treeView->show();
-        this->listView->show();
-    }
-    else
-    {
-        this->treeView->hide();
-        this->listView->hide();
-    }
-}
-
 void MainWindow::settingsDialogAccepted()
 {
     if (this->settingsView->newConfig.audioDriver != gConfig.audioDriver)
@@ -325,7 +311,14 @@ void MainWindow::ToggleSelectedVoices(const QModelIndex &index)
 void MainWindow::DoChannelMuting(bool (*pred)(bool voiceIsMuted, bool voiceIsSelected))
 {
     QModelIndex root = this->channelConfigModel->invisibleRootItem()->index();
-    const SongFormat &f = this->player->getCurrentSong()->Format;
+    
+    const Song *s = this->player->getCurrentSong();
+    if (s == nullptr)
+    {
+        return;
+    }
+
+    const SongFormat &f = s->Format;
     QItemSelectionModel *sel = this->channelView->selectionModel();
     QModelIndexList selRows = sel->selectedRows();
 
