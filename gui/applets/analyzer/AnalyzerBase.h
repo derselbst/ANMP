@@ -62,7 +62,6 @@ class AnalyzerBase : public QGLWidget
     void disconnectSignals();
     //     void currentDesktopChanged();
     void processData(const Song *s, frame_t playhead);
-    void reset();
 };
 
 
