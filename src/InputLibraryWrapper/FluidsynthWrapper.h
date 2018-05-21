@@ -85,6 +85,7 @@ class FluidsynthWrapper
     void setupSynth(MidiWrapper &);
     void setupSeq();
 
+    void deleteEvents();
     void deleteSynth();
     void deleteSeq();
 

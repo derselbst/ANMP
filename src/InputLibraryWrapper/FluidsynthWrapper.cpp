@@ -6,43 +6,45 @@
 #include "CommonExceptions.h"
 #include "Config.h"
 
-
 #include <chrono>
 #include <cstring>
 #include <thread> // std::this_thread::sleep_for
 
 FluidsynthWrapper::FluidsynthWrapper()
 {
+    if((this->synthEvent = new_fluid_event()) == nullptr ||
+       (this->callbackEvent = new_fluid_event()) == nullptr ||
+       (this->callbackNoteEvent = new_fluid_event()) == nullptr)
+    {
+        this->deleteEvents();
+        throw std::bad_alloc();
+    }
+    
+    fluid_event_set_source(this->synthEvent, -1);
+    fluid_event_set_source(this->callbackEvent, -1);
+    fluid_event_set_source(this->callbackNoteEvent, -1);
 }
 
 FluidsynthWrapper::~FluidsynthWrapper()
 {
-    if (this->callbackEvent != nullptr)
-    {
-        delete_fluid_event(this->callbackEvent);
-        this->callbackEvent = nullptr;
-    }
-
-    if (this->callbackNoteEvent != nullptr)
-    {
-        delete_fluid_event(this->callbackNoteEvent);
-        this->callbackNoteEvent = nullptr;
-    }
-
-    if (this->synthEvent != nullptr)
-    {
-        delete_fluid_event(this->synthEvent);
-        this->synthEvent = nullptr;
-    }
-
     this->deleteSeq();
     this->deleteSynth();
+    this->deleteEvents();
+    
+    delete_fluid_settings(this->settings);
+    this->settings = nullptr;
+}
 
-    if (this->settings != nullptr)
-    {
-        delete_fluid_settings(this->settings);
-        this->settings = nullptr;
-    }
+void FluidsynthWrapper::deleteEvents()
+{
+    delete_fluid_event(this->callbackEvent);
+    this->callbackEvent = nullptr;
+    
+    delete_fluid_event(this->callbackNoteEvent);
+    this->callbackNoteEvent = nullptr;
+    
+    delete_fluid_event(this->synthEvent);
+    this->synthEvent = nullptr;
 }
 
 void FluidsynthWrapper::setupSeq()
@@ -57,24 +59,37 @@ void FluidsynthWrapper::setupSeq()
 
         // register synth as first destination
         this->synthId = fluid_sequencer_register_fluidsynth(this->sequencer, this->synth);
+        
+        fluid_event_set_dest(this->synthEvent, this->synthId);
     }
 
     if (this->myselfID.hasValue)
     {
+        CLOG(LogLevel_t::Error, "myselfid had a value!");
         // unregister any client
         fluid_sequencer_unregister_client(this->sequencer, this->myselfID.Value);
     }
     // register myself as second destination
     this->myselfID = fluid_sequencer_register_client(this->sequencer, "schedule_note_callback", &FluidsynthWrapper::FluidSeqNoteCallback, this);
+    
+    // destination may have changed, refresh it
+    fluid_event_set_dest(this->callbackNoteEvent, this->myselfID.Value);
 
     // remove all events from the sequencer's queue
     fluid_sequencer_remove_events(this->sequencer, -1, -1, -1);
+    
+    this->initTick = fluid_sequencer_get_tick(this->sequencer);
 }
 
 void FluidsynthWrapper::deleteSeq()
 {
     if (this->sequencer != nullptr)
     {
+        // explictly unregister all clients before deleting the seq
+        fluid_sequencer_unregister_client(this->sequencer, this->myselfID.Value);
+        fluid_event_unregistering(this->synthEvent);
+        fluid_sequencer_send_now(this->sequencer, this->synthEvent);
+        
         delete_fluid_sequencer(this->sequencer);
         this->sequencer = nullptr;
     }
@@ -123,9 +138,6 @@ void FluidsynthWrapper::setupSynth(MidiWrapper &midi)
         fluid_synth_set_channel_type(this->synth, 9, CHANNEL_TYPE_MELODIC);
         fluid_synth_bank_select(this->synth, 9, 0); // try to force drum channel to bank 0
     }
-
-    // increase default polyphone
-    fluid_synth_set_polyphony(this->synth, 1024 * 4);
 
     // set highest resampler quality on all channels
     fluid_synth_set_interp_method(this->synth, -1, FLUID_INTERP_HIGHEST);
@@ -247,13 +259,10 @@ void FluidsynthWrapper::setupSettings()
         fluid_settings_setint(this->settings, "synth.min-note-length", 1);
         // only in mma mode, bank high and bank low controllers are handled as specified by MIDI standard
         fluid_settings_setstr(this->settings, "synth.midi-bank-select", gConfig.FluidsynthBankSelect.c_str());
-
-        // these maybe needed for fast renderer (even fluidsynth itself isnt sure about)
-        fluid_settings_setstr(this->settings, "player.timing-source", "sample");
-        fluid_settings_setint(this->settings, "synth.parallel-render", 0);
         fluid_settings_setint(this->settings, "synth.threadsafe-api", 1);
         fluid_settings_setint(this->settings, "synth.lock-memory", 0);
         fluid_settings_setint(this->settings, "synth.dynamic-sample-loading", 1);
+        fluid_settings_setint(this->settings, "synth.polyphony", 2048);
     }
 
     int stereoChannels = gConfig.FluidsynthMultiChannel ? NMidiChannels : 1;
@@ -273,29 +282,7 @@ void FluidsynthWrapper::DeepInit(MidiWrapper &caller)
 {
     this->setupSynth(caller);
     this->setupSeq();
-    this->initTick = fluid_sequencer_get_tick(this->sequencer);
-
-    if (this->synthEvent == nullptr)
-    {
-        this->synthEvent = new_fluid_event();
-        fluid_event_set_source(this->synthEvent, -1);
-        fluid_event_set_dest(this->synthEvent, this->synthId);
-    }
-
-    if (this->callbackEvent == nullptr)
-    {
-        this->callbackEvent = new_fluid_event();
-        fluid_event_set_source(this->callbackEvent, -1);
-    }
-
-    if (this->callbackNoteEvent == nullptr)
-    {
-        this->callbackNoteEvent = new_fluid_event();
-        fluid_event_set_source(this->callbackNoteEvent, -1);
-    }
-    // destination may have changed, refresh it
-    fluid_event_set_dest(this->callbackNoteEvent, this->myselfID.Value);
-
+    
     // Load the soundfont
     if (!fluid_is_soundfont(this->cachedSf2.c_str()))
     {
