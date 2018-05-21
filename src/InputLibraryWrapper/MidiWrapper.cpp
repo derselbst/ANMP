@@ -309,7 +309,8 @@ vector<loop_t> MidiWrapper::getLoopArray() const noexcept
             {
                 const MidiLoopInfo &info = this->trackLoops[t][c][l];
 
-                if (info.start_tick.hasValue && info.stop_tick.hasValue)
+                // only infinite midi track loops are considered as master loop for the entire song
+                if (info.start_tick.hasValue && info.stop_tick.hasValue && info.count == 0)
                 {
                     int duration = info.stop_tick.Value - info.start_tick.Value;
                     if (max == nullptr)
