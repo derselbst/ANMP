@@ -152,7 +152,6 @@ void FluidsynthWrapper::setupSynth(MidiWrapper &midi)
 
     fluid_synth_set_chorus_on(this->synth, gConfig.FluidsynthEnableChorus);
 
-#if FLUIDSYNTH_VERSION_MAJOR >= 2
     constexpr int ACTUAL_FILTERFC_THRESHOLD = 11700 /* Hz */;
 
     constexpr int CBFD_FILTERFC_CC = 34;
@@ -228,9 +227,6 @@ void FluidsynthWrapper::setupSynth(MidiWrapper &midi)
     }
 
     delete_fluid_mod(my_mod);
-#else
-#warning "Cannot simulate Rareware's IIR Lowpass Filter used in CBFD and JFG. Fluidsynth too old, use at least version 2.0"
-#endif
 }
 
 void FluidsynthWrapper::deleteSynth()
