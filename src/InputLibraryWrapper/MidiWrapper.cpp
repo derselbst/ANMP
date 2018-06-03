@@ -205,26 +205,22 @@ void MidiWrapper::parseEvents()
                             {
                                 // events shall not be looped beyond the end of the song
                                 const double evtTime = evt_of_loop->time_seconds;
+                                bool isInfinite = info.count == 0;
 
                                 if (evtTime >= info.stop.Value)
                                 {
                                     // all events of this loop handled, stop here
                                     break;
                                 }
-                                
-                                int noOfInsertions = floor((endOfSong - evtTime*1000) / ((info.stop.Value - info.start.Value)*1000));
-                                if(info.count > 0)
-                                {
-                                    // trim finite loops
-                                    noOfInsertions = min<int>(noOfInsertions, info.count);
-                                }
 
-                                const double loopDur = (info.stop_tick.Value - info.start_tick.Value);
-                                for(int i=1; i<noOfInsertions; i++)
+                                const double loopDurSec = (info.stop.Value - info.start.Value);
+                                const double loopDurTick = (info.stop_tick.Value - info.start_tick.Value);
+                                
+                                for(int i=1; (isInfinite || i < info.count) && ((evtTime + loopDurSec * i)*1000 < endOfSong); i++)
                                 {
                                     smf_event_t* newEvt = smf_event_new_from_pointer(evt_of_loop->midi_buffer, evt_of_loop->midi_buffer_length);
                                     
-                                    int pulses = evt_of_loop->time_pulses + loopDur * i;
+                                    int pulses = evt_of_loop->time_pulses + loopDurTick * i;
                                     smf_track_add_event_pulses(evt_of_loop->track, newEvt, pulses);
                                 }
                             }
