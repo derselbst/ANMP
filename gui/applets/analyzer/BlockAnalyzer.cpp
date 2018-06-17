@@ -135,7 +135,7 @@ void BlockAnalyzer::paintGL()
     // Paint the background
     drawTexture(m_background.data(), 0, 0, 0, 0);
 
-    for (uint y, x = 0; x < (uint)m_scope.size(); ++x)
+    for (int y, x = 0; x < m_scope.size(); ++x)
     {
         // determine y
         for (y = 0; y < m_yscale.size() && m_scope[x] < m_yscale[y]; ++y)
@@ -165,8 +165,8 @@ void BlockAnalyzer::paintGL()
         if (m_fade_intensity[x] > 0)
         {
             const uint offset = --m_fade_intensity[x];
-            const uint y = m_fade_pos[x] * (BLOCK_HEIGHT + 1);
-            if (y < (uint)height())
+            const int y = m_fade_pos[x] * (BLOCK_HEIGHT + 1);
+            if (y < height())
             {
                 drawTexture(m_fade_bars[offset].data(), x * (BLOCK_WIDTH + 1), y, 0, 0);
             }

@@ -96,7 +96,7 @@ class BlockAnalyzer : public AnalyzerBase
     QSharedPointer<Texture> m_background;
     QVector<QSharedPointer<Texture>> m_fade_bars;
 
-    QVector<uint> m_fade_pos;
+    QVector<int> m_fade_pos;
     QVector<int> m_fade_intensity;
 
     float m_step; //rows to fall per frame

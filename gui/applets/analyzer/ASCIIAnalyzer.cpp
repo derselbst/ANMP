@@ -124,7 +124,7 @@ void ASCIIAnalyzer::paintGL()
     // Paint the background
     drawTexture(m_background.data(), 0, 0, 0, 0);
 
-    for (uint y, x = 0; x < (uint)m_scope.size(); ++x)
+    for (int y, x = 0; x < m_scope.size(); ++x)
     {
         // determine y
         for (y = 0; y < m_yscale.size() && m_scope[x] < m_yscale[y]; ++y)
@@ -135,7 +135,7 @@ void ASCIIAnalyzer::paintGL()
         // the higher the y, the lower the bar physically is.
         if ((float)y > m_store[x])
         {
-            y = uint(m_store[x] += m_step);
+            y = int(m_store[x] += m_step);
         }
         else
         {

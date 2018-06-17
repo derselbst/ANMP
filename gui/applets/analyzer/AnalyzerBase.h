@@ -27,9 +27,6 @@
 
 #include <QGLWidget>
 
-#include <vector> //included for convenience
-
-
 #include "types.h"
 
 class Song;
