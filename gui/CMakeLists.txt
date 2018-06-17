@@ -37,6 +37,9 @@ if(USE_GUI)
 
     # from the just generated xml file, generate implementation files for the dbus adaptor
     qt5_add_dbus_adaptor(GUI_SRCS ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml mainwindow.h MainWindow mainwindow_adaptor MainWindowAdaptor)
+    
+    # skip processing those auto generated files
+    set_property(SOURCE mainwindow_adaptor.cpp mainwindow_adaptor.h PROPERTY SKIP_AUTOGEN ON)
 
     
     qt5_wrap_ui(UI_HEADERS
