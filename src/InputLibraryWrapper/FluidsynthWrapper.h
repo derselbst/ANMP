@@ -36,10 +36,9 @@ class FluidsynthWrapper
     // returns the samplerate that will be synthesized at
     unsigned int GetSampleRate();
 
-    unsigned int GetVoices();
-    unsigned int GetAudioVoices();
-    unsigned int GetEffectVoices();
-    static constexpr unsigned int GetChannelsPerVoice();
+    int GetAudioVoices();
+    int GetEffectVoices();
+    static constexpr int GetChannelsPerVoice();
 
     // returns the tick count the sequencer had during a call to this.DeepInit()
     unsigned int GetInitTick();
