@@ -151,12 +151,6 @@ void FluidsynthWrapper::setupSynth(MidiWrapper &midi)
     fluid_synth_set_sample_rate(this->synth, gConfig.FluidsynthSampleRate);
     this->cachedSampleRate = gConfig.FluidsynthSampleRate;
 
-    // reverb and chrous settings might have changed
-    fluid_synth_set_reverb_on(this->synth, gConfig.FluidsynthEnableReverb);
-    fluid_synth_set_reverb(this->synth, gConfig.FluidsynthRoomSize, gConfig.FluidsynthDamping, gConfig.FluidsynthWidth, gConfig.FluidsynthLevel);
-
-    fluid_synth_set_chorus_on(this->synth, gConfig.FluidsynthEnableChorus);
-
     constexpr int ACTUAL_FILTERFC_THRESHOLD = 11700 /* Hz */;
 
     constexpr int CBFD_FILTERFC_CC = 34;
@@ -269,7 +263,16 @@ void FluidsynthWrapper::setupSettings()
     int stereoChannels = gConfig.FluidsynthMultiChannel ? NMidiChannels : 1;
     fluid_settings_setint(this->settings, "synth.audio-groups", stereoChannels);
     fluid_settings_setint(this->settings, "synth.audio-channels", stereoChannels);
-
+    
+    // reverb and chrous settings might have changed
+    // those are realtime settings, so they will update the synth in every case
+    fluid_settings_setint(this->settings, "synth.chorus.active", gConfig.FluidsynthEnableChorus);
+    fluid_settings_setint(this->settings, "synth.reverb.active", gConfig.FluidsynthEnableReverb);
+    fluid_settings_setnum(this->settings, "synth.reverb.room-size", gConfig.FluidsynthRoomSize);
+    fluid_settings_setnum(this->settings, "synth.reverb.damping", gConfig.FluidsynthDamping);
+    fluid_settings_setnum(this->settings, "synth.reverb.width", gConfig.FluidsynthWidth);
+    fluid_settings_setnum(this->settings, "synth.reverb.level", gConfig.FluidsynthLevel);
+    
     fluid_settings_setint(this->settings, "synth.cpu-cores", 4);
 }
 
@@ -363,23 +366,38 @@ void FluidsynthWrapper::ConfigureChannels(SongFormat *f)
         }
     }
 
-    for (int i = nAudVoices; i < nVoices; i++)
+    int i, fxid = 0;
+    fluid_settings_getint(this->settings, "synth.reverb.active", &i);
+    if(i)
     {
-        int fxid = i - nAudVoices;
-        f->VoiceName[i] = "Fx Channel " + to_string(fxid);
-        if (fxid == 0)
-        {
-            f->VoiceName[i] += " (reverb)";
-        }
-        else if (fxid == 1)
-        {
-            f->VoiceName[i] += " (chorus)";
-        }
-        else
-        {
-            f->VoiceName[i] += " (unknown fx)";
-        }
+        f->VoiceName[nAudVoices + fxid] = "Fx Channel " + to_string(fxid) + " (reverb)";
+        fxid++;
     }
+    
+    fluid_settings_getint(this->settings, "synth.chorus.active", &i);
+    if(i)
+    {
+        f->VoiceName[nAudVoices + fxid] = "Fx Channel " + to_string(fxid) + " (chorus)";
+        fxid++;
+    }
+    
+//     for (int i = nAudVoices; i < nVoices; i++)
+//     {
+//         int fxid = i - nAudVoices;
+//         f->VoiceName[i] = "Fx Channel " + to_string(fxid);
+//         if (fxid == 0)
+//         {
+//             f->VoiceName[i] += " (reverb)";
+//         }
+//         else if (fxid == 1)
+//         {
+//             f->VoiceName[i] += " (chorus)";
+//         }
+//         else
+//         {
+//             f->VoiceName[i] += " (unknown fx)";
+//         }
+//     }
 }
 
 int FluidsynthWrapper::GetAudioVoices()
@@ -392,10 +410,24 @@ int FluidsynthWrapper::GetAudioVoices()
 
 int FluidsynthWrapper::GetEffectVoices()
 {
-    int chan;
-    // dont read from the synth, we need this at a time when the synth hasnt been created
-    fluid_settings_getint(this->settings, "synth.effects-channels", &chan);
-    return chan * 2 / FluidsynthWrapper::GetChannelsPerVoice();
+    int chan = 0, i;
+    
+    fluid_settings_getint(this->settings, "synth.reverb.active", &i);
+    if(i)
+    {
+        chan++;
+    }
+    
+    fluid_settings_getint(this->settings, "synth.chorus.active", &i);
+    if(i)
+    {
+        chan++;
+    }
+    return chan;
+//     int chan;
+//     // dont read from the synth, we need this at a time when the synth hasnt been created
+//     fluid_settings_getint(this->settings, "synth.effects-channels", &chan);
+//     return chan * 2 / FluidsynthWrapper::GetChannelsPerVoice();
 }
 
 unsigned int FluidsynthWrapper::GetSampleRate()
