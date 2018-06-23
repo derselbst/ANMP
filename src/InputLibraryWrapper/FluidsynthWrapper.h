@@ -8,6 +8,7 @@
 
 // libsmf - helper lib for reading midi files
 #include <smf.h>
+#include <vector>
 
 class MidiWrapper;
 struct MidiLoopInfo;
@@ -79,8 +80,15 @@ class FluidsynthWrapper
 
     string cachedSf2;
     int cachedSf2Id = -1;
+    
+    // temporary sample mixdown buffer used by fluid_synth_process
+    std::vector<float> sampleBuffer;
+    
+    // pointer to small buffers within sampleBuffer of dry and effects audio
+    std::vector<float*> dry, fx;
 
     void setupSettings();
+    void setupMixdownBuffer();
     void setupSynth(MidiWrapper &);
     void setupSeq();
 

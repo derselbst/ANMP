@@ -7,8 +7,8 @@
 #include "Config.h"
 
 #include <chrono>
-#include <cstring>
 #include <thread> // std::this_thread::sleep_for
+#include <algorithm>
 
 FluidsynthWrapper::FluidsynthWrapper()
 {
@@ -45,6 +45,11 @@ void FluidsynthWrapper::deleteEvents()
     
     delete_fluid_event(this->synthEvent);
     this->synthEvent = nullptr;
+}
+
+constexpr int FluidsynthWrapper::GetChannelsPerVoice()
+{
+    return 2; //stereo
 }
 
 void FluidsynthWrapper::setupSeq()
@@ -268,10 +273,41 @@ void FluidsynthWrapper::setupSettings()
     fluid_settings_setint(this->settings, "synth.cpu-cores", 4);
 }
 
+void FluidsynthWrapper::setupMixdownBuffer()
+{
+    constexpr int ChanPerV = FluidsynthWrapper::GetChannelsPerVoice();
+
+    // lookup number of audio and effect (stereo-)channels of the synth
+    // see „synth.audio-channels“ and „synth.effects-channels“ settings respectively
+    int audVoices = this->GetAudioVoices();
+    int fxVoices = this->GetEffectVoices();
+    int channels = (audVoices + fxVoices) * ChanPerV;
+    
+    // allocate one single sample buffer
+    this->sampleBuffer.resize(gConfig.FramesToRender * channels);
+    
+    // array of buffers used to setup channel mapping
+    this->dry.resize(audVoices * ChanPerV);
+    this->fx.resize(fxVoices * ChanPerV);
+    
+    // setup buffers to mix dry stereo audio to
+    for(int i=0; i<audVoices*ChanPerV; i++)
+    {
+        this->dry[i] = &this->sampleBuffer.data()[i * gConfig.FramesToRender];
+    }
+    
+    // setup buffers to mix effects stereo audio to
+    for(int i=0; i<fxVoices*ChanPerV; i++)
+    {
+        this->fx[i] = &this->sampleBuffer.data()[audVoices*ChanPerV*gConfig.FramesToRender + i * gConfig.FramesToRender];
+    }
+}
+
 void FluidsynthWrapper::ShallowInit()
 {
     this->setupSettings();
     this->cachedSampleRate = gConfig.FluidsynthSampleRate;
+    this->setupMixdownBuffer();
 }
 
 void FluidsynthWrapper::DeepInit(MidiWrapper &caller)
@@ -312,7 +348,7 @@ void FluidsynthWrapper::ConfigureChannels(SongFormat *f)
     f->SetVoices(nVoices);
     for (int i = 0; i < nVoices; i++)
     {
-        f->VoiceChannels[i] = this->GetChannelsPerVoice();
+        f->VoiceChannels[i] = FluidsynthWrapper::GetChannelsPerVoice();
     }
 
     if (nAudVoices == 1)
@@ -344,11 +380,6 @@ void FluidsynthWrapper::ConfigureChannels(SongFormat *f)
             f->VoiceName[i] += " (unknown fx)";
         }
     }
-}
-
-constexpr int FluidsynthWrapper::GetChannelsPerVoice()
-{
-    return 2; //stereo
 }
 
 int FluidsynthWrapper::GetAudioVoices()
@@ -622,28 +653,12 @@ void FluidsynthWrapper::Render(float *bufferToFill, frame_t framesToRender)
     int fxVoices = this->GetEffectVoices();
     int channels = (audVoices + fxVoices) * ChanPerV;
     
-    // allocate one single sample buffer
-    float samp_buf[gConfig.FramesToRender * channels];
-    
-    // array of buffers used to setup channel mapping
-    float *dry[audVoices * ChanPerV], *fx[fxVoices * ChanPerV];
-    
-    // setup buffers to mix dry stereo audio to
-    for(int i=0; i<audVoices*ChanPerV; i++)
-    {
-        dry[i] = &samp_buf[i * gConfig.FramesToRender];
-    }
-    
-    // setup buffers to mix effects stereo audio to
-    for(int i=0; i<fxVoices*ChanPerV; i++)
-    {
-        fx[i] = &samp_buf[audVoices*ChanPerV*gConfig.FramesToRender + i * gConfig.FramesToRender];
-    }
+    float **dry = this->dry.data(), **fx = this->fx.data();
     
     // dont forget to zero sample buffer(s) before each rendering
-    memset(samp_buf, 0, sizeof(samp_buf));
+    std::fill(this->sampleBuffer.begin(), this->sampleBuffer.end(), 0);
     
-    int err = fluid_synth_process(this->synth, framesToRender, fxVoices*ChanPerV, fx, audVoices*ChanPerV, dry);
+    int err = fluid_synth_process(this->synth, framesToRender, this->fx.size(), fx, this->dry.size(), dry);
     if(err == FLUID_FAILED)
         THROW_RUNTIME_ERROR("fluid_synth_process() failed!");
 
