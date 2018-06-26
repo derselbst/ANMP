@@ -17,8 +17,8 @@ set(analyzer_SRCS
     fht.cpp
 )
 
-qt5_wrap_ui(UI_HEADERS
+qt5_wrap_ui(UI_ANAL_HEADER
     AnalyzerApplet.ui
 )
 
-ADD_LIBRARY(${LIBANAL} STATIC ${UI_HEADERS} ${analyzer_SRCS})
+ADD_LIBRARY(${LIBANAL} STATIC ${UI_ANAL_HEADER} ${analyzer_SRCS})
