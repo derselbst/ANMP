@@ -39,6 +39,7 @@ class FluidsynthWrapper
 
     int GetAudioVoices();
     int GetEffectVoices();
+    int GetEffectCount();
     static constexpr int GetChannelsPerVoice();
 
     // returns the tick count the sequencer had during a call to this.DeepInit()

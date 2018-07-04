@@ -263,6 +263,7 @@ void FluidsynthWrapper::setupSettings()
     int stereoChannels = gConfig.FluidsynthMultiChannel ? NMidiChannels : 1;
     fluid_settings_setint(this->settings, "synth.audio-groups", stereoChannels);
     fluid_settings_setint(this->settings, "synth.audio-channels", stereoChannels);
+    fluid_settings_setint(this->settings, "synth.effects-groups", stereoChannels);
     
     // reverb and chrous settings might have changed
     // those are realtime settings, so they will update the synth in every case
@@ -284,25 +285,34 @@ void FluidsynthWrapper::setupMixdownBuffer()
     // see „synth.audio-channels“ and „synth.effects-channels“ settings respectively
     int audVoices = this->GetAudioVoices();
     int fxVoices = this->GetEffectVoices();
-    int channels = (audVoices + fxVoices) * ChanPerV;
+    int fxCount = this->GetEffectCount();
+    int channels = audVoices * ChanPerV;
     
     // allocate one single sample buffer
     this->sampleBuffer.resize(gConfig.FramesToRender * channels);
     
     // array of buffers used to setup channel mapping
-    this->dry.resize(audVoices * ChanPerV);
-    this->fx.resize(fxVoices * ChanPerV);
+    this->dry.resize(channels);
+    this->fx.resize(fxVoices * ChanPerV * fxCount);
     
     // setup buffers to mix dry stereo audio to
-    for(int i=0; i<audVoices*ChanPerV; i++)
+    for(int i=0; i<channels; i++)
     {
         this->dry[i] = &this->sampleBuffer.data()[i * gConfig.FramesToRender];
     }
     
-    // setup buffers to mix effects stereo audio to
-    for(int i=0; i<fxVoices*ChanPerV; i++)
+    for(int i=0; i<fxVoices; i++)
     {
-        this->fx[i] = &this->sampleBuffer.data()[audVoices*ChanPerV*gConfig.FramesToRender + i * gConfig.FramesToRender];
+        for(int c=0; c<ChanPerV; c++)
+        {
+            auto buf = this->dry[(i * ChanPerV + c) % channels];
+            
+            // mix reverb and chorus to same buffer
+            for(int f=0; f<fxCount; f++)
+            {
+                this->fx[i * fxCount * ChanPerV + f * ChanPerV + c] = buf;
+            }
+        }
     }
 }
 
@@ -346,8 +356,7 @@ void FluidsynthWrapper::Unload()
 void FluidsynthWrapper::ConfigureChannels(SongFormat *f)
 {
     int nAudVoices = this->GetAudioVoices();
-    int nFxVoices = this->GetEffectVoices();
-    int nVoices = nAudVoices + nFxVoices;
+    int nVoices = nAudVoices;
     f->SetVoices(nVoices);
     for (int i = 0; i < nVoices; i++)
     {
@@ -356,7 +365,7 @@ void FluidsynthWrapper::ConfigureChannels(SongFormat *f)
 
     if (nAudVoices == 1)
     {
-        f->VoiceName[0] = "Dry Sound";
+        f->VoiceName[0] = "Everything";
     }
     else
     {
@@ -364,21 +373,6 @@ void FluidsynthWrapper::ConfigureChannels(SongFormat *f)
         {
             f->VoiceName[i] = "Midi Channel " + to_string(i);
         }
-    }
-
-    int i, fxid = 0;
-    fluid_settings_getint(this->settings, "synth.reverb.active", &i);
-    if(i)
-    {
-        f->VoiceName[nAudVoices + fxid] = "Fx Channel " + to_string(fxid) + " (reverb)";
-        fxid++;
-    }
-    
-    fluid_settings_getint(this->settings, "synth.chorus.active", &i);
-    if(i)
-    {
-        f->VoiceName[nAudVoices + fxid] = "Fx Channel " + to_string(fxid) + " (chorus)";
-        fxid++;
     }
     
 //     for (int i = nAudVoices; i < nVoices; i++)
@@ -405,29 +399,24 @@ int FluidsynthWrapper::GetAudioVoices()
     int stereoChannels;
     // dont read from the synth, we need this at a time when the synth hasnt been created
     fluid_settings_getint(this->settings, "synth.audio-channels", &stereoChannels);
-    return stereoChannels * 2 / FluidsynthWrapper::GetChannelsPerVoice();
+    return stereoChannels;
 }
 
 int FluidsynthWrapper::GetEffectVoices()
 {
-    int chan = 0, i;
+    int i;
+    fluid_settings_getint(this->settings, "synth.effects-groups", &i);
     
-    fluid_settings_getint(this->settings, "synth.reverb.active", &i);
-    if(i)
-    {
-        chan++;
-    }
+    return i;
+}
+
+int FluidsynthWrapper::GetEffectCount()
+{
+    int chan;
     
-    fluid_settings_getint(this->settings, "synth.chorus.active", &i);
-    if(i)
-    {
-        chan++;
-    }
+    // dont read from the synth, we need this at a time when the synth hasnt been created
+    fluid_settings_getint(this->settings, "synth.effects-channels", &chan);
     return chan;
-//     int chan;
-//     // dont read from the synth, we need this at a time when the synth hasnt been created
-//     fluid_settings_getint(this->settings, "synth.effects-channels", &chan);
-//     return chan * 2 / FluidsynthWrapper::GetChannelsPerVoice();
 }
 
 unsigned int FluidsynthWrapper::GetSampleRate()
@@ -682,8 +671,7 @@ void FluidsynthWrapper::Render(float *bufferToFill, frame_t framesToRender)
     // lookup number of audio and effect (stereo-)channels of the synth
     // see „synth.audio-channels“ and „synth.effects-channels“ settings respectively
     int audVoices = this->GetAudioVoices();
-    int fxVoices = this->GetEffectVoices();
-    int channels = (audVoices + fxVoices) * ChanPerV;
+    int channels = audVoices * ChanPerV;
     
     float **dry = this->dry.data(), **fx = this->fx.data();
     
@@ -701,16 +689,6 @@ void FluidsynthWrapper::Render(float *bufferToFill, frame_t framesToRender)
             // frame by frame write planar audio to interleaved buffer
             bufferToFill[frame * channels + (ChanPerV * c + 0)] = dry[ChanPerV * c + 0][frame];
             bufferToFill[frame * channels + (ChanPerV * c + 1)] = dry[ChanPerV * c + 1][frame];
-        }
-    }
-
-    for (int c = 0; c < fxVoices; c++)
-    {
-        for (int frame = 0; frame < framesToRender; frame++)
-        {
-            int d = audVoices + c;
-            bufferToFill[frame * channels + (ChanPerV * d + 0)] = fx[ChanPerV * c + 0][frame];
-            bufferToFill[frame * channels + (ChanPerV * d + 1)] = fx[ChanPerV * c + 1][frame];
         }
     }
 }
