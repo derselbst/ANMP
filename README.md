@@ -24,6 +24,7 @@ ANMP aims to be a versatile but lightweight audio player, just as the other hund
   * supports an IIR lowpass filter compatible to Rareware's N64 games (Conkers Bad Fur Day, Jet Force Gemini)
 * support for cue sheets
 * support for audio normalization based on EBU R 128
+* exposes basic commands via D-Bus
 * easy attempt to implement new formats
 
 #### ANMP does NOT...
