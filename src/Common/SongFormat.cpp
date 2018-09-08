@@ -91,7 +91,7 @@ int SongFormat::getBitrate() const
     return rate * width;
 }
 
-bool SongFormat::IsValid()
+bool SongFormat::IsValid() const
 {
     return this->SampleRate != 0 && this->Channels() != 0 && this->SampleFormat != SampleFormat_t::unknown;
 }

@@ -49,7 +49,7 @@ void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, const QString
 
 void MainWindow::slotSeek(long long pos)
 {
-    QSlider *playheadSlider = this->playctrl->seekBar;
+    PlayheadSlider *playheadSlider = this->playctrl->seekBar;
     bool oldState = playheadSlider->blockSignals(true);
     playheadSlider->setSliderPosition(pos);
     playheadSlider->blockSignals(oldState);

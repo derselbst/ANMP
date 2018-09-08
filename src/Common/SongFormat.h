@@ -44,7 +44,7 @@ struct SongFormat
     /**
      * whether this instance holds valid data
      */
-    bool IsValid();
+    bool IsValid() const;
 
     /**
      * from \c nChannels create voices and assign each as many as \c defaultChannelsPerVoice channels
