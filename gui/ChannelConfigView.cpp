@@ -3,6 +3,7 @@
 
 #include <QAction>
 #include <QContextMenuEvent>
+#include <QKeyEvent>
 #include <QMenu>
 #include <QStandardItemModel>
 
@@ -31,8 +32,9 @@ void ChannelConfigView::Select(Qt::CheckState state)
     }
 }
 
-void ChannelConfigView::SetContextMenu(QMenu *menu)
+void ChannelConfigView::SetContextMenu(MainWindow* wnd, QMenu *menu)
 {
+    this->mainWindow = wnd;
     this->contextMenu = menu;
 }
 
@@ -43,4 +45,34 @@ void ChannelConfigView::contextMenuEvent(QContextMenuEvent *event)
     QPoint p = event->globalPos();
     p += offset;
     this->contextMenu->exec(p);
+}
+
+void ChannelConfigView::keyPressEvent(QKeyEvent *event)
+{
+    switch(event->key())
+    {
+        case Qt::Key_Delete: // mute selection
+            this->mainWindow->MuteSelectedVoices();
+            break;
+            
+        case Qt::Key_Insert: // unmute / solo selection
+            if(event->modifiers() & Qt::ShiftModifier)
+            {
+                this->mainWindow->SoloSelectedVoices();
+            }
+            else
+            {
+                this->mainWindow->UnmuteSelectedVoices();
+            }
+            break;
+            
+        case Qt::Key_Return:
+        case Qt::Key_Enter: // toggle selection
+            this->mainWindow->ToggleSelectedVoices();
+            break;
+            
+        default:
+            QTableView::keyPressEvent(event);
+            break;
+    }
 }

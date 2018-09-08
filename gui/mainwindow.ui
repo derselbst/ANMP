@@ -271,12 +271,12 @@
   </action>
   <action name="actionMute_Selected_Voices">
    <property name="text">
-    <string>&amp;Mute Selected Voices</string>
+    <string>&amp;Mute Selected Voices [Delete]</string>
    </property>
   </action>
   <action name="actionUnmute_Selected_Voices">
    <property name="text">
-    <string>&amp;Unmute Selected Voices</string>
+    <string>&amp;Unmute Selected Voices [Insert]</string>
    </property>
   </action>
   <action name="actionMute_All_Voices">
@@ -301,7 +301,7 @@
   </action>
   <action name="actionSolo_Selected_Voices">
    <property name="text">
-    <string>S&amp;olo Selected Voices</string>
+    <string>S&amp;olo Selected Voices [Shift + Insert]</string>
    </property>
   </action>
  </widget>

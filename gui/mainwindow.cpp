@@ -143,8 +143,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this->ui->actionUnmute_All_Voices, &QAction::triggered, this, &MainWindow::UnmuteAllVoices);
     connect(this->ui->actionToggle_All_Voices, &QAction::triggered, this, &MainWindow::ToggleAllVoices);
 
-    connect(this->channelView, &QTableView::activated, this, &MainWindow::ToggleSelectedVoices);
-    connect(this->channelView, &QTableView::doubleClicked, this, &MainWindow::ToggleSelectedVoices);
+    // When the user clicks (activates) the channel muter, make sure it gets focus and the correct current index
+//     connect(this->channelView, &QTableView::activated, this, [this](const QModelIndex& index) { this->channelView->selectionModel()->setCurrentIndex(index, QItemSelectionModel::NoUpdate); });
 
     this->setWindowState(Qt::WindowMaximized);
 
@@ -302,7 +302,7 @@ void MainWindow::buildChannelConfig()
     m->addAction(this->ui->actionUnmute_All_Voices);
     m->addAction(this->ui->actionToggle_All_Voices);
 
-    channelView->SetContextMenu(m);
+    channelView->SetContextMenu(this, m);
 
     this->ui->dockChannel->setWidget(channelView);
     channelView->show();
@@ -383,6 +383,8 @@ void MainWindow::enableSeekButtons(bool isEnabled)
     this->playctrl->fbackwardButton->setEnabled(isEnabled);
 }
 
+// properly fills up the channel muter
+// does not preserve selection and currentIndex
 void MainWindow::updateChannelConfig(const SongFormat &currentFormat)
 {
     this->channelConfigModel->setRowCount(currentFormat.Voices);

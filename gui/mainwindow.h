@@ -106,7 +106,7 @@ class MainWindow : public QMainWindow
     void MuteAllVoices();
     void UnmuteAllVoices();
     void ToggleAllVoices();
-    void ToggleSelectedVoices(const QModelIndex &index);
+    void ToggleSelectedVoices();
 
     protected slots:
     friend class PlaylistModel;

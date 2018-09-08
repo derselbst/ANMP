@@ -301,11 +301,9 @@ void MainWindow::AddSongs(const QStringList& files)
     this->playlistModel->asyncAdd(files);
 }
 
-void MainWindow::ToggleSelectedVoices(const QModelIndex &index)
+void MainWindow::ToggleSelectedVoices()
 {
     this->DoChannelMuting([](bool voiceMuted, bool voiceSelected) { return voiceMuted != voiceSelected; });
-
-    this->channelView->selectionModel()->setCurrentIndex(index, QItemSelectionModel::NoUpdate);
 }
 
 void MainWindow::DoChannelMuting(bool (*pred)(bool voiceIsMuted, bool voiceIsSelected))
@@ -320,6 +318,7 @@ void MainWindow::DoChannelMuting(bool (*pred)(bool voiceIsMuted, bool voiceIsSel
 
     const SongFormat &f = s->Format;
     QItemSelectionModel *sel = this->channelView->selectionModel();
+    QModelIndex curIdx = sel->currentIndex();
     QModelIndexList selRows = sel->selectedRows();
 
     for (int i = 0; i < f.Voices; i++)
@@ -328,12 +327,14 @@ void MainWindow::DoChannelMuting(bool (*pred)(bool voiceIsMuted, bool voiceIsSel
     }
     this->updateChannelConfig(f);
 
-    // restore selection and focus
+    // restore selection, focus and currentIndex
     sel->clearSelection();
     for (QModelIndex i : selRows)
     {
         sel->select(i, QItemSelectionModel::Select);
     }
+    sel->setCurrentIndex(curIdx, QItemSelectionModel::NoUpdate);
+    
     this->channelView->setFocus();
 }
 

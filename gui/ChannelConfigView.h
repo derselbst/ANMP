@@ -5,6 +5,7 @@
 
 class QContextMenuEvent;
 class QAction;
+class MainWindow;
 
 class ChannelConfigView : public QTableView
 {
@@ -13,11 +14,13 @@ class ChannelConfigView : public QTableView
     public:
     ChannelConfigView(QWidget *parent = 0);
     void Select(Qt::CheckState state);
-    void SetContextMenu(QMenu *menu);
+    void SetContextMenu(MainWindow *wnd, QMenu *menu);
 
     protected:
     void contextMenuEvent(QContextMenuEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 
 
+    MainWindow *mainWindow;
     QMenu *contextMenu;
 };
