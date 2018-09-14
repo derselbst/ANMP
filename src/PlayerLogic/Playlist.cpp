@@ -59,6 +59,7 @@ void Playlist::clear()
     }
 
     this->queue.clear();
+    this->queue.shrink_to_fit();
     this->currentSong = 0;
 }
 
