@@ -54,10 +54,10 @@ BuildRequires: lazyusf2-devel
 # SuSE specific:
 # everything newer openSUSE 13.2 or openSUSE Leap
 %if 0%{?suse_version} >= 1320 || 0%{?suse_version} == 1315
-BuildRequires: libavcodec-devel
-BuildRequires: libavformat-devel
-BuildRequires: libavutil-devel
-BuildRequires: libswresample-devel
+BuildRequires: libavcodec-devel >= 3.1
+BuildRequires: libavformat-devel >= 3.1
+BuildRequires: libavutil-devel >= 3.1
+BuildRequires: libswresample-devel >= 3.1
 
 BuildRequires: update-desktop-files
 %endif

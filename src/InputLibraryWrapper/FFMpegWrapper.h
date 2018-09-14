@@ -52,10 +52,11 @@ class FFMpegWrapper : public StandardWrapper<int16_t>
     private:
     AVFormatContext *handle = nullptr;
     SwrContext *swr = nullptr;
+    AVCodecContext *codecCtx = nullptr;
 
     int audioStreamID = -1;
 
-    int decode_packet(int16_t *(&pcm), int &framesToDo, int &got_frame, AVPacket &pkt, AVFrame *(&frame));
+    int decode_packet(int16_t *(&pcm), int &framesToDo, AVPacket &pkt, AVFrame *(&frame));
 };
 
 #endif // FFMPEGWRAPPER_H

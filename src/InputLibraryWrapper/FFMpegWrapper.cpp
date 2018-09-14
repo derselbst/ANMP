@@ -77,24 +77,29 @@ void FFMpegWrapper::open()
     AVStream *audioStream = this->handle->streams[this->audioStreamID];
 
     // Get a pointer to the codec context for the audio stream
-    AVCodecContext *pCodecCtx = audioStream->codec;
+    AVCodecParameters *pCodecPar = audioStream->codecpar;
 
     // Find the decoder for the audio stream
-    AVCodec *decoder = avcodec_find_decoder(pCodecCtx->codec_id);
+    AVCodec *decoder = avcodec_find_decoder(pCodecPar->codec_id);
     if (decoder == nullptr)
     {
-        THROW_RUNTIME_ERROR("Codec type " << pCodecCtx->codec_id << " not found.")
+        THROW_RUNTIME_ERROR("Codec type " << pCodecPar->codec_id << " not found.")
+    }
+    
+    if ((this->codecCtx = avcodec_alloc_context3(decoder)) == nullptr)
+    {
+        THROW_RUNTIME_ERROR("Could not allocate audio codec context");
     }
 
     // Open the codec found suitable for this stream in the last step
-    if (avcodec_open2(pCodecCtx, decoder, nullptr) < 0)
+    if (avcodec_open2(this->codecCtx, decoder, nullptr) < 0)
     {
         THROW_RUNTIME_ERROR("Could not open decoder.");
     }
 
     this->Format.SetVoices(1);
-    this->Format.VoiceChannels[0] = pCodecCtx->channels;
-    this->Format.SampleRate = pCodecCtx->sample_rate;
+    this->Format.VoiceChannels[0] = pCodecPar->channels;
+    this->Format.SampleRate = pCodecPar->sample_rate;
 
     // we now have to retrieve the playduration of this file
     // if it's possible to retrieve this from the currently decoded audio stream itself, we prefer that way
@@ -123,20 +128,18 @@ void FFMpegWrapper::open()
         THROW_RUNTIME_ERROR("FFMpeg doesnt specify duration for this file."); // either this, or there is some other weird way of getting the duration, which is not implemented
     }
 
-    if (pCodecCtx->channel_layout == 0)
+    if (pCodecPar->channel_layout == 0)
     {
-        pCodecCtx->channel_layout = av_get_default_channel_layout(pCodecCtx->channels);
+        pCodecPar->channel_layout = av_get_default_channel_layout(pCodecPar->channels);
     }
-
-    AVSampleFormat &sfmt = pCodecCtx->sample_fmt;
 
     // Set up SWR context once you've got codec information
     this->swr = swr_alloc();
-    av_opt_set_int(this->swr, "in_channel_layout", pCodecCtx->channel_layout, 0);
-    av_opt_set_int(this->swr, "out_channel_layout", pCodecCtx->channel_layout, 0);
-    av_opt_set_int(this->swr, "in_sample_rate", pCodecCtx->sample_rate, 0);
-    av_opt_set_int(this->swr, "out_sample_rate", pCodecCtx->sample_rate, 0);
-    av_opt_set_sample_fmt(this->swr, "in_sample_fmt", sfmt, 0);
+    av_opt_set_int(this->swr, "in_channel_layout", pCodecPar->channel_layout, 0);
+    av_opt_set_int(this->swr, "out_channel_layout", pCodecPar->channel_layout, 0);
+    av_opt_set_int(this->swr, "in_sample_rate", pCodecPar->sample_rate, 0);
+    av_opt_set_int(this->swr, "out_sample_rate", pCodecPar->sample_rate, 0);
+    av_opt_set_sample_fmt(this->swr, "in_sample_fmt", static_cast<AVSampleFormat>(pCodecPar->format), 0);
     av_opt_set_sample_fmt(this->swr, "out_sample_fmt", AV_SAMPLE_FMT_S16, 0);
     swr_init(this->swr);
 }
@@ -149,15 +152,8 @@ void FFMpegWrapper::close() noexcept
         this->swr = nullptr;
     }
 
-    if (this->handle != nullptr)
-    {
-        if (this->audioStreamID != -1)
-        {
-            avcodec_close(this->handle->streams[this->audioStreamID]->codec);
-        }
-        avformat_close_input(&this->handle);
-        this->handle = nullptr;
-    }
+    avcodec_free_context(&this->codecCtx);
+    avformat_close_input(&this->handle);
 }
 
 void FFMpegWrapper::fillBuffer()
@@ -165,30 +161,69 @@ void FFMpegWrapper::fillBuffer()
     StandardWrapper::fillBuffer(this);
 }
 
-int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo, int &got_frame, AVPacket &pkt, AVFrame *(&frame))
+int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo, AVPacket &pkt, AVFrame *(&frame))
 {
-    int decoded = pkt.size;
-
-    got_frame = 0;
+    int decoded = 0, ret;
 
     if (pkt.stream_index == this->audioStreamID)
     {
-        /* decode audio frame */
-        int ret = avcodec_decode_audio4(this->handle->streams[this->audioStreamID]->codec, frame, &got_frame, &pkt);
-        if (ret < 0)
+        if ((ret = avcodec_send_packet(this->codecCtx, &pkt)) < 0)
         {
-            CLOG(LogLevel_t::Error, "Failed decoding audio frame");
+            switch (ret)
+            {
+            case AVERROR(EAGAIN):
+                CLOG(LogLevel_t::Error, "avcodec_send_packet() not ready??");
+                break;
+                
+            case AVERROR_EOF:
+                CLOG(LogLevel_t::Error, "decoder has been flushed, and no new packets can be sent to it or more than 1 flush packet has been sent");
+                break;
+                
+            case AVERROR(EINVAL):
+                CLOG(LogLevel_t::Error, "codec not opened, it is an encoder, or requires flush");
+                break;
+                
+            case AVERROR(ENOMEM):
+                CLOG(LogLevel_t::Error, "failed to add packet to internal queue");
+                
+            default:
+                CLOG(LogLevel_t::Warning, "error submitting the packet to the decoder (legitimate decoding error)");
+                break;
+            }
             return ret;
         }
-
-        /* Some audio decoders decode only part of the packet, and have to be
-         * called again with the remainder of the packet data.
-         * Sample: fate-suite/lossless-audio/luckynight-partial.shn
-         * Also, some decoders might over-read the packet. */
-        decoded = min(ret, pkt.size);
-
-        if (got_frame != 0)
+        
+        /* read all the output frames (in general there may be any number of them */
+        while (ret >= 0)
         {
+            ret = avcodec_receive_frame(this->codecCtx, frame);
+            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+            {
+                CLOG(LogLevel_t::Debug, "AVERROR_EOF || AVERROR(EAGAIN)");
+                return ret;
+            }
+            else if (ret < 0)
+            {
+                CLOG(LogLevel_t::Warning, "legitimate decoding error");
+            }
+            
+            ret = av_get_bytes_per_sample(this->codecCtx->sample_fmt);
+            if (ret < 0)
+            {
+                /* This should not occur, checking just for paranoia */
+                THROW_RUNTIME_ERROR("Failed to calculate data size per sample");
+            }
+            
+//             for (i = 0; i < frame->nb_samples; i++)
+//                 for (ch = 0; ch < this->handle->streams[this->audioStreamID]->codec->channels; ch++)
+//                     fwrite(frame->data[ch] + data_size*i, 1, data_size, outfile);
+
+            /* Some audio decoders decode only part of the packet, and have to be
+             * called again with the remainder of the packet data.
+             * Sample: fate-suite/lossless-audio/luckynight-partial.shn
+             * Also, some decoders might over-read the packet. */
+            decoded += frame->nb_samples;
+            
             // make sure we dont run over buffer
             int framesToConvert = min(frame->nb_samples, framesToDo);
 
@@ -201,7 +236,7 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo, int &got_fram
 
             if (framesToDo < 0)
             {
-                CLOG(LogLevel_t::Error, "THIS SHOULD NEVER HAPPEN! bufferoverrun ffmpegwrapper")
+                CLOG(LogLevel_t::Fatal, "THIS SHOULD NEVER HAPPEN! bufferoverrun ffmpegwrapper")
             }
 
             this->framesAlreadyRendered += framesToConvert;
@@ -211,12 +246,7 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo, int &got_fram
     {
         // dont care
     }
-
-    /* If we use frame reference counting, we own the data and need
-     * to de-reference it when we don't use it anymore */
-    //     if (*got_frame && refcount)
-    //         av_frame_unref(frame);
-
+    
     return decoded;
 }
 
@@ -233,7 +263,7 @@ void FFMpegWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
     {
         framesToDo = min(framesToRender, this->getFrames() - this->framesAlreadyRendered);
     }
-
+    
     //data packet read from the stream
     AVPacket packet;
 
@@ -242,26 +272,21 @@ void FFMpegWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
     packet.data = nullptr;
     packet.size = 0;
 
-
-    //frame, where the decoded data will be written
+    // frame, where the decoded data will be written
     AVFrame *frame = av_frame_alloc();
     if (frame == nullptr)
     {
         THROW_RUNTIME_ERROR("Cannot allocate AVFrame.")
     }
 
-    int frameFinished = 0;
-
     // int16 because we told swr to convert everything to int16
     int16_t *pcm = static_cast<int16_t *>(bufferToFill);
     bufferToFill = (pcm += this->framesAlreadyRendered * this->Format.Channels());
-
 
     while (!this->stopFillBuffer &&
            framesToDo > 0 &&
            pcm < static_cast<int16_t *>(bufferToFill) + this->count)
     {
-
         /* read frames from the file */
         int ret = av_read_frame(this->handle, &packet);
         if (ret < 0)
@@ -277,37 +302,21 @@ void FFMpegWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
                 break;
             }
         }
-
-        AVPacket orig_pkt = packet;
-        do
-        {
-            ret = decode_packet(pcm, framesToDo, frameFinished, packet, frame);
-            if (ret < 0)
-            {
-                break;
-            }
-            packet.data += ret;
-            packet.size -= ret;
-        } while (packet.size > 0);
-
-        av_packet_unref(&orig_pkt);
+        
+        this->decode_packet(pcm, framesToDo, packet, frame);
+        av_packet_unref(&packet);
     }
 
-    /* flush any cached frames */
-    packet.data = nullptr;
-    packet.size = 0;
-    do
+    /* at the very last call, make sure the very last run flushes any cached frames */
+    if (framesToRender == 0)
     {
-        int ret = decode_packet(pcm, framesToDo, frameFinished, packet, frame);
-        if (ret < 0)
-        {
-            break;
-        }
-    } while (frameFinished);
-
+        packet.data = nullptr;
+        packet.size = 0;
+        this->decode_packet(pcm, framesToDo, packet, frame);
+        av_packet_unref(&packet);
+    }
 
     av_frame_free(&frame);
-
 
     this->doAudioNormalization(static_cast<int16_t *>(bufferToFill), framesToRender);
 }
