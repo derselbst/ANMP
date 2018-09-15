@@ -394,9 +394,9 @@ void PlaylistModel::clear()
         this->songsToAdd.queue.clear();
     }
 
-    beginRemoveRows(QModelIndex(), 0, this->rowCount(QModelIndex()) - 1);
+    this->beginResetModel();
     this->playlist->clear();
-    endRemoveRows();
+    this->endResetModel();
 }
 
 void PlaylistModel::slotCurrentSongChanged(const Song *)
