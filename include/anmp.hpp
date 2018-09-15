@@ -19,7 +19,7 @@
 
 #define ANMP_TITLE "ANMP"
 #define ANMP_SUBTITLE "Another Nameless Music Player"
-#define ANMP_VERSION "7"
+#define ANMP_VERSION "8"
 #define ANMP_API_VERSION 0
 #define ANMP_WEBSITE "https://www.github.com/derselbst/ANMP"
 #define ANMP_COPYRIGHT "Tom Moebert (derselbst)"
