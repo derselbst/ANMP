@@ -60,9 +60,6 @@ MidiWrapper::~MidiWrapper()
 {
     this->releaseBuffer();
     this->close();
-
-    delete this->synth;
-    this->synth = nullptr;
 }
 
 
@@ -253,8 +250,8 @@ void MidiWrapper::close() noexcept
     if (this->synth != nullptr)
     {
         this->synth->Unload();
-        //         delete this->synth;
-        //         this->synth = nullptr;
+        delete this->synth;
+        this->synth = nullptr;
     }
 
     if (this->smf != nullptr)
