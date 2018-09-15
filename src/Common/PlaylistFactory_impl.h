@@ -21,7 +21,7 @@ void PlaylistFactory::tryWith(Song *(&pcm), const string &filePath, Nullable<siz
                 THROW_RUNTIME_ERROR("Nothing to play, refusing to add file: '" << filePath << "'");
             }
         }
-        catch (exception &e)
+        catch (const exception &e)
         {
             CLOG(LogLevel_t::Error, e.what());
             pcm->close();
