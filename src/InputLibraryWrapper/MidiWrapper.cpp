@@ -265,7 +265,7 @@ void MidiWrapper::fillBuffer()
 {
     if (this->data == nullptr)
     {
-        this->synth->DeepInit(*this);
+        this->synth->DeepInit(::findSoundfont(this->Filename));
         // if this is the first call, add the midi events to the sequencer
         this->parseEvents();
         this->buildLoopTree();

@@ -68,17 +68,11 @@ void FluidsynthWrapper::setupSeq()
         fluid_event_set_dest(this->synthEvent, this->synthId);
     }
 
-    if (this->myselfID.hasValue)
-    {
-        CLOG(LogLevel_t::Error, "myselfid had a value!");
-        // unregister any client
-        fluid_sequencer_unregister_client(this->sequencer, this->myselfID.Value);
-    }
     // register myself as second destination
     this->myselfID = fluid_sequencer_register_client(this->sequencer, "schedule_note_callback", &FluidsynthWrapper::FluidSeqNoteCallback, this);
     
     // destination may have changed, refresh it
-    fluid_event_set_dest(this->callbackNoteEvent, this->myselfID.Value);
+    fluid_event_set_dest(this->callbackNoteEvent, this->myselfID);
 
     // remove all events from the sequencer's queue
     fluid_sequencer_remove_events(this->sequencer, -1, -1, -1);
@@ -91,7 +85,7 @@ void FluidsynthWrapper::deleteSeq()
     if (this->sequencer != nullptr)
     {
         // explictly unregister all clients before deleting the seq
-        fluid_sequencer_unregister_client(this->sequencer, this->myselfID.Value);
+        fluid_sequencer_unregister_client(this->sequencer, this->myselfID);
         fluid_event_unregistering(this->synthEvent);
         fluid_sequencer_send_now(this->sequencer, this->synthEvent);
         
@@ -100,29 +94,8 @@ void FluidsynthWrapper::deleteSeq()
     }
 }
 
-void FluidsynthWrapper::setupSynth(MidiWrapper &midi)
+void FluidsynthWrapper::setupSynth()
 {
-    // find a soundfont
-    Nullable<string> soundfont;
-    if (!gConfig.FluidsynthForceDefaultSoundfont)
-    {
-        soundfont = ::findSoundfont(midi.Filename);
-    }
-
-    if (!soundfont.hasValue)
-    {
-        // so, either we were forced to use default, or we didnt find any suitable sf2
-        soundfont = gConfig.FluidsynthDefaultSoundfont;
-    }
-
-    if (!::myExists(soundfont.Value))
-    {
-        THROW_RUNTIME_ERROR("Cant synthesize this MIDI, soundfont not found: \"" << soundfont.Value << "\"");
-    }
-
-    this->cachedSf2 = soundfont.Value;
-
-
     if (this->synth == nullptr)
     {
         /* Create the synthesizer */
@@ -131,8 +104,6 @@ void FluidsynthWrapper::setupSynth(MidiWrapper &midi)
         {
             THROW_RUNTIME_ERROR("Failed to create the synth");
         }
-        // retrieve this after the synth has been inited (just for sure)
-        fluid_settings_getint(this->settings, "audio.period-size", &gConfig.FluidsynthPeriodSize);
     }
 
     // press the big red panic/reset button
@@ -258,6 +229,7 @@ void FluidsynthWrapper::setupSettings()
         fluid_settings_setint(this->settings, "synth.lock-memory", 0);
         fluid_settings_setint(this->settings, "synth.dynamic-sample-loading", 1);
         fluid_settings_setint(this->settings, "synth.polyphony", 2048);
+        fluid_settings_setint(this->settings, "synth.cpu-cores", 4);
     }
 
     int stereoChannels = gConfig.FluidsynthMultiChannel ? NMidiChannels : 1;
@@ -273,8 +245,6 @@ void FluidsynthWrapper::setupSettings()
     fluid_settings_setnum(this->settings, "synth.reverb.damping", gConfig.FluidsynthDamping);
     fluid_settings_setnum(this->settings, "synth.reverb.width", gConfig.FluidsynthWidth);
     fluid_settings_setnum(this->settings, "synth.reverb.level", gConfig.FluidsynthLevel);
-    
-    fluid_settings_setint(this->settings, "synth.cpu-cores", 4);
 }
 
 void FluidsynthWrapper::setupMixdownBuffer()
@@ -323,20 +293,38 @@ void FluidsynthWrapper::ShallowInit()
     this->setupMixdownBuffer();
 }
 
-void FluidsynthWrapper::DeepInit(MidiWrapper &caller)
+void FluidsynthWrapper::DeepInit(const Nullable<string>& suggestedSf2)
 {
-    this->setupSynth(caller);
+    // find a soundfont
+    Nullable<string> soundfont;
+    if (!gConfig.FluidsynthForceDefaultSoundfont)
+    {
+        soundfont = suggestedSf2;
+    }
+
+    if (!soundfont.hasValue)
+    {
+        // so, either we were forced to use default, or we didnt find any suitable sf2
+        soundfont = gConfig.FluidsynthDefaultSoundfont;
+    }
+
+    if (!::myExists(soundfont.Value))
+    {
+        THROW_RUNTIME_ERROR("Cant synthesize this MIDI, soundfont not found: \"" << soundfont.Value << "\"");
+    }
+
+    this->setupSynth();
     this->setupSeq();
     
     // Load the soundfont
-    if (!fluid_is_soundfont(this->cachedSf2.c_str()))
+    if (!fluid_is_soundfont(soundfont.Value.c_str()))
     {
-        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (weak test): \"" << this->cachedSf2 << "\"");
+        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (weak test): \"" << soundfont.Value << "\"");
     }
 
-    if ((this->cachedSf2Id = fluid_synth_sfload(this->synth, this->cachedSf2.c_str(), true)) == -1)
+    if ((this->cachedSf2Id = fluid_synth_sfload(this->synth, soundfont.Value.c_str(), true)) == -1)
     {
-        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (strong test): \"" << this->cachedSf2 << "\"");
+        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (strong test): \"" << soundfont.Value << "\"");
     }
 }
 

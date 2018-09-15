@@ -116,9 +116,6 @@ class Config
     //   FLUIDSYNTH-SPECIFIC SECTION   *
     //**********************************
 
-    // overrides FramesToRender for fluidsynth
-    int FluidsynthPeriodSize = 64;
-
     // enables reverb in fluidsynth's synth
     bool FluidsynthEnableReverb = true;
 
@@ -243,7 +240,6 @@ class Config
                 archive(CEREAL_NVP(this->MidiControllerLoopStart));
                 archive(CEREAL_NVP(this->MidiControllerLoopStop));
 
-                archive(CEREAL_NVP(this->FluidsynthPeriodSize));
                 archive(CEREAL_NVP(this->FluidsynthEnableReverb));
                 archive(CEREAL_NVP(this->FluidsynthEnableChorus));
                 archive(CEREAL_NVP(this->FluidsynthMultiChannel));

@@ -30,7 +30,7 @@ class FluidsynthWrapper
     FluidsynthWrapper &operator=(FluidsynthWrapper const &) = delete;
 
     void ShallowInit();
-    void DeepInit(MidiWrapper &);
+    void DeepInit(const Nullable<string>&);
     void ConfigureChannels(SongFormat *f);
     void Unload();
 
@@ -68,10 +68,10 @@ class FluidsynthWrapper
     fluid_event_t *callbackNoteEvent = nullptr;
 
     // fluidsynth's internal synth
-    short synthId;
+    fluid_seq_id_t synthId;
 
     // callback ID for ourself
-    Nullable<short> myselfID;
+    fluid_seq_id_t myselfID;
 
     // fluidsynth's synth has no samplerate getter, so cache it here
     unsigned int cachedSampleRate = 0;
@@ -79,7 +79,6 @@ class FluidsynthWrapper
     // tick count of the sequencer when this->DeepInit() was called
     unsigned int initTick = 0;
 
-    string cachedSf2;
     int cachedSf2Id = -1;
     
     // temporary sample mixdown buffer used by fluid_synth_process
@@ -90,7 +89,7 @@ class FluidsynthWrapper
 
     void setupSettings();
     void setupMixdownBuffer();
-    void setupSynth(MidiWrapper &);
+    void setupSynth();
     void setupSeq();
 
     void deleteEvents();
