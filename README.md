@@ -57,7 +57,7 @@ See [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%
 (depending on which audio formats ANMP shall be able to play)
 * [libsndfile](http://www.mega-nerd.com/libsndfile/) (strongly recommended to play most common audio formats)
 * [mad](https://sourceforge.net/projects/mad/files/libmad/) >= 0.15.1b (to play mp3 files)
-* [ffmpeg](https://ffmpeg.org) >= 2.8.6 (specifically libavcodec, libavformat, libavutil, libswresample)
+* [ffmpeg](https://ffmpeg.org) >= 3.1.0 (specifically libavcodec, libavformat, libavutil, libswresample)
 * [lazyusf2](https://gitlab.kode54.net/kode54/lazyusf2) (to play Ultra64 Sound Format (usf))
 * [libgme](https://bitbucket.org/mpyne/game-music-emu) (Famicom (nsf), SuperFamicon (spc), GameBoy (gbs), etc.)
 * [vgmstream](https://gitlab.kode54.net/kode54/vgmstream) (various audio formats from sixth generation video game consoles and following)
