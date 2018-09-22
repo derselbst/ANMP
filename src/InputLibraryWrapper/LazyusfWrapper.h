@@ -21,7 +21,7 @@ class LazyusfWrapper : public StandardWrapper<int16_t>
     LazyusfWrapper(LazyusfWrapper const &) = delete;
     LazyusfWrapper &operator=(LazyusfWrapper const &) = delete;
 
-    virtual ~LazyusfWrapper();
+    ~LazyusfWrapper() override;
 
     void open() override;
 

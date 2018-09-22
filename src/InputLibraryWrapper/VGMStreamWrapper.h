@@ -24,7 +24,7 @@ class VGMStreamWrapper : public StandardWrapper<int16_t>
     VGMStreamWrapper(VGMStreamWrapper const &) = delete;
     VGMStreamWrapper &operator=(VGMStreamWrapper const &) = delete;
 
-    virtual ~VGMStreamWrapper();
+    ~VGMStreamWrapper() override;
 
 
     // interface methods declaration

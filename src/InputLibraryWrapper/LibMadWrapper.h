@@ -22,7 +22,7 @@ class LibMadWrapper : public StandardWrapper<int32_t>
     LibMadWrapper(LibMadWrapper const &) = delete;
     LibMadWrapper &operator=(LibMadWrapper const &) = delete;
 
-    virtual ~LibMadWrapper();
+    ~LibMadWrapper() override;
 
     // interface methods declaration
 

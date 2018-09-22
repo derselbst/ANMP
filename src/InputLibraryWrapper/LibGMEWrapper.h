@@ -25,7 +25,7 @@ class LibGMEWrapper : public StandardWrapper<int16_t>
     LibGMEWrapper(LibGMEWrapper const &) = delete;
     LibGMEWrapper &operator=(LibGMEWrapper const &) = delete;
 
-    virtual ~LibGMEWrapper();
+    ~LibGMEWrapper() override;
 
     void open() override;
 

@@ -67,7 +67,7 @@ class MidiWrapper : public StandardWrapper<float>
     MidiWrapper(MidiWrapper const &) = delete;
     MidiWrapper &operator=(MidiWrapper const &) = delete;
 
-    virtual ~MidiWrapper();
+    ~MidiWrapper() override;
 
     static string SmfEventToString(smf_event_t *event);
 

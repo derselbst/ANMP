@@ -20,7 +20,7 @@ class ModPlugWrapper : public StandardWrapper<int32_t>
     ModPlugWrapper(ModPlugWrapper const &) = delete;
     ModPlugWrapper &operator=(ModPlugWrapper const &) = delete;
 
-    virtual ~ModPlugWrapper();
+    ~ModPlugWrapper() override;
 
     // interface methods declaration
 

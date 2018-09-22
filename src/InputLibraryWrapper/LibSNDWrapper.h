@@ -30,7 +30,7 @@ class LibSNDWrapper : public StandardWrapper<sndfile_sample_t>
     LibSNDWrapper(LibSNDWrapper const &) = delete;
     LibSNDWrapper &operator=(LibSNDWrapper const &) = delete;
 
-    virtual ~LibSNDWrapper();
+    ~LibSNDWrapper() override;
 
     // interface methods declaration
 

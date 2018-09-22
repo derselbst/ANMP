@@ -22,7 +22,7 @@ class AopsfWrapper : public StandardWrapper<int16_t>
     AopsfWrapper(AopsfWrapper const &) = delete;
     AopsfWrapper &operator=(AopsfWrapper const &) = delete;
 
-    virtual ~AopsfWrapper();
+    ~AopsfWrapper() override;
 
     void open() override;
 

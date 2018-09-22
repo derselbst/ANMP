@@ -33,7 +33,7 @@ class FFMpegWrapper : public StandardWrapper<int16_t>
     FFMpegWrapper(FFMpegWrapper const &) = delete;
     FFMpegWrapper &operator=(FFMpegWrapper const &) = delete;
 
-    virtual ~FFMpegWrapper();
+    ~FFMpegWrapper() override;
 
     // interface methods declaration
 

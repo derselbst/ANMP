@@ -81,7 +81,7 @@ class StandardWrapper : public Song
     StandardWrapper(StandardWrapper const &) = delete;
     StandardWrapper &operator=(StandardWrapper const &) = delete;
 
-    virtual ~StandardWrapper();
+    ~StandardWrapper() override;
 
     void releaseBuffer() noexcept override;
 
