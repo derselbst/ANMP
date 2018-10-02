@@ -45,13 +45,21 @@ int main(int argc, char *argv[])
 
     for (int i = 1; i < argc; i++)
     {
-        for (const directory_entry& dirEntry : recursive_directory_iterator(argv[i]))
+        if (is_directory(argv[i]))
         {
-            if (is_regular_file(dirEntry.status()))
+            for (const directory_entry& dirEntry : directory_iterator(argv[i]))
             {
-                PlaylistFactory::addSong(plist[curThread], dirEntry.path());
-                curThread = (curThread + 1) % Threads;
+                if (is_regular_file(dirEntry.status()))
+                {
+                    PlaylistFactory::addSong(plist[curThread], dirEntry.path());
+                    curThread = (curThread + 1) % Threads;
+                }
             }
+        }
+        else if (is_regular_file(argv[i]))
+        {
+            PlaylistFactory::addSong(plist[curThread], absolute(argv[i]));
+            curThread = (curThread + 1) % Threads;
         }
     }
 
