@@ -68,12 +68,15 @@ if(USE_GUI)
 
     SET(ANMP_LAUNCHER anmp-launcher)
     SET(ANMP_LAUNCHER_SRC anmp-launcher.cpp)
-#     PKGCONFIG_GETVAR(dbus-1 prefix DBUS_PREFIX)
-#     set(network_xml ${DBUS_PREFIX}/interfaces/org.foo.bar.xml)
 
     qt5_add_dbus_interface(ANMP_LAUNCHER_SRC ${CMAKE_CURRENT_BINARY_DIR}/../gui/org.anmp.xml anmp_dbus_interface)
     
     add_executable(${ANMP_LAUNCHER} ${ANMP_LAUNCHER_SRC})
+    
+    # manually inject a dependency on anmp-qt here, because it generates org.anmp.xml, which is needed here,
+    # however some cmake versions / qt version are unable to automatically query this dependency
+    add_dependencies(${ANMP_LAUNCHER} anmp-qt)
+    
     set(LINK_FLAGS ${LINK_FLAGS} "-Wl,-whole-archive")
 
     target_link_libraries(${ANMP_LAUNCHER} ${Qt5DBus_LIBRARIES} ${Qt5Widgets_LIBRARIES})

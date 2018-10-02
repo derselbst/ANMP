@@ -26,7 +26,6 @@ if(USE_GUI)
         PlayheadSlider.cpp
         ChannelConfigView.cpp
         songinspector.cpp
-#         ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml # cause this xml to be a dependency and thus force it to get generated
     )
     
     qt5_generate_dbus_interface(
