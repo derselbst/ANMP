@@ -15,7 +15,10 @@ using namespace std::experimental::filesystem;
 
 void onSongChanged(void *pthis, const Song *s)
 {
-    CLOG(LogLevel_t::Info, "Now handling: " << s->Filename);
+    if(s != nullptr)
+    {
+        CLOG(LogLevel_t::Info, "Now handling: " << s->Filename);
+    }
 }
 
 static const struct option long_options[] =
