@@ -166,8 +166,7 @@ cmake .. \
         -DCMAKE_INSTALL_DO_STRIP:BOOL=OFF \
         -DCMAKE_MODULES_INSTALL_DIR=%{_datadir}/cmake/Modules
 
-make %{?_smp_mflags} anmp-qt
-make %{?_smp_mflags} anmp-launcher
+make %{?_smp_mflags}
 
 %install
 make VERBOSE=1 DESTDIR=%{buildroot} install/fast -C %{builddir}
@@ -229,6 +228,7 @@ export LD_LIBRARY_PATH=%{buildroot}/%{_libdir}/:$LD_LIBRARY_PATH
 
 %files progs
 %defattr(-,root,root)
-# %%{_bindir}/anmp-normalize
-
+%{_bindir}/anmp-normalize
+%{_bindir}/anmp-loopify
+%{_bindir}/anmp-dump
 
