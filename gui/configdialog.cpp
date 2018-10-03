@@ -62,6 +62,18 @@ void ConfigDialog::fillProperties()
     this->ui->checkChorus->setChecked(this->newConfig.FluidsynthEnableChorus);
     this->ui->checkChan9Drum->setChecked(this->newConfig.FluidsynthChannel9IsDrum);
     this->ui->comboBankSelMode->setCurrentText(QString::fromStdString(this->newConfig.FluidsynthBankSelect));
+
+    this->ui->checkModBass->setChecked(this->newConfig.ModPlugEnableBass);
+    this->ui->checkModNoise->setChecked(this->newConfig.ModPlugEnableNoiseRed);
+    this->ui->checkModReverb->setChecked(this->newConfig.ModPlugEnableReverb);
+    this->ui->checkModSurround->setChecked(this->newConfig.ModPlugEnableSurround);
+    this->ui->spinModBassAmount->setValue(this->newConfig.ModPlugBassAmount);
+    this->ui->spinModBassRange->setValue(this->newConfig.ModPlugBassRange);
+    this->ui->spinModReverbDelay->setValue(this->newConfig.ModPlugReverbDelay);
+    this->ui->spinModReverbDepth->setValue(this->newConfig.ModPlugReverbDepth);
+    this->ui->spinModSampleRate->setValue(this->newConfig.ModPlugSampleRate);
+    this->ui->spinModSurroundDelay->setValue(this->newConfig.ModPlugSurroundDelay);
+    this->ui->spinModSurroundDepth->setValue(this->newConfig.ModPlugSurroundDepth);
 }
 
 
@@ -216,6 +228,19 @@ void ConfigDialog::buttonBoxClicked(QAbstractButton *btn)
         this->newConfig.FluidsynthEnableChorus = this->ui->checkChorus->isChecked();
         this->newConfig.FluidsynthChannel9IsDrum = this->ui->checkChan9Drum->isChecked();
         this->newConfig.FluidsynthBankSelect = this->ui->comboBankSelMode->currentText().toStdString();
+
+
+        this->newConfig.ModPlugEnableBass = this->ui->checkModBass->isChecked();
+        this->newConfig.ModPlugEnableNoiseRed = this->ui->checkModNoise->isChecked();
+        this->newConfig.ModPlugEnableReverb = this->ui->checkModReverb->isChecked();
+        this->newConfig.ModPlugEnableSurround = this->ui->checkModSurround->isChecked();
+        this->newConfig.ModPlugBassAmount = this->ui->spinModBassAmount->value();
+        this->newConfig.ModPlugBassRange = this->ui->spinModBassRange->value();
+        this->newConfig.ModPlugReverbDelay = this->ui->spinModReverbDelay->value();
+        this->newConfig.ModPlugReverbDepth = this->ui->spinModReverbDepth->value();
+        this->newConfig.ModPlugSampleRate = this->ui->spinModSampleRate->value();
+        this->newConfig.ModPlugSurroundDelay = this->ui->spinModSurroundDelay->value();
+        this->newConfig.ModPlugSurroundDepth = this->ui->spinModSurroundDepth->value();
 
         std::swap(gConfig, this->newConfig);
         if (stdbtn == QDialogButtonBox::Save)
