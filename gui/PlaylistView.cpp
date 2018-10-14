@@ -95,6 +95,9 @@ void PlaylistView::keyPressEvent(QKeyEvent *event)
     {
         return;
     }
+    
+    QModelIndex bot = playlistModel->index(playlistModel->rowCount(QModelIndex()) - 1, 0);
+    QModelIndex top = playlistModel->index(0, 0);
 
     int key = event->key();
     switch (key)
@@ -127,6 +130,41 @@ void PlaylistView::keyPressEvent(QKeyEvent *event)
         case Qt::Key_S:
             this->moveItems(1);
             break;
+
+        case Qt::Key_Home:
+        case Qt::Key_End:
+            if ((event->modifiers() & Qt::ShiftModifier) == Qt::ShiftModifier)
+            {
+                QModelIndex cur = this->currentIndex();
+                
+                QItemSelectionRange aboveCur(top, cur);
+                
+                QItemSelection selection;
+                selection.append(aboveCur);
+                this->selectionModel()->select(selection,
+                                               ((key == Qt::Key_Home) ? QItemSelectionModel::Select : QItemSelectionModel::Deselect) | QItemSelectionModel::Rows);
+                selection.clear();
+                
+                QItemSelectionRange belowCur(cur, bot);
+                selection.append(belowCur);
+                this->selectionModel()->select(selection,
+                                               ((key == Qt::Key_Home) ? QItemSelectionModel::Deselect : QItemSelectionModel::Select) | QItemSelectionModel::Rows);
+                
+                // make sure the current index is selected
+                this->selectionModel()->select(this->currentIndex(),
+                                               QItemSelectionModel::Select | QItemSelectionModel::Rows);
+                
+                break;
+            }
+            else if ((event->modifiers() & Qt::NoModifier) == Qt::NoModifier)
+            {
+                this->setCurrentIndex((key == Qt::Key_Home) ? top : bot);
+                break;
+            }
+            else
+            {
+                [[fallthrough]];
+            }
 
         default:
             QTableView::keyPressEvent(event);
