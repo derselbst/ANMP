@@ -6,6 +6,7 @@
 
 #include <mutex>
 #include <queue>
+#include <random>
 
 using namespace std;
 
@@ -14,6 +15,7 @@ class Playlist : public IPlaylist
     public:
     typedef deque<Song *> SongQueue_t;
 
+    Playlist();
     virtual ~Playlist();
 
 
@@ -45,6 +47,9 @@ class Playlist : public IPlaylist
     protected:
     SongQueue_t queue;
     SongQueue_t::size_type currentSong = 0;
+
+    std::random_device rd;
+    std::mt19937 urbg;
 
     // synchronize concurrent access made by playback thread and qt's gui thread
     mutable recursive_mutex mtx;

@@ -3,6 +3,10 @@
 
 #include <algorithm>
 
+Playlist::Playlist() :
+    urbg(rd())
+{
+}
 
 Playlist::~Playlist()
 {
@@ -139,17 +143,17 @@ void Playlist::shuffle(size_t start, size_t end)
     {
         if (start - this->currentSong != 0)
         {
-            std::random_shuffle(this->queue.begin() + start, this->queue.begin() + this->currentSong);
+            std::shuffle(this->queue.begin() + start, this->queue.begin() + this->currentSong, this->urbg);
         }
 
         if (this->currentSong + 1 - end != 0)
         {
-            std::random_shuffle(this->queue.begin() + (this->currentSong + 1), this->queue.begin() + end);
+            std::shuffle(this->queue.begin() + (this->currentSong + 1), this->queue.begin() + end, this->urbg);
         }
     }
     else
     {
-        std::random_shuffle(this->queue.begin() + start, this->queue.begin() + end);
+        std::shuffle(this->queue.begin() + start, this->queue.begin() + end, this->urbg);
     }
 }
 
