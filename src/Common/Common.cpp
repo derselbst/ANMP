@@ -153,9 +153,10 @@ string framesToTimeStr(frame_t frames, const unsigned int &sampleRate)
     int sec = frames / sampleRate;
     int min = sec / 60;
     sec %= 60;
+    int msec100 = frames % sampleRate % 10;
 
     stringstream ssTime;
-    ssTime << min << ":" << setw(2) << setfill('0') << sec;
+    ssTime << min << ":" << setw(2) << setfill('0') << sec << "." << msec100;
 
     // stringstream::str() returns a temporary object
     string temp = ssTime.str();
