@@ -90,6 +90,20 @@ void FFMpegWrapper::open()
     {
         THROW_RUNTIME_ERROR("Could not allocate audio codec context");
     }
+    
+    /* Initialize the stream parameters with demuxer information.
+     * This is needed for aac decoding for some reason.
+     */
+    if (avcodec_parameters_to_context(this->codecCtx, audioStream->codecpar) < 0)
+    {
+        THROW_RUNTIME_ERROR("avcodec_parameters_to_context() failed");
+    }
+    
+    // This is not needed anymore above FFMpeg version 4.0
+#if LIBAVCODEC_VERSION_INT < 3805796
+    // Se timebase correct
+    av_codec_set_pkt_timebase(this->codecCtx, audioStream->time_base);
+#endif
 
     // Open the codec found suitable for this stream in the last step
     if (avcodec_open2(this->codecCtx, decoder, nullptr) < 0)
@@ -163,6 +177,7 @@ void FFMpegWrapper::fillBuffer()
 
 int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo, AVPacket &pkt, AVFrame *(&frame))
 {
+    char errstr[AV_ERROR_MAX_STRING_SIZE];
     int decoded = 0, ret;
 
     if (pkt.stream_index == this->audioStreamID)
@@ -185,9 +200,11 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo, AVPacket &pkt
                 
             case AVERROR(ENOMEM):
                 CLOG(LogLevel_t::Error, "failed to add packet to internal queue");
+                break;
                 
             default:
-                CLOG(LogLevel_t::Warning, "error submitting the packet to the decoder (legitimate decoding error)");
+                av_strerror(ret, errstr, sizeof(errstr));
+                CLOG(LogLevel_t::Warning, "error submitting the packet to the decoder (legitimate decoding error): '" << errstr << "'");
                 break;
             }
             return ret;
@@ -197,14 +214,20 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo, AVPacket &pkt
         while (ret >= 0)
         {
             ret = avcodec_receive_frame(this->codecCtx, frame);
-            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+            if (ret == AVERROR(EAGAIN))
             {
-                CLOG(LogLevel_t::Debug, "AVERROR_EOF || AVERROR(EAGAIN)");
+                CLOG(LogLevel_t::Debug, "AVERROR(EAGAIN)");
+                return ret;
+            }
+            if (ret == AVERROR_EOF)
+            {
+                CLOG(LogLevel_t::Debug, "AVERROR_EOF");
                 return ret;
             }
             else if (ret < 0)
             {
-                CLOG(LogLevel_t::Warning, "legitimate decoding error");
+                av_strerror(ret, errstr, sizeof(errstr));
+                CLOG(LogLevel_t::Warning, "legitimate decoding error: '" << errstr << "'");
             }
             
             ret = av_get_bytes_per_sample(this->codecCtx->sample_fmt);
@@ -283,16 +306,18 @@ void FFMpegWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
     int16_t *pcm = static_cast<int16_t *>(bufferToFill);
     bufferToFill = (pcm += this->framesAlreadyRendered * this->Format.Channels());
 
+    bool finished = false;
     while (!this->stopFillBuffer &&
            framesToDo > 0 &&
            pcm < static_cast<int16_t *>(bufferToFill) + this->count)
     {
-        /* read frames from the file */
+        /* Read one audio frame from the input file into a temporary packet. */
         int ret = av_read_frame(this->handle, &packet);
         if (ret < 0)
         {
             if (ret == AVERROR_EOF || avio_feof(this->handle->pb))
             {
+                finished = true;
                 CLOG(LogLevel_t::Debug, "AVERROR_EOF");
                 break;
             }
@@ -303,12 +328,15 @@ void FFMpegWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
             }
         }
         
-        this->decode_packet(pcm, framesToDo, packet, frame);
+        if (this->decode_packet(pcm, framesToDo, packet, frame) == AVERROR_EOF)
+        {
+            finished = true;
+        }
         av_packet_unref(&packet);
     }
 
-    /* at the very last call, make sure the very last run flushes any cached frames */
-    if (framesToRender == 0)
+    /* If we are at the end of the file, flush the decoder below, making sure the very last run flushes any cached frames */
+    if (finished)
     {
         packet.data = nullptr;
         packet.size = 0;
