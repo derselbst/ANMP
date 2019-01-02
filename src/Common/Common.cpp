@@ -344,41 +344,35 @@ string myHomeDir()
 
 Nullable<string> findSoundfont(string midFile)
 {
+    static const char *ext[] = {".sf2", ".dls"};
+    
     // trim extension
     midFile = midFile.erase(midFile.find_last_of('.'), string::npos);
 
-    string soundffile = midFile + ".sf2";
-
-    //     if(fs::exists(midFile + ".sf2"))
-    if (myExists(soundffile))
+    for(const char* e : ext)
     {
-        // a soundfont named like midi file, but with sf2 extension
-        return Nullable<string>(soundffile);
+        string soundffile = midFile + e;
+
+        //     if(fs::exists(midFile + e))
+        if (myExists(soundffile))
+        {
+            // a soundfont named like midi file, but with sf2 extension
+            return Nullable<string>(soundffile);
+        }
+
+        // get path to directory this file is in
+        string dir = mydirname(midFile);
+
+        soundffile = dir + "/"; // the directory this soundfont might be in
+        soundffile += mybasename(dir); // bare name of that soundfont
+        soundffile += e; // extension
+
+        //     if(fs::exists(dir + e))
+        if (myExists(soundffile))
+        {
+            return Nullable<string>(soundffile);
+        }
     }
-
-    // get path to directory this file is in
-    string dir = mydirname(midFile);
-
-    soundffile = dir + "/"; // the directory this soundfont might be in
-    soundffile += mybasename(dir); // bare name of that soundfont
-    soundffile += ".sf2"; // extension
-
-    //     if(fs::exists(dir + ".sf2"))
-    if (myExists(soundffile))
-    {
-        return Nullable<string>(soundffile);
-    }
-
-    //     for(directory_entry& dirEntry : fs::directory_iterator("sandbox"))
-    //     {
-    //         string ext = getFileExtension(dirEntry.path());
-    //
-    //         if(iEquals(ext, "sf2"))
-    //         {
-    //             // a soundfont in that directory
-    //             return Nullable<string>(dirEntry.path());
-    //         }
-    //     }
-
+    
     return Nullable<string>(nullptr);
 }

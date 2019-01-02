@@ -171,6 +171,7 @@ bool PlaylistFactory::addSong(IPlaylist &playlist, const string& filePath, Nulla
         iEquals(ext, "mood") ||
         iEquals(ext, "usflib") ||
         iEquals(ext, "sf2") || // libmad forever busy
+        iEquals(ext, "dls") ||
         iEquals(ext, "txt") || // libmad converts it to sound
         iEquals(ext, "bash") ||
         iEquals(ext, "zip") || // libsmf assertion fail

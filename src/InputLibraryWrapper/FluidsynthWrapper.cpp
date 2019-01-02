@@ -316,15 +316,9 @@ void FluidsynthWrapper::DeepInit(const Nullable<string>& suggestedSf2)
     this->setupSynth();
     this->setupSeq();
     
-    // Load the soundfont
-    if (!fluid_is_soundfont(soundfont.Value.c_str()))
-    {
-        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (weak test): \"" << soundfont.Value << "\"");
-    }
-
     if ((this->cachedSf2Id = fluid_synth_sfload(this->synth, soundfont.Value.c_str(), true)) == -1)
     {
-        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid (strong test): \"" << soundfont.Value << "\"");
+        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid or not supported: \"" << soundfont.Value << "\"");
     }
 }
 

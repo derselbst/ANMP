@@ -172,7 +172,7 @@ void ConfigDialog::on_comboBoxAudioDriver_currentIndexChanged(int index)
 
 void ConfigDialog::on_browseSF2_clicked()
 {
-    QString selFilter = "SoundFonts (*.sf2 *.sf3)";
+    QString selFilter = "SoundFonts (*.sf2 *.sf3 *.dls) (*.sf2 *.sf3 *.dls)";
     QString sf2 = QFileDialog::getOpenFileName(this, "Select Soundfont", this->ui->defaultSF2Path->text(), selFilter + ";;All files (*.*)", &selFilter);
 
     if (!sf2.isNull())
