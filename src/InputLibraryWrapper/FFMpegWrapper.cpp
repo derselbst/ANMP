@@ -148,14 +148,34 @@ void FFMpegWrapper::open()
     }
 
     // Set up SWR context once you've got codec information
-    this->swr = swr_alloc();
+    if((this->swr = swr_alloc()) == nullptr)
+    {
+        THROW_RUNTIME_ERROR("Cannot alloc swr.");
+    }
     av_opt_set_int(this->swr, "in_channel_layout", pCodecPar->channel_layout, 0);
     av_opt_set_int(this->swr, "out_channel_layout", pCodecPar->channel_layout, 0);
     av_opt_set_int(this->swr, "in_sample_rate", pCodecPar->sample_rate, 0);
     av_opt_set_int(this->swr, "out_sample_rate", pCodecPar->sample_rate, 0);
     av_opt_set_sample_fmt(this->swr, "in_sample_fmt", static_cast<AVSampleFormat>(pCodecPar->format), 0);
     av_opt_set_sample_fmt(this->swr, "out_sample_fmt", AV_SAMPLE_FMT_S16, 0);
-    swr_init(this->swr);
+    
+    if((swr_init(this->swr)) != 0)
+    {
+        THROW_RUNTIME_ERROR("Cannot init swr.");
+    }
+    
+    /* initialize packet, set data to nullptr, let the demuxer fill it */
+    if((this->packet = av_packet_alloc()) == nullptr)
+    {
+        THROW_RUNTIME_ERROR("Cannot allocate AVPacket.")
+    }
+
+    // frame, where the decoded data will be written
+    this->frame = av_frame_alloc();
+    if (frame == nullptr)
+    {
+        THROW_RUNTIME_ERROR("Cannot allocate AVFrame.")
+    }
 }
 
 void FFMpegWrapper::close() noexcept
@@ -166,6 +186,10 @@ void FFMpegWrapper::close() noexcept
         this->swr = nullptr;
     }
 
+    this->tmpSwrBuf.clear();
+    this->tmpSwrBuf.shrink_to_fit();
+    av_frame_free(&this->frame);
+    av_packet_free(&this->packet);
     avcodec_free_context(&this->codecCtx);
     avformat_close_input(&this->handle);
 }
@@ -175,14 +199,14 @@ void FFMpegWrapper::fillBuffer()
     StandardWrapper::fillBuffer(this);
 }
 
-int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo, AVPacket &pkt, AVFrame *(&frame))
+int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo)
 {
     char errstr[AV_ERROR_MAX_STRING_SIZE];
     int decoded = 0, ret;
 
-    if (pkt.stream_index == this->audioStreamID)
+    if (this->packet->stream_index == this->audioStreamID)
     {
-        if ((ret = avcodec_send_packet(this->codecCtx, &pkt)) < 0)
+        if ((ret = avcodec_send_packet(this->codecCtx, this->packet)) < 0)
         {
             switch (ret)
             {
@@ -210,10 +234,10 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo, AVPacket &pkt
             return ret;
         }
         
-        /* read all the output frames (in general there may be any number of them */
+        /* read all the output frames (in general there may be any number of them) */
         while (ret >= 0)
         {
-            ret = avcodec_receive_frame(this->codecCtx, frame);
+            ret = avcodec_receive_frame(this->codecCtx, this->frame);
             if (ret == AVERROR(EAGAIN))
             {
                 CLOG(LogLevel_t::Debug, "AVERROR(EAGAIN)");
@@ -230,13 +254,6 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo, AVPacket &pkt
                 CLOG(LogLevel_t::Warning, "legitimate decoding error: '" << errstr << "'");
             }
             
-            ret = av_get_bytes_per_sample(this->codecCtx->sample_fmt);
-            if (ret < 0)
-            {
-                /* This should not occur, checking just for paranoia */
-                THROW_RUNTIME_ERROR("Failed to calculate data size per sample");
-            }
-            
 //             for (i = 0; i < frame->nb_samples; i++)
 //                 for (ch = 0; ch < this->handle->streams[this->audioStreamID]->codec->channels; ch++)
 //                     fwrite(frame->data[ch] + data_size*i, 1, data_size, outfile);
@@ -245,24 +262,38 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo, AVPacket &pkt
              * called again with the remainder of the packet data.
              * Sample: fate-suite/lossless-audio/luckynight-partial.shn
              * Also, some decoders might over-read the packet. */
-            decoded += frame->nb_samples;
+            decoded += this->frame->nb_samples;
             
-            // make sure we dont run over buffer
-            int framesToConvert = min(frame->nb_samples, framesToDo);
-
-            swr_convert(this->swr, reinterpret_cast<uint8_t **>(&pcm), framesToConvert, const_cast<const uint8_t **>(frame->extended_data), framesToConvert);
-
-            size_t unpadded_linesize = framesToConvert * frame->channels; // * sizeof(int16_t); //* av_get_bytes_per_sample((AVSampleFormat)frame->format);
-            pcm += unpadded_linesize;
-
-            framesToDo -= framesToConvert;
-
-            if (framesToDo < 0)
+            if(this->frame->nb_samples > framesToDo)
             {
-                CLOG(LogLevel_t::Fatal, "THIS SHOULD NEVER HAPPEN! bufferoverrun ffmpegwrapper")
+                size_t oldNoOfItems = this->tmpSwrBuf.size();
+                // not enough space left in the master PCM buffer, render to tmp buffer
+                this->tmpSwrBuf.resize(oldNoOfItems + this->frame->nb_samples * this->frame->channels);
+                
+                auto* inbuf = this->tmpSwrBuf.data() + oldNoOfItems;
+                swr_convert(this->swr, reinterpret_cast<uint8_t **>(&inbuf), this->frame->nb_samples, const_cast<const uint8_t **>(this->frame->extended_data), this->frame->nb_samples);
+            
+                // and copy over frames, if there is any space left in the master PCM buffer
+                if(framesToDo > 0)
+                {
+                    frame_t itemsToCopy = framesToDo * this->frame->channels;
+                    
+                    std::memcpy(pcm, this->tmpSwrBuf.data(), itemsToCopy * sizeof(*pcm));
+                    this->tmpSwrBuf.erase(this->tmpSwrBuf.begin(), this->tmpSwrBuf.begin()+itemsToCopy);
+                    
+                    pcm += itemsToCopy;
+                    this->framesAlreadyRendered += framesToDo;
+                }
             }
-
-            this->framesAlreadyRendered += framesToConvert;
+            else
+            {
+                swr_convert(this->swr, reinterpret_cast<uint8_t **>(&pcm), this->frame->nb_samples, const_cast<const uint8_t **>(this->frame->extended_data), this->frame->nb_samples);
+                
+                pcm += this->frame->nb_samples * this->frame->channels;
+                this->framesAlreadyRendered += this->frame->nb_samples;
+            }
+            
+            framesToDo -= this->frame->nb_samples; // could go negative here, i.e. no space left in master PCM buffer
         }
     }
     else
@@ -273,7 +304,6 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo, AVPacket &pkt
     return decoded;
 }
 
-// TODO: this crap is not guaranteed to generate exactly framesToRender frames, there might by more thrown out, which is bad in case of a limited buffer
 void FFMpegWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
 {
     int framesToDo;
@@ -287,32 +317,33 @@ void FFMpegWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
         framesToDo = min(framesToRender, this->getFrames() - this->framesAlreadyRendered);
     }
     
-    //data packet read from the stream
-    AVPacket packet;
-
-    /* initialize packet, set data to nullptr, let the demuxer fill it */
-    av_init_packet(&packet);
-    packet.data = nullptr;
-    packet.size = 0;
-
-    // frame, where the decoded data will be written
-    AVFrame *frame = av_frame_alloc();
-    if (frame == nullptr)
-    {
-        THROW_RUNTIME_ERROR("Cannot allocate AVFrame.")
-    }
-
     // int16 because we told swr to convert everything to int16
     int16_t *pcm = static_cast<int16_t *>(bufferToFill);
-    bufferToFill = (pcm += this->framesAlreadyRendered * this->Format.Channels());
+    const auto Channels = this->Format.Channels();
+    /* advance the pcm pointer by that many items where we previously ended filling it */
+    pcm += (this->framesAlreadyRendered * Channels) % this->count;
+    bufferToFill = pcm;
 
+    // anything already cached in the temp buffer?
+    frame_t itemsToCopy = std::min<frame_t>(this->tmpSwrBuf.size(), Channels * framesToDo);
+    if(itemsToCopy>0)
+    {
+        std::memcpy(pcm, this->tmpSwrBuf.data(), itemsToCopy * sizeof(*pcm));
+        this->tmpSwrBuf.erase(this->tmpSwrBuf.begin(), ((itemsToCopy==this->tmpSwrBuf.size()) ? this->tmpSwrBuf.end() : this->tmpSwrBuf.begin()+itemsToCopy));
+        
+        pcm += itemsToCopy;
+        framesToDo -= itemsToCopy/Channels;
+        this->framesAlreadyRendered += itemsToCopy/Channels;
+    }
+    
+    // the FFMPEG rendering loop
     bool finished = false;
     while (!this->stopFillBuffer &&
            framesToDo > 0 &&
            pcm < static_cast<int16_t *>(bufferToFill) + this->count)
     {
         /* Read one audio frame from the input file into a temporary packet. */
-        int ret = av_read_frame(this->handle, &packet);
+        int ret = av_read_frame(this->handle, this->packet);
         if (ret < 0)
         {
             if (ret == AVERROR_EOF || avio_feof(this->handle->pb))
@@ -328,23 +359,21 @@ void FFMpegWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
             }
         }
         
-        if (this->decode_packet(pcm, framesToDo, packet, frame) == AVERROR_EOF)
+        if (this->decode_packet(pcm, framesToDo) == AVERROR_EOF)
         {
             finished = true;
         }
-        av_packet_unref(&packet);
+        av_packet_unref(this->packet);
     }
 
     /* If we are at the end of the file, flush the decoder below, making sure the very last run flushes any cached frames */
     if (finished)
     {
-        packet.data = nullptr;
-        packet.size = 0;
-        this->decode_packet(pcm, framesToDo, packet, frame);
-        av_packet_unref(&packet);
+        this->packet->data = nullptr;
+        this->packet->size = 0;
+        this->decode_packet(pcm, framesToDo);
+        av_packet_unref(this->packet);
     }
-
-    av_frame_free(&frame);
 
     this->doAudioNormalization(static_cast<int16_t *>(bufferToFill), framesToRender);
 }

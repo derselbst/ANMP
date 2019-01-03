@@ -53,10 +53,17 @@ class FFMpegWrapper : public StandardWrapper<int16_t>
     AVFormatContext *handle = nullptr;
     SwrContext *swr = nullptr;
     AVCodecContext *codecCtx = nullptr;
+    
+    // things needed to save the current decoding state, to allow this->render() be called multiple times without causing interrupts in the decoded audio
+    
+    AVFrame *frame = nullptr;
+    //data packet read from the stream
+    AVPacket *packet = nullptr;
+    std::vector<int16_t> tmpSwrBuf;
 
     int audioStreamID = -1;
 
-    int decode_packet(int16_t *(&pcm), int &framesToDo, AVPacket &pkt, AVFrame *(&frame));
+    int decode_packet(int16_t *(&pcm), int &framesToDo);
 };
 
 #endif // FFMPEGWRAPPER_H
