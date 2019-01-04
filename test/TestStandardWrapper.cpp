@@ -50,11 +50,11 @@ class TestSong : public StandardWrapper<FORMAT>
         return this->frames;
     }
 
-    void render(pcm_t *bufferToFill, frame_t framesToRender = 0) override
+    void render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender) override
     {
         STANDARDWRAPPER_RENDER(FORMAT,
-                               for (unsigned int i = 0; i < framesToDoNow * this->Format.Channels(); i++) {
-                                   pcm[i] = GEN_FRAMES(FORMAT, framesToDoNow * this->Format.Channels(), i);
+                               for (unsigned int i = 0; i < framesToDoNow * Channels; i++) {
+                                   pcm[i] = GEN_FRAMES(FORMAT, framesToDoNow * Channels, i);
                                })
     }
 };

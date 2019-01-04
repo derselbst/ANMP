@@ -48,7 +48,10 @@ template<typename SAMPLEFORMAT>
 template<typename WRAPPERCLASS>
 void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS *context)
 {
-    if (this->count == static_cast<size_t>(this->getFrames()) * this->Format.Channels())
+    const auto Channels = this->Format.Channels();
+    const auto TotalFrames = this->getFrames();
+    
+    if (this->count == static_cast<size_t>(TotalFrames) * Channels)
     {
         // Song::data already filled up with all the audiofile's PCM, nothing to do here (most likely case)
         return;
@@ -67,7 +70,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS *context)
         size_t itemsToAlloc = 0;
         if (gConfig.RenderWholeSong)
         {
-            itemsToAlloc = this->getFrames() * this->Format.Channels();
+            itemsToAlloc = TotalFrames * Channels;
 
             // try to alloc a buffer to hold the whole song's pcm in memory
             this->data = new (std::nothrow) SAMPLEFORMAT[itemsToAlloc];
@@ -76,14 +79,21 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS *context)
                 this->count = itemsToAlloc;
 
                 // (pre-)render the first few milliseconds
-                this->render(this->data, msToFrames(gConfig.PreRenderTime, this->Format.SampleRate));
+                this->render(this->data, Channels, msToFrames(gConfig.PreRenderTime, this->Format.SampleRate));
 
                 // immediatly start filling the rest of the pcm buffer
-                this->futureFillBuffer = async(launch::async, &WRAPPERCLASS::render, context /*==this*/, context->data, 0 /*render everything*/);
+                frame_t restFrames = TotalFrames - this->framesAlreadyRendered;
+                if(restFrames > 0)
+                {
+                    /* advance the pcm pointer by that many items where we previously ended filling it */
+                    SAMPLEFORMAT *pcm = static_cast<SAMPLEFORMAT *>(context->data);
+                    pcm += (this->framesAlreadyRendered * Channels);
+                
+                    this->futureFillBuffer = async(launch::async, &WRAPPERCLASS::render, context /*==this*/, pcm, Channels, restFrames /*render everything*/);
 
-                // allow the render thread to do his work
-                this_thread::yield();
-
+                    // allow the render thread to do his work
+                    this_thread::yield();
+                }
                 return;
             }
         }
@@ -91,7 +101,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS *context)
         // well either we shall not render whole song once or something went wrong during alloc (not enough memory??)
         // so try to alloc at least enough to do double buffering
         // if this fails too, an exception will be thrown
-        itemsToAlloc = gConfig.FramesToRender * this->Format.Channels();
+        itemsToAlloc = gConfig.FramesToRender * Channels;
 
         try
         {
@@ -105,7 +115,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS *context)
             throw;
         }
 
-        this->render(this->data, gConfig.FramesToRender);
+        this->render(this->data, Channels, gConfig.FramesToRender);
     }
     else // only small buffer allocated, i.e. this->count == gConfig.FramesToRender * this->Format.Channels
     {
@@ -115,7 +125,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS *context)
         std::swap(this->data, this->preRenderBuf);
     }
 
-    this->futureFillBuffer = async(launch::async, &WRAPPERCLASS::render, context /*==this*/, context->preRenderBuf, gConfig.FramesToRender);
+    this->futureFillBuffer = async(launch::async, &WRAPPERCLASS::render, context /*==this*/, context->preRenderBuf, Channels, gConfig.FramesToRender);
 }
 
 template<typename SAMPLEFORMAT>

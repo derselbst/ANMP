@@ -34,7 +34,7 @@ class LibMadWrapper : public StandardWrapper<int32_t>
 
     frame_t getFrames() const override;
 
-    void render(pcm_t *bufferToFill, frame_t framesToRender = 0) override;
+    void render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender) override;
 
     void buildMetadata() noexcept override;
 

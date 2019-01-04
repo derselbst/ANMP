@@ -230,36 +230,23 @@ void LibMadWrapper::fillBuffer()
     StandardWrapper::fillBuffer(this);
 }
 
-void LibMadWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
+void LibMadWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender)
 {
-    if (framesToRender == 0)
-    {
-        /* render rest of file */
-        framesToRender = this->getFrames() - this->framesAlreadyRendered;
-    }
-    else
-    {
-        framesToRender = min(framesToRender, this->getFrames() - this->framesAlreadyRendered);
-    }
-
+    framesToRender = min(framesToRender, this->getFrames() - this->framesAlreadyRendered);
     int32_t *pcm = static_cast<int32_t *>(bufferToFill);
-
-    // if buffer for whole song: adjusts the position where to start filling "bufferToFill", with respect to already rendered frames
-    // if only small buffer: since "this->framesAlreadyRendered" should be multiple of this->count: should do pcm+=0
-    pcm += (this->framesAlreadyRendered * this->Format.Channels()) % this->count;
 
     // the outer loop, used for decoding and synthesizing MPEG frames
     while (framesToRender > 0 && !this->stopFillBuffer)
     {
         // write back tempbuffer, i.e. frames weve buffered from previous calls to libmad (necessary due to inelegant API of libmad, i.e. cant tell how many frames to render during one call)
         {
-            const size_t itemsToCpy = min<size_t>(this->tempBuf.size(), framesToRender * this->Format.Channels());
+            const size_t itemsToCpy = min<size_t>(this->tempBuf.size(), framesToRender * Channels);
 
             memcpy(pcm, this->tempBuf.data(), itemsToCpy * sizeof(int32_t));
 
             this->tempBuf.erase(this->tempBuf.begin(), this->tempBuf.begin() + itemsToCpy);
 
-            const size_t framesCpyd = itemsToCpy / this->Format.Channels();
+            const size_t framesCpyd = itemsToCpy / Channels;
             framesToRender -= framesCpyd;
             this->framesAlreadyRendered += framesCpyd;
 
@@ -334,7 +321,7 @@ void LibMadWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
             sample = gConfig.useAudioNormalization ? floor(sample * absoluteGain) : sample;
             pcm[item++] = sample;
 
-            if (this->Format.Channels() == 2) // our buffer is for 2 channels
+            if (Channels == 2) // our buffer is for 2 channels
             {
                 if (this->synth.Value.pcm.channels == 2) // ...but did mad also decoded for 2 channels?
                 {
@@ -365,7 +352,7 @@ void LibMadWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
             sample = LibMadWrapper::toInt24Sample(*left_ch++);
             this->tempBuf.push_back(gConfig.useAudioNormalization ? floor(sample * absoluteGain) : sample);
 
-            if (this->Format.Channels() == 2)
+            if (Channels == 2)
             {
                 sample = LibMadWrapper::toInt24Sample(*right_ch++);
                 this->tempBuf.push_back(gConfig.useAudioNormalization ? floor(sample * absoluteGain) : sample);

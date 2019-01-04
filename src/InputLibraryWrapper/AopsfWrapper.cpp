@@ -164,7 +164,7 @@ void AopsfWrapper::fillBuffer()
     StandardWrapper::fillBuffer(this);
 }
 
-void AopsfWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
+void AopsfWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender)
 {
     int err;
 

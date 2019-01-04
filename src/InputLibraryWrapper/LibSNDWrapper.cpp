@@ -91,7 +91,7 @@ void LibSNDWrapper::fillBuffer()
     StandardWrapper::fillBuffer(this);
 }
 
-void LibSNDWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
+void LibSNDWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender)
 {
     // what we are doing below is nothing more than efficiently reading audio frames from libsndfile. it got a bit more complex due to
     //   - performance improvements (avoid unnecessary to in conversion if file contains floats)

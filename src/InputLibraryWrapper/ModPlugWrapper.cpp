@@ -139,7 +139,7 @@ void ModPlugWrapper::fillBuffer()
     StandardWrapper::fillBuffer(this);
 }
 
-void ModPlugWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
+void ModPlugWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender)
 {
     STANDARDWRAPPER_RENDER(int32_t,
                            int ret = ModPlug_Read(this->handle, pcm, framesToDoNow * Channels * sizeof(int32_t));

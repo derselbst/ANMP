@@ -102,10 +102,12 @@ void LazyusfWrapper::fillBuffer()
     StandardWrapper::fillBuffer(this);
 }
 
-void LazyusfWrapper::render(pcm_t *bufferToFill, frame_t framesToRender){
+void LazyusfWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender)
+{
 // TODO: UGLY CAST AHEAD!
 STANDARDWRAPPER_RENDER(int16_t,
-                       usf_render(this->usfHandle, pcm, framesToDoNow, reinterpret_cast<int32_t *>(&this->Format.SampleRate)))}
+                       usf_render(this->usfHandle, pcm, framesToDoNow, reinterpret_cast<int32_t *>(&this->Format.SampleRate)))
+}
 
 frame_t LazyusfWrapper::getFrames() const
 {

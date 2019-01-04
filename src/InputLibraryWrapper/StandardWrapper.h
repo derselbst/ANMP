@@ -31,26 +31,11 @@
   * 
   * @warning whenever changing this implementation, dont forget LibMadWrapper::render() AND FFMpegWrapper::render(), which does
   * pretty much the same thing, without using this macro
-  * 
-  * @warning modifies bufferToFill to point to the beginning, where the macro started filling up the PCM buffer, allowing \c StandardWrapper::doAudioNormalization() to directly take and use this pointer
   */
 #define STANDARDWRAPPER_RENDER(SAMPLEFORMAT, LIB_SPECIFIC_RENDER_FUNCTION)                                                                        \
     {                                                                                                                                             \
-        decltype(framesToRender) backup;                                                                                                          \
-        if (framesToRender == 0)                                                                                                                  \
-        {                                                                                                                                         \
-            /* render rest of file */                                                                                                             \
-            backup = framesToRender = this->getFrames() - this->framesAlreadyRendered;                                                            \
-        }                                                                                                                                         \
-        else                                                                                                                                      \
-        {                                                                                                                                         \
-            backup = framesToRender = min(framesToRender, this->getFrames() - this->framesAlreadyRendered);                                       \
-        }                                                                                                                                         \
-        const uint32_t Channels = this->Format.Channels();                                                                                        \
+        auto backup = framesToRender = min(framesToRender, this->getFrames() - this->framesAlreadyRendered);                                      \
         SAMPLEFORMAT *pcm = static_cast<SAMPLEFORMAT *>(bufferToFill);                                                                            \
-        /* advance the pcm pointer by that many items where we previously ended filling it */                                                     \
-        pcm += (this->framesAlreadyRendered * Channels) % this->count;                                                                            \
-        bufferToFill = pcm;                                                                                                                       \
                                                                                                                                                   \
         while (framesToRender > 0 && !this->stopFillBuffer)                                                                                       \
         {                                                                                                                                         \
@@ -87,7 +72,14 @@ class StandardWrapper : public Song
 
     frame_t getFramesRendered();
 
-    virtual void render(pcm_t *bufferToFill, frame_t framesToRender = 0) = 0;
+    /**
+     * The render function that actually decodes and saves everything to @p bufferToFill.
+     * 
+     * @param bufferToFill: the buffer to be filled with PCM.
+     * @param channels: number of channels, same as this->Format.Channels(), but cached for convenience
+     * @param framesToRender: number of requested frames to be decoded; there may be less frames decoded if the end of file is reached, but there must not be more frames decoded
+     */
+    virtual void render(pcm_t *const bufferToFill, const uint32_t channels, frame_t framesToRender) = 0;
 
     protected:
     // used for double buffering, whenever we were unable to allocate a buffer big enough to hold the whole song in memory

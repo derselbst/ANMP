@@ -304,25 +304,12 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo)
     return decoded;
 }
 
-void FFMpegWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
+void FFMpegWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender)
 {
-    int framesToDo;
-    if (framesToRender == 0)
-    {
-        /* render rest of file */
-        framesToDo = framesToRender = this->getFrames() - this->framesAlreadyRendered;
-    }
-    else
-    {
-        framesToDo = framesToRender = min(framesToRender, this->getFrames() - this->framesAlreadyRendered);
-    }
+    int framesToDo = framesToRender = min(framesToRender, this->getFrames() - this->framesAlreadyRendered);
 
     // int16 because we told swr to convert everything to int16
     int16_t *pcm = static_cast<int16_t *>(bufferToFill);
-    const auto Channels = this->Format.Channels();
-    /* advance the pcm pointer by that many items where we previously ended filling it */
-    pcm += (this->framesAlreadyRendered * Channels) % this->count;
-    bufferToFill = pcm;
 
     // anything already cached in the temp buffer?
     frame_t itemsToCopy = std::min<frame_t>(this->tmpSwrBuf.size(), Channels * framesToDo);
