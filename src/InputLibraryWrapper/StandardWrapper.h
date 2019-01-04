@@ -96,6 +96,7 @@ class StandardWrapper : public Song
     // a flag that indicates a prematurely abort of async buffer fill
     bool stopFillBuffer = false;
 
+    // number of frames that have been rendered to this->pcm since the song has been opened
     frame_t framesAlreadyRendered = 0;
 
     template<typename WRAPPERCLASS>

@@ -310,11 +310,11 @@ void FFMpegWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
     if (framesToRender == 0)
     {
         /* render rest of file */
-        framesToDo = this->getFrames() - this->framesAlreadyRendered;
+        framesToDo = framesToRender = this->getFrames() - this->framesAlreadyRendered;
     }
     else
     {
-        framesToDo = min(framesToRender, this->getFrames() - this->framesAlreadyRendered);
+        framesToDo = framesToRender = min(framesToRender, this->getFrames() - this->framesAlreadyRendered);
     }
     
     // int16 because we told swr to convert everything to int16
