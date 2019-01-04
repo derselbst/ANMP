@@ -53,9 +53,9 @@ class FFMpegWrapper : public StandardWrapper<int16_t>
     AVFormatContext *handle = nullptr;
     SwrContext *swr = nullptr;
     AVCodecContext *codecCtx = nullptr;
-    
+
     // things needed to save the current decoding state, to allow this->render() be called multiple times without causing interrupts in the decoded audio
-    
+
     AVFrame *frame = nullptr;
     //data packet read from the stream
     AVPacket *packet = nullptr;

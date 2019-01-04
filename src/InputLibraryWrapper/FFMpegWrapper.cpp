@@ -85,12 +85,12 @@ void FFMpegWrapper::open()
     {
         THROW_RUNTIME_ERROR("Codec type " << pCodecPar->codec_id << " not found.")
     }
-    
+
     if ((this->codecCtx = avcodec_alloc_context3(decoder)) == nullptr)
     {
         THROW_RUNTIME_ERROR("Could not allocate audio codec context");
     }
-    
+
     /* Initialize the stream parameters with demuxer information.
      * This is needed for aac decoding for some reason.
      */
@@ -98,7 +98,7 @@ void FFMpegWrapper::open()
     {
         THROW_RUNTIME_ERROR("avcodec_parameters_to_context() failed");
     }
-    
+
     // This is not needed anymore above FFMpeg version 4.0
 #if LIBAVCODEC_VERSION_INT < 3805796
     // Se timebase correct
@@ -148,7 +148,7 @@ void FFMpegWrapper::open()
     }
 
     // Set up SWR context once you've got codec information
-    if((this->swr = swr_alloc()) == nullptr)
+    if ((this->swr = swr_alloc()) == nullptr)
     {
         THROW_RUNTIME_ERROR("Cannot alloc swr.");
     }
@@ -158,14 +158,14 @@ void FFMpegWrapper::open()
     av_opt_set_int(this->swr, "out_sample_rate", pCodecPar->sample_rate, 0);
     av_opt_set_sample_fmt(this->swr, "in_sample_fmt", static_cast<AVSampleFormat>(pCodecPar->format), 0);
     av_opt_set_sample_fmt(this->swr, "out_sample_fmt", AV_SAMPLE_FMT_S16, 0);
-    
-    if((swr_init(this->swr)) != 0)
+
+    if ((swr_init(this->swr)) != 0)
     {
         THROW_RUNTIME_ERROR("Cannot init swr.");
     }
-    
+
     /* initialize packet, set data to nullptr, let the demuxer fill it */
-    if((this->packet = av_packet_alloc()) == nullptr)
+    if ((this->packet = av_packet_alloc()) == nullptr)
     {
         THROW_RUNTIME_ERROR("Cannot allocate AVPacket.")
     }
@@ -210,30 +210,30 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo)
         {
             switch (ret)
             {
-            case AVERROR(EAGAIN):
-                CLOG(LogLevel_t::Error, "avcodec_send_packet() not ready??");
-                break;
-                
-            case AVERROR_EOF:
-                CLOG(LogLevel_t::Error, "decoder has been flushed, and no new packets can be sent to it or more than 1 flush packet has been sent");
-                break;
-                
-            case AVERROR(EINVAL):
-                CLOG(LogLevel_t::Error, "codec not opened, it is an encoder, or requires flush");
-                break;
-                
-            case AVERROR(ENOMEM):
-                CLOG(LogLevel_t::Error, "failed to add packet to internal queue");
-                break;
-                
-            default:
-                av_strerror(ret, errstr, sizeof(errstr));
-                CLOG(LogLevel_t::Warning, "error submitting the packet to the decoder (legitimate decoding error): '" << errstr << "'");
-                break;
+                case AVERROR(EAGAIN):
+                    CLOG(LogLevel_t::Error, "avcodec_send_packet() not ready??");
+                    break;
+
+                case AVERROR_EOF:
+                    CLOG(LogLevel_t::Error, "decoder has been flushed, and no new packets can be sent to it or more than 1 flush packet has been sent");
+                    break;
+
+                case AVERROR(EINVAL):
+                    CLOG(LogLevel_t::Error, "codec not opened, it is an encoder, or requires flush");
+                    break;
+
+                case AVERROR(ENOMEM):
+                    CLOG(LogLevel_t::Error, "failed to add packet to internal queue");
+                    break;
+
+                default:
+                    av_strerror(ret, errstr, sizeof(errstr));
+                    CLOG(LogLevel_t::Warning, "error submitting the packet to the decoder (legitimate decoding error): '" << errstr << "'");
+                    break;
             }
             return ret;
         }
-        
+
         /* read all the output frames (in general there may be any number of them) */
         while (ret >= 0)
         {
@@ -253,34 +253,34 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo)
                 av_strerror(ret, errstr, sizeof(errstr));
                 CLOG(LogLevel_t::Warning, "legitimate decoding error: '" << errstr << "'");
             }
-            
-//             for (i = 0; i < frame->nb_samples; i++)
-//                 for (ch = 0; ch < this->handle->streams[this->audioStreamID]->codec->channels; ch++)
-//                     fwrite(frame->data[ch] + data_size*i, 1, data_size, outfile);
+
+            //             for (i = 0; i < frame->nb_samples; i++)
+            //                 for (ch = 0; ch < this->handle->streams[this->audioStreamID]->codec->channels; ch++)
+            //                     fwrite(frame->data[ch] + data_size*i, 1, data_size, outfile);
 
             /* Some audio decoders decode only part of the packet, and have to be
              * called again with the remainder of the packet data.
              * Sample: fate-suite/lossless-audio/luckynight-partial.shn
              * Also, some decoders might over-read the packet. */
             decoded += this->frame->nb_samples;
-            
-            if(this->frame->nb_samples > framesToDo)
+
+            if (this->frame->nb_samples > framesToDo)
             {
                 size_t oldNoOfItems = this->tmpSwrBuf.size();
                 // not enough space left in the master PCM buffer, render to tmp buffer
                 this->tmpSwrBuf.resize(oldNoOfItems + this->frame->nb_samples * this->frame->channels);
-                
-                auto* inbuf = this->tmpSwrBuf.data() + oldNoOfItems;
+
+                auto *inbuf = this->tmpSwrBuf.data() + oldNoOfItems;
                 swr_convert(this->swr, reinterpret_cast<uint8_t **>(&inbuf), this->frame->nb_samples, const_cast<const uint8_t **>(this->frame->extended_data), this->frame->nb_samples);
-            
+
                 // and copy over frames, if there is any space left in the master PCM buffer
-                if(framesToDo > 0)
+                if (framesToDo > 0)
                 {
                     frame_t itemsToCopy = framesToDo * this->frame->channels;
-                    
+
                     std::memcpy(pcm, this->tmpSwrBuf.data(), itemsToCopy * sizeof(*pcm));
-                    this->tmpSwrBuf.erase(this->tmpSwrBuf.begin(), this->tmpSwrBuf.begin()+itemsToCopy);
-                    
+                    this->tmpSwrBuf.erase(this->tmpSwrBuf.begin(), this->tmpSwrBuf.begin() + itemsToCopy);
+
                     pcm += itemsToCopy;
                     this->framesAlreadyRendered += framesToDo;
                 }
@@ -288,11 +288,11 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo)
             else
             {
                 swr_convert(this->swr, reinterpret_cast<uint8_t **>(&pcm), this->frame->nb_samples, const_cast<const uint8_t **>(this->frame->extended_data), this->frame->nb_samples);
-                
+
                 pcm += this->frame->nb_samples * this->frame->channels;
                 this->framesAlreadyRendered += this->frame->nb_samples;
             }
-            
+
             framesToDo -= this->frame->nb_samples; // could go negative here, i.e. no space left in master PCM buffer
         }
     }
@@ -300,7 +300,7 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo)
     {
         // dont care
     }
-    
+
     return decoded;
 }
 
@@ -316,7 +316,7 @@ void FFMpegWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
     {
         framesToDo = framesToRender = min(framesToRender, this->getFrames() - this->framesAlreadyRendered);
     }
-    
+
     // int16 because we told swr to convert everything to int16
     int16_t *pcm = static_cast<int16_t *>(bufferToFill);
     const auto Channels = this->Format.Channels();
@@ -326,16 +326,16 @@ void FFMpegWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
 
     // anything already cached in the temp buffer?
     frame_t itemsToCopy = std::min<frame_t>(this->tmpSwrBuf.size(), Channels * framesToDo);
-    if(itemsToCopy>0)
+    if (itemsToCopy > 0)
     {
         std::memcpy(pcm, this->tmpSwrBuf.data(), itemsToCopy * sizeof(*pcm));
-        this->tmpSwrBuf.erase(this->tmpSwrBuf.begin(), this->tmpSwrBuf.begin()+itemsToCopy);
-        
+        this->tmpSwrBuf.erase(this->tmpSwrBuf.begin(), this->tmpSwrBuf.begin() + itemsToCopy);
+
         pcm += itemsToCopy;
-        framesToDo -= itemsToCopy/Channels;
-        this->framesAlreadyRendered += itemsToCopy/Channels;
+        framesToDo -= itemsToCopy / Channels;
+        this->framesAlreadyRendered += itemsToCopy / Channels;
     }
-    
+
     // the FFMPEG rendering loop
     bool finished = false;
     while (!this->stopFillBuffer &&
@@ -358,7 +358,7 @@ void FFMpegWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
                 break;
             }
         }
-        
+
         if (this->decode_packet(pcm, framesToDo) == AVERROR_EOF)
         {
             finished = true;
