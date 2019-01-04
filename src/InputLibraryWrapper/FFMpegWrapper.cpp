@@ -329,7 +329,7 @@ void FFMpegWrapper::render(pcm_t *bufferToFill, frame_t framesToRender)
     if(itemsToCopy>0)
     {
         std::memcpy(pcm, this->tmpSwrBuf.data(), itemsToCopy * sizeof(*pcm));
-        this->tmpSwrBuf.erase(this->tmpSwrBuf.begin(), ((itemsToCopy==this->tmpSwrBuf.size()) ? this->tmpSwrBuf.end() : this->tmpSwrBuf.begin()+itemsToCopy));
+        this->tmpSwrBuf.erase(this->tmpSwrBuf.begin(), this->tmpSwrBuf.begin()+itemsToCopy);
         
         pcm += itemsToCopy;
         framesToDo -= itemsToCopy/Channels;
