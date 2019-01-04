@@ -89,7 +89,7 @@ class StandardWrapper : public Song
     bool stopFillBuffer = false;
 
     // number of frames that have been rendered to this->pcm since the song has been opened
-    frame_t framesAlreadyRendered = 0;
+    std::atomic<frame_t> framesAlreadyRendered = {0};
 
     template<typename WRAPPERCLASS>
     void fillBuffer(WRAPPERCLASS *context);
