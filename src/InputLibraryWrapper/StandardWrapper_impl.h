@@ -79,7 +79,8 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS *context)
                 this->count = itemsToAlloc;
 
                 // (pre-)render the first few milliseconds
-                this->render(this->data, Channels, msToFrames(gConfig.PreRenderTime, this->Format.SampleRate));
+                frame_t firstFrames = (gConfig.PreRenderTime == 0) ? TotalFrames : msToFrames(gConfig.PreRenderTime, this->Format.SampleRate);
+                this->render(this->data, Channels, firstFrames);
 
                 // immediatly start filling the rest of the pcm buffer
                 frame_t restFrames = TotalFrames - this->framesAlreadyRendered;
