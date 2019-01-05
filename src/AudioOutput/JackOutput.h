@@ -72,10 +72,13 @@ class JackOutput : public IAudioOutput
     std::condition_variable cv;
     mutable std::mutex mtx;
     //*** Begin: mutex-protected vars ***//
-    jack_buffer_t interleavedProcessedBuffer;
+    jack_buffer_t interleavedProcessedBuffer; // mixed and resampled buffer ready to be consumed by jack
     jack_nframes_t jackBufSize = 0;
     jack_nframes_t jackSampleRate = 0;
     //*** End: mutex-protected vars ***//
+
+    // mixed_and_converted_to_float_but_not_resampled buffer used in JackOutput::write()
+    vector<float> tempBuf;
 
     static int processCallback(jack_nframes_t nframes, void *arg);
     static int onJackSampleRateChanged(jack_nframes_t nframes, void *arg);

@@ -1,4 +1,5 @@
 #include "JackOutput.h"
+#include "Config.h"
 #include "IAudioOutput_impl.h"
 
 #include "AtomicWrite.h"
@@ -94,18 +95,21 @@ void JackOutput::SetOutputChannels(Nullable<uint16_t> chan)
 
     if (chan.hasValue)
     {
+        this->tempBuf.clear();
+        this->tempBuf.shrink_to_fit();
+        this->tempBuf.resize(gConfig.FramesToRender * chan.Value);
+        
         // re-register ports
         char portName[3 + 1];
         for (unsigned int i = this->playbackPorts.size(); i < chan.Value && i <= 99; i++)
         {
-            snprintf(portName, 3 + 1, "%.2d", i);
+            snprintf(portName, sizeof(portName), "%.2d", i);
 
             // we provide an output port (from the view of jack), i.e. a capture port, i.e. a readable port
             jack_port_t *out_port = jack_port_register(this->handle, portName, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
 
             if (out_port == nullptr)
             {
-                // TODO: throw or just break??
                 THROW_RUNTIME_ERROR("no more JACK ports available");
             }
 
@@ -191,7 +195,7 @@ int JackOutput::doResampling(const float *inBuf, const size_t Frames)
         THROW_RUNTIME_ERROR("SongFormat not valid")
     }
 
-    this->srcData.data_in = /*const_cast<float*>*/ (inBuf);
+    this->srcData.data_in = inBuf;
     this->srcData.input_frames = Frames;
 
     this->srcData.data_out = this->interleavedProcessedBuffer.buf;
@@ -237,11 +241,7 @@ int JackOutput::write(const T *buffer, frame_t frames)
 {
     const uint16_t Channels = this->GetOutputChannels().Value;
 
-    // converted_to_float_but_not_resampled buffer
-    vector<float> tempBuf;
-    tempBuf.reserve(frames * Channels);
-
-    this->Mix<T, float>(frames, buffer, this->currentFormat, tempBuf.data(), Channels);
+    this->Mix<T, float>(frames, buffer, this->currentFormat, this->tempBuf.data(), Channels);
 
     unique_lock<mutex> lck(this->mtx);
 
@@ -252,7 +252,7 @@ int JackOutput::write(const T *buffer, frame_t frames)
         // wait until jacks buffer has been consumed
         this->cv.wait(lck, [this] { return !this->interleavedProcessedBuffer.ready || !this->interleavedProcessedBuffer.isRunning; });
 
-        framesUsedNow = this->doResampling(tempBuf.data() + framesUsed * Channels, frames);
+        framesUsedNow = this->doResampling(this->tempBuf.data() + framesUsed * Channels, frames);
         frames -= framesUsedNow;
         framesUsed += framesUsedNow;
 
@@ -401,7 +401,7 @@ int JackOutput::processCallback(jack_nframes_t nframes, void *arg)
         {
             const int idx = i + portsToFill;
             // mute those ports
-            memset(out[idx], 0, nframes * sizeof(jack_default_audio_sample_t));
+            memset(out[idx], 0, nframes * sizeof(**out));
         }
     }
     pthis->interleavedProcessedBuffer.ready = false;
@@ -415,12 +415,12 @@ fail:
     {
         jack_default_audio_sample_t *out = static_cast<jack_default_audio_sample_t *>(jack_port_get_buffer(pthis->playbackPorts[i], nframes));
 
-        memset(out, 0, nframes * sizeof(jack_default_audio_sample_t));
+        memset(out, 0, nframes * sizeof(*out));
     }
     return ret;
 }
 
-// we can do non-realtime safe stuff here :D
+// we can do non-realtime safe stuff here
 int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
 {
     JackOutput *const pthis = static_cast<JackOutput *const>(arg);
@@ -435,7 +435,7 @@ int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
     }
 
     delete[] pthis->interleavedProcessedBuffer.buf;
-    pthis->interleavedProcessedBuffer.buf = new (nothrow) jack_default_audio_sample_t[pthis->jackBufSize * pthis->GetOutputChannels().Value];
+    pthis->interleavedProcessedBuffer.buf = new (std::nothrow) jack_default_audio_sample_t[pthis->jackBufSize * pthis->GetOutputChannels().Value];
     pthis->interleavedProcessedBuffer.ready = false;
 
     if (pthis->interleavedProcessedBuffer.buf == nullptr)
