@@ -389,9 +389,9 @@ int JackOutput::processCallback(jack_nframes_t nframes, void *arg)
             for (unsigned int c = 0; c < nchannels; c++)
             {
                 const unsigned int idx = f * nchannels + c;
-                jack_default_audio_sample_t &item = pthis->interleavedProcessedBuffer.buf[idx];
+                const jack_default_audio_sample_t &item = pthis->interleavedProcessedBuffer.buf[idx];
                 out[c][f] = item;
-                item = 0; // zero the consumed buffer
+//                 item = 0; // zero the consumed buffer
             }
         }
 
