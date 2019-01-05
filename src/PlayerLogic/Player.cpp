@@ -476,7 +476,6 @@ void Player::playFrames(frame_t framesToPlay)
 
     // PLAY!
     again:
-        //         this->audioDriver->SetVoiceConfig(this->currentSong->Format.Voices, this->currentSong->Format.VoiceChannels);
         this->audioDriver->SetMuteMask(this->currentSong->Format.VoiceIsMuted);
 
         framesWritten = this->audioDriver->write(this->currentSong->data, framesToPush, itemOffset);
@@ -490,6 +489,7 @@ void Player::playFrames(frame_t framesToPlay)
         // but we can try it again whenever audioDriver failed at all (i.e. returned 0)
         if (this->IsPlaying() && framesWritten == 0)
         {
+            CLOG(LogLevel_t::Info, "failed to play the rendered pcm chunk, trying again");
             // something went terribly wrong, wait some time, so the cpu doesnt get too busy
             this_thread::sleep_for(chrono::milliseconds(1));
             // and try again
@@ -544,7 +544,7 @@ void Player::playInternal()
             this->_setCurrentSong(this->playlist->next());
         }
     }
-    catch (exception &e)
+    catch (const exception &e)
     {
         cerr << "An Exception was thrown in Player::playInternal(): " << e.what() << endl;
         this->_pause();
