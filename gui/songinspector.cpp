@@ -9,21 +9,14 @@
 #include <QHeaderView>
 #include <anmp.hpp>
 
-class MySelectableLabel : public QLabel
-{
-public:
-    MySelectableLabel(const QString& text, QWidget *parent=nullptr) : QLabel(text, parent)
-    {
-        this->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    }
-};
-
 SongInspector::SongInspector(const Song *s, QWidget *parent)
 : QDialog(parent),
   ui(new Ui::SongInspector),
   channelConfigModel(new ChannelConfigModel(0, 1, this))
 {
     this->ui->setupUi(this);
+    std::string basename = ::mybasename(s->Filename);
+    this->setWindowTitle(basename.c_str());
     this->FillView(s);
 }
 
