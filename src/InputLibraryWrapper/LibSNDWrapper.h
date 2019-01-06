@@ -8,7 +8,7 @@
 // depending whether the audio file we contains floats, doubles or ints, access the decoded pcm as int or float
 union sndfile_sample_t
 {
-    // classes from the outside will either see an int32 or a float here. they dont see this union. they cant acces the members via f and i members. there require float to be 32 bits, to avoid having any padding bits that would be treated as audio.
+    // classes from the outside will either see an int32 or a float here. they dont see this union. they cant access the members via f and i members. we require float to be 32 bits, to avoid having any padding bits that would be treated as audio.
     static_assert(sizeof(float) == sizeof(int32_t), "sizeof(float) != sizeof(int32_t), sry, this code wont work");
 
     float f;
