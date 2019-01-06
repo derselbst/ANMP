@@ -30,40 +30,112 @@ void SongInspector::FillView(const Song *s)
 
 void SongInspector::fillGeneral(const Song *s)
 {
-    QWidget *scroll = this->ui->scrollAreaGeneralWidget;
-    QLayout *oldLayout = scroll->layout();
-    delete oldLayout;
+    QTableWidget *tab = this->ui->tableGeneral;
+    tab->clearContents();
+    tab->setRowCount(8);
+    tab->verticalHeader()->setVisible(false);
+    tab->horizontalHeader()->setVisible(false);
+    tab->setColumnWidth(0, 150);
 
-    QFormLayout *form = new QFormLayout(scroll);
-    form->addRow("File:", new MySelectableLabel(QString::fromStdString(s->Filename), scroll));
-    form->addRow("File Offset:", new MySelectableLabel(QString::number(s->fileOffset.Value), scroll));
-    form->addRow("File Length:", new MySelectableLabel(QString::number(::framesToMs(s->getFrames(), s->Format.SampleRate) / 1000.0) + " s", scroll));
-    form->addRow("Sample Rate:", new MySelectableLabel(QString::number(s->Format.SampleRate) + " Hz", scroll));
-    form->addRow("Sample Format:", new MySelectableLabel(SampleFormatName[static_cast<int>(s->Format.SampleFormat)], scroll));
-    form->addRow("Audio Channels:", new MySelectableLabel(QString::number(s->Format.Channels()), scroll));
-    form->addRow("Audio Voices:", new MySelectableLabel(QString::number(s->Format.Voices), scroll));
-    form->addRow("Bit Rate:", new MySelectableLabel(QString::number(s->Format.getBitrate() / 1024) + " kBit/s", scroll));
+    QTableWidgetItem *key = new QTableWidgetItem("File");
+    tab->setItem(0,0,key);
+    QTableWidgetItem *value = new QTableWidgetItem(QString::fromStdString(s->Filename));
+    tab->setItem(0,1,value);
 
-    scroll->setLayout(form);
+    key = new QTableWidgetItem("File Offset");
+    tab->setItem(1,0,key);
+    if(s->fileOffset.hasValue)
+    {
+        value = new QTableWidgetItem(QString::number(s->fileOffset.Value));
+        tab->setItem(1,1,value);
+    }
+
+    key = new QTableWidgetItem("File Length");
+    tab->setItem(2,0,key);
+    value = new QTableWidgetItem(QString::number(::framesToMs(s->getFrames(), s->Format.SampleRate) / 1000.0) + " s");
+    tab->setItem(2,1,value);
+
+    key = new QTableWidgetItem("Sample Rate");
+    tab->setItem(3,0,key);
+    value = new QTableWidgetItem(QString::number(s->Format.SampleRate) + " Hz");
+    tab->setItem(3,1,value);
+
+    key = new QTableWidgetItem("Sample Format");
+    tab->setItem(4,0,key);
+    value = new QTableWidgetItem(SampleFormatName[static_cast<int>(s->Format.SampleFormat)]);
+    tab->setItem(4,1,value);
+
+    key = new QTableWidgetItem("Audio Channels (total)");
+    tab->setItem(5,0,key);
+    value = new QTableWidgetItem(QString::number(s->Format.Channels()));
+    tab->setItem(5,1,value);
+
+    key = new QTableWidgetItem("Audio Voices");
+    tab->setItem(6,0,key);
+    value = new QTableWidgetItem(QString::number(s->Format.Voices));
+    tab->setItem(6,1,value);
+
+    key = new QTableWidgetItem("Bit Rate");
+    tab->setItem(7,0,key);
+    value = new QTableWidgetItem(QString::number(s->Format.getBitrate() / 1024) + " kBit/s");
+    tab->setItem(7,1,value);
+}
+
+
+void SongInspector::fillChannelConfig(const Song *s)
+{
+    this->ui->scrollAreaChannel->setWidget();
 }
 
 void SongInspector::fillMetadata(const SongInfo &m)
 {
-    QWidget *scroll = this->ui->scrollAreaMetaWidget;
-    QLayout *oldLayout = scroll->layout();
-    delete oldLayout;
+    QTableWidget *tab = this->ui->tableMeta;
+    tab->clearContents();
+    tab->setRowCount(8);
+    static const QStringList headerStrList{"Property","Value"};
+    tab->setHorizontalHeaderLabels(headerStrList);
+    tab->verticalHeader()->setVisible(false);
+    tab->horizontalHeader()->setVisible(true); // don't rely on the properties reported by QDesigner
 
-    QFormLayout *form = new QFormLayout(scroll);
-    form->addRow("Composer", new MySelectableLabel(QString::fromStdString(m.Composer), scroll));
-    form->addRow("Artist", new MySelectableLabel(QString::fromStdString(m.Artist), scroll));
-    form->addRow("Album", new MySelectableLabel(QString::fromStdString(m.Album), scroll));
-    form->addRow("Title", new MySelectableLabel(QString::fromStdString(m.Title), scroll));
-    form->addRow("Track", new MySelectableLabel(QString::fromStdString(m.Track), scroll));
-    form->addRow("Year", new MySelectableLabel(QString::fromStdString(m.Year), scroll));
-    form->addRow("Genre", new MySelectableLabel(QString::fromStdString(m.Genre), scroll));
-    form->addRow("Comment", new MySelectableLabel(QString::fromStdString(m.Comment), scroll));
+    QTableWidgetItem *key = new QTableWidgetItem("Composer");
+    tab->setItem(0,0,key);
+    QTableWidgetItem *value = new QTableWidgetItem(QString::fromStdString(m.Composer));
+    tab->setItem(0,1,value);
 
-    scroll->setLayout(form);
+    key = new QTableWidgetItem("Artist");
+    tab->setItem(1,0,key);
+    value = new QTableWidgetItem(QString::fromStdString(m.Artist));
+    tab->setItem(1,1,value);
+
+    key = new QTableWidgetItem("Album");
+    tab->setItem(2,0,key);
+    value = new QTableWidgetItem(QString::fromStdString(m.Album));
+    tab->setItem(2,1,value);
+
+    key = new QTableWidgetItem("Title");
+    tab->setItem(3,0,key);
+    value = new QTableWidgetItem(QString::fromStdString(m.Title));
+    tab->setItem(3,1,value);
+
+    key = new QTableWidgetItem("Track");
+    tab->setItem(4,0,key);
+    value = new QTableWidgetItem(QString::fromStdString(m.Track));
+    tab->setItem(4,1,value);
+
+    key = new QTableWidgetItem("Year");
+    tab->setItem(5,0,key);
+    value = new QTableWidgetItem(QString::fromStdString(m.Year));
+    tab->setItem(5,1,value);
+
+    key = new QTableWidgetItem("Genre");
+    tab->setItem(6,0,key);
+    value = new QTableWidgetItem(QString::fromStdString(m.Genre));
+    tab->setItem(6,1,value);
+
+    key = new QTableWidgetItem("Comment");
+    tab->setItem(7,0,key);
+    value = new QTableWidgetItem(QString::fromStdString(m.Comment));
+    tab->setItem(7,1,value);
 }
 
 SongInspector::~SongInspector()
