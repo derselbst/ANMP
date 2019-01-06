@@ -38,7 +38,7 @@ BuildRequires: cmake >= 1:3.1.0
 BuildRequires: cmake >= 3.1.0
 %endif
 
-BuildRequires: pkgconfig(fluidsynth)
+BuildRequires: pkgconfig(fluidsynth) >= 2.0.0
 BuildRequires: pkgconfig(smf)
 BuildRequires: libaopsf-devel
 BuildRequires: libcue-devel
