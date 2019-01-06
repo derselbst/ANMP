@@ -25,6 +25,7 @@ if(USE_GUI)
         PlaylistView.cpp
         PlayheadSlider.cpp
         ChannelConfigView.cpp
+        ChannelConfigModel.cpp
         songinspector.cpp
     )
     

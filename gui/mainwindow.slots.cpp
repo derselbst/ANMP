@@ -7,7 +7,7 @@
  */
 
 
-#include "ChannelConfigView.h"
+#include "ChannelConfigModel.h"
 #include "PlaylistModel.h"
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
@@ -76,13 +76,12 @@ void MainWindow::slotSeek(long long pos)
 
 void MainWindow::slotCurrentSongChanged(const Song *s)
 {
-    this->channelConfigModel->removeRows(0, this->channelConfigModel->rowCount());
-
     PlayheadSlider *playheadSlider = this->playctrl->seekBar;
     if (s == nullptr)
     {
         this->setWindowTitleCustom("");
         playheadSlider->SilentReset();
+        this->channelConfigModel->updateChannelConfig(nullptr);
     }
     else
     {
@@ -99,7 +98,7 @@ void MainWindow::slotCurrentSongChanged(const Song *s)
         playheadSlider->setMaximum(s->getFrames());
 
         this->enableSeekButtons(this->player->IsSeekingPossible());
-        this->updateChannelConfig(s->Format);
+        this->channelConfigModel->updateChannelConfig(&s->Format);
     }
 }
 
@@ -299,73 +298,6 @@ void MainWindow::FastSeekBackward()
 void MainWindow::AddSongs(const QStringList& files)
 {
     this->playlistModel->asyncAdd(files);
-}
-
-void MainWindow::ToggleSelectedVoices()
-{
-    this->DoChannelMuting([](bool voiceMuted, bool voiceSelected) { return voiceMuted != voiceSelected; });
-}
-
-void MainWindow::DoChannelMuting(bool (*pred)(bool voiceIsMuted, bool voiceIsSelected))
-{
-    QModelIndex root = this->channelConfigModel->invisibleRootItem()->index();
-    
-    const Song *s = this->player->getCurrentSong();
-    if (s == nullptr)
-    {
-        return;
-    }
-
-    const SongFormat &f = s->Format;
-    QItemSelectionModel *sel = this->channelView->selectionModel();
-    QModelIndex curIdx = sel->currentIndex();
-    QModelIndexList selRows = sel->selectedRows();
-
-    for (int i = 0; i < f.Voices; i++)
-    {
-        f.VoiceIsMuted[i] = (*pred)(f.VoiceIsMuted[i], sel->isRowSelected(i, root));
-    }
-    this->updateChannelConfig(f);
-
-    // restore selection, focus and currentIndex
-    sel->clearSelection();
-    for (QModelIndex i : selRows)
-    {
-        sel->select(i, QItemSelectionModel::Select);
-    }
-    sel->setCurrentIndex(curIdx, QItemSelectionModel::NoUpdate);
-    
-    this->channelView->setFocus();
-}
-
-void MainWindow::MuteSelectedVoices()
-{
-    this->DoChannelMuting([](bool voiceMuted, bool voiceSelected) { return voiceMuted || voiceSelected; });
-}
-
-void MainWindow::UnmuteSelectedVoices()
-{
-    this->DoChannelMuting([](bool voiceMuted, bool voiceSelected) { return voiceMuted && !voiceSelected; });
-}
-
-void MainWindow::SoloSelectedVoices()
-{
-    this->DoChannelMuting([](bool, bool voiceSelected) { return !voiceSelected; });
-}
-
-void MainWindow::MuteAllVoices()
-{
-    this->DoChannelMuting([](bool, bool) { return true; });
-}
-
-void MainWindow::UnmuteAllVoices()
-{
-    this->DoChannelMuting([](bool, bool) { return false; });
-}
-
-void MainWindow::ToggleAllVoices()
-{
-    this->DoChannelMuting([](bool voiceMuted, bool) { return !voiceMuted; });
 }
 
 void MainWindow::slotSongAdded(const QString& file, int cur, int total)

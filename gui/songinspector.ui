@@ -67,7 +67,7 @@
       <attribute name="title">
        <string>Voice / Channel Config</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_4">
+      <layout class="QVBoxLayout" name="verticalLayout_6">
        <item>
         <widget class="QScrollArea" name="scrollAreaChannel">
          <property name="widgetResizable">

@@ -32,14 +32,16 @@ SOURCES += main.cpp\
     mainwindow.callback.cpp \
     mainwindow.slots.cpp \
     applets/channel/channelconfig.cpp \
-    songinspector.cpp
+    songinspector.cpp \
+    ChannelConfigModel.cpp
 
 HEADERS  += mainwindow.h PlaylistView.h PlaylistModel.h configdialog.h \
     applets/analyzer/AnalyzerApplet.h \
     PlayheadSlider.h \
     applets/channel/channelconfig.h \
     ChannelConfigView.h \
-    songinspector.h
+    songinspector.h \
+    ChannelConfigModel.h
 
 FORMS    += mainwindow.ui configdialog.ui \
     applets/analyzer/AnalyzerApplet.ui \

@@ -1,8 +1,12 @@
 #include "songinspector.h"
 #include "ui_songinspector.h"
+#include "ChannelConfigView.h"
+#include "ChannelConfigModel.h"
 
 #include <QFormLayout>
 #include <QLabel>
+#include <QStandardItemModel>
+#include <QHeaderView>
 #include <anmp.hpp>
 
 class MySelectableLabel : public QLabel
@@ -16,15 +20,17 @@ public:
 
 SongInspector::SongInspector(const Song *s, QWidget *parent)
 : QDialog(parent),
-  ui(new Ui::SongInspector)
+  ui(new Ui::SongInspector),
+  channelConfigModel(new ChannelConfigModel(0, 1, this))
 {
-    ui->setupUi(this);
+    this->ui->setupUi(this);
     this->FillView(s);
 }
 
 void SongInspector::FillView(const Song *s)
 {
     this->fillGeneral(s);
+    this->fillChannelConfig(s);
     this->fillMetadata(s->Metadata);
 }
 
@@ -84,7 +90,13 @@ void SongInspector::fillGeneral(const Song *s)
 
 void SongInspector::fillChannelConfig(const Song *s)
 {
-    this->ui->scrollAreaChannel->setWidget();
+    this->channelConfigModel->updateChannelConfig(&s->Format);
+
+    this->channelView = new ChannelConfigView(this->ui->scrollAreaChannel);
+    channelView->setModel(this->channelConfigModel);
+
+    this->ui->scrollAreaChannel->setWidget(channelView);
+    channelView->show();
 }
 
 void SongInspector::fillMetadata(const SongInfo &m)

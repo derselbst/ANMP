@@ -93,16 +93,8 @@
     <property name="title">
      <string>&amp;Voices</string>
     </property>
-    <addaction name="actionSelect_Muted_Voices"/>
-    <addaction name="actionSelect_Unmuted_Voices"/>
     <addaction name="separator"/>
-    <addaction name="actionMute_Selected_Voices"/>
-    <addaction name="actionUnmute_Selected_Voices"/>
-    <addaction name="actionSolo_Selected_Voices"/>
     <addaction name="separator"/>
-    <addaction name="actionMute_All_Voices"/>
-    <addaction name="actionUnmute_All_Voices"/>
-    <addaction name="actionToggle_All_Voices"/>
    </widget>
    <addaction name="menuHello"/>
    <addaction name="menuPlayer"/>
@@ -259,49 +251,9 @@
     <string>A&amp;bout ANMP</string>
    </property>
   </action>
-  <action name="actionSelect_Muted_Voices">
-   <property name="text">
-    <string>&amp;Select Muted Voices</string>
-   </property>
-  </action>
-  <action name="actionSelect_Unmuted_Voices">
-   <property name="text">
-    <string>S&amp;elect Unmuted Voices</string>
-   </property>
-  </action>
-  <action name="actionMute_Selected_Voices">
-   <property name="text">
-    <string>&amp;Mute Selected Voices [Delete]</string>
-   </property>
-  </action>
-  <action name="actionUnmute_Selected_Voices">
-   <property name="text">
-    <string>&amp;Unmute Selected Voices [Insert]</string>
-   </property>
-  </action>
-  <action name="actionMute_All_Voices">
-   <property name="text">
-    <string>Mute &amp;All Voices</string>
-   </property>
-  </action>
-  <action name="actionUnmute_All_Voices">
-   <property name="text">
-    <string>Unmute All &amp;Voices</string>
-   </property>
-  </action>
-  <action name="actionToggle_All_Voices">
-   <property name="text">
-    <string>&amp;Toogle All Voices</string>
-   </property>
-  </action>
   <action name="actionAdd_Playback_Stop_At_End">
    <property name="text">
     <string>Add Playback-Stop at &amp;end</string>
-   </property>
-  </action>
-  <action name="actionSolo_Selected_Voices">
-   <property name="text">
-    <string>S&amp;olo Selected Voices [Shift + Insert]</string>
    </property>
   </action>
  </widget>

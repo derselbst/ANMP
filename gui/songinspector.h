@@ -5,6 +5,9 @@
 
 class Song;
 struct SongInfo;
+class ChannelConfigView;
+class ChannelConfigModel;
+class QStandardItemModel;
 
 namespace Ui
 {
@@ -23,8 +26,11 @@ class SongInspector : public QDialog
 
     private:
     Ui::SongInspector *ui;
+    ChannelConfigModel *channelConfigModel = nullptr;
+    ChannelConfigView *channelView = nullptr;
 
     void fillGeneral(const Song *s);
+    void fillChannelConfig(const Song *s);
     void fillMetadata(const SongInfo &m);
 };
 

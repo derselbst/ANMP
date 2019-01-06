@@ -4,6 +4,7 @@
 
 #include "mainwindow.h"
 #include "ChannelConfigView.h"
+#include "ChannelConfigModel.h"
 #include "PlayheadSlider.h"
 #include "PlaylistModel.h"
 #include "applets/analyzer/AnalyzerApplet.h"
@@ -38,7 +39,7 @@ MainWindow::MainWindow(QWidget *parent)
   playlist(new Playlist()),
   playlistModel(new PlaylistModel(playlist, this)),
   player(new Player(this->playlist)),
-  channelConfigModel(new QStandardItemModel(0, 1, this)),
+  channelConfigModel(new ChannelConfigModel(0, 1, this)),
 #ifdef USE_VISUALIZER
   analyzerWindow(new AnalyzerApplet(this->player, this)),
 #endif
@@ -133,18 +134,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this->playlistModel, &PlaylistModel::UnloadCurrentSong, this, [this] {this->player->stop(); this->player->setCurrentSong(nullptr); });
 
     connect(this->treeView, &QTreeView::clicked, this, &MainWindow::treeViewClicked);
-
-    connect(this->ui->actionSelect_Muted_Voices, &QAction::triggered, this, [this] { this->channelView->Select(Qt::Unchecked); });
-    connect(this->ui->actionSelect_Unmuted_Voices, &QAction::triggered, this, [this] { this->channelView->Select(Qt::Checked); });
-    connect(this->ui->actionMute_Selected_Voices, &QAction::triggered, this, &MainWindow::MuteSelectedVoices);
-    connect(this->ui->actionUnmute_Selected_Voices, &QAction::triggered, this, &MainWindow::UnmuteSelectedVoices);
-    connect(this->ui->actionSolo_Selected_Voices, &QAction::triggered, this, &MainWindow::SoloSelectedVoices);
-    connect(this->ui->actionMute_All_Voices, &QAction::triggered, this, &MainWindow::MuteAllVoices);
-    connect(this->ui->actionUnmute_All_Voices, &QAction::triggered, this, &MainWindow::UnmuteAllVoices);
-    connect(this->ui->actionToggle_All_Voices, &QAction::triggered, this, &MainWindow::ToggleAllVoices);
-
-    // When the user clicks (activates) the channel muter, make sure it gets focus and the correct current index
-//     connect(this->channelView, &QTableView::activated, this, [this](const QModelIndex& index) { this->channelView->selectionModel()->setCurrentIndex(index, QItemSelectionModel::NoUpdate); });
 
     this->setWindowState(Qt::WindowMaximized);
 
@@ -278,31 +267,8 @@ void MainWindow::buildFileBrowser()
 
 void MainWindow::buildChannelConfig()
 {
-    QStringList strlist;
-    strlist.append(QString("Channel Name"));
-    this->channelConfigModel->setHorizontalHeaderLabels(strlist);
-
     this->channelView = new ChannelConfigView(this->ui->dockChannel);
-    channelView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    channelView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    channelView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    channelView->setAcceptDrops(false);
-    channelView->setDragEnabled(false);
     channelView->setModel(this->channelConfigModel);
-
-    QMenu *m = new QMenu(channelView);
-    m->addAction(this->ui->actionSelect_Muted_Voices);
-    m->addAction(this->ui->actionSelect_Unmuted_Voices);
-    m->addSeparator();
-    m->addAction(this->ui->actionMute_Selected_Voices);
-    m->addAction(this->ui->actionUnmute_Selected_Voices);
-    m->addAction(this->ui->actionSolo_Selected_Voices);
-    m->addSeparator();
-    m->addAction(this->ui->actionMute_All_Voices);
-    m->addAction(this->ui->actionUnmute_All_Voices);
-    m->addAction(this->ui->actionToggle_All_Voices);
-
-    channelView->SetContextMenu(this, m);
 
     this->ui->dockChannel->setWidget(channelView);
     channelView->show();
@@ -381,29 +347,6 @@ void MainWindow::enableSeekButtons(bool isEnabled)
     this->playctrl->fforwardButton->setEnabled(isEnabled);
     this->playctrl->backwardButton->setEnabled(isEnabled);
     this->playctrl->fbackwardButton->setEnabled(isEnabled);
-}
-
-// properly fills up the channel muter
-// does not preserve selection and currentIndex
-void MainWindow::updateChannelConfig(const SongFormat &currentFormat)
-{
-    this->channelConfigModel->setRowCount(currentFormat.Voices);
-    for (int i = 0; i < currentFormat.Voices; i++)
-    {
-        const string &voiceName = currentFormat.VoiceName[i];
-        QStandardItem *item = new QStandardItem(QString::fromStdString(voiceName));
-
-        QBrush b(currentFormat.VoiceIsMuted[i] ? Qt::red : Qt::green);
-        item->setBackground(b);
-
-        QBrush f(currentFormat.VoiceIsMuted[i] ? Qt::white : Qt::black);
-        item->setForeground(f);
-
-        item->setTextAlignment(Qt::AlignCenter);
-        item->setCheckable(false);
-        item->setCheckState(currentFormat.VoiceIsMuted[i] ? Qt::Unchecked : Qt::Checked);
-        this->channelConfigModel->setItem(i, 0, item);
-    }
 }
 
 void MainWindow::showError(const QString &detail, const QString &general)
