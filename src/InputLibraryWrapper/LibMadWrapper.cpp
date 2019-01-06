@@ -105,14 +105,14 @@ void LibMadWrapper::open()
             // only free the locally used header here, this->stream and this->mpegbuf are freed in LibMadWrapper::close()
             mad_header_finish(&header);
 
-            THROW_RUNTIME_ERROR("unable to find a valid frame-header for File \"" + this->Filename + ")\"");
+            THROW_RUNTIME_ERROR("unable to find a valid frame-header for File \"" + this->Filename + "\"");
         }
 
         this->Format.SetVoices(1);
         // a first valid header is good, but it may contain garbage
         this->Format.VoiceChannels[0] = MAD_NCHANNELS(&header);
         this->Format.SampleRate = header.samplerate;
-        CLOG(LogLevel_t::Debug, "found a first valid header within File \"" << this->Filename << ")\"\n\tchannels: " << MAD_NCHANNELS(&header) << "\nsrate: " << header.samplerate);
+        CLOG(LogLevel_t::Debug, "found a first valid header within File \"" << this->Filename << "\"\n\tchannels: " << MAD_NCHANNELS(&header) << "\nsrate: " << header.samplerate);
 
         // no clue what this 32 does
         // stolen from mad_synth_frame() in synth.c
@@ -125,7 +125,7 @@ void LibMadWrapper::open()
             // better use format infos from this header
             this->Format.VoiceChannels[0] = max<int>(MAD_NCHANNELS(&header), this->Format.VoiceChannels[0]);
             this->Format.SampleRate = header.samplerate;
-            CLOG(LogLevel_t::Debug, "found a second valid header within File \"" << this->Filename << ")\"\n\tchannels: " << MAD_NCHANNELS(&header) << "\nsrate: " << header.samplerate);
+            CLOG(LogLevel_t::Debug, "found a second valid header within File \"" << this->Filename << "\"\n\tchannels: " << MAD_NCHANNELS(&header) << "\nsrate: " << header.samplerate);
 
             this->numFrames += 32 * MAD_NSBSAMPLES(&header);
 
@@ -170,7 +170,7 @@ void LibMadWrapper::open()
         }
         else
         {
-            CLOG(LogLevel_t::Warning, "only one valid header found, probably no valid mp3 File \"" << this->Filename << ")\"");
+            CLOG(LogLevel_t::Warning, "only one valid header found, probably no valid mp3 File \"" << this->Filename << "\"");
         }
 
         // somehow reset libmad stream
@@ -258,10 +258,6 @@ void LibMadWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, f
         if (framesToDoNow == 0)
         {
             continue;
-        }
-        else if (framesToDoNow < 0)
-        {
-            CLOG(LogLevel_t::Error, "framesToDoNow negative!!!: " << framesToDoNow);
         }
 
         int ret = mad_frame_decode(&this->frame.Value, this->stream);
