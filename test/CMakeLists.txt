@@ -1,23 +1,13 @@
 
 project(anmp-test)
 
+ENABLE_TESTING()
+include ( AddAnmpTest )
 
-ADD_EXECUTABLE(TestLoudnessFile TestLoudnessFile.cpp)
-TARGET_LINK_LIBRARIES(TestLoudnessFile anmp)
-ADD_TEST(NAME TestLoudnessFile COMMAND TestLoudnessFile)
+# first define the test target, used by the macros below
+add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND} -C $<CONFIG> --output-on-failure)
 
-ADD_EXECUTABLE(TestCommon TestCommon.cpp)
-TARGET_LINK_LIBRARIES(TestCommon anmp)
-ADD_TEST(NAME TestCommon COMMAND TestCommon)
-
-ADD_EXECUTABLE(TestConfigSerialization TestConfigSerialization.cpp)
-TARGET_LINK_LIBRARIES(TestConfigSerialization anmp)
-ADD_TEST(NAME TestConfigSerialization COMMAND TestConfigSerialization)
-
-ADD_EXECUTABLE(TestStandardWrapper TestStandardWrapper.cpp)
-TARGET_LINK_LIBRARIES(TestStandardWrapper anmp)
-ADD_TEST(NAME TestStandardWrapper COMMAND TestStandardWrapper)
-
-
-# make test only runs tests, but doesnt build them
-add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND}  DEPENDS TestLoudnessFile TestCommon TestConfigSerialization TestStandardWrapper)
+ADD_ANMP_TEST(TestLoudnessFile)
+ADD_ANMP_TEST(TestCommon)
+ADD_ANMP_TEST(TestConfigSerialization)
+ADD_ANMP_TEST(TestStandardWrapper)
