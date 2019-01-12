@@ -124,6 +124,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this->ui->actionSettings, &QAction::triggered, this, [this] { this->settingsView->show(); });
     connect(this->settingsView, &ConfigDialog::accepted, this, &MainWindow::settingsDialogAccepted);
 
+    connect(this->ui->actionClose, &QAction::triggered, QCoreApplication::instance(), &QCoreApplication::quit);
 
     connect(this->ui->actionAbout_Qt, &QAction::triggered, this, &MainWindow::aboutQt);
     connect(this->ui->actionAbout_ANMP, &QAction::triggered, this, &MainWindow::aboutAnmp);
