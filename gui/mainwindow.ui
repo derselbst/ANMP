@@ -43,17 +43,6 @@
     </property>
     <addaction name="actionClose"/>
    </widget>
-   <widget class="QMenu" name="menuPlaylist">
-    <property name="title">
-     <string>Pla&amp;ylist</string>
-    </property>
-    <addaction name="actionAdd_Songs"/>
-    <addaction name="actionAdd_Playback_Stop"/>
-    <addaction name="actionAdd_Playback_Stop_At_End"/>
-    <addaction name="actionShuffle_Playst"/>
-    <addaction name="separator"/>
-    <addaction name="actionClear_Playlist"/>
-   </widget>
    <widget class="QMenu" name="menuPlayer">
     <property name="title">
      <string>&amp;Player</string>
@@ -95,17 +84,20 @@
     <addaction name="actionAbout_ANMP"/>
     <addaction name="actionAbout_Qt"/>
    </widget>
-   <widget class="QMenu" name="menuVoices">
+   <widget class="QMenu" name="menuPlaylist">
     <property name="title">
-     <string>&amp;Voices</string>
+     <string>Pla&amp;ylist</string>
     </property>
+    <addaction name="actionAdd_Songs"/>
+    <addaction name="actionAdd_Playback_Stop"/>
+    <addaction name="actionAdd_Playback_Stop_At_End"/>
+    <addaction name="actionShuffle_Playst"/>
     <addaction name="separator"/>
-    <addaction name="separator"/>
+    <addaction name="actionClear_Playlist"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuPlayer"/>
    <addaction name="menuPlaylist"/>
-   <addaction name="menuVoices"/>
    <addaction name="menuShow"/>
    <addaction name="menuHelp"/>
   </widget>
