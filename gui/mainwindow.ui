@@ -37,7 +37,7 @@
      <height>30</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuHello">
+   <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>Fi&amp;le</string>
     </property>
@@ -96,7 +96,7 @@
     <addaction name="separator"/>
     <addaction name="separator"/>
    </widget>
-   <addaction name="menuHello"/>
+   <addaction name="menuFile"/>
    <addaction name="menuPlayer"/>
    <addaction name="menuPlaylist"/>
    <addaction name="menuVoices"/>

@@ -51,8 +51,13 @@ void SongInspector::fillGeneral(const Song *s)
 
     key = new QTableWidgetItem("File Length");
     tab->setItem(2,0,key);
-    value = new QTableWidgetItem(QString::number(::framesToMs(s->getFrames(), s->Format.SampleRate) / 1000.0) + " s");
-    tab->setItem(2,1,value);
+    {
+        frame_t frames = s->getFrames();
+        auto sec = ::framesToMs(frames, s->Format.SampleRate) / 1000.0;
+        auto min = sec / 60.0;
+        value = new QTableWidgetItem(QString::number(frames) + " frames == " + QString::number(sec, 'f', 2) + " s == " + QString::number(min, 'f', 2) + " min");
+        tab->setItem(2,1,value);
+    }
 
     key = new QTableWidgetItem("Sample Rate");
     tab->setItem(3,0,key);
