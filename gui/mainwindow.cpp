@@ -64,15 +64,20 @@ MainWindow::MainWindow(QWidget *parent)
 
     // init UI
     this->ui->setupUi(this);
-    this->setWindowTitleCustom("");
 
     QWidget *dockwid = new QWidget(this->ui->dockControl);
     this->playctrl->setupUi(dockwid);
     this->ui->dockControl->setWidget(dockwid);
 
+
     this->buildFileBrowser();
     this->buildPlaylistView();
     this->buildChannelConfig();
+
+    this->ui->menuDockWindows->addAction(this->ui->dockControl->toggleViewAction());
+    this->ui->menuDockWindows->addAction(this->ui->dockChannel->toggleViewAction());
+    this->ui->menuDockWindows->addAction(this->ui->dockDir->toggleViewAction());
+    this->ui->menuDockWindows->addAction(this->ui->dockFile->toggleViewAction());
 
     // connect main buttons
     connect(this->playctrl->playButton, &QPushButton::toggled, this, [this](bool) { this->MainWindow::TogglePlayPause(); });
@@ -135,7 +140,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(this->treeView, &QTreeView::clicked, this, &MainWindow::treeViewClicked);
 
-    this->setWindowState(Qt::WindowMaximized);
 
     // set callbacks for the underlying player
     this->player->onPlayheadChanged += make_pair(this, &MainWindow::callbackSeek);
@@ -143,6 +147,9 @@ MainWindow::MainWindow(QWidget *parent)
     this->player->onIsPlayingChanged += make_pair(this, &MainWindow::callbackIsPlayingChanged);
 
     this->createShortcuts();
+
+    this->setWindowTitleCustom("");
+    this->setWindowState(Qt::WindowMaximized);
 }
 
 MainWindow::~MainWindow()

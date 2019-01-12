@@ -71,6 +71,11 @@
     <property name="title">
      <string>&amp;Show</string>
     </property>
+    <widget class="QMenu" name="menuDockWindows">
+     <property name="title">
+      <string>&amp;Dock Windows</string>
+     </property>
+    </widget>
     <widget class="QMenu" name="menuVisualization">
      <property name="title">
       <string>&amp;Visualization</string>
@@ -78,6 +83,7 @@
      <addaction name="actionASCII"/>
      <addaction name="actionBlocky"/>
     </widget>
+    <addaction name="menuDockWindows"/>
     <addaction name="menuVisualization"/>
     <addaction name="separator"/>
     <addaction name="actionSettings"/>
@@ -86,8 +92,8 @@
     <property name="title">
      <string>&amp;Help</string>
     </property>
-    <addaction name="actionAbout_Qt"/>
     <addaction name="actionAbout_ANMP"/>
+    <addaction name="actionAbout_Qt"/>
    </widget>
    <widget class="QMenu" name="menuVoices">
     <property name="title">
