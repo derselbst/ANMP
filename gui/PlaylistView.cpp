@@ -205,8 +205,9 @@ void PlaylistView::showInspector()
         int row = i.row();
         const Song *s = playlistModel->getPlaylist()->getSong(row);
 
-        SongInspector insp(s, this);
-        insp.exec();
+        SongInspector *insp = new SongInspector(s, this);
+        insp->setAttribute(Qt::WA_DeleteOnClose);
+        insp->show();
     }
 }
 
