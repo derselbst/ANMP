@@ -19,9 +19,8 @@
 
 #include "AnalyzerBase.h"
 
+#include <atomic>
 #include <QImage>
-#include <QPixmap>
-#include <QSharedPointer>
 #include <QSize>
 
 class QPalette;
