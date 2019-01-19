@@ -82,7 +82,7 @@ void AnalyzerBase::prepareScope(const Song *s, frame_t playhead, QVector<float> 
     for (frame = 0; (frame < gConfig.FramesToRender) && ((playhead + frame) < s->getFrames()); frame++)
     {
         /* init the frame'th element */
-        scope[frame] = 0;
+        float sampleItem = 0;
 
         for (unsigned int v = 0; v < nVoices; v++)
         {
@@ -91,7 +91,7 @@ void AnalyzerBase::prepareScope(const Song *s, frame_t playhead, QVector<float> 
             {
                 for (unsigned int m = 0; m < vchan; m++)
                 {
-                    scope[frame] += float(pcmBuf[m]);
+                    sampleItem += float(pcmBuf[m]);
                 }
             }
 
@@ -100,16 +100,18 @@ void AnalyzerBase::prepareScope(const Song *s, frame_t playhead, QVector<float> 
         }
 
         //         /* Average between the channels */
-        //         scope[frame] /= s->Format.Channels();
+        //         sampleItem /= s->Format.Channels();
 
         if (!std::is_floating_point<T>())
         {
             /* normalize the signal by dividing through the maximum value of the type PCMBUF points to */
-            scope[frame] /= std::numeric_limits<T>::max();
+            sampleItem /= std::numeric_limits<T>::max();
         }
 
         /* further attenuation */
-        scope[frame] /= 20;
+        sampleItem /= 20;
+        
+        scope[frame] = sampleItem;
     }
     
     // workaround: the fft buffer may not be completely filled yet (e.g. end of song reached or seeked back to beginning).
