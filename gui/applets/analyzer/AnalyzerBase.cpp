@@ -78,7 +78,8 @@ void AnalyzerBase::prepareScope(const Song *s, frame_t playhead, QVector<float> 
     const unsigned int nVoices = s->Format.Voices;
     const T *pcmBuf = static_cast<T *>(s->data) + (playhead * s->Format.Channels()) % s->count;
 
-    for (unsigned int frame = 0; (frame < gConfig.FramesToRender) && ((playhead + frame) < s->getFrames()); frame++)
+    unsigned int frame;
+    for (frame = 0; (frame < gConfig.FramesToRender) && ((playhead + frame) < s->getFrames()); frame++)
     {
         /* init the frame'th element */
         scope[frame] = 0;
@@ -109,6 +110,14 @@ void AnalyzerBase::prepareScope(const Song *s, frame_t playhead, QVector<float> 
 
         /* further attenuation */
         scope[frame] /= 20;
+    }
+    
+    // workaround: the fft buffer may not be completely filled yet (e.g. end of song reached or seeked back to beginning).
+    // we cannot FFT less frames than with what we've initialized FHT.
+    // thus to avoid FFTing uninitialized PCM, fill up the rest of the buffer with zeros.
+    for(;frame < gConfig.FramesToRender; frame++)
+    {
+        scope[frame]=0;
     }
 }
 
