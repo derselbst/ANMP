@@ -19,7 +19,8 @@ class AnalyzerApplet : public QMainWindow
     enum AnalyzerType
     {
         Block,
-        Ascii
+        Ascii,
+        Spectrogram
     };
 
     explicit AnalyzerApplet(Player *player, QWidget *parent = 0);

@@ -71,6 +71,7 @@
      </property>
      <addaction name="actionASCII"/>
      <addaction name="actionBlocky"/>
+     <addaction name="actionSpectrogram"/>
     </widget>
     <addaction name="menuDockWindows"/>
     <addaction name="menuVisualization"/>
@@ -198,6 +199,11 @@
   <action name="actionBlocky">
    <property name="text">
     <string>&amp;Block</string>
+   </property>
+  </action>
+  <action name="actionSpectrogram">
+   <property name="text">
+    <string>&amp;Spectrogram</string>
    </property>
   </action>
   <action name="actionASCII">

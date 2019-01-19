@@ -53,7 +53,7 @@ class BlockAnalyzer : public AnalyzerBase
     virtual void initializeGL();
     virtual void paintGL();
     virtual void resizeGL(int w, int h);
-    virtual void analyze(const QVector<float> &);
+    void analyze(const QVector<float> &, uint32_t srate) override;
     virtual void paletteChange(const QPalette &);
 
     void drawBackground();

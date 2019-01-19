@@ -3,6 +3,7 @@
 
 #include "ASCIIAnalyzer.h"
 #include "BlockAnalyzer.h"
+#include "SpectrogramAnalyzer.h"
 
 #include "Player.h"
 
@@ -70,9 +71,6 @@ void AnalyzerApplet::newGeometry()
 
 void AnalyzerApplet::setAnalyzer(AnalyzerType type)
 {
-    //     if( m_analyzerName == name )
-    //         return;
-
     if (this->analyzerWidget != nullptr)
     {
         this->ui->horizontalLayout->removeWidget(this->analyzerWidget);
@@ -82,10 +80,15 @@ void AnalyzerApplet::setAnalyzer(AnalyzerType type)
     switch (type)
     {
         default:
+            this->analyzerWidget = nullptr;
             [[fallthrough]];
         case Block:
             this->analyzerWidget = new BlockAnalyzer(this);
             this->setWindowTitle("Block Analyzer");
+            break;
+        case Spectrogram:
+            this->analyzerWidget = new SpectrogramAnalyzer(this);
+            this->setWindowTitle("Spectrogram Analyzer");
             break;
         case Ascii:
             this->analyzerWidget = new ASCIIAnalyzer(this);

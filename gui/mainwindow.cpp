@@ -120,6 +120,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(this->ui->actionASCII, &QAction::triggered, this, [this] { this->showAnalyzer(AnalyzerApplet::AnalyzerType::Ascii); });
     connect(this->ui->actionBlocky, &QAction::triggered, this, [this] { this->showAnalyzer(AnalyzerApplet::AnalyzerType::Block); });
+    connect(this->ui->actionSpectrogram, &QAction::triggered, this, [this] { this->showAnalyzer(AnalyzerApplet::AnalyzerType::Spectrogram); });
 
     connect(this->ui->actionSettings, &QAction::triggered, this, [this] { this->settingsView->show(); });
     connect(this->settingsView, &ConfigDialog::accepted, this, &MainWindow::settingsDialogAccepted);

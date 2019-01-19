@@ -46,7 +46,7 @@ class AnalyzerBase : public QGLWidget
     template<typename T>
     void prepareScope(const Song *s, frame_t playhead, QVector<float> &scope);
     virtual void transform(QVector<float> &);
-    virtual void analyze(const QVector<float> &) = 0;
+    virtual void analyze(const QVector<float> &, uint32_t srate) = 0;
 
     void setFps(int fps);
 
@@ -55,9 +55,8 @@ class AnalyzerBase : public QGLWidget
     QTimer *m_renderTimer;
 
     public slots:
-    void connectSignals();
+    virtual void connectSignals();
     void disconnectSignals();
-    //     void currentDesktopChanged();
     void processData(const Song *s, frame_t playhead);
 };
 

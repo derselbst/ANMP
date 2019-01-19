@@ -82,7 +82,7 @@ void ASCIIAnalyzer::resizeGL(int w, int h)
     }
 
     drawBackground();
-    analyze(m_scope);
+    analyze(m_scope,0);
 }
 
 void ASCIIAnalyzer::determineStep()
@@ -95,7 +95,7 @@ void ASCIIAnalyzer::determineStep()
     m_step = double(m_rows * 80) / fallTime; //80 = ~milliseconds between signals with audio data
 }
 
-void ASCIIAnalyzer::analyze(const QVector<float> &s)
+void ASCIIAnalyzer::analyze(const QVector<float> &s, uint32_t)
 {
     interpolate(s, m_scope);
 }

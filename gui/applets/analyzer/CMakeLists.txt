@@ -9,10 +9,9 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(analyzer_SRCS
     AnalyzerApplet.cpp
     AnalyzerBase.cpp
-#     BallsAnalyzer.cpp
     BlockAnalyzer.cpp
-#     DiscoAnalyzer.cpp
     ASCIIAnalyzer.cpp
+    SpectrogramAnalyzer.cpp
     PaletteHandler.cpp
     fht.cpp
 )

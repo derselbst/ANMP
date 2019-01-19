@@ -68,9 +68,7 @@ void AnalyzerBase::disconnectSignals()
 
 void AnalyzerBase::transform(QVector<float> &s)
 {
-    float *front = static_cast<float *>(&s.front());
-
-    m_fht->spectrum(front);
+    m_fht->spectrum(&s.front());
 }
 
 // fill the buffer that will be fourier transformed
@@ -135,7 +133,7 @@ void AnalyzerBase::processData(const Song *s, frame_t playhead)
     }
 
     transform(m_fftData);
-    analyze(m_fftData);
+    analyze(m_fftData, s->Format.SampleRate);
 }
 
 void AnalyzerBase::interpolate(const QVector<float> &inVec, QVector<float> &outVec)
@@ -169,6 +167,12 @@ void AnalyzerBase::interpolate(const QVector<float> &inVec, QVector<float> &outV
 
 void AnalyzerBase::setFps(int fps)
 {
+    if(fps == 0)
+    {
+        m_renderTimer->stop();
+        return;
+    }
+    
     m_renderTimer->setInterval(1000 / fps);
 }
 

@@ -94,7 +94,7 @@ void BlockAnalyzer::resizeGL(int w, int h)
     }
 
     drawBackground();
-    analyze(m_scope);
+    analyze(m_scope, 0);
 }
 
 void BlockAnalyzer::determineStep()
@@ -106,7 +106,7 @@ void BlockAnalyzer::determineStep()
     m_step = double(m_rows * 80) / fallTime; //80 = ~milliseconds between signals with audio data
 }
 
-void BlockAnalyzer::analyze(const QVector<float> &s)
+void BlockAnalyzer::analyze(const QVector<float> &s, uint32_t)
 {
     interpolate(s, m_scope);
 }
