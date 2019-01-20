@@ -3,8 +3,8 @@
 Name=ANMP
 GenericName=Music Player
 Comment=Audio Player for various formats
-Exec=/usr/bin/anmp-launcher %U
-TryExec=/usr/bin/anmp-launcher
+Exec=/usr/bin/anmp-qt %U
+TryExec=/usr/bin/anmp-qt
 Terminal=true
 Type=Application
 Categories=AudioVideo;Audio;Player;

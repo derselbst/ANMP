@@ -62,28 +62,3 @@ install(TARGETS ${ANMP_LOOP} DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
 
 set_property(TARGET ${ANMP_LOOP} PROPERTY CXX_STANDARD 14)
 set_property(TARGET ${ANMP_LOOP} PROPERTY CXX_STANDARD_REQUIRED ON)
-
-
-if(USE_GUI)
-
-    SET(ANMP_LAUNCHER anmp-launcher)
-    SET(ANMP_LAUNCHER_SRC anmp-launcher.cpp)
-
-    qt5_add_dbus_interface(ANMP_LAUNCHER_SRC ${CMAKE_CURRENT_BINARY_DIR}/../gui/org.anmp.xml anmp_dbus_interface)
-    
-    add_executable(${ANMP_LAUNCHER} ${ANMP_LAUNCHER_SRC})
-    
-    # manually inject a dependency on anmp-qt here, because it generates org.anmp.xml, which is needed here,
-    # however some cmake versions / qt version are unable to automatically query this dependency
-    add_dependencies(${ANMP_LAUNCHER} anmp-qt)
-    
-    set(LINK_FLAGS ${LINK_FLAGS} "-Wl,-whole-archive")
-
-    target_link_libraries(${ANMP_LAUNCHER} ${Qt5DBus_LIBRARIES} ${Qt5Widgets_LIBRARIES})
-
-    install(TARGETS ${ANMP_LAUNCHER} DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
-
-    set_property(TARGET ${ANMP_LAUNCHER} PROPERTY CXX_STANDARD 11)
-    set_property(TARGET ${ANMP_LAUNCHER} PROPERTY CXX_STANDARD_REQUIRED ON)
-
-endif(USE_GUI)

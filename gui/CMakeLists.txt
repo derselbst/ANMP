@@ -49,7 +49,12 @@ if(USE_GUI)
         playcontrol.ui
     )
 
-    add_executable(${PROJECT_NAME} ${UI_HEADERS} ${GUI_SRCS} icons.qrc)
+    # auto-generate "build/gui/anmp_dbus_interface.h" and "build/gui/anmp_dbus_interface.cpp" but skip
+    # AUTOMOC and AUTOUIC for them (Policy CMP0071)
+    qt5_add_dbus_interface(ANMP_LAUNCHER_SRC ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml anmp_dbus_interface)
+    set_property(SOURCE ${ANMP_LAUNCHER_SRC} PROPERTY SKIP_AUTOGEN ON)    
+    
+    add_executable(${PROJECT_NAME} ${UI_HEADERS} ${GUI_SRCS} ${ANMP_LAUNCHER_SRC} icons.qrc)
     
     # should add all necessary compile and link flags
     qt5_use_modules(${PROJECT_NAME} Core OpenGL)
@@ -63,6 +68,7 @@ if(USE_GUI)
 
     target_link_libraries(${PROJECT_NAME}
         anmp
+        ${Qt5DBus_LIBRARIES} ${Qt5Widgets_LIBRARIES}
         ${LD_FLAGS}
     )
     
