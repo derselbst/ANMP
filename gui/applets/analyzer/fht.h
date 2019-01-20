@@ -31,7 +31,6 @@
  */
 class FHT
 {
-    int m_exp2;
     int m_num;
     float *m_buf;
     float *m_tab;
@@ -58,10 +57,6 @@ class FHT
     FHT(int);
 
     ~FHT();
-    inline int sizeExp() const
-    {
-        return m_exp2;
-    }
     inline int size() const
     {
         return m_num;

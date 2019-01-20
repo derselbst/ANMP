@@ -32,10 +32,9 @@ FHT::FHT(int n)
     if (n < 3)
     {
         m_num = 0;
-        m_exp2 = -1;
         return;
     }
-    m_exp2 = n;
+    
     m_num = 1 << n;
     if (n > 3)
     {
