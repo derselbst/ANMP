@@ -40,6 +40,8 @@ protected:
     void resizeEvent(QResizeEvent * event) override;
     void analyze(const QVector<float> &, uint32_t srate) override;
     
+    double getYForFrequency(double frequency, double minf, double maxf, bool logarithmic);
+    
 protected slots:
     void display(const QImage&);
     

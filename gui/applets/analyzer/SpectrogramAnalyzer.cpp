@@ -31,7 +31,7 @@ void SpectrogramAnalyzer::connectSignals()
 
 void SpectrogramAnalyzer::display(const QImage& img)
 {
-    m_toBeDrawn = img.mirrored();
+    m_toBeDrawn = img;
     this->update();
 }
 
@@ -52,7 +52,7 @@ void SpectrogramAnalyzer::resizeEvent(QResizeEvent * event)
 
 
 void SpectrogramAnalyzer::paintEvent(QPaintEvent* event)
-{    
+{
     QPainter painter(this);
     painter.drawImage(this->rect(), m_toBeDrawn);
     
@@ -78,27 +78,68 @@ void SpectrogramAnalyzer::analyze(const QVector<float> &s, uint32_t srate)
 
     interpolate(s, m_scope);
     
+    constexpr int xStepWidth = 4;
+    
+    QPainter painter(&m_spectrogram);
+    
     double w = 1 / sqrt(srate);
-    auto scopeSize = m_scope.size();
-    for (int y = 0; y < scopeSize/2; y++)
+    int yTargetOld = m_scope.size();
+    auto scopeSize = yTargetOld/2;
+    for (int y = 0; y < scopeSize; y++)
     {
-        int a = 255*sqrt(w * /*sqrt*/(m_scope[y + 0] * m_scope[y + 0] /*+ m_scope[y + 1] * m_scope[y + 1]*/));
+        int a = 255*sqrt(w * sqrt(m_scope[y + 0] * m_scope[y + 0] + m_scope[y + scopeSize] * m_scope[y + scopeSize]));
         int b = /*(nb_display_channels == 2 ) ? sqrt(w * hypot(data[1][2 * y + 0], data[1][2 * y + 1]))
                                             :*/ a;
         a = std::min(a, 255);
         b = std::min(b, 255);
 
-        for (int i = 0; i < 2; i++)
-        {
-            m_spectrogram.setPixel(m_xPos, 2 * y + i, qRgb(a, b, (a + b) >> 1));
-            m_spectrogram.setPixel(m_xPos+1, 2 * y + i, qRgb(a, b, (a + b) >> 1));
-        }
+        int yTarget = this->getYForFrequency(srate/2.0 * (y+1.0)/scopeSize, 1.0/scopeSize * srate/2.0, srate/2.0, true);
+        
+        painter.fillRect(m_xPos, yTarget, xStepWidth, yTargetOld-yTarget, QColor(qRgb(a, b, (a + b) >> 1)));
+        
+        yTargetOld = yTarget;
     }
-    ++m_xPos;
-    if (++m_xPos >= m_currentWidth)
+    
+    m_xPos += xStepWidth;
+    if (m_xPos >= m_currentWidth)
     {
         m_xPos = 0;
     }
     
     this->display(m_spectrogram);
+}
+
+
+double SpectrogramAnalyzer::getYForFrequency(double frequency, double minf, double maxf, bool logarithmic)
+{
+    int h = this->height();
+
+    if (logarithmic) {
+
+        static double lastminf = 0.0, lastmaxf = 0.0;
+        static double logminf = 0.0, logmaxf = 0.0;
+
+        if (lastminf != minf) {
+            lastminf = (minf == 0.0 ? 1.0 : minf);
+            logminf = std::log10(minf);
+        }
+        if (lastmaxf != maxf) {
+            lastmaxf = (maxf < lastminf ? lastminf : maxf);
+            logmaxf = std::log10(maxf);
+        }
+
+        if (logminf == logmaxf)
+        {
+            return 0;
+        }
+        return h - (h * (std::log10(frequency) - logminf)) / (logmaxf - logminf);
+
+    } else {
+
+        if (minf == maxf)
+        {
+            return 0;
+        }
+        return h - (h * (frequency - minf)) / (maxf - minf);
+    }
 }
