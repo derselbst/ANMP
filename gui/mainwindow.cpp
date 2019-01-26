@@ -293,14 +293,12 @@ void MainWindow::buildPlaylistView()
 
 void MainWindow::setWindowTitleCustom(QString title)
 {
-    if (title.isEmpty())
+    if (!title.isEmpty())
     {
-        title.append("ANMP " ANMP_VERSION);
+        title.append(" :: ");
     }
-    else
-    {
-        title.append(" :: ANMP");
-    }
+    
+    title.append("ANMP " ANMP_VERSION);
 
     this->setWindowTitle(title);
 }
