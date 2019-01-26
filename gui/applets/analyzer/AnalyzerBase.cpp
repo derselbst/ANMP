@@ -108,9 +108,6 @@ void AnalyzerBase::prepareScope(const Song *s, frame_t playhead, QVector<float> 
             sampleItem /= std::numeric_limits<T>::max();
         }
 
-        /* further attenuation */
-        sampleItem /= 20;
-        
         scope[frame] = sampleItem;
     }
     

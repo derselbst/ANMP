@@ -138,7 +138,7 @@ void BlockAnalyzer::paintGL()
     for (int y, x = 0; x < m_scope.size(); ++x)
     {
         // determine y
-        for (y = 0; y < m_yscale.size() && m_scope[x] < m_yscale[y]; ++y)
+        for (y = 0; y < m_yscale.size() && m_scope[x]/m_yscale.size() < m_yscale[y]; ++y)
         {
             ;
         }
