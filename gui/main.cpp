@@ -28,7 +28,11 @@ int main(int argc, char *argv[])
     
     
     QDBusReply<bool> reply = dbus.interface()->isServiceRegistered(org::anmp::staticInterfaceName());
-    if (reply.isValid() && !reply.value())
+    if (
+#if !defined(NDEBUG)
+        true ||
+#endif
+        (reply.isValid() && !reply.value()))
     {
         CLOG(LogLevel_t::Debug, "ANMP not started yet");
         
