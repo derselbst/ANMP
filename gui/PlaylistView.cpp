@@ -1,8 +1,10 @@
 #include "PlaylistView.h"
-#include "IPlaylist.h"
-#include "Playlist.h"
+
+#include "anmp.hpp"
 #include "PlaylistModel.h"
 #include "songinspector.h"
+
+#include <QDesktopServices>
 #include <QItemSelectionModel>
 #include <QKeyEvent>
 #include <QMenu>
@@ -10,7 +12,7 @@
 #include <QtGlobal>
 
 PlaylistView::PlaylistView(QWidget *parent)
-: QTableView(parent)
+: QTableView(parent), contextMenu(new QMenu(this))
 {
     this->setAcceptDrops(true);
     this->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -20,6 +22,9 @@ PlaylistView::PlaylistView(QWidget *parent)
     this->setDefaultDropAction(Qt::MoveAction);
     this->setSelectionBehavior(QAbstractItemView::SelectRows);
     this->setShowGrid(false);
+
+    this->contextMenu->addAction(QIcon::fromTheme("help-contents"), "Details", this, &PlaylistView::showInspector);
+    this->contextMenu->addAction(QIcon::fromTheme("system-file-manager"), "Open containing folder", this, &PlaylistView::openContainingFolder);
 }
 
 void PlaylistView::setModel(QAbstractItemModel *model)
@@ -180,15 +185,32 @@ void PlaylistView::contextMenuEvent(QContextMenuEvent *event)
     if (i.isValid())
     {
         event->accept();
-        QMenu menu;
-        menu.addAction(QIcon::fromTheme("help-contents"), "Details", this, &PlaylistView::showInspector);
-        menu.exec(event->globalPos());
+        this->contextMenu->exec(event->globalPos());
     }
     else
 #endif
     {
         QTableView::contextMenuEvent(event);
     }
+}
+
+void PlaylistView::openContainingFolder()
+{
+    PlaylistModel *playlistModel = dynamic_cast<PlaylistModel *>(this->model());
+    if (playlistModel == nullptr)
+    {
+        return;
+    }
+
+    QModelIndex i = this->currentIndex();
+    if (i.isValid())
+    {
+        int row = i.row();
+        const Song *s = playlistModel->getPlaylist()->getSong(row);
+
+        QDesktopServices::openUrl(QUrl::fromLocalFile(QString::fromStdString(::mydirname(s->Filename))));
+    }
+
 }
 
 void PlaylistView::showInspector()

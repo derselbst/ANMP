@@ -16,6 +16,8 @@ class PlaylistView : public QTableView
     void setModel(QAbstractItemModel *model) override;
 
     protected:
+    QMenu *contextMenu;
+
     void keyPressEvent(QKeyEvent *event) override;
     void contextMenuEvent(QContextMenuEvent *event) override;
 
@@ -28,6 +30,7 @@ class PlaylistView : public QTableView
 
     protected slots:
     void showInspector();
+    void openContainingFolder();
 };
 
 
