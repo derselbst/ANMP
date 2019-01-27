@@ -23,8 +23,14 @@ PlaylistView::PlaylistView(QWidget *parent)
     this->setSelectionBehavior(QAbstractItemView::SelectRows);
     this->setShowGrid(false);
 
+    
+#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
     this->contextMenu->addAction(QIcon::fromTheme("help-contents"), "Details", this, &PlaylistView::showInspector);
     this->contextMenu->addAction(QIcon::fromTheme("system-file-manager"), "Open containing folder", this, &PlaylistView::openContainingFolder);
+#else
+    this->contextMenu->addAction(QIcon::fromTheme("help-contents"), "Details", this, SLOT(showInspector()));
+    this->contextMenu->addAction(QIcon::fromTheme("system-file-manager"), "Open containing folder", this, SLOT(openContainingFolder()));
+#endif
 }
 
 void PlaylistView::setModel(QAbstractItemModel *model)
@@ -180,7 +186,6 @@ void PlaylistView::keyPressEvent(QKeyEvent *event)
 
 void PlaylistView::contextMenuEvent(QContextMenuEvent *event)
 {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
     QModelIndex i = this->currentIndex();
     if (i.isValid())
     {
@@ -188,7 +193,6 @@ void PlaylistView::contextMenuEvent(QContextMenuEvent *event)
         this->contextMenu->exec(event->globalPos());
     }
     else
-#endif
     {
         QTableView::contextMenuEvent(event);
     }
