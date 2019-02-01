@@ -1,6 +1,7 @@
 #include "Song.h"
 
 #include "CommonExceptions.h"
+#include "AtomicWrite.h"
 
 #include <algorithm> // std::sort
 #include <utility>
@@ -49,6 +50,13 @@ void Song::buildLoopTree()
     std::sort(loopvec.begin(), loopvec.end(), myLoopSort);
     for (vector<loop_t>::iterator it = loopvec.begin(); it != loopvec.end(); ++it)
     {
+        if(it->stop <= it->start)
+        {
+            // that wont work
+            CLOG(LogLevel_t::Warning, "\"" << this->Filename << "\" specifies a zero size or negative loop, skipping." << endl);
+            continue;
+        }
+        
         core::tree<loop_t> &subNode = findRootLoopNode(this->loopTree, *it);
         subNode.insert(*it);
     }
