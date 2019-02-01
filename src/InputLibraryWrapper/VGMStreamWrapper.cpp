@@ -94,7 +94,7 @@ vector<loop_t> VGMStreamWrapper::getLoopArray() const noexcept
         if (l.stop > this->getFrames())
         {
             l.stop = this->getFrames();
-            CLOG(LogLevel_t::Warning, "\"" << this->Filename << "\" specifies the end of loop past the end of file. The loop was truncated to the last frame available." << endl)
+            CLOG(LogLevel_t::Warning, "\"" << this->Filename << "\" specifies the end of loop past the end of file. The loop was truncated to the last frame available." << endl);
         }
 
         // this will always be an infinite loop

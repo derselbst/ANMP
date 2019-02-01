@@ -157,11 +157,19 @@ void LibGMEWrapper::open()
     }
     else
     {
-        // ... and the file has no default duration
+        // if the file has no default duration
         if (this->info->length == -1)
         {
-            // use 3 minutes as default
-            this->fileLen = 3 * 60 * 1000;
+            // the total length is not specified, try to figure it out
+            if(this->info->intro_length != -1 && this->info->loop_length != -1)
+            {
+                this->fileLen = this->info->intro_length + this->info->loop_length;
+            }
+            else
+            {
+                // use what GME thinks is best
+                this->fileLen = this->info->play_length;
+            }
         }
         else
         {
@@ -218,7 +226,7 @@ vector<loop_t> LibGMEWrapper::getLoopArray() const noexcept
         loop_t l;
         l.start = msToFrames(this->info->intro_length, this->Format.SampleRate);
         l.stop = msToFrames(this->info->intro_length + this->info->loop_length, this->Format.SampleRate);
-        l.count = 2;
+        l.count = 0;
         res.push_back(l);
     }
     return res;
