@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>PlayControl</class>
  <widget class="QWidget" name="PlayControl">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>688</width>
+    <height>132</height>
+   </rect>
+  </property>
   <property name="windowTitle">
    <string>Player Control</string>
   </property>
@@ -281,6 +289,15 @@ background-color: rgb(255, 209, 205);
          <height>0</height>
         </size>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>11</pointsize>
+         <kerning>false</kerning>
+        </font>
+       </property>
+       <property name="toolTip">
+        <string notr="true">Playtime</string>
+       </property>
        <property name="text">
         <string>0:00</string>
        </property>
@@ -364,6 +381,15 @@ background: #eee;
          <width>45</width>
          <height>0</height>
         </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>11</pointsize>
+         <kerning>false</kerning>
+        </font>
+       </property>
+       <property name="toolTip">
+        <string notr="true">Time left to play</string>
        </property>
        <property name="text">
         <string>-0:00</string>

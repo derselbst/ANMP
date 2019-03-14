@@ -23,6 +23,7 @@
 #include <QStandardItemModel>
 #include <QTableView>
 #include <QTreeView>
+#include <QFontDatabase>
 
 #include <chrono>
 #include <cmath>
@@ -67,6 +68,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     QWidget *dockwid = new QWidget(this->ui->dockControl);
     this->playctrl->setupUi(dockwid);
+    this->playctrl->labelTimeLeft->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    this->playctrl->labelTimePast->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
     this->ui->dockControl->setWidget(dockwid);
 
 
