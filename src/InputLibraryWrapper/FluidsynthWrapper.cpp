@@ -242,7 +242,7 @@ void FluidsynthWrapper::setupSettings()
     fluid_settings_setint(this->settings, "synth.chorus.active", gConfig.FluidsynthEnableChorus);
     fluid_settings_setint(this->settings, "synth.reverb.active", gConfig.FluidsynthEnableReverb);
     fluid_settings_setnum(this->settings, "synth.reverb.room-size", gConfig.FluidsynthRoomSize);
-    fluid_settings_setnum(this->settings, "synth.reverb.damping", gConfig.FluidsynthDamping);
+    fluid_settings_setnum(this->settings, "synth.reverb.damp", gConfig.FluidsynthDamping);
     fluid_settings_setnum(this->settings, "synth.reverb.width", gConfig.FluidsynthWidth);
     fluid_settings_setnum(this->settings, "synth.reverb.level", gConfig.FluidsynthLevel);
 }
