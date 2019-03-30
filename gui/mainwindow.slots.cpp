@@ -54,13 +54,19 @@ void MainWindow::slotSeek(long long pos)
     playheadSlider->setSliderPosition(pos);
     playheadSlider->blockSignals(oldState);
 
+    string temp;
+    
     const Song *s = this->player->getCurrentSong();
     if (s == nullptr)
     {
+        temp = framesToTimeStr(0, 1);
+        QString strTime = QString::fromStdString(temp);
+        this->playctrl->labelTimePast->setText(strTime);
+        this->playctrl->labelTimeLeft->setText(QString("-") + strTime);
+        
         return;
     }
 
-    string temp;
     {
         temp = framesToTimeStr(pos, s->Format.SampleRate);
         QString strTimePast = QString::fromStdString(temp);

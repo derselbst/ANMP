@@ -282,12 +282,6 @@ QMimeData *PlaylistModel::mimeData(const QModelIndexList &indexes) const
     return mimeData;
 }
 
-bool PlaylistModel::canDropMimeData(const QMimeData *data, Qt::DropAction, int, int, const QModelIndex &) const
-{
-    return data->hasFormat("text/uri-list");
-}
-
-
 bool PlaylistModel::dropMimeData(const QMimeData *data, Qt::DropAction action, int row, int column, const QModelIndex &parent)
 {
     if (!canDropMimeData(data, action, row, column, parent))
