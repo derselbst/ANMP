@@ -19,7 +19,7 @@ class IPlaylist;
 
 class PlaylistFactory
 {
-    public:
+public:
     // no object
     PlaylistFactory() = delete;
     // no copy
@@ -42,7 +42,8 @@ class PlaylistFactory
                         Nullable<size_t> offset = Nullable<size_t>(),
                         Nullable<size_t> len = Nullable<size_t>(),
                         Nullable<SongInfo> overridingMetadata = Nullable<SongInfo>());
-
+private:
+    
 #ifdef USE_CUE
     static void parseCue(IPlaylist &playlist, const string &filePath);
 #endif
@@ -51,8 +52,6 @@ class PlaylistFactory
     static void tryWith(Song *(&pcm), const string &filePath, Nullable<size_t> offset, Nullable<size_t> len);
 };
 
-
-#include "PlaylistFactory_impl.h"
 
 
 #endif // PLAYLISTFACTORY_H
