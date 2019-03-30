@@ -47,6 +47,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <memory>
 
 #ifdef USE_CUE
 extern "C" {
@@ -65,48 +66,50 @@ void PlaylistFactory::parseCue(IPlaylist &playlist, const string &filePath)
         throw runtime_error(string("Error: Failed to parse CUE-Sheet file \"") + filePath + "\" (" + ERRMSG + ")"); \
     }
 
-    FILE *f = fopen(filePath.c_str(), "r");
-    Cd *cd = cue_parse_file(f);
-    cue_assert("error parsing CUE", cd != NULL);
+    std::unique_ptr<FILE, decltype(&fclose)> f(fopen(filePath.c_str(), "r"), &fclose);
+    cue_assert("failed to open cue file real-only", f != nullptr);
+    
+    std::unique_ptr<Cd, decltype(&cd_delete)> cd(cue_parse_file(f.get()), &cd_delete);
+    cue_assert("error parsing CUE", cd != nullptr);
 
     SongInfo overridingMetadata;
     {
         // get metadata of overall CD
-        Cdtext *albumtext = cd_get_cdtext(cd);
+        Cdtext *albumtext = cd_get_cdtext(cd.get());
 
         const char *val = cdtext_get(PTI_PERFORMER, albumtext);
-        if (val != NULL)
+        if (val != nullptr)
         {
             // overall CD interpret
             overridingMetadata.Artist = string(val);
         }
 
         val = cdtext_get(PTI_COMPOSER, albumtext);
-        if (val != NULL)
+        if (val != nullptr)
         {
             // overall CD Composer
             overridingMetadata.Composer = string(val);
         }
 
         val = cdtext_get(PTI_TITLE, albumtext);
-        if (val != NULL)
+        if (val != nullptr)
         {
             // album title
             overridingMetadata.Album = string(val);
         }
     }
 
-    int ntrk = cd_get_ntrack(cd);
+    int ntrk = cd_get_ntrack(cd.get());
     for (int i = 0; i < ntrk; i++)
     {
-        Track *track = cd_get_track(cd, i + 1);
-        cue_assert("error getting track", track != NULL);
+        Track *track = cd_get_track(cd.get(), i + 1);
+        cue_assert("error getting track", track != nullptr);
 
         const char *realAudioFile = track_get_filename(track);
-        cue_assert("error getting track filename", realAudioFile != NULL);
+        cue_assert("error getting track filename", realAudioFile != nullptr);
 
         Cdtext *cdtext = track_get_cdtext(track);
-        cue_assert("error getting track CDTEXT", cdtext != NULL);
+        cue_assert("error getting track CDTEXT", cdtext != nullptr);
 
         {
             stringstream ss;
@@ -114,25 +117,25 @@ void PlaylistFactory::parseCue(IPlaylist &playlist, const string &filePath)
             overridingMetadata.Track = ss.str();
 
             const char *val = cdtext_get(PTI_PERFORMER, cdtext);
-            if (val != NULL)
+            if (val != nullptr)
             {
                 overridingMetadata.Artist = string(val);
             }
 
             val = cdtext_get(PTI_COMPOSER, cdtext);
-            if (val != NULL)
+            if (val != nullptr)
             {
                 overridingMetadata.Composer = string(val);
             }
 
             val = cdtext_get(PTI_TITLE, cdtext);
-            if (val != NULL)
+            if (val != nullptr)
             {
                 overridingMetadata.Title = string(val);
             }
 
             val = cdtext_get(PTI_GENRE, cdtext);
-            if (val != NULL)
+            if (val != nullptr)
             {
                 overridingMetadata.Genre = string(val);
             }
@@ -155,7 +158,6 @@ void PlaylistFactory::parseCue(IPlaylist &playlist, const string &filePath)
 
         PlaylistFactory::addSong(playlist, mydirname(filePath).append("/").append(realAudioFile), strangeFramesStart * 1000 / 75, len, overridingMetadata);
     }
-    cd_delete(cd);
 #undef cue_assert
 }
 #endif
