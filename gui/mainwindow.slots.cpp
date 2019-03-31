@@ -308,6 +308,12 @@ void MainWindow::AddSongs(const QStringList& files)
 
 void MainWindow::slotSongAdded(const QString& file, int cur, int total)
 {
+    QStatusBar* stat = this->ui->statusbar;
+    
+    // avoid showMessage() updating itself every time it's message changes
+    // instead, implicitly schedule an update (when re-enabling updates below) to give the main thread a chance to skip paint events
+    stat->setUpdatesEnabled(false);
+    
     QString text = "Adding file (";
     text += QString::number(cur);
     text += " / ";
@@ -317,13 +323,15 @@ void MainWindow::slotSongAdded(const QString& file, int cur, int total)
 
     if (cur == total)
     {
-        this->ui->statusbar->showMessage(text, 3000);
+        stat->showMessage(text, 3000);
         this->ui->playlistView->resizeColumnsToContents();
     }
     else
     {
-        this->ui->statusbar->showMessage(text);
+        stat->showMessage(text);
     }
+    
+    stat->setUpdatesEnabled(true);
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event)

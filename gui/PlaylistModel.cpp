@@ -27,19 +27,15 @@ PlaylistModel::~PlaylistModel()
     this->songsToAdd.shutDown = true;
     this->songsToAdd.queue.clear();
 
-    try
+    if(this->songAdderWorker.valid())
     {
         CLOG(LogLevel_t::Info, "Waiting for song adder thread to finish...");
         std::future_status status = this->songAdderWorker.wait_for(std::chrono::seconds(15));
         if (status == std::future_status::timeout)
         {
-            CLOG(LogLevel_t::Fatal, "song adder thread not responding, probably got stuck. Aborting.");
+            CLOG(LogLevel_t::Fatal, "song adder thread not responding, probably got stuck. Terminating.");
             std::terminate();
         }
-    }
-    catch (const std::future_error &e)
-    {
-        // probably no future associated, that's fine here
     }
 }
 
@@ -335,13 +331,16 @@ QString PlaylistModel::__toQString(const QUrl &url)
 void PlaylistModel::workerLoop()
 {
     int i = 0;
-    std::unique_lock<mutex> lck(this->songsToAdd.mtx);
-    //     this->songsToAdd.processed = false;
-
+    std::vector<Song*> freshSongs;
+    
+    std::unique_lock<std::recursive_mutex> lck(this->songsToAdd.mtx);
+    this->songsToAdd.ready = true;
+    
+    freshSongs.reserve(this->songsToAdd.queue.size()+1);
     while (!this->songsToAdd.queue.empty() && !this->songsToAdd.shutDown)
     {
         // grep the file at the very front and pop it from queue
-        const string s = std::move(this->songsToAdd.queue[0]);
+        const QString s = std::move(this->songsToAdd.queue[0]);
         this->songsToAdd.queue.pop_front();
         const int total = this->songsToAdd.queue.size();
 
@@ -351,28 +350,23 @@ void PlaylistModel::workerLoop()
         // notify waiting threads, so they can continue filling the queue
         this->songsToAdd.cv.notify_all();
 
-        auto start = std::chrono::high_resolution_clock::now();
-        int songsBefore = this->playlist->size();
-        PlaylistFactory::addSong(*this->playlist, s);
-        int songsAfter = this->playlist->size();
-        int songsAdded = songsAfter - songsBefore;
+        freshSongs.clear();
+        PlaylistFactory::addSong(freshSongs, s.toStdString());
+        int songsAdded = freshSongs.size();
+        std::this_thread::yield();
+
         if (songsAdded > 0)
         {
-            emit this->SongAdded(QString::fromStdString(s), i, i + total);
-            QMetaObject::invokeMethod(this, "insertRows", Qt::QueuedConnection, Q_ARG(int, songsBefore), Q_ARG(int, songsAdded));
+            auto songAddedInRow = this->playlist->add(freshSongs[0]) + 1;
+            for(decltype(songsAdded) j=1; j<songsAdded; j++)
+            {
+                this->playlist->add(freshSongs[j]);
+            }
+            QMetaObject::invokeMethod(this, "insertRows", Qt::QueuedConnection, Q_ARG(int, songAddedInRow), Q_ARG(int, songsAdded));
+            emit this->SongAdded(s, i, i + total);
         }
         i++;
-        auto end = std::chrono::high_resolution_clock::now();
-
-        // if we add songs too fast we keep locking this->mtx (via this->add(Song*)) and thus potentially blocking the UI thread
-        std::chrono::milliseconds wait = std::chrono::milliseconds(10);
-        std::chrono::milliseconds past = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        wait -= past;
-        if (wait > std::chrono::milliseconds(0))
-        {
-            std::this_thread::sleep_for(wait);
-        }
-
+        
         lck.lock();
         this->songsToAdd.ready = true;
     }
@@ -384,8 +378,18 @@ void PlaylistModel::workerLoop()
 void PlaylistModel::clear()
 {
     {
-        std::lock_guard<mutex> lck(this->songsToAdd.mtx);
+        std::lock_guard<std::recursive_mutex> lck(this->songsToAdd.mtx);
         this->songsToAdd.queue.clear();
+    }
+
+    if(this->songAdderWorker.valid())
+    {
+        std::future_status status = this->songAdderWorker.wait_for(std::chrono::seconds(5));
+        if (status == std::future_status::timeout)
+        {
+            CLOG(LogLevel_t::Fatal, "song adder thread not responding, probably got stuck. Terminating.");
+            std::terminate();
+        }
     }
 
     this->beginResetModel();

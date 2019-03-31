@@ -90,9 +90,9 @@ int main(int argc, char *argv[])
         }
     }
 
-
     constexpr int Threads = 4;
     Playlist plist[Threads];
+    std::vector<Song*> tempSongBuf;
 
     int curThread = 0;
 
@@ -106,8 +106,7 @@ int main(int argc, char *argv[])
                 {
                     if (is_regular_file(dirEntry.status()))
                     {
-                        PlaylistFactory::addSong(plist[curThread], dirEntry.path());
-                        curThread = (curThread + 1) % Threads;
+                        PlaylistFactory::addSong(tempSongBuf, dirEntry.path());
                     }
                 }
             }
@@ -117,17 +116,21 @@ int main(int argc, char *argv[])
                 {
                     if (is_regular_file(dirEntry.status()))
                     {
-                        PlaylistFactory::addSong(plist[curThread], dirEntry.path());
-                        curThread = (curThread + 1) % Threads;
+                        PlaylistFactory::addSong(tempSongBuf, dirEntry.path());
                     }
                 }
             }
         }
         else if (is_regular_file(argv[i]))
         {
-            PlaylistFactory::addSong(plist[curThread], absolute(argv[i]));
-            curThread = (curThread + 1) % Threads;
+            PlaylistFactory::addSong(tempSongBuf, absolute(argv[i]));
         }
+    }
+    
+    for(size_t i = 0; i < tempSongBuf.size(); i++)
+    {
+        curThread = i % Threads;
+        plist[curThread].add(tempSongBuf[i]);
     }
 
     std::vector<Player> players;

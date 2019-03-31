@@ -228,6 +228,5 @@ export LD_LIBRARY_PATH=%{buildroot}/%{_libdir}/:$LD_LIBRARY_PATH
 %files progs
 %defattr(-,root,root)
 %{_bindir}/anmp-normalize
-%{_bindir}/anmp-loopify
 %{_bindir}/anmp-dump
 

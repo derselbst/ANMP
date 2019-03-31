@@ -4,8 +4,8 @@
 #include "Nullable.h"
 #include "SongInfo.h"
 #include <string>
+#include <vector>
 
-using namespace std;
 
 class Song;
 class IPlaylist;
@@ -31,25 +31,25 @@ public:
     /**
      * try to add a song to the playlist
      * 
-     * @param  playlist the playlist object the songs get added to
+     * @param  playlist an empty vector to push all added songs to
      * @param  filePath full path to an audio file on your HDD
      * @param  offset see Song::fileOffset
      * @param  len see Song::fileLen
      * @param  overridingMetadata not the metadata from Song::buildMetadata() but the metadata specified here will be used
      */
-    static bool addSong(IPlaylist &playlist,
-                        const string& filePath,
+    static bool addSong(std::vector<Song*> &playlist,
+                        const std::string& filePath,
                         Nullable<size_t> offset = Nullable<size_t>(),
                         Nullable<size_t> len = Nullable<size_t>(),
                         Nullable<SongInfo> overridingMetadata = Nullable<SongInfo>());
 private:
     
 #ifdef USE_CUE
-    static void parseCue(IPlaylist &playlist, const string &filePath);
+    static void parseCue(std::vector<Song*> &playlist, const std::string &filePath);
 #endif
 
     template<typename T>
-    static void tryWith(Song *(&pcm), const string &filePath, Nullable<size_t> offset, Nullable<size_t> len);
+    static void tryWith(Song *(&pcm), const std::string &filePath, Nullable<size_t> offset, Nullable<size_t> len);
 };
 
 

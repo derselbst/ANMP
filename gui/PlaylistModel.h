@@ -4,6 +4,8 @@
 #include <QAbstractTableModel>
 #include <QColor>
 #include <QModelIndex>
+#include <QCoreApplication>
+#include <QDir>
 
 #include <condition_variable>
 #include <deque>
@@ -70,13 +72,13 @@ class PlaylistModel : public QAbstractTableModel
     struct
     {
         // a queue to be filled with filepaths for songs that shall be added
-        std::deque<std::string> queue;
+        std::deque<QString> queue;
 
         // mutex for that queue
-        mutable std::mutex mtx;
+        mutable std::recursive_mutex mtx;
 
         // cond var for synchronizing the worker thread and queue filler threads
-        std::condition_variable cv;
+        std::condition_variable_any cv;
 
         // predicate variable for cv used by the queue filler threads
         // true: the worker thread is currently owner of the mutex, i.e. it's messing around the the queue
@@ -101,11 +103,10 @@ class PlaylistModel : public QAbstractTableModel
     static QString __toQString(const QUrl &url);
 };
 
-#include <QDir>
 template<typename T>
 void PlaylistModel::asyncAdd(const QList<T> &files)
 {
-    std::unique_lock<std::mutex> lck(this->songsToAdd.mtx);
+    std::unique_lock<std::recursive_mutex> lck(this->songsToAdd.mtx);
     this->songsToAdd.cv.wait(lck, [this] { return !this->songsToAdd.ready; });
 
     for (int i = 0; i < files.count() && !this->songsToAdd.shutDown; i++)
@@ -116,21 +117,20 @@ void PlaylistModel::asyncAdd(const QList<T> &files)
         if (info.isDir())
         {
             QDir dir(file);
-            lck.unlock();
             this->asyncAdd(dir.entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot, QDir::LocaleAware));
-            lck.lock();
         }
         else
         {
-            this->songsToAdd.queue.push_back(file.toStdString());
+            this->songsToAdd.queue.emplace_back(std::move(file));
         }
+        
+        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents, 1/*ms*/);
     }
-    this->songsToAdd.ready = true;
 
     if (this->songsToAdd.processed && !this->songsToAdd.shutDown)
     {
-        this->songAdderWorker = std::async(std::launch::async, &PlaylistModel::workerLoop, this);
         this->songsToAdd.processed = false;
+        this->songAdderWorker = std::async(std::launch::async, &PlaylistModel::workerLoop, this);
     }
     lck.unlock();
     this->songsToAdd.cv.notify_one();

@@ -140,7 +140,7 @@ MainWindow::MainWindow(QWidget *parent)
     // emitted double-clicking or pressing Enter
     connect(this->ui->playlistView, &PlaylistView::activated, this, &MainWindow::selectSong);
 
-    connect(this->playlistModel, &PlaylistModel::SongAdded, this, &MainWindow::slotSongAdded);
+    connect(this->playlistModel, &PlaylistModel::SongAdded, this, &MainWindow::slotSongAdded, Qt::QueuedConnection);
     connect(this->playlistModel, &PlaylistModel::UnloadCurrentSong, this, [this] {this->player->stop(); this->player->setCurrentSong(nullptr); });
 
     connect(this->treeView, &QTreeView::clicked, this, &MainWindow::treeViewClicked);

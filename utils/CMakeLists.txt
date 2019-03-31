@@ -42,23 +42,3 @@ install(TARGETS ${ANMP_DUMP} DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
 
 set_property(TARGET ${ANMP_DUMP} PROPERTY CXX_STANDARD 14)
 set_property(TARGET ${ANMP_DUMP} PROPERTY CXX_STANDARD_REQUIRED ON)
-
-
-SET(ANMP_LOOP anmp-loopify)
-
-add_executable(${ANMP_LOOP} anmp-loopify.cpp)
-set(LINK_FLAGS ${LINK_FLAGS} "-Wl,-whole-archive")
-
-target_link_libraries(${ANMP_LOOP} anmp)
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-        if(USE_LIBCXX)
-            target_link_libraries(${ANMP_LOOP} libc++experimental.a)
-        else(USE_LIBCXX)
-            target_link_libraries(${ANMP_LOOP} stdc++fs)
-        endif(USE_LIBCXX)
-endif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-
-install(TARGETS ${ANMP_LOOP} DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
-
-set_property(TARGET ${ANMP_LOOP} PROPERTY CXX_STANDARD 14)
-set_property(TARGET ${ANMP_LOOP} PROPERTY CXX_STANDARD_REQUIRED ON)

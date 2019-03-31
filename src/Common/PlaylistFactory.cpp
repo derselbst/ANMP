@@ -2,7 +2,6 @@
 
 #include "AtomicWrite.h"
 #include "CommonExceptions.h"
-#include "IPlaylist.h"
 #include "Song.h"
 
 #ifdef USE_LAZYUSF
@@ -55,10 +54,11 @@ extern "C" {
 }
 #endif
 
+using namespace std;
 
 #ifdef USE_CUE
 
-void PlaylistFactory::parseCue(IPlaylist &playlist, const string &filePath)
+void PlaylistFactory::parseCue(std::vector<Song*> &playlist, const string &filePath)
 {
 #define cue_assert(ERRMSG, COND)                                                                                    \
     if (!(COND))                                                                                                    \
@@ -163,7 +163,7 @@ void PlaylistFactory::parseCue(IPlaylist &playlist, const string &filePath)
 #endif
 
 
-bool PlaylistFactory::addSong(IPlaylist &playlist, const string& filePath, Nullable<size_t> offset, Nullable<size_t> len, Nullable<SongInfo> overridingMetadata)
+bool PlaylistFactory::addSong(std::vector<Song*> &playlist, const string& filePath, Nullable<size_t> offset, Nullable<size_t> len, Nullable<SongInfo> overridingMetadata)
 {
     Song *pcm = nullptr;
 
@@ -381,7 +381,7 @@ bool PlaylistFactory::addSong(IPlaylist &playlist, const string& filePath, Nulla
 
     pcm->close();
 
-    playlist.add(pcm);
+    playlist.push_back(pcm);
 
     return true;
 }
@@ -404,7 +404,6 @@ void PlaylistFactory::tryWith(Song *(&pcm), const string &filePath, Nullable<siz
         catch (const exception &e)
         {
             CLOG(LogLevel_t::Error, e.what());
-            pcm->close();
             delete pcm;
             pcm = nullptr;
         }
