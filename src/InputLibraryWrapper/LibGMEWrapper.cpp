@@ -52,7 +52,7 @@ void LibGMEWrapper::open()
     gme_type_t emuType;
     gme_err_t msg = gme_identify_file(this->Filename.c_str(), &emuType);
 
-    if (msg || emuType == nullptr)
+    if (msg)
     {
         THROW_RUNTIME_ERROR("libgme failed on file \"" << this->Filename << ")\""
                                                        << " with message " << msg);
