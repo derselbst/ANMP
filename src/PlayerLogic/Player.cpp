@@ -90,42 +90,50 @@ void Player::_initAudio()
 
     delete this->audioDriver;
 
-    switch (gConfig.audioDriver)
+    try
     {
+        switch (gConfig.audioDriver)
+        {
 #ifdef USE_ALSA
-        case AudioDriver_t::Alsa:
-            this->audioDriver = new ALSAOutput();
-            break;
+            case AudioDriver_t::Alsa:
+                this->audioDriver = new ALSAOutput();
+                break;
 #endif
 #ifdef USE_EBUR128
-        case AudioDriver_t::Ebur128:
-            this->audioDriver = new ebur128Output(this);
-            break;
+            case AudioDriver_t::Ebur128:
+                this->audioDriver = new ebur128Output(this);
+                break;
 #endif
 #ifdef USE_JACK
-        case AudioDriver_t::Jack:
-            this->audioDriver = new JackOutput();
-            break;
+            case AudioDriver_t::Jack:
+                this->audioDriver = new JackOutput();
+                break;
 #endif
-        case AudioDriver_t::Wave:
-            this->audioDriver = new WaveOutput(this);
-            break;
+            case AudioDriver_t::Wave:
+                this->audioDriver = new WaveOutput(this);
+                break;
 #ifdef USE_PORTAUDIO
-        case AudioDriver_t::Portaudio:
-            this->audioDriver = new PortAudioOutput();
-            break;
+            case AudioDriver_t::Portaudio:
+                this->audioDriver = new PortAudioOutput();
+                break;
 #endif
-        default:
-            this->audioDriver = nullptr;
-            throw NotImplementedException();
-            break;
+            default:
+                throw NotImplementedException();
+                break;
+        }
+
+        this->audioDriver->open();
+
+        if (this->currentSong != nullptr)
+        {
+            this->audioDriver->init(this->currentSong->Format);
+        }
     }
-
-    this->audioDriver->open();
-
-    if (this->currentSong != nullptr)
+    catch(...)
     {
-        this->audioDriver->init(this->currentSong->Format);
+        delete this->audioDriver;
+        this->audioDriver = nullptr;
+        throw;
     }
 }
 

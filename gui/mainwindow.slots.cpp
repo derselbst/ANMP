@@ -214,12 +214,26 @@ void MainWindow::TogglePlayPauseFade()
 
 void MainWindow::Play()
 {
-    this->player->play();
+    try
+    {
+        this->player->play();
+    }
+    catch (const exception &e)
+    {
+        this->showError(e.what(), "Failed to start playback");
+    }
 }
 
 void MainWindow::Pause()
 {
-    this->player->pause();
+    try
+    {
+        this->player->pause();
+    }
+    catch (const exception &e)
+    {
+        this->showError(e.what(), "Failed to pause playback");
+    }
 }
 
 void MainWindow::StopFade()
@@ -230,7 +244,14 @@ void MainWindow::StopFade()
 
 void MainWindow::Stop()
 {
-    this->player->stop();
+    try
+    {
+        this->player->stop();
+    }
+    catch (const exception &e)
+    {
+        this->showError(e.what(), "Failed to stop playback");
+    }
 }
 
 void MainWindow::Next()
