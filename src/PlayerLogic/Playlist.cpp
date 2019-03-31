@@ -223,5 +223,7 @@ void Playlist::move(size_t source, unsigned int count, int steps)
 
 size_t Playlist::size()
 {
+    lock_guard<recursive_mutex> lck(this->mtx);
+    
     return this->queue.size();
 }
