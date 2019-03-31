@@ -84,9 +84,9 @@ class IAudioOutput
     void setVolume(float vol);
 
     // gets and sets the number of mixdown channels, all non muted voices of a song get mixed to
-    Nullable<uint16_t> GetOutputChannels();
+    uint16_t GetOutputChannels();
     // only call this when playback is paused, i.e. no call to this->write() is pending
-    virtual void SetOutputChannels(Nullable<uint16_t>);
+    virtual void SetOutputChannels(uint16_t);
 
     void SetVoiceConfig(decltype(SongFormat::Voices) voices, decltype(SongFormat::VoiceChannels) &voiceChannels);
     void SetMuteMask(decltype(SongFormat::VoiceIsMuted) &mask);
@@ -114,10 +114,6 @@ class IAudioOutput
 
     protected:
     SongFormat currentFormat;
-
-    // number of audio channels all the different song's voices will be mixed to (by this->Mix())
-    // if it has no value, no mixing takes place
-    Nullable<uint16_t> outputChannels;
 
     // the current volume [0,1.0] to use, i.e. a factor by that the PCM gets amplified.
     float volume = 1.0f;
@@ -151,4 +147,9 @@ class IAudioOutput
     virtual int write(const float *buffer, frame_t frames) = 0;
     virtual int write(const int16_t *buffer, frame_t frames) = 0;
     virtual int write(const int32_t *buffer, frame_t frames) = 0;
+    
+private:
+    // number of audio channels all the different song's voices will be mixed to (by this->Mix())
+    // if it has no value, no mixing takes place
+    uint16_t outputChannels;
 };

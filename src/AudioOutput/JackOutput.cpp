@@ -79,7 +79,7 @@ void JackOutput::open()
     }
 }
 
-void JackOutput::SetOutputChannels(Nullable<uint16_t> chan)
+void JackOutput::SetOutputChannels(uint16_t chan)
 {
     // deregister all ports
     for (int i = this->playbackPorts.size() - 1; i >= 0; i--)
@@ -93,64 +93,61 @@ void JackOutput::SetOutputChannels(Nullable<uint16_t> chan)
         this->playbackPorts.pop_back();
     }
 
-    if (chan.hasValue)
+    this->tempBuf.clear();
+    this->tempBuf.shrink_to_fit();
+    this->tempBuf.resize(gConfig.FramesToRender * chan);
+    
+    // re-register ports
+    char portName[3 + 1];
+    for (unsigned int i = this->playbackPorts.size(); i < chan && i <= 99; i++)
     {
-        this->tempBuf.clear();
-        this->tempBuf.shrink_to_fit();
-        this->tempBuf.resize(gConfig.FramesToRender * chan.Value);
-        
-        // re-register ports
-        char portName[3 + 1];
-        for (unsigned int i = this->playbackPorts.size(); i < chan.Value && i <= 99; i++)
+        snprintf(portName, sizeof(portName), "%.2d", i);
+
+        // we provide an output port (from the view of jack), i.e. a capture port, i.e. a readable port
+        jack_port_t *out_port = jack_port_register(this->handle, portName, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+
+        if (out_port == nullptr)
         {
-            snprintf(portName, sizeof(portName), "%.2d", i);
-
-            // we provide an output port (from the view of jack), i.e. a capture port, i.e. a readable port
-            jack_port_t *out_port = jack_port_register(this->handle, portName, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
-
-            if (out_port == nullptr)
-            {
-                THROW_RUNTIME_ERROR("no more JACK ports available");
-            }
-
-            this->playbackPorts.push_back(out_port);
+            THROW_RUNTIME_ERROR("no more JACK ports available");
         }
 
-        // we have to delete the resampler in order to refresh channel count
-        if (this->srcState != nullptr)
-        {
-            this->srcState = src_delete(this->srcState);
-        }
-        int error;
-        // SRC_SINC_BEST_QUALITY is too slow, causing jack process thread to discard samples, resulting in hearable artifacts
-        // SRC_LINEAR has high frequency audible garbage
-        // SRC_ZERO_ORDER_HOLD is even worse than LINEAR
-        // SRC_SINC_MEDIUM_QUALITY might still be too slow when using jack with very low latency having a bit of CPU load
-        this->srcState = src_new(SRC_SINC_FASTEST, chan.Value, &error);
-        if (this->srcState == nullptr)
-        {
-            THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) << ")");
-        }
-
-        // channel count changed, buffer needs to be realloced
-        if (JackOutput::onJackBufSizeChanged(jack_get_buffer_size(this->handle), this) != 0)
-        {
-            // invalidate the current format
-            this->currentFormat.SetVoices(0);
-            THROW_RUNTIME_ERROR("unable to onJackBufSizeChanged()");
-        }
-
-        // start the process thread, no error if it is already started
-        if (jack_activate(this->handle))
-        {
-            THROW_RUNTIME_ERROR("cannot activate client")
-        }
-
-        this->connectPorts();
+        this->playbackPorts.push_back(out_port);
     }
 
+    // we have to delete the resampler in order to refresh channel count
+    if (this->srcState != nullptr)
+    {
+        this->srcState = src_delete(this->srcState);
+    }
+    int error;
+    // SRC_SINC_BEST_QUALITY is too slow, causing jack process thread to discard samples, resulting in hearable artifacts
+    // SRC_LINEAR has high frequency audible garbage
+    // SRC_ZERO_ORDER_HOLD is even worse than LINEAR
+    // SRC_SINC_MEDIUM_QUALITY might still be too slow when using jack with very low latency having a bit of CPU load
+    this->srcState = src_new(SRC_SINC_FASTEST, chan, &error);
+    if (this->srcState == nullptr)
+    {
+        THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) << ")");
+    }
+
+    // channel count changed, buffer needs to be realloced
+    if (JackOutput::onJackBufSizeChanged(jack_get_buffer_size(this->handle), this) != 0)
+    {
+        // invalidate the current format
+        this->currentFormat.SetVoices(0);
+        THROW_RUNTIME_ERROR("unable to onJackBufSizeChanged()");
+    }
+
+    // start the process thread, no error if it is already started
+    if (jack_activate(this->handle))
+    {
+        THROW_RUNTIME_ERROR("cannot activate client")
+    }
+
+    this->connectPorts();
+
     // call base method to make sure we allocate temporary mixdown buffer
-    this->IAudioOutput::SetOutputChannels(min<uint16_t>(chan.Value, this->playbackPorts.size()));
+    this->IAudioOutput::SetOutputChannels(min<uint16_t>(chan, this->playbackPorts.size()));
 }
 
 void JackOutput::init(SongFormat &format, bool realtime)
@@ -199,7 +196,7 @@ int JackOutput::doResampling(const float *inBuf, const size_t Frames)
     this->srcData.input_frames = Frames;
 
     this->srcData.data_out = this->interleavedProcessedBuffer.buf;
-    this->srcData.data_out += this->srcData.output_frames_gen * this->GetOutputChannels().Value;
+    this->srcData.data_out += this->srcData.output_frames_gen * this->GetOutputChannels();
 
     this->srcData.output_frames = this->jackBufSize - this->srcData.output_frames_gen;
 
@@ -239,7 +236,7 @@ int JackOutput::doResampling(const float *inBuf, const size_t Frames)
 template<typename T>
 int JackOutput::write(const T *buffer, frame_t frames)
 {
-    const uint16_t Channels = this->GetOutputChannels().Value;
+    const uint16_t Channels = this->GetOutputChannels();
 
     this->Mix<T, float>(frames, buffer, this->currentFormat, this->tempBuf.data(), Channels);
 
@@ -371,7 +368,7 @@ int JackOutput::processCallback(jack_nframes_t nframes, void *arg)
     }
 
     {
-        const unsigned int nchannels = pthis->GetOutputChannels().Value;
+        const unsigned int nchannels = pthis->GetOutputChannels();
         const unsigned int portsToFill = min<unsigned int>(nJackPorts, nchannels);
 
         jack_default_audio_sample_t *out[nJackPorts]; // temporary array that caches the retrieved buffers for jack ports
@@ -435,7 +432,7 @@ int JackOutput::onJackBufSizeChanged(jack_nframes_t nframes, void *arg)
     }
 
     delete[] pthis->interleavedProcessedBuffer.buf;
-    pthis->interleavedProcessedBuffer.buf = new (std::nothrow) jack_default_audio_sample_t[pthis->jackBufSize * pthis->GetOutputChannels().Value];
+    pthis->interleavedProcessedBuffer.buf = new (std::nothrow) jack_default_audio_sample_t[pthis->jackBufSize * pthis->GetOutputChannels()];
     pthis->interleavedProcessedBuffer.ready = false;
 
     if (pthis->interleavedProcessedBuffer.buf == nullptr)

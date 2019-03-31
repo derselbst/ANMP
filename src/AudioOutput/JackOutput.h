@@ -44,7 +44,7 @@ class JackOutput : public IAudioOutput
     void start() override;
     void stop() override;
 
-    void SetOutputChannels(Nullable<uint16_t>) override;
+    void SetOutputChannels(uint16_t) override;
 
     protected:
     vector<jack_port_t *> playbackPorts;

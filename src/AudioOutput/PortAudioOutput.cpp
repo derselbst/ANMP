@@ -39,12 +39,12 @@ void PortAudioOutput::open()
 }
 
 
-void PortAudioOutput::SetOutputChannels(Nullable<uint16_t> chan)
+void PortAudioOutput::SetOutputChannels(uint16_t chan)
 {
     this->IAudioOutput::SetOutputChannels(chan);
 
     // force reinit
-    if (this->currentFormat.IsValid() && chan.hasValue)
+    if (this->currentFormat.IsValid())
     {
         this->_init(this->currentFormat);
     }
@@ -104,7 +104,7 @@ void PortAudioOutput::_init(SongFormat &format, bool realtime)
     /* Open an audio I/O stream. */
     err = Pa_OpenDefaultStream(&this->handle,
                                0, /* no input channels */
-                               this->GetOutputChannels().Value, /* no. of output channels */
+                               this->GetOutputChannels(), /* no. of output channels */
                                paSampleFmt, /* 32 bit floating point output */
                                format.SampleRate,
                                gConfig.FramesToRender, /* frames per buffer, i.e. the number of sample frames that PortAudio will request from the callback.*/
@@ -161,7 +161,7 @@ int PortAudioOutput::write(const T *buffer, frame_t frames)
         THROW_RUNTIME_ERROR("unable to write pcm since PortAudioOutput::init() has not been called yet or init failed");
     }
 
-    const uint16_t Channels = this->GetOutputChannels().Value;
+    const uint16_t Channels = this->GetOutputChannels();
     vector<T> processedBuffer;
     processedBuffer.reserve(frames * Channels);
 

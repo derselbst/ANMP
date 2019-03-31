@@ -22,6 +22,7 @@
 
 ALSAOutput::ALSAOutput()
 {
+    this->processedBuffer.reserve(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(int32_t));
 }
 
 ALSAOutput::~ALSAOutput()
@@ -34,7 +35,7 @@ ALSAOutput::~ALSAOutput()
 //
 void ALSAOutput::open()
 {
-    const char device[] = "default";
+    static constexpr const char device[] = "default";
 
     if (this->alsa_dev == nullptr)
     {
@@ -48,12 +49,12 @@ void ALSAOutput::open()
 } /* alsa_open */
 
 
-void ALSAOutput::SetOutputChannels(Nullable<uint16_t> chan)
+void ALSAOutput::SetOutputChannels(uint16_t chan)
 {
     this->IAudioOutput::SetOutputChannels(chan);
 
     // force reinit
-    if (this->currentFormat.IsValid() && chan.hasValue)
+    if (this->currentFormat.IsValid())
     {
         this->_init(this->currentFormat);
     }
@@ -84,7 +85,8 @@ void ALSAOutput::_init(SongFormat &format, bool realtime)
     // dropping them will cause (at least in non-realtime mode) a hearable crack
 
     // UPDATE (2016-03-23): draining may take very long for some reason (>10s !!!) thus try dropping
-    this->drop();
+    // 2019-03-31: use it anyway
+    this->drain();
 
     int err;
 
@@ -142,7 +144,7 @@ void ALSAOutput::_init(SongFormat &format, bool realtime)
         THROW_RUNTIME_ERROR("cannot set sample rate (" << snd_strerror(err) << ")");
     }
 
-    if ((err = snd_pcm_hw_params_set_channels(this->alsa_dev, hw_params, this->GetOutputChannels().Value)) < 0)
+    if ((err = snd_pcm_hw_params_set_channels(this->alsa_dev, hw_params, this->GetOutputChannels())) < 0)
     {
         snd_pcm_hw_params_free(hw_params);
         THROW_RUNTIME_ERROR("cannot set channel count (" << snd_strerror(err) << ")");
@@ -225,6 +227,7 @@ void ALSAOutput::_init(SongFormat &format, bool realtime)
 void ALSAOutput::drain()
 {
     snd_pcm_drain(this->alsa_dev);
+//     snd_pcm_wait(this->alsa_dev,-1);
 }
 
 void ALSAOutput::drop()
@@ -236,6 +239,7 @@ void ALSAOutput::close()
 {
     if (this->alsa_dev != nullptr)
     {
+        this->drop();
         snd_pcm_close(this->alsa_dev);
         this->alsa_dev = nullptr;
     }
@@ -259,9 +263,11 @@ int ALSAOutput::write(const int32_t *buffer, frame_t frames)
 template<typename T>
 int ALSAOutput::write(const T *buffer, frame_t frames)
 {
-    const uint16_t Channels = this->GetOutputChannels().Value;
-    T *processedBuffer = new T[frames * Channels];
-    this->Mix<T, T>(frames, buffer, this->currentFormat, processedBuffer, Channels);
+    const uint16_t Channels = this->GetOutputChannels();
+    processedBuffer.reserve(frames * Channels * sizeof(T));
+    T* profBuf = reinterpret_cast<T*>(processedBuffer.data());
+    
+    this->Mix<T, T>(frames, buffer, this->currentFormat, profBuf, Channels);
 
     if (this->epipe_count > 0)
     {
@@ -271,7 +277,7 @@ int ALSAOutput::write(const T *buffer, frame_t frames)
     int total = 0;
     while (total < frames)
     {
-        int retval = snd_pcm_writei(this->alsa_dev, processedBuffer + total * this->currentFormat.Channels(), frames - total);
+        int retval = snd_pcm_writei(this->alsa_dev, profBuf + total * this->currentFormat.Channels(), frames - total);
 
         if (retval >= 0)
         {
@@ -307,7 +313,7 @@ int ALSAOutput::write(const T *buffer, frame_t frames)
                 break;
 
             case -EBADFD:
-                cerr << "alsa_write: Bad PCM state" << endl;
+                cerr << "alsa_write: Bad PCM state: " << snd_pcm_state(this->alsa_dev) << "\nsnd_strerror: " << snd_strerror(retval) << endl;
                 total = 0;
                 goto LEAVE_LOOP;
 
@@ -322,25 +328,30 @@ int ALSAOutput::write(const T *buffer, frame_t frames)
                 goto LEAVE_LOOP;
 
             default:
-                cerr << "alsa_write: retval = " << retval << endl;
+                cerr << "alsa_write: retval = " << retval << "\nsnd_strerror: " << snd_strerror(retval) << endl;
                 total = 0;
                 goto LEAVE_LOOP;
         } /* switch */
     } /* while */
 LEAVE_LOOP:
-    delete[] processedBuffer;
 
     return total;
 }
 
 void ALSAOutput::start()
 {
-    //     snd_pcm_reset (this->alsa_dev);
-    snd_pcm_prepare(this->alsa_dev);
-    int err = snd_pcm_start(this->alsa_dev);
+    // prepare pcm stream and reset delay to zero, but do not start it yet
+    // it will be implictly started when first written to
+    int err = snd_pcm_prepare(this->alsa_dev);
     if (err < 0)
     {
-        THROW_RUNTIME_ERROR("unable to start pcm (" << snd_strerror(err) << ")");
+        THROW_RUNTIME_ERROR("cannot snd_pcm_prepare, state: " << snd_pcm_state(this->alsa_dev) << " (" << snd_strerror(err) << ")");
+    }
+    
+    err = snd_pcm_reset(this->alsa_dev);
+    if (err < 0)
+    {
+        THROW_RUNTIME_ERROR("unable to reset pcm, state: " << snd_pcm_state(this->alsa_dev) << " (" << snd_strerror(err) << ")");
     }
 }
 
