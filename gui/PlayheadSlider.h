@@ -11,6 +11,7 @@ class PlayheadSlider : public QSlider
 
     public:
     PlayheadSlider(QWidget *parent);
+    void SlotCurrentSongChanged(const Song *s);
 
     void SilentReset();
 
@@ -20,9 +21,6 @@ class PlayheadSlider : public QSlider
     
     int getFrameFromMouseEvt(const QMouseEvent *event);
     
-    
-    protected slots:
-    void slotCurrentSongChanged(const Song *s);
     
     private:
     uint32_t currentSampleRate=0;

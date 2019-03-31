@@ -54,6 +54,8 @@ class PlaylistModel : public QAbstractTableModel
 
     template<typename T>
     void asyncAdd(const QList<T> &);
+    
+    void SlotCurrentSongChanged(const Song *s);
 
     signals:
     void SongAdded(QString file, int cur, int total);
@@ -62,7 +64,6 @@ class PlaylistModel : public QAbstractTableModel
     void UnloadCurrentSong();
 
     public slots:
-    void slotCurrentSongChanged(const Song *s);
     bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 
     private:

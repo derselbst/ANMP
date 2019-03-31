@@ -80,13 +80,15 @@ void MainWindow::slotSeek(long long pos)
     }
 }
 
-void MainWindow::slotCurrentSongChanged(const Song *s)
+void MainWindow::slotCurrentSongChanged(const Song* s)
 {
-    PlayheadSlider *playheadSlider = this->playctrl->seekBar;
-    if (s == nullptr)
+    // fetch the current song by asking the player directly
+    // rather than retrieving it as event parameter, as the song might have been already deleted by the user
+    // now, being in the main thread, the user cannot delete it
+    s = this->player->getCurrentSong();
+    if (s == nullptr || !s->Format.IsValid())
     {
         this->setWindowTitleCustom("");
-        playheadSlider->SilentReset();
         this->channelConfigModel->updateChannelConfig(nullptr);
     }
     else
@@ -101,11 +103,13 @@ void MainWindow::slotCurrentSongChanged(const Song *s)
         {
             this->setWindowTitleCustom(interpret + " - " + title);
         }
-        playheadSlider->setMaximum(s->getFrames());
-
+        
         this->enableSeekButtons(this->player->IsSeekingPossible());
         this->channelConfigModel->updateChannelConfig(&s->Format);
     }
+    
+    this->playctrl->seekBar->SlotCurrentSongChanged(s);
+    this->playlistModel->SlotCurrentSongChanged(s);
 }
 
 void MainWindow::treeViewClicked(const QModelIndex &index)

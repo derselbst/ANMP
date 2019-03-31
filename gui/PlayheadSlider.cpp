@@ -66,19 +66,21 @@ void PlayheadSlider::mouseMoveEvent(QMouseEvent *event)
 void PlayheadSlider::SilentReset()
 {
     bool oldState = this->blockSignals(true);
+    this->currentSampleRate = 0;
     this->setSliderPosition(0);
     this->setMaximum(0);
     this->blockSignals(oldState);
 }
 
-void PlayheadSlider::slotCurrentSongChanged(const Song *s)
+void PlayheadSlider::SlotCurrentSongChanged(const Song *s)
 {
     if (s == nullptr || !s->Format.IsValid())
     {
-        this->currentSampleRate = 0;
+        this->SilentReset();
     }
     else
     {
         this->currentSampleRate = s->Format.SampleRate;
+        this->setMaximum(s->getFrames());
     }
 }

@@ -207,7 +207,7 @@ bool PlaylistModel::removeRows(int row, int count, const QModelIndex &parent)
     //finish removal, notify views/models
     endRemoveRows();
 
-    this->slotCurrentSongChanged(nullptr);
+    this->SlotCurrentSongChanged(nullptr);
 
     return true;
 }
@@ -397,7 +397,7 @@ void PlaylistModel::clear()
     this->endResetModel();
 }
 
-void PlaylistModel::slotCurrentSongChanged(const Song *)
+void PlaylistModel::SlotCurrentSongChanged(const Song *)
 {
     const int oldSongId = this->oldSongId;
     const int newSongId = this->playlist->getCurrentSongId();
