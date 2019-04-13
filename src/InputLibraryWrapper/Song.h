@@ -80,7 +80,7 @@ class Song
     size_t count = 0;
 
     // a tree, that holds the loops to be played
-    /*  example: syntax aggreement: ([a,b],k) defines an instance of loop_t where:
+    /*  example: syntax agreement: Let ([a,b],k) define an instance of loop_t where:
         a: loop_t::start
         b: loop_t::stop
         k: loop_t::count
@@ -103,10 +103,10 @@ class Song
         ([3,10],5)          ([15,12000],6)      ([12001,65344],1)
                                    |                     \
                                    |                      \
-                            ([20,4000],123)           ([12005, 12010],2)
+                            ([20,4000],123)           ([12005,12010],2)
                                /         \
                               /           \
-                       ([20-22],4)     ([30,3000],23)
+                       ([20,22],4)     ([30,3000],23)
     */
     core::tree<loop_t> loopTree;
 

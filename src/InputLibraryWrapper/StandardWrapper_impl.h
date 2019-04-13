@@ -106,9 +106,21 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer(WRAPPERCLASS *context)
 
         try
         {
-            this->data = new SAMPLEFORMAT[itemsToAlloc];
-            this->preRenderBuf = new SAMPLEFORMAT[itemsToAlloc];
+            auto len = itemsToAlloc * 2;
+            SAMPLEFORMAT* tmp = new SAMPLEFORMAT[len];
+            this->data = tmp;
+            this->preRenderBuf = tmp + itemsToAlloc;
             this->count = itemsToAlloc;
+            
+            len *= sizeof(SAMPLEFORMAT);
+            if(!::PageLockMemory(tmp, len))
+            {
+                CLOG(LogLevel_t::Info, "Failed to page-lock " << len << " bytes of memory, swapping possible." << endl);
+            }
+            else
+            {
+                CLOG(LogLevel_t::Debug, "Successfully page-locked " << len << " bytes of memory." << endl);
+            }
         }
         catch (const std::bad_alloc &e)
         {
@@ -135,10 +147,19 @@ void StandardWrapper<SAMPLEFORMAT>::releaseBuffer() noexcept
     this->stopFillBuffer = true;
     WAIT(this->futureFillBuffer);
 
+    if(this->preRenderBuf != nullptr)
+    {
+        ::PageUnlockMemory(this->data, this->count * 2 * sizeof(SAMPLEFORMAT));
+        
+        // make sure we pass the pointer returned by new[] to delete[], i.e. the one pointing to the beginning of the alloced buffer
+        if(this->data > this->preRenderBuf)
+        {
+            std::swap(this->data, this->preRenderBuf);
+        }
+    }
+    
     delete[] static_cast<SAMPLEFORMAT *>(this->data);
     this->data = nullptr;
-
-    delete[] static_cast<SAMPLEFORMAT *>(this->preRenderBuf);
     this->preRenderBuf = nullptr;
 
     this->count = 0;

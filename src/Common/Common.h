@@ -46,3 +46,6 @@ size_t getFileSize(int fd);
 
 
 Nullable<string> findSoundfont(string midFile);
+
+bool PageLockMemory(void* ptr, size_t bytes);
+void PageUnlockMemory(void* ptr, size_t bytes);

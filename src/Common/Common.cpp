@@ -16,6 +16,7 @@
 
 #ifdef _POSIX_SOURCE
 #include <strings.h> // strncasecmp
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -375,4 +376,20 @@ Nullable<string> findSoundfont(string midFile)
     }
     
     return Nullable<string>(nullptr);
+}
+
+bool PageLockMemory(void* ptr, size_t bytes)
+{
+#if defined(_POSIX_SOURCE)
+    return mlock(ptr, bytes) == 0;
+#else
+    return false;
+#endif
+}
+
+void PageUnlockMemory(void* ptr, size_t bytes)
+{
+#if defined(_POSIX_SOURCE)
+    munlock(ptr, bytes);
+#endif
 }
