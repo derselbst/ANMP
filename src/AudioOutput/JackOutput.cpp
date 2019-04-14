@@ -79,7 +79,7 @@ void JackOutput::open()
     }
 }
 
-void JackOutput::SetOutputChannels(uint16_t chan)
+void JackOutput::SetOutputChannels(uint8_t chan)
 {
     // deregister all ports
     for (int i = this->playbackPorts.size() - 1; i >= 0; i--)

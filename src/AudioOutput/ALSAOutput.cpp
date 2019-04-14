@@ -49,7 +49,7 @@ void ALSAOutput::open()
 } /* alsa_open */
 
 
-void ALSAOutput::SetOutputChannels(uint16_t chan)
+void ALSAOutput::SetOutputChannels(uint8_t chan)
 {
     this->IAudioOutput::SetOutputChannels(chan);
 

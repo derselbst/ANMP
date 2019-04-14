@@ -39,7 +39,7 @@ void PortAudioOutput::open()
 }
 
 
-void PortAudioOutput::SetOutputChannels(uint16_t chan)
+void PortAudioOutput::SetOutputChannels(uint8_t chan)
 {
     this->IAudioOutput::SetOutputChannels(chan);
 

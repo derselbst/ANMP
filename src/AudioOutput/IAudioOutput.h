@@ -84,9 +84,9 @@ class IAudioOutput
     void setVolume(float vol);
 
     // gets and sets the number of mixdown channels, all non muted voices of a song get mixed to
-    uint16_t GetOutputChannels();
+    uint8_t GetOutputChannels();
     // only call this when playback is paused, i.e. no call to this->write() is pending
-    virtual void SetOutputChannels(uint16_t);
+    virtual void SetOutputChannels(uint8_t);
 
     void SetVoiceConfig(decltype(SongFormat::Voices) voices, decltype(SongFormat::VoiceChannels) &voiceChannels);
     void SetMuteMask(decltype(SongFormat::VoiceIsMuted) &mask);
@@ -128,7 +128,7 @@ class IAudioOutput
      * @param outChannels number of audio channels in @p out buffer
      */
     template<typename TIN, typename TOUT = TIN>
-    void Mix(const frame_t frames, const TIN *restrict in, const SongFormat &inputFormat, TOUT *restrict out, const uint16_t outChannels) noexcept;
+    void Mix(const frame_t frames, const TIN *restrict in, const SongFormat &inputFormat, TOUT *restrict out, const uint8_t N) noexcept;
 
     /**
      * pushes the pcm pointed to by buffer to the underlying audio driver and by that causes it to play
@@ -151,5 +151,5 @@ class IAudioOutput
 private:
     // number of audio channels all the different song's voices will be mixed to (by this->Mix())
     // if it has no value, no mixing takes place
-    uint16_t outputChannels;
+    uint8_t outputChannels;
 };

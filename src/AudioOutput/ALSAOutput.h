@@ -45,7 +45,7 @@ class ALSAOutput : public IAudioOutput
     void start() override;
     void stop() override;
 
-    void SetOutputChannels(uint16_t) override;
+    void SetOutputChannels(uint8_t) override;
 
     private:
     std::vector<unsigned char> processedBuffer;
