@@ -77,9 +77,6 @@ class JackOutput : public IAudioOutput
     jack_nframes_t jackSampleRate = 0;
     //*** End: mutex-protected vars ***//
 
-    // mixed_and_converted_to_float_but_not_resampled buffer used in JackOutput::write()
-    vector<float> tempBuf;
-
     static int processCallback(jack_nframes_t nframes, void *arg);
     static int onJackSampleRateChanged(jack_nframes_t nframes, void *arg);
     static void onJackShutdown(void *arg);

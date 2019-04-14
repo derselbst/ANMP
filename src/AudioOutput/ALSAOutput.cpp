@@ -118,12 +118,15 @@ void ALSAOutput::_init(SongFormat &format, bool realtime)
     {
         case SampleFormat_t::float32:
             err = snd_pcm_hw_params_set_format(this->alsa_dev, hw_params, SND_PCM_FORMAT_FLOAT);
+            processedBuffer.reserve(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(float));
             break;
         case SampleFormat_t::int16:
             err = snd_pcm_hw_params_set_format(this->alsa_dev, hw_params, SND_PCM_FORMAT_S16);
+            processedBuffer.reserve(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(int16_t));
             break;
         case SampleFormat_t::int32:
             err = snd_pcm_hw_params_set_format(this->alsa_dev, hw_params, SND_PCM_FORMAT_S32);
+            processedBuffer.reserve(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(int32_t));
             break;
         case SampleFormat_t::unknown:
             THROW_RUNTIME_ERROR("Sample Format not set");
@@ -263,11 +266,9 @@ int ALSAOutput::write(const int32_t *buffer, frame_t frames)
 template<typename T>
 int ALSAOutput::write(const T *buffer, frame_t frames)
 {
-    const uint16_t Channels = this->GetOutputChannels();
-    processedBuffer.reserve(frames * Channels * sizeof(T));
     T* profBuf = reinterpret_cast<T*>(processedBuffer.data());
     
-    this->Mix<T, T>(frames, buffer, this->currentFormat, profBuf, Channels);
+    this->Mix<T, T>(frames, buffer, this->currentFormat, profBuf);
 
     if (this->epipe_count > 0)
     {

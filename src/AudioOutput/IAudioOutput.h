@@ -4,6 +4,7 @@
 #include "types.h"
 
 #include <cstdint>
+#include <vector>
 
 
 using namespace std;
@@ -114,6 +115,9 @@ class IAudioOutput
 
     protected:
     SongFormat currentFormat;
+    
+    // mixed_and_converted_to_float_but_not_resampled buffer used in this->write()
+    std::vector<unsigned char> processedBuffer;
 
     // the current volume [0,1.0] to use, i.e. a factor by that the PCM gets amplified.
     float volume = 1.0f;
@@ -128,7 +132,7 @@ class IAudioOutput
      * @param outChannels number of audio channels in @p out buffer
      */
     template<typename TIN, typename TOUT = TIN>
-    void Mix(const frame_t frames, const TIN *restrict in, const SongFormat &inputFormat, TOUT *restrict out, const uint8_t N) noexcept;
+    void Mix(const frame_t frames, const TIN *restrict in, const SongFormat &inputFormat, TOUT *restrict out) noexcept;
 
     /**
      * pushes the pcm pointed to by buffer to the underlying audio driver and by that causes it to play

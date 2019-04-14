@@ -68,7 +68,7 @@ void PortAudioOutput::init(SongFormat &format, bool realtime)
     this->currentFormat = format;
 }
 
-void PortAudioOutput::_init(SongFormat &format, bool realtime)
+void PortAudioOutput::_init(SongFormat &format, bool)
 {
     if (this->paInitError != PaErrorCode::paNoError)
     {
@@ -76,17 +76,19 @@ void PortAudioOutput::_init(SongFormat &format, bool realtime)
     }
 
     PaSampleFormat paSampleFmt;
-
     switch (format.SampleFormat)
     {
         case SampleFormat_t::float32:
             paSampleFmt = paFloat32;
+            this->processedBuffer.reserve(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(float));
             break;
         case SampleFormat_t::int16:
             paSampleFmt = paInt16;
+            this->processedBuffer.reserve(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(int16_t));
             break;
         case SampleFormat_t::int32:
             paSampleFmt = paInt32;
+            this->processedBuffer.reserve(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(int32_t));
             break;
         case SampleFormat_t::unknown:
             THROW_RUNTIME_ERROR("Sample Format not set");
@@ -160,14 +162,11 @@ int PortAudioOutput::write(const T *buffer, frame_t frames)
     {
         THROW_RUNTIME_ERROR("unable to write pcm since PortAudioOutput::init() has not been called yet or init failed");
     }
+    
+    auto* procBuf = reinterpret_cast<T*>(processedBuffer.data());
+    this->Mix<T, T>(frames, buffer, this->currentFormat, procBuf);
 
-    const uint16_t Channels = this->GetOutputChannels();
-    vector<T> processedBuffer;
-    processedBuffer.reserve(frames * Channels);
-
-    this->Mix<T, T>(frames, buffer, this->currentFormat, processedBuffer.data(), Channels);
-
-    PaError err = Pa_WriteStream(this->handle, processedBuffer.data(), frames);
+    PaError err = Pa_WriteStream(this->handle, procBuf, frames);
     switch (err)
     {
         case PaErrorCode::paUnanticipatedHostError:

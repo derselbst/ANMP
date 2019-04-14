@@ -93,10 +93,6 @@ void JackOutput::SetOutputChannels(uint8_t chan)
         this->playbackPorts.pop_back();
     }
 
-    this->tempBuf.clear();
-    this->tempBuf.shrink_to_fit();
-    this->tempBuf.resize(gConfig.FramesToRender * chan);
-    
     // re-register ports
     char portName[3 + 1];
     for (unsigned int i = this->playbackPorts.size(); i < chan && i <= 99; i++)
@@ -146,11 +142,10 @@ void JackOutput::SetOutputChannels(uint8_t chan)
 
     this->connectPorts();
 
-    // call base method to make sure we allocate temporary mixdown buffer
     this->IAudioOutput::SetOutputChannels(min<uint16_t>(chan, this->playbackPorts.size()));
 }
 
-void JackOutput::init(SongFormat &format, bool realtime)
+void JackOutput::init(SongFormat &format, bool)
 {
     if (format.IsValid())
     {
@@ -165,6 +160,9 @@ void JackOutput::init(SongFormat &format, bool realtime)
             // zero out any buffer in resampler, to avoid hearable cracks, when switching from one song to another
             src_reset(this->srcState);
         }
+        
+        this->processedBuffer.clear();
+        this->processedBuffer.resize(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(float));
     }
 
     // dont forget to update channelcount, srate and sformat
@@ -236,9 +234,8 @@ int JackOutput::doResampling(const float *inBuf, const size_t Frames)
 template<typename T>
 int JackOutput::write(const T *buffer, frame_t frames)
 {
-    const uint16_t Channels = this->GetOutputChannels();
-
-    this->Mix<T, float>(frames, buffer, this->currentFormat, this->tempBuf.data(), Channels);
+    auto* procBuf = reinterpret_cast<float*>(processedBuffer.data());
+    this->Mix<T, float>(frames, buffer, this->currentFormat, procBuf);
 
     unique_lock<mutex> lck(this->mtx);
 
@@ -249,7 +246,7 @@ int JackOutput::write(const T *buffer, frame_t frames)
         // wait until jacks buffer has been consumed
         this->cv.wait(lck, [this] { return !this->interleavedProcessedBuffer.ready || !this->interleavedProcessedBuffer.isRunning; });
 
-        framesUsedNow = this->doResampling(this->tempBuf.data() + framesUsed * Channels, frames);
+        framesUsedNow = this->doResampling(procBuf + framesUsed * this->GetOutputChannels(), frames);
         frames -= framesUsedNow;
         framesUsed += framesUsedNow;
 

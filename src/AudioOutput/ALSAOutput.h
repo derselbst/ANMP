@@ -3,8 +3,6 @@
 
 #include "IAudioOutput.h"
 
-#include <vector>
-
 // just forward declare this type by ourself; it's actually
 // declared in alsa/asoundlib.h; but it's a complete overkill
 // to include ALSA in this header
@@ -48,7 +46,6 @@ class ALSAOutput : public IAudioOutput
     void SetOutputChannels(uint8_t) override;
 
     private:
-    std::vector<unsigned char> processedBuffer;
     int epipe_count = 0;
     snd_pcm_t *alsa_dev = nullptr;
 
