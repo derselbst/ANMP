@@ -39,6 +39,7 @@ void SongInspector::fillGeneral(const Song *s)
     QTableWidgetItem *key = new QTableWidgetItem("File");
     tab->setItem(0,0,key);
     QTableWidgetItem *value = new QTableWidgetItem(QString::fromStdString(s->Filename));
+    value->setToolTip(value->text());
     tab->setItem(0,1,value);
 
     key = new QTableWidgetItem("File Offset");
@@ -56,6 +57,7 @@ void SongInspector::fillGeneral(const Song *s)
         auto sec = ::framesToMs(frames, s->Format.SampleRate) / 1000.0;
         auto min = sec / 60.0;
         value = new QTableWidgetItem(QString::number(frames) + " frames == " + QString::number(sec, 'f', 2) + " s == " + QString::number(min, 'f', 2) + " min");
+        value->setToolTip(value->text());
         tab->setItem(2,1,value);
     }
 
