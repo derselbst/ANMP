@@ -520,6 +520,7 @@ void Player::playFrames(frame_t framesToPlay)
         this->playhead += framesWritten;
         // notify observers
         this->onPlayheadChanged(this->playhead);
+        this->onBufferHealthChanged(this->currentSong->getFramesRendered());
 
         // update our local copy of playhead
         memorizedPlayhead += framesWritten;

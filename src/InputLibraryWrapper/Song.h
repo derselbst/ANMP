@@ -173,6 +173,12 @@ class Song
      */
     virtual frame_t getFrames() const = 0;
 
+    /**
+     * gets the number of audio frames that have already been decoded to memory
+     * 
+     * function is thread-safe
+     */
+    virtual frame_t getFramesRendered() const noexcept = 0;
 
     /**
      * public helper method for building up the this->loopTree, by requesting looparrays via this->getLoopArray()

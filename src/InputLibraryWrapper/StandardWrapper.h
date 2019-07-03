@@ -70,7 +70,7 @@ class StandardWrapper : public Song
 
     void releaseBuffer() noexcept override;
 
-    frame_t getFramesRendered();
+    frame_t getFramesRendered() const noexcept override;
 
     /**
      * The render function that actually decodes and saves everything to @p bufferToFill.

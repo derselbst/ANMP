@@ -102,6 +102,7 @@ class Player
 
     Event<bool, Nullable<string>> onIsPlayingChanged;
     Event<frame_t> onPlayheadChanged;
+    Event<frame_t> onBufferHealthChanged;
     Event<const Song *> onCurrentSongChanged;
 
 

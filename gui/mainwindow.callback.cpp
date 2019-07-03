@@ -26,3 +26,9 @@ void MainWindow::callbackCurrentSongChanged(void *context, const Song *newSong)
     MainWindow *ctx = static_cast<MainWindow *>(context);
     QMetaObject::invokeMethod(ctx, "slotCurrentSongChanged", Qt::QueuedConnection, Q_ARG(const Song *, newSong));
 }
+
+void MainWindow::callbackBufferHealth(void *context, frame_t pos)
+{
+    MainWindow *ctx = static_cast<MainWindow *>(context);
+    QMetaObject::invokeMethod(ctx, "slotBufferHealthChanged", Qt::QueuedConnection, Q_ARG(long long, pos));
+}

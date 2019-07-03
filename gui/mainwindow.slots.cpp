@@ -47,6 +47,11 @@ void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, const QString
     }
 }
 
+void MainWindow::slotBufferHealthChanged(long long framesRendered)
+{
+    this->playctrl->seekBar->setBufferHealth(framesRendered);
+}
+
 void MainWindow::slotSeek(long long pos)
 {
     PlayheadSlider *playheadSlider = this->playctrl->seekBar;

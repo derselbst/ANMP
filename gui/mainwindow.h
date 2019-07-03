@@ -36,6 +36,7 @@ class MainWindow : public QMainWindow
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    static void callbackBufferHealth(void *, frame_t pos);
     static void callbackSeek(void *, frame_t pos);
     static void callbackCurrentSongChanged(void *, const Song *newSong);
     static void callbackIsPlayingChanged(void *context, bool isPlaying, Nullable<string> msg);
@@ -108,6 +109,7 @@ class MainWindow : public QMainWindow
 
     void slotIsPlayingChanged(bool isPlaying, bool, const QString&);
     void slotSeek(long long);
+    void slotBufferHealthChanged(long long);
     void slotCurrentSongChanged(const Song *s);
 
     void shufflePlaylist();

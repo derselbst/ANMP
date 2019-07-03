@@ -147,6 +147,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     // set callbacks for the underlying player
+    this->player->onBufferHealthChanged += make_pair(this, &MainWindow::callbackBufferHealth);
     this->player->onPlayheadChanged += make_pair(this, &MainWindow::callbackSeek);
     this->player->onCurrentSongChanged += make_pair(this, &MainWindow::callbackCurrentSongChanged);
     this->player->onIsPlayingChanged += make_pair(this, &MainWindow::callbackIsPlayingChanged);
@@ -159,6 +160,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    this->player->onBufferHealthChanged -= this;
     this->player->onPlayheadChanged -= this;
     this->player->onCurrentSongChanged -= this;
     this->player->onIsPlayingChanged -= this;

@@ -169,7 +169,7 @@ void StandardWrapper<SAMPLEFORMAT>::releaseBuffer() noexcept
 }
 
 template<typename SAMPLEFORMAT>
-frame_t StandardWrapper<SAMPLEFORMAT>::getFramesRendered()
+frame_t StandardWrapper<SAMPLEFORMAT>::getFramesRendered() const noexcept
 {
     return this->framesAlreadyRendered;
 }

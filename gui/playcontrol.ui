@@ -332,7 +332,6 @@ border-radius: 10px;
 }
 
 QSlider::add-page:horizontal {
-background: #fff;
 border: 0px solid #777;
 border-radius: 10px;
 }
