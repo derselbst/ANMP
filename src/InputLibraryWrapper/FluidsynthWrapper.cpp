@@ -126,12 +126,23 @@ void FluidsynthWrapper::setupSynth()
 
     constexpr int CBFD_FILTERFC_CC = 34;
     constexpr int CBFD_FILTERQ_CC = 33;
+    constexpr int DP_ATTACK_CC = 20;
+    constexpr int DP_HOLD_CC = 21;
+    constexpr int DP_DECAY_CC = 22;
+    constexpr int DP_SUSTAIN_CC = 23;
+    constexpr int DP_RELEASE_CC = 24;
 
     // make sure lsb mod and breath controller used by CBFD's IIR lowpass filter are inited to their default value to avoid unhearable instruments
     for (int i = 0; i < fluid_synth_count_midi_channels(this->synth); i++)
     {
         fluid_synth_cc(this->synth, i, CBFD_FILTERQ_CC, 0);
         fluid_synth_cc(this->synth, i, CBFD_FILTERFC_CC, 127);
+        
+        fluid_synth_cc(this->synth, i, DP_ATTACK_CC, 0);
+        fluid_synth_cc(this->synth, i, DP_HOLD_CC, 0);
+        fluid_synth_cc(this->synth, i, DP_DECAY_CC, 0);
+        fluid_synth_cc(this->synth, i, DP_SUSTAIN_CC, 127);
+        fluid_synth_cc(this->synth, i, DP_RELEASE_CC, 0);
     }
 
     fluid_synth_set_custom_filter(this->synth, FLUID_IIR_LOWPASS, FLUID_IIR_NO_GAIN_AMP | FLUID_IIR_Q_LINEAR | FLUID_IIR_Q_ZERO_OFF);
@@ -194,6 +205,50 @@ void FluidsynthWrapper::setupSynth()
                               11,
                               FLUID_MOD_CC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_NEGATIVE);
         fluid_synth_remove_default_mod(this->synth, my_mod);
+    }
+    
+    // Dinosaur Planet and Star Fox Adventures specific stuff
+    fluid_mod_set_source2(my_mod, 0, 0);
+    fluid_mod_set_amount(my_mod, 25000);
+    {
+        fluid_mod_set_source1(my_mod,
+                              DP_ATTACK_CC,
+                              FLUID_MOD_CC | FLUID_MOD_LINEAR | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
+        fluid_mod_set_dest(my_mod, GEN_VOLENVATTACK);
+        fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
+    }
+    
+    {
+        fluid_mod_set_source1(my_mod,
+                              DP_HOLD_CC,
+                              FLUID_MOD_CC | FLUID_MOD_LINEAR | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
+        fluid_mod_set_dest(my_mod, GEN_VOLENVHOLD);
+        fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
+    }
+    
+    {
+        fluid_mod_set_source1(my_mod,
+                              DP_DECAY_CC,
+                              FLUID_MOD_CC | FLUID_MOD_LINEAR | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
+        fluid_mod_set_dest(my_mod, GEN_VOLENVDECAY);
+        fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
+    }
+    
+    {
+        fluid_mod_set_source1(my_mod,
+                              DP_RELEASE_CC,
+                              FLUID_MOD_CC | FLUID_MOD_LINEAR | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
+        fluid_mod_set_dest(my_mod, GEN_VOLENVRELEASE);
+        fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
+    }
+    
+    {
+        fluid_mod_set_source1(my_mod,
+                              DP_SUSTAIN_CC,
+                              FLUID_MOD_CC | FLUID_MOD_CONVEX | FLUID_MOD_UNIPOLAR | FLUID_MOD_NEGATIVE);
+        fluid_mod_set_dest(my_mod, GEN_VOLENVSUSTAIN);
+        fluid_mod_set_amount(my_mod, 60/*cB*/);
+        fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
 
     delete_fluid_mod(my_mod);
@@ -532,7 +587,7 @@ void FluidsynthWrapper::ScheduleNote(const MidiNoteInfo &noteInfo, unsigned int 
         CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
     }
 
-    }
+}
 
 void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_t *e, fluid_sequencer_t * /*seq*/, void *data)
 {
