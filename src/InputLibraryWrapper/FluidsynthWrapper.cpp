@@ -577,16 +577,18 @@ void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo *loopInfo)
 // anyway, to avoid missing notes we are scheduling a callback on every noteon and off, so that this.FluidSeqNoteCallback() (resp. this.NoteOnOff()) takes care of switching voices on and off
 void FluidsynthWrapper::ScheduleNote(const MidiNoteInfo &noteInfo, unsigned int time)
 {
-    MidiNoteInfo *dup = new MidiNoteInfo(noteInfo);
-
+    MidiNoteInfo* dup = new MidiNoteInfo(noteInfo);
     fluid_event_timer(this->callbackNoteEvent, dup);
 
     int ret = fluid_sequencer_send_at(this->sequencer, this->callbackNoteEvent, time, true);
     if (ret != FLUID_OK)
     {
+        delete dup;
         CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
+        return;
     }
 
+    this->noteOnContainer.emplace_back(dup);
 }
 
 void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_t *e, fluid_sequencer_t * /*seq*/, void *data)
@@ -599,8 +601,6 @@ void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_
     }
 
     pthis->NoteOnOff(ninfo);
-
-    delete ninfo;
 }
 
 // switch voices on and off via FIFO occurrence of noteon/offs

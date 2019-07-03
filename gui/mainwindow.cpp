@@ -165,6 +165,8 @@ MainWindow::~MainWindow()
 
     delete this->ui;
 
+    delete this->playctrl;
+
     // manually delete applets before deleting player, since they hold this.player
     delete this->analyzerWindow;
 

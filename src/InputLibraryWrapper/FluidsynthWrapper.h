@@ -9,6 +9,7 @@
 // libsmf - helper lib for reading midi files
 #include <smf.h>
 #include <vector>
+#include <memory>
 
 class MidiWrapper;
 struct MidiLoopInfo;
@@ -86,6 +87,9 @@ class FluidsynthWrapper
     
     // pointer to small buffers within sampleBuffer of dry and effects audio
     std::vector<float*> dry, fx;
+
+    // temporary buffer to store all our custom NoteOn events, to make sure they get deleted, even if the NoteOn-callback is not called
+    std::vector<std::unique_ptr<MidiNoteInfo>> noteOnContainer;
 
     void setupSettings();
     void setupMixdownBuffer();
