@@ -21,6 +21,7 @@ class PlayheadSlider : public QSlider
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void paintEvent(QPaintEvent* ev) override;
+    bool event(QEvent *event) override;
     
     int getFrameFromMouseEvt(const QMouseEvent *event);
     
@@ -28,4 +29,5 @@ class PlayheadSlider : public QSlider
     private:
     uint32_t currentSampleRate=0;
     long long bufferHealth=0;
+    bool mouseIsOver=false;
 };

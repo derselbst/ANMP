@@ -66,6 +66,20 @@ void PlayheadSlider::mouseMoveEvent(QMouseEvent *event)
     QSlider::mouseMoveEvent(event);
 }
 
+bool PlayheadSlider::event(QEvent *event)
+{
+    switch(event->type()) {
+    case QEvent::HoverEnter:
+        this->mouseIsOver = true;
+        break;
+    case QEvent::HoverLeave:
+        this->mouseIsOver = false;
+    default:
+        break;
+    }
+    return QSlider::event(event);
+}
+
 void PlayheadSlider::paintEvent( QPaintEvent* )
 {
     QStylePainter p(this);
@@ -130,6 +144,10 @@ void PlayheadSlider::paintEvent( QPaintEvent* )
 
     this->initStyleOption(&option);
     option.subControls = QStyle::SC_SliderHandle;
+    if(this->mouseIsOver)
+    {
+        option.activeSubControls = QStyle::SC_SliderHandle;
+    }
     p.drawComplexControl(QStyle::CC_Slider, option);
 }
 
