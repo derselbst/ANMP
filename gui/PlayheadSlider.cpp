@@ -94,8 +94,8 @@ void PlayheadSlider::paintEvent( QPaintEvent* )
                                                 this);
 
         rangeBox = QRect(
-        QPoint(qMin( lowerRange.center().x(), upperRange.center().x() ), groove.top()),
-        QPoint(qMax( lowerRange.center().x(), upperRange.center().x() ), groove.bottom()));
+        QPoint(lowerRange.left(), groove.top()),
+        QPoint(upperRange.center().x(), groove.bottom()));
     }
     else
     {
@@ -105,7 +105,6 @@ void PlayheadSlider::paintEvent( QPaintEvent* )
     // -----------------------------
     // Render the range
     //
-    groove.adjust(0, -1, 0, 0);
     rangeBox = rangeBox.intersected(groove);
 
     QLinearGradient gradient;
