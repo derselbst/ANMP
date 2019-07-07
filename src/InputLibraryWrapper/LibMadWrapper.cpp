@@ -416,24 +416,17 @@ void LibMadWrapper::buildMetadata() noexcept
 string LibMadWrapper::id3_get_tag(struct id3_tag const *tag, char const *what)
 {
     struct id3_frame const *frame = NULL;
-    union id3_field const *field = NULL;
-    int nstrings;
-    int avail;
-    int j;
-    int tocopy;
-    int len;
-    char printable[1024];
+    int len, tocopy=0;
+    char printable[4096] = {0};
     id3_ucs4_t const *ucs4 = NULL;
-    id3_latin1_t *latin1 = NULL;
+    id3_utf8_t *utf8 = NULL;
 
-    memset(printable, '\0', 1024);
-    avail = 1024;
+    int avail = sizeof(printable);
     if (strcmp(what, ID3_FRAME_COMMENT) == 0)
     {
         /*There may be sth wrong. I did not fully understand how to use
             libid3tag for retrieving comments  */
-        j = 0;
-        frame = id3_tag_findframe(tag, ID3_FRAME_COMMENT, j++);
+        frame = id3_tag_findframe(tag, ID3_FRAME_COMMENT, 0);
         if (!frame)
         {
             return "";
@@ -443,29 +436,25 @@ string LibMadWrapper::id3_get_tag(struct id3_tag const *tag, char const *what)
         {
             return "";
         }
-        latin1 = id3_ucs4_latin1duplicate(ucs4);
-        if (!latin1 || strlen(reinterpret_cast<char *>(latin1)) == 0)
+        utf8 = id3_ucs4_utf8duplicate(ucs4);
+        if (!utf8 || strlen(reinterpret_cast<char *>(utf8)) == 0)
         {
+            free(utf8);
             return "";
         }
-        len = strlen(reinterpret_cast<char *>(latin1));
+        len = strlen(reinterpret_cast<char *>(utf8));
         if (avail > len)
         {
             tocopy = len;
+            avail -= tocopy;
+            strncat(printable, reinterpret_cast<char *>(utf8), tocopy);
         }
         else
         {
-            tocopy = 0;
+            printable[0] = '\0';
         }
-        if (!tocopy)
-        {
-            return "";
-        }
-        avail -= tocopy;
-        strncat(printable, reinterpret_cast<char *>(latin1), tocopy);
-        free(latin1);
+        free(utf8);
     }
-
     else
     {
         frame = id3_tag_findframe(tag, what, 0);
@@ -473,9 +462,10 @@ string LibMadWrapper::id3_get_tag(struct id3_tag const *tag, char const *what)
         {
             return "";
         }
-        field = &frame->fields[1];
-        nstrings = id3_field_getnstrings(field);
-        for (j = 0; j < nstrings; ++j)
+        
+        union id3_field const *field = &frame->fields[1];
+        int nstrings = id3_field_getnstrings(field);
+        for (int j = 0; j < nstrings; ++j)
         {
             ucs4 = id3_field_getstrings(field, j);
             if (!ucs4)
@@ -486,27 +476,24 @@ string LibMadWrapper::id3_get_tag(struct id3_tag const *tag, char const *what)
             {
                 ucs4 = id3_genre_name(ucs4);
             }
-            latin1 = id3_ucs4_latin1duplicate(ucs4);
-            if (!latin1)
+            utf8 = id3_ucs4_utf8duplicate(ucs4);
+            if (!utf8)
             {
                 break;
             }
-            len = strlen(reinterpret_cast<char *>(latin1));
+            len = strlen(reinterpret_cast<char *>(utf8));
             if (avail > len)
             {
                 tocopy = len;
             }
             else
             {
-                tocopy = 0;
-            }
-            if (!tocopy)
-            {
+                free(utf8);
                 break;
             }
             avail -= tocopy;
-            strncat(printable, reinterpret_cast<char *>(latin1), tocopy);
-            free(latin1);
+            strncat(printable, reinterpret_cast<char *>(utf8), tocopy);
+            free(utf8);
         }
     }
 
