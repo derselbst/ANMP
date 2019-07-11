@@ -256,11 +256,8 @@ void FluidsynthWrapper::setupSynth()
 
 void FluidsynthWrapper::deleteSynth()
 {
-    if (this->synth != nullptr)
-    {
-        delete_fluid_synth(this->synth);
-        this->synth = nullptr;
-    }
+    delete_fluid_synth(this->synth);
+    this->synth = nullptr;
 }
 
 void FluidsynthWrapper::setupSettings()
