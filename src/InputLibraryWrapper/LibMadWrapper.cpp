@@ -238,10 +238,10 @@ void LibMadWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, f
     // the outer loop, used for decoding and synthesizing MPEG frames
     while (framesToRender > 0 && !this->stopFillBuffer)
     {
-        // write back tempbuffer, i.e. frames weve buffered from previous calls to libmad (necessary due to inelegant API of libmad, i.e. cant tell how many frames to render during one call)
+        // write back tempbuffer, i.e. frames we've buffered from previous calls to libmad (required due to inelegant API of libmad, i.e. cant tell how many frames to render during one call)
+        const size_t itemsToCpy = min<size_t>(this->tempBuf.size(), framesToRender * Channels);
+        if (itemsToCpy > 0)
         {
-            const size_t itemsToCpy = min<size_t>(this->tempBuf.size(), framesToRender * Channels);
-
             memcpy(pcm, this->tempBuf.data(), itemsToCpy * sizeof(int32_t));
 
             this->tempBuf.erase(this->tempBuf.begin(), this->tempBuf.begin() + itemsToCpy);
