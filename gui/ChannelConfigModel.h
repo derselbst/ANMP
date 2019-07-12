@@ -3,7 +3,7 @@
 
 #include <QStandardItemModel>
 
-class SongFormat;
+struct SongFormat;
 
 class ChannelConfigModel : public QStandardItemModel
 {
