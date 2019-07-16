@@ -122,7 +122,7 @@ void FluidsynthWrapper::setupSynth()
     fluid_synth_set_sample_rate(this->synth, gConfig.FluidsynthSampleRate);
     this->cachedSampleRate = gConfig.FluidsynthSampleRate;
 
-    constexpr int ACTUAL_FILTERFC_THRESHOLD = 11700 /* Hz */;
+    constexpr int ACTUAL_FILTERFC_THRESHOLD = 22050/2 /* Hz */;
 
     constexpr int CBFD_FILTERFC_CC = 34;
     constexpr int CBFD_FILTERQ_CC = 33;
@@ -172,10 +172,10 @@ void FluidsynthWrapper::setupSynth()
     // add a custom default modulator Custom CC33 to CBFD's lowpass Filter Q*/
     {
         fluid_mod_set_source1(my_mod, CBFD_FILTERQ_CC,
-                              FLUID_MOD_CC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
+                              FLUID_MOD_CC | FLUID_MOD_LINEAR | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
         fluid_mod_set_source2(my_mod, FLUID_MOD_NONE, 0);
         fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERQ);
-        fluid_mod_set_amount(my_mod, 7);
+        fluid_mod_set_amount(my_mod, gConfig.FluidsynthFilterQ);
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
 

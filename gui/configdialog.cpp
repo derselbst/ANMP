@@ -62,6 +62,7 @@ void ConfigDialog::fillProperties()
     this->ui->checkChorus->setChecked(this->newConfig.FluidsynthEnableChorus);
     this->ui->checkChan9Drum->setChecked(this->newConfig.FluidsynthChannel9IsDrum);
     this->ui->comboBankSelMode->setCurrentText(QString::fromStdString(this->newConfig.FluidsynthBankSelect));
+    this->ui->spinFilterQ->setValue(this->newConfig.FluidsynthFilterQ);
 
     this->ui->checkModBass->setChecked(this->newConfig.ModPlugEnableBass);
     this->ui->checkModNoise->setChecked(this->newConfig.ModPlugEnableNoiseRed);
@@ -228,7 +229,7 @@ void ConfigDialog::buttonBoxClicked(QAbstractButton *btn)
         this->newConfig.FluidsynthEnableChorus = this->ui->checkChorus->isChecked();
         this->newConfig.FluidsynthChannel9IsDrum = this->ui->checkChan9Drum->isChecked();
         this->newConfig.FluidsynthBankSelect = this->ui->comboBankSelMode->currentText().toStdString();
-
+        this->newConfig.FluidsynthFilterQ = this->ui->spinFilterQ->value();
 
         this->newConfig.ModPlugEnableBass = this->ui->checkModBass->isChecked();
         this->newConfig.ModPlugEnableNoiseRed = this->ui->checkModNoise->isChecked();

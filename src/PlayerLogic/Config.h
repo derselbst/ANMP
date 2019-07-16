@@ -146,6 +146,8 @@ class Config
     int FluidsynthWidth = 0;
     double FluidsynthLevel = 0.8;
 
+    double FluidsynthFilterQ = 14;
+
     string FluidsynthBankSelect = "mma";
     bool FluidsynthChannel9IsDrum = false;
 
@@ -196,6 +198,9 @@ class Config
     {
         switch (version)
         {
+            case 5:
+                archive(CEREAL_NVP(this->FluidsynthFilterQ));
+                [[fallthrough]];
             case 4:
                 archive(CEREAL_NVP(this->MadPermissive));
                 archive(CEREAL_NVP(this->FluidsynthBankSelect));
@@ -258,7 +263,7 @@ class Config
     }
 };
 
-CEREAL_CLASS_VERSION(Config, 4)
+CEREAL_CLASS_VERSION(Config, 5)
 
 // global var holding the singleton Config instance
 // just a nice little shortcut, so one doesnt always have to write Config::Singleton()

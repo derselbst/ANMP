@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>591</width>
-    <height>559</height>
+    <height>605</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -43,7 +43,7 @@
               <x>0</x>
               <y>0</y>
               <width>553</width>
-              <height>454</height>
+              <height>500</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -140,7 +140,7 @@
               <x>0</x>
               <y>0</y>
               <width>553</width>
-              <height>454</height>
+              <height>500</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_9">
@@ -232,7 +232,7 @@
               <x>0</x>
               <y>0</y>
               <width>553</width>
-              <height>454</height>
+              <height>500</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -279,7 +279,7 @@
               <x>0</x>
               <y>0</y>
               <width>553</width>
-              <height>454</height>
+              <height>500</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_13">
@@ -400,7 +400,7 @@
               <x>0</x>
               <y>0</y>
               <width>553</width>
-              <height>454</height>
+              <height>500</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -618,8 +618,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>533</width>
-              <height>456</height>
+              <width>553</width>
+              <height>500</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_14">
@@ -742,6 +742,23 @@
                  </property>
                 </widget>
                </item>
+               <item row="8" column="0">
+                <widget class="QLabel" name="label_23">
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Always use the default soundfont.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string>Force Default Soundfont</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="8" column="1">
+                <widget class="QCheckBox" name="checkForceDefaultSf">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
                <item row="9" column="0">
                 <widget class="QLabel" name="label_17">
                  <property name="text">
@@ -835,20 +852,17 @@
                  </property>
                 </widget>
                </item>
-               <item row="8" column="0">
-                <widget class="QLabel" name="label_23">
-                 <property name="whatsThis">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Always use the default soundfont.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
+               <item row="15" column="0">
+                <widget class="QLabel" name="label_38">
                  <property name="text">
-                  <string>Force Default Soundfont</string>
+                  <string>CBFD IIR Filter Q</string>
                  </property>
                 </widget>
                </item>
-               <item row="8" column="1">
-                <widget class="QCheckBox" name="checkForceDefaultSf">
-                 <property name="text">
-                  <string/>
+               <item row="15" column="1">
+                <widget class="QDoubleSpinBox" name="spinFilterQ">
+                 <property name="maximum">
+                  <double>100.000000000000000</double>
                  </property>
                 </widget>
                </item>
