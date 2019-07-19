@@ -55,7 +55,6 @@ void PlayheadSlider::mouseMoveEvent(QMouseEvent *event)
         const QRect rect(pos.x(), pos.y(), 1, this->height());
         int frameOnSlider = getFrameFromMouseEvt(event);
         
-        
         QToolTip::showText(event->globalPos(),
                            QString::fromStdString(framesToTimeStr(frameOnSlider, this->currentSampleRate)),
                            this,
@@ -121,16 +120,9 @@ void PlayheadSlider::paintEvent( QPaintEvent* )
     //
     rangeBox = rangeBox.intersected(groove);
 
-    QLinearGradient gradient;
-    if (option.orientation == Qt::Horizontal)
-    {
-        gradient = QLinearGradient( rangeBox.left(), groove.center().y(),
+    Q_ASSERT(option.orientation == Qt::Horizontal);
+    QLinearGradient gradient = QLinearGradient( rangeBox.left(), groove.center().y(),
                                 rangeBox.right(), groove.center().y());
-    }
-    else
-    {
-        Q_ASSERT(false);
-    }
 
     const QColor l = QColor(255,255,180);
     const QColor u = QColor(255,244,105);
@@ -138,7 +130,7 @@ void PlayheadSlider::paintEvent( QPaintEvent* )
     gradient.setColorAt(0, l);
     gradient.setColorAt(1, u);
 
-    p.setPen(QPen(Qt::white, 0));
+    p.setPen(Qt::NoPen);
     p.setBrush(gradient);
     p.drawRect( rangeBox.intersected(groove) );
 
@@ -149,6 +141,31 @@ void PlayheadSlider::paintEvent( QPaintEvent* )
         option.activeSubControls = QStyle::SC_SliderHandle;
     }
     p.drawComplexControl(QStyle::CC_Slider, option);
+
+    constexpr qreal MarkerPixelWidth = 2;
+    QPen loopMarkerPen(QBrush(Qt::black), MarkerPixelWidth, Qt::DotLine);
+    p.setPen(loopMarkerPen);
+    for(const auto& currentLoop : this->currentLoops)
+    {
+        option.sliderPosition = currentLoop.start;
+        const QRect lowerRange = this->style()->subControlRect(QStyle::CC_Slider,
+                                                &option,
+                                                QStyle::SC_SliderHandle,
+                                                this);
+
+        // draw loop start marker
+        p.drawLine(QPoint(lowerRange.center().x(), groove.top()),
+                   QPoint(lowerRange.center().x(), groove.bottom()));
+
+        option.sliderPosition = currentLoop.stop;
+        const QRect upperRange = this->style()->subControlRect(QStyle::CC_Slider,
+                                                &option,
+                                                QStyle::SC_SliderHandle,
+                                                this);
+        // draw loop stop marker
+        p.drawLine(QPoint(upperRange.center().x(), groove.top()),
+                   QPoint(upperRange.center().x(), groove.bottom()));
+    }
 }
 
 void PlayheadSlider::SilentReset()
@@ -170,6 +187,7 @@ void PlayheadSlider::SlotCurrentSongChanged(const Song *s)
     else
     {
         this->currentSampleRate = s->Format.SampleRate;
+        this->currentLoops = s->getLoopArray();
         this->setMaximum(s->getFrames());
     }
 }
