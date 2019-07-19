@@ -29,62 +29,97 @@ void SongInspector::FillView(const Song *s)
 
 void SongInspector::fillGeneral(const Song *s)
 {
+    const std::vector<loop_t> loops = s->getLoopArray();
     QTableWidget *tab = this->ui->tableGeneral;
     tab->clearContents();
-    tab->setRowCount(8);
+    tab->setRowCount(8 + loops.size()*3);
     tab->verticalHeader()->setVisible(false);
     tab->horizontalHeader()->setVisible(false);
     tab->setColumnWidth(0, 150);
 
+    unsigned int row=0;
+
     QTableWidgetItem *key = new QTableWidgetItem("File");
-    tab->setItem(0,0,key);
+    tab->setItem(row,0,key);
     QTableWidgetItem *value = new QTableWidgetItem(QString::fromStdString(s->Filename));
     value->setToolTip(value->text());
-    tab->setItem(0,1,value);
+    tab->setItem(row,1,value);
+
+    row++;
 
     key = new QTableWidgetItem("File Offset");
-    tab->setItem(1,0,key);
+    tab->setItem(row,0,key);
     if(s->fileOffset.hasValue)
     {
         value = new QTableWidgetItem(QString::number(s->fileOffset.Value));
-        tab->setItem(1,1,value);
+        tab->setItem(row,1,value);
     }
 
+    row++;
+
     key = new QTableWidgetItem("File Length");
-    tab->setItem(2,0,key);
+    tab->setItem(row,0,key);
     {
         frame_t frames = s->getFrames();
         auto sec = ::framesToMs(frames, s->Format.SampleRate) / 1000.0;
         auto min = sec / 60.0;
         value = new QTableWidgetItem(QString::number(frames) + " frames == " + QString::number(sec, 'f', 2) + " s == " + QString::number(min, 'f', 2) + " min");
         value->setToolTip(value->text());
-        tab->setItem(2,1,value);
+        tab->setItem(row,1,value);
     }
 
+    row++;
+
     key = new QTableWidgetItem("Sample Rate");
-    tab->setItem(3,0,key);
+    tab->setItem(row,0,key);
     value = new QTableWidgetItem(QString::number(s->Format.SampleRate) + " Hz");
-    tab->setItem(3,1,value);
+    tab->setItem(row,1,value);
+
+    row++;
 
     key = new QTableWidgetItem("Sample Format");
-    tab->setItem(4,0,key);
+    tab->setItem(row,0,key);
     value = new QTableWidgetItem(SampleFormatName[static_cast<int>(s->Format.SampleFormat)]);
-    tab->setItem(4,1,value);
+    tab->setItem(row,1,value);
+
+    row++;
 
     key = new QTableWidgetItem("Audio Channels (total)");
-    tab->setItem(5,0,key);
+    tab->setItem(row,0,key);
     value = new QTableWidgetItem(QString::number(s->Format.Channels()));
-    tab->setItem(5,1,value);
+    tab->setItem(row,1,value);
+
+    row++;
 
     key = new QTableWidgetItem("Audio Voices");
-    tab->setItem(6,0,key);
+    tab->setItem(row,0,key);
     value = new QTableWidgetItem(QString::number(s->Format.Voices));
-    tab->setItem(6,1,value);
+    tab->setItem(row,1,value);
+
+    row++;
 
     key = new QTableWidgetItem("Bit Rate");
-    tab->setItem(7,0,key);
+    tab->setItem(row,0,key);
     value = new QTableWidgetItem(QString::number(s->Format.getBitrate() / 1024) + " kBit/s");
-    tab->setItem(7,1,value);
+    tab->setItem(row,1,value);
+
+    row++;
+
+    for(unsigned int i=0; i<loops.size(); i++)
+    {
+        const auto& l = loops[i];
+
+        key = new QTableWidgetItem("Loop " + QString::number(i));
+        tab->setItem(row,0,key);
+        value = new QTableWidgetItem("Count: " + ((l.count == 0) ? "inf" : QString::number(l.count)));
+        tab->setItem(row++,1,value);
+
+        value = new QTableWidgetItem("Start at frame " + QString::number(l.start));
+        tab->setItem(row++,1,value);
+
+        value = new QTableWidgetItem("Stop at frame " + QString::number(l.stop));
+        tab->setItem(row++,1,value);
+    }
 }
 
 
