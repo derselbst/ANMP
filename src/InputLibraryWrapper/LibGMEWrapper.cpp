@@ -221,7 +221,7 @@ vector<loop_t> LibGMEWrapper::getLoopArray() const noexcept
 {
     vector<loop_t> res;
 
-    if (this->wholeSong() && this->info->intro_length != -1 && this->info->loop_length != -1)
+    if (this->info != nullptr && this->wholeSong() && this->info->intro_length != -1 && this->info->loop_length != -1)
     {
         loop_t l;
         l.start = msToFrames(this->info->intro_length, this->Format.SampleRate);
