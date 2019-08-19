@@ -114,10 +114,13 @@ void SongInspector::fillGeneral(const Song *s)
         value = new QTableWidgetItem("Count: " + ((l.count == 0) ? "inf" : QString::number(l.count)));
         tab->setItem(row++,1,value);
 
-        value = new QTableWidgetItem("Start at frame " + QString::number(l.start));
+
+        auto sec = ::framesToMs(l.start, s->Format.SampleRate) / 1000.0;
+        value = new QTableWidgetItem("Start at frame " + QString::number(l.start) + " == " + QString::number(sec, 'f', 6) + " s");
         tab->setItem(row++,1,value);
 
-        value = new QTableWidgetItem("Stop at frame " + QString::number(l.stop));
+        sec = ::framesToMs(l.stop, s->Format.SampleRate) / 1000.0;
+        value = new QTableWidgetItem("Stop at frame " + QString::number(l.stop) + " == " + QString::number(sec, 'f', 6) + " s");
         tab->setItem(row++,1,value);
     }
 }
