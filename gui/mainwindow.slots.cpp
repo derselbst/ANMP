@@ -9,7 +9,6 @@
 
 #include "ChannelConfigModel.h"
 #include "PlaylistModel.h"
-#include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
