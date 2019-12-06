@@ -34,7 +34,7 @@ void usage(char *prog)
     cout << "usage: " << prog << " [OPTIONS] FILES|DIRS\n"
          << "\n"
          << "options:\n"
-         << "      -l      --unroll-loop     If there are loops in an audio file, unroll them according to the interal settings.\n"
+         << "      -l N    --unroll-loop N   If there are loops in an audio file, unroll them N times.\n"
          << "      -r      --recursive       Recursively traverse directories.\n"
          << "      -o      --output PATTERN  Specifies the naming pattern for file names.\n"
          << "      -h      --help            Print this.\n"
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     int option_index = 0;
 
     int ch;
-    while ((ch = getopt_long(argc, argv, "o:lh", long_options, &option_index)) != -1)
+    while ((ch = getopt_long(argc, argv, "o:l:h", long_options, &option_index)) != -1)
     {
         switch (ch)
         {
@@ -70,6 +70,10 @@ int main(int argc, char *argv[])
 
             case 'l':
                 gConfig.useLoopInfo = true;
+                if(optarg != nullptr)
+                {
+                    gConfig.overridingGlobalLoopCount = strtol(optarg, nullptr, 10);
+                }
                 break;
 
             case 'h':
