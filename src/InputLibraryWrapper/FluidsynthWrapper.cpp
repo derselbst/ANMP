@@ -10,7 +10,7 @@
 #include <thread> // std::this_thread::sleep_for
 #include <algorithm>
 
-FluidsynthWrapper::FluidsynthWrapper()
+FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2)
 {
     if((this->synthEvent = new_fluid_event()) == nullptr ||
        (this->callbackEvent = new_fluid_event()) == nullptr ||
@@ -19,18 +19,54 @@ FluidsynthWrapper::FluidsynthWrapper()
         this->deleteEvents();
         throw std::bad_alloc();
     }
-    
+
     fluid_event_set_source(this->synthEvent, -1);
     fluid_event_set_source(this->callbackEvent, -1);
     fluid_event_set_source(this->callbackNoteEvent, -1);
+
+    this->setupSettings();
+    this->setupMixdownBuffer();
+
+    // find a soundfont
+    Nullable<string> soundfont;
+    if (!gConfig.FluidsynthForceDefaultSoundfont)
+    {
+        soundfont = suggestedSf2;
+    }
+
+    if (!soundfont.hasValue)
+    {
+        // so, either we were forced to use default, or we didnt find any suitable sf2
+        soundfont = gConfig.FluidsynthDefaultSoundfont;
+    }
+
+    if (!::myExists(soundfont.Value))
+    {
+        THROW_RUNTIME_ERROR("Cant synthesize this MIDI, soundfont not found: \"" << soundfont.Value << "\"");
+    }
+
+    this->setupSynth();
+    this->setupSeq();
+
+    if ((this->cachedSf2Id = fluid_synth_sfload(this->synth, soundfont.Value.c_str(), true)) == -1)
+    {
+        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid or not supported: \"" << soundfont.Value << "\"");
+    }
 }
 
 FluidsynthWrapper::~FluidsynthWrapper()
 {
+    // soundfonts take up huge amount of memory, free it
+    if (this->synth != nullptr)
+    {
+        fluid_synth_sfunload(this->synth, this->cachedSf2Id, true);
+    }
+
     this->deleteSeq();
+    // the synth uses pthread_key_create, which quickly runs out of keys when not cleaning up
     this->deleteSynth();
     this->deleteEvents();
-    
+
     delete_fluid_settings(this->settings);
     this->settings = nullptr;
 }
@@ -335,54 +371,6 @@ void FluidsynthWrapper::setupMixdownBuffer()
             }
         }
     }
-}
-
-void FluidsynthWrapper::ShallowInit()
-{
-    this->setupSettings();
-    this->setupMixdownBuffer();
-}
-
-void FluidsynthWrapper::DeepInit(const Nullable<string>& suggestedSf2)
-{
-    // find a soundfont
-    Nullable<string> soundfont;
-    if (!gConfig.FluidsynthForceDefaultSoundfont)
-    {
-        soundfont = suggestedSf2;
-    }
-
-    if (!soundfont.hasValue)
-    {
-        // so, either we were forced to use default, or we didnt find any suitable sf2
-        soundfont = gConfig.FluidsynthDefaultSoundfont;
-    }
-
-    if (!::myExists(soundfont.Value))
-    {
-        THROW_RUNTIME_ERROR("Cant synthesize this MIDI, soundfont not found: \"" << soundfont.Value << "\"");
-    }
-
-    this->setupSynth();
-    this->setupSeq();
-    
-    if ((this->cachedSf2Id = fluid_synth_sfload(this->synth, soundfont.Value.c_str(), true)) == -1)
-    {
-        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid or not supported: \"" << soundfont.Value << "\"");
-    }
-}
-
-void FluidsynthWrapper::Unload()
-{
-    // soundfonts take up huge amount of memory, free it
-    if (this->synth != nullptr)
-    {
-        fluid_synth_sfunload(this->synth, this->cachedSf2Id, true);
-    }
-
-    this->deleteSeq();
-    // the synth uses pthread_key_create, which quickly runs out of keys when not cleaning up
-    this->deleteSynth();
 }
 
 void FluidsynthWrapper::ConfigureChannels(SongFormat *f)

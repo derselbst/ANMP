@@ -126,9 +126,7 @@ void MidiWrapper::open()
         this->initAttr();
     }
 
-    this->synth = new FluidsynthWrapper();
-    this->synth->ShallowInit();
-    this->synth->DeepInit(::findSoundfont(this->Filename));
+    this->synth = new FluidsynthWrapper(::findSoundfont(this->Filename));
     this->synth->ConfigureChannels(&this->Format);
 
     smf_rewind(this->smf);
@@ -287,7 +285,6 @@ void MidiWrapper::close() noexcept
 {
     if (this->synth != nullptr)
     {
-        this->synth->Unload();
         delete this->synth;
         this->synth = nullptr;
     }

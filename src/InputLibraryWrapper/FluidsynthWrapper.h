@@ -23,17 +23,14 @@ struct SongFormat;
 class FluidsynthWrapper
 {
     public:
-    FluidsynthWrapper();
+    FluidsynthWrapper(const Nullable<string>& suggestedSf2);
     ~FluidsynthWrapper();
 
     // forbid copying
     FluidsynthWrapper(FluidsynthWrapper const &) = delete;
     FluidsynthWrapper &operator=(FluidsynthWrapper const &) = delete;
 
-    void ShallowInit();
-    void DeepInit(const Nullable<string>&);
     void ConfigureChannels(SongFormat *f);
-    void Unload();
 
     // returns the samplerate that will be synthesized at
     unsigned int GetSampleRate();
