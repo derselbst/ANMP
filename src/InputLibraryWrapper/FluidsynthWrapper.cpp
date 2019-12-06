@@ -118,10 +118,6 @@ void FluidsynthWrapper::setupSynth()
     // set highest resampler quality on all channels
     fluid_synth_set_interp_method(this->synth, -1, FLUID_INTERP_HIGHEST);
 
-    // then update samplerate
-    fluid_synth_set_sample_rate(this->synth, gConfig.FluidsynthSampleRate);
-    this->cachedSampleRate = gConfig.FluidsynthSampleRate;
-
     constexpr int ACTUAL_FILTERFC_THRESHOLD = 22050/2 /* Hz */;
 
     constexpr int CBFD_FILTERFC_CC = 34;
@@ -297,6 +293,9 @@ void FluidsynthWrapper::setupSettings()
     fluid_settings_setnum(this->settings, "synth.reverb.damp", gConfig.FluidsynthDamping);
     fluid_settings_setnum(this->settings, "synth.reverb.width", gConfig.FluidsynthWidth);
     fluid_settings_setnum(this->settings, "synth.reverb.level", gConfig.FluidsynthLevel);
+
+    this->cachedSampleRate = gConfig.FluidsynthSampleRate;
+    fluid_settings_setnum(this->settings, "synth.sample-rate", this->cachedSampleRate);
 }
 
 void FluidsynthWrapper::setupMixdownBuffer()
@@ -341,7 +340,6 @@ void FluidsynthWrapper::setupMixdownBuffer()
 void FluidsynthWrapper::ShallowInit()
 {
     this->setupSettings();
-    this->cachedSampleRate = gConfig.FluidsynthSampleRate;
     this->setupMixdownBuffer();
 }
 
