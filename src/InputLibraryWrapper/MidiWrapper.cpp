@@ -12,11 +12,12 @@
 #include <cstring>
 #include <thread> // std::this_thread::sleep_for
 #include <utility>
+#include <fstream>
 
 #define IsControlChange(e) ((e->midi_buffer[0] & 0xF0) == 0xB0)
-#define IsLoopStart(e) IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopStart)
-#define IsLoopStop(e) IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopStop)
-#define IsLoopCount(e) IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopCount)
+#define IsLoopStart(e) (IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopStart))
+#define IsLoopStop(e) (IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopStop))
+#define IsLoopCount(e) (IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopCount))
 
 
 /** class MidiWrapper
@@ -54,41 +55,40 @@ MidiWrapper::MidiWrapper(string filename, Nullable<size_t> fileOffset, Nullable<
 void MidiWrapper::initAttr()
 {
     this->Format.SampleFormat = SampleFormat_t::float32;
+    this->lastOverridingLoopCount = gConfig.overridingGlobalLoopCount;
+    this->initialize();
 }
 
-MidiWrapper::~MidiWrapper()
+// calling libsmf, parsing through all events is expensive
+// the idea is to outsource those long-running parts and only do them when really necessary, i.e. when creating this object and whenever the user changes gConfig.overridingGlobalLoopCount
+void MidiWrapper::initialize()
 {
-    this->releaseBuffer();
-    this->close();
-}
+    std::ifstream file(this->Filename, std::ios::binary | std::ios::ate);
+    std::streamsize size = file.tellg();
+    file.seekg(0, std::ios::beg);
 
-
-void MidiWrapper::open()
-{
-    if (this->smf != nullptr)
+    std::vector<char> buffer(size);
+    if (!file.read(buffer.data(), size))
     {
-        return;
+        THROW_RUNTIME_ERROR("Unable to load midi " << this->Filename);
     }
 
-    this->smf = smf_load(this->Filename.c_str());
+    if (this->smf != nullptr)
+    {
+        smf_delete(this->smf);
+    }
+    this->smf = smf_load_from_memory(buffer.data(), size);
     if (this->smf == nullptr)
     {
         THROW_RUNTIME_ERROR("Something is wrong with that midi, loading failed");
     }
 
-    this->synth = new FluidsynthWrapper();
-    this->synth->ShallowInit();
-    this->synth->DeepInit(::findSoundfont(this->Filename));
-    this->synth->ConfigureChannels(&this->Format);
-
-    unsigned int srate = this->synth->GetSampleRate();
-    if (this->Format.SampleRate != srate)
+    double playtime = smf_get_length_seconds(this->smf);
+    if (playtime <= 0.0)
     {
-        // the sample rate may have changed, if requested by user
-        this->Format.SampleRate = srate;
-        // so we have to build up the loop tree again
-        this->buildLoopTree();
+        THROW_RUNTIME_ERROR("How can playtime be negative?!?");
     }
+    this->fileLen = static_cast<size_t>(playtime * 1000);
 
     this->trackLoops.clear();
     this->trackLoops.resize(this->smf->number_of_tracks);
@@ -98,29 +98,69 @@ void MidiWrapper::open()
         this->trackLoops[i].resize(NMidiChannels);
     }
 
-    // if this is the first call, add the midi events to the sequencer
     this->parseEvents();
-    this->buildLoopTree();
 
+    const auto* max = this->getLongestMidiTrackLoop();
+    if(gConfig.useLoopInfo && max != nullptr)
     {
-        double playtime = smf_get_length_seconds(this->smf);
-        if (playtime <= 0.0)
-        {
-            THROW_RUNTIME_ERROR("How can playtime be negative?!?");
-        }
-        this->fileLen = static_cast<size_t>(playtime * 1000);
-        const auto* max = this->getLongestMidiTrackLoop();
-        if(gConfig.useLoopInfo && max != nullptr)
-        {
-            this->fileLen.Value += (max->stop.Value - max->start.Value)*1000 * std::max(0, gConfig.overridingGlobalLoopCount-1);
-        }
+        this->fileLen.Value += (max->stop.Value - max->start.Value)*1000 * std::max(0, this->lastOverridingLoopCount-1);
     }
+}
+
+MidiWrapper::~MidiWrapper()
+{
+    this->releaseBuffer();
+    this->close();
+
+    if (this->smf != nullptr)
+    {
+        smf_delete(this->smf);
+        this->smf = nullptr;
+    }
+}
+
+void MidiWrapper::open()
+{
+    if(gConfig.overridingGlobalLoopCount != this->lastOverridingLoopCount)
+    {
+        this->initAttr();
+    }
+
+    this->synth = new FluidsynthWrapper();
+    this->synth->ShallowInit();
+    this->synth->DeepInit(::findSoundfont(this->Filename));
+    this->synth->ConfigureChannels(&this->Format);
+
+    smf_rewind(this->smf);
+    smf_event_t *event;
+    while ((event = smf_get_next_event(this->smf)) != nullptr)
+    {
+        if (!smf_event_is_valid(event)
+            || smf_event_is_metadata(event)
+            || smf_event_is_sysex(event)
+            || IsLoopCount(event)
+            || IsLoopStart(event)
+            || IsLoopStop(event)
+            || static_cast<unsigned int>((event->time_seconds * 1000) >= this->fileLen.Value))
+        {
+            continue;
+        }
+
+        this->synth->AddEvent(event);
+    } // end of while
+
+    // finally send note offs on all channels
+    // we have to do this, because some wind might be blowing (DK64)
+    this->synth->FinishSong(this->fileLen.Value);
+
+    this->Format.SampleRate = this->synth->GetSampleRate();
+    this->buildLoopTree();
 }
 
 void MidiWrapper::parseEvents()
 {
     int lastestLoopCount[NMidiChannels] = {};
-    const int endOfSong = this->fileLen.Value;
+    const double endOfSong = this->fileLen.Value * std::max(1, this->lastOverridingLoopCount) / 1000;
 
     smf_event_t *event;
     while ((event = smf_get_next_event(this->smf)) != nullptr)
@@ -220,7 +260,7 @@ void MidiWrapper::parseEvents()
                                 const double loopDurSec = (info.stop.Value - info.start.Value);
                                 const double loopDurTick = (info.stop_tick.Value - info.start_tick.Value);
 
-                                for(int i=1; (isInfinite || i < info.count) && ((evtTime + loopDurSec * i)*1000 < endOfSong); i++)
+                                for(int i=1; (isInfinite || i < info.count) && ((evtTime + loopDurSec * i) < endOfSong); i++)
                                 {
                                     smf_event_t* newEvt = smf_event_new_from_pointer(evt_of_loop->midi_buffer, evt_of_loop->midi_buffer_length);
 
@@ -239,16 +279,7 @@ void MidiWrapper::parseEvents()
                 }
             }
         }
-
-        this->synth->AddEvent(event);
-
-    } // end of while
-
-    smf_rewind(this->smf);
-
-    // finally send note offs on all channels
-    // we have to do this, because some wind might be blowing (DK64)
-    this->synth->FinishSong(endOfSong);
+    }
 }
 
 
@@ -259,12 +290,6 @@ void MidiWrapper::close() noexcept
         this->synth->Unload();
         delete this->synth;
         this->synth = nullptr;
-    }
-
-    if (this->smf != nullptr)
-    {
-        smf_delete(this->smf);
-        this->smf = nullptr;
     }
 }
 
@@ -327,9 +352,9 @@ vector<loop_t> MidiWrapper::getLoopArray() const noexcept
     //
     // if the loop info is used but the song is not rendered in a single buffer AND the user has requested infinite playback, also unroll everything "forever"
     if(gConfig.useLoopInfo &&
-        (gConfig.overridingGlobalLoopCount >= 1
+        (this->lastOverridingLoopCount >= 1
         ||
-        (gConfig.overridingGlobalLoopCount <= 0
+        (this->lastOverridingLoopCount <= 0
         && !gConfig.RenderWholeSong)))
     {
         return loopArr;

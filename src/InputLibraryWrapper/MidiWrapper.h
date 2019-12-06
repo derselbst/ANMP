@@ -88,6 +88,7 @@ class MidiWrapper : public StandardWrapper<float>
     private:
     smf_t *smf = nullptr;
     FluidsynthWrapper *synth = nullptr;
+    int lastOverridingLoopCount;
 
     // first dimension: no. of the midi track
     // second dim: midi channel
@@ -95,6 +96,7 @@ class MidiWrapper : public StandardWrapper<float>
     vector<vector<vector<MidiLoopInfo>>> trackLoops;
 
     void initAttr();
+    void initialize();
     void parseEvents();
     const MidiLoopInfo* getLongestMidiTrackLoop() const;
 };
