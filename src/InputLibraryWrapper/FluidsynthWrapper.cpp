@@ -689,11 +689,8 @@ void FluidsynthWrapper::NoteOnOff(MidiNoteInfo *nInfo)
 
 void FluidsynthWrapper::FinishSong(int millisec)
 {
-    for (int i = 0; i < NMidiChannels; i++)
-    {
-        fluid_event_all_notes_off(this->synthEvent, i);
-        fluid_sequencer_send_at(this->sequencer, this->synthEvent, fluid_sequencer_get_tick(this->sequencer) + millisec, true);
-    }
+    fluid_event_all_notes_off(this->synthEvent, -1);
+    fluid_sequencer_send_at(this->sequencer, this->synthEvent, fluid_sequencer_get_tick(this->sequencer) + millisec, true);
 }
 
 void FluidsynthWrapper::Render(float *bufferToFill, frame_t framesToRender)
