@@ -76,14 +76,17 @@ void MidiWrapper::open()
         THROW_RUNTIME_ERROR("Something is wrong with that midi, loading failed");
     }
 
-    //     if(!this->fileLen.hasValue)
     {
         double playtime = smf_get_length_seconds(this->smf);
-        if (playtime < 0.0)
+        if (playtime <= 0.0)
         {
             THROW_RUNTIME_ERROR("How can playtime be negative?!?");
         }
         this->fileLen = static_cast<size_t>(playtime * 1000);
+        if(gConfig.useLoopInfo)
+        {
+            this->fileLen.Value *= std::max(1, gConfig.overridingGlobalLoopCount);
+        }
     }
 
     this->trackLoops.clear();
@@ -94,10 +97,8 @@ void MidiWrapper::open()
         this->trackLoops[i].resize(NMidiChannels);
     }
 
-
     this->synth = new FluidsynthWrapper();
     this->synth->ShallowInit();
-
     this->synth->ConfigureChannels(&this->Format);
 
     unsigned int srate = this->synth->GetSampleRate();
@@ -168,7 +169,7 @@ void MidiWrapper::parseEvents()
             unsigned int loopId = event->midi_buffer[2];
             if (loops.size() <= loopId)
             {
-                CLOG(LogLevel_t::Error, "Received loop end, but there was no corresponding loop start");
+                CLOG(LogLevel_t::Warning, "Received loop end, but there was no corresponding loop start");
 
                 // ...well, cant do anything here
                 continue;
@@ -212,11 +213,11 @@ void MidiWrapper::parseEvents()
 
                                 const double loopDurSec = (info.stop.Value - info.start.Value);
                                 const double loopDurTick = (info.stop_tick.Value - info.start_tick.Value);
-                                
+
                                 for(int i=1; (isInfinite || i < info.count) && ((evtTime + loopDurSec * i)*1000 < endOfSong); i++)
                                 {
                                     smf_event_t* newEvt = smf_event_new_from_pointer(evt_of_loop->midi_buffer, evt_of_loop->midi_buffer_length);
-                                    
+
                                     int pulses = evt_of_loop->time_pulses + loopDurTick * i;
                                     smf_track_add_event_pulses(evt_of_loop->track, newEvt, pulses);
                                 }
@@ -289,6 +290,20 @@ frame_t MidiWrapper::getFrames() const
 
 vector<loop_t> MidiWrapper::getLoopArray() const noexcept
 {
+    vector<loop_t> loopArr;
+
+    // if the loop should be unrolled and loop info is respected, do not attemtp to search for a potential master loop and simply unroll all midi track loops
+    //
+    // if the loop info is used but the song is not rendered in a single buffer AND the user has requested infinite playback, also unroll everything "forever"
+    if(gConfig.useLoopInfo &&
+        (gConfig.overridingGlobalLoopCount >= 1
+        ||
+        (gConfig.overridingGlobalLoopCount <= 0
+        && !gConfig.RenderWholeSong)))
+    {
+        return loopArr;
+    }
+
     // so, here we are, having a bunch of individually looped midi tracks (maybe)
     // somehow trying to put those loops together so that we find a valid master loop within the generated PCM
 
@@ -322,8 +337,6 @@ vector<loop_t> MidiWrapper::getLoopArray() const noexcept
             }
         }
     }
-
-    vector<loop_t> loopArr;
 
     if (max != nullptr)
     {
