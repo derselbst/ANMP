@@ -96,4 +96,5 @@ class MidiWrapper : public StandardWrapper<float>
 
     void initAttr();
     void parseEvents();
+    const MidiLoopInfo* getLongestMidiTrackLoop() const;
 };

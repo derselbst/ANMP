@@ -71,22 +71,23 @@ void MidiWrapper::open()
     }
 
     this->smf = smf_load(this->Filename.c_str());
-    if (this->smf == NULL)
+    if (this->smf == nullptr)
     {
         THROW_RUNTIME_ERROR("Something is wrong with that midi, loading failed");
     }
 
+    this->synth = new FluidsynthWrapper();
+    this->synth->ShallowInit();
+    this->synth->DeepInit(::findSoundfont(this->Filename));
+    this->synth->ConfigureChannels(&this->Format);
+
+    unsigned int srate = this->synth->GetSampleRate();
+    if (this->Format.SampleRate != srate)
     {
-        double playtime = smf_get_length_seconds(this->smf);
-        if (playtime <= 0.0)
-        {
-            THROW_RUNTIME_ERROR("How can playtime be negative?!?");
-        }
-        this->fileLen = static_cast<size_t>(playtime * 1000);
-        if(gConfig.useLoopInfo)
-        {
-            this->fileLen.Value *= std::max(1, gConfig.overridingGlobalLoopCount);
-        }
+        // the sample rate may have changed, if requested by user
+        this->Format.SampleRate = srate;
+        // so we have to build up the loop tree again
+        this->buildLoopTree();
     }
 
     this->trackLoops.clear();
@@ -97,17 +98,22 @@ void MidiWrapper::open()
         this->trackLoops[i].resize(NMidiChannels);
     }
 
-    this->synth = new FluidsynthWrapper();
-    this->synth->ShallowInit();
-    this->synth->ConfigureChannels(&this->Format);
+    // if this is the first call, add the midi events to the sequencer
+    this->parseEvents();
+    this->buildLoopTree();
 
-    unsigned int srate = this->synth->GetSampleRate();
-    if (this->Format.SampleRate != srate)
     {
-        // the sample rate may have changed, if requested by user
-        this->Format.SampleRate = srate;
-        // so we have to build up the loop tree again
-        this->buildLoopTree();
+        double playtime = smf_get_length_seconds(this->smf);
+        if (playtime <= 0.0)
+        {
+            THROW_RUNTIME_ERROR("How can playtime be negative?!?");
+        }
+        this->fileLen = static_cast<size_t>(playtime * 1000);
+        const auto* max = this->getLongestMidiTrackLoop();
+        if(gConfig.useLoopInfo && max != nullptr)
+        {
+            this->fileLen.Value += (max->stop.Value - max->start.Value)*1000 * std::max(0, gConfig.overridingGlobalLoopCount-1);
+        }
     }
 }
 
@@ -264,14 +270,6 @@ void MidiWrapper::close() noexcept
 
 void MidiWrapper::fillBuffer()
 {
-    if (this->data == nullptr)
-    {
-        this->synth->DeepInit(::findSoundfont(this->Filename));
-        // if this is the first call, add the midi events to the sequencer
-        this->parseEvents();
-        this->buildLoopTree();
-    }
-
     StandardWrapper::fillBuffer(this);
 }
 
@@ -287,28 +285,9 @@ frame_t MidiWrapper::getFrames() const
     return msToFrames(len, this->Format.SampleRate);
 }
 
-
-vector<loop_t> MidiWrapper::getLoopArray() const noexcept
+const MidiLoopInfo* MidiWrapper::getLongestMidiTrackLoop() const
 {
-    vector<loop_t> loopArr;
-
-    // if the loop should be unrolled and loop info is respected, do not attemtp to search for a potential master loop and simply unroll all midi track loops
-    //
-    // if the loop info is used but the song is not rendered in a single buffer AND the user has requested infinite playback, also unroll everything "forever"
-    if(gConfig.useLoopInfo &&
-        (gConfig.overridingGlobalLoopCount >= 1
-        ||
-        (gConfig.overridingGlobalLoopCount <= 0
-        && !gConfig.RenderWholeSong)))
-    {
-        return loopArr;
-    }
-
-    // so, here we are, having a bunch of individually looped midi tracks (maybe)
-    // somehow trying to put those loops together so that we find a valid master loop within the generated PCM
-
     const MidiLoopInfo *max = nullptr;
-
     for (unsigned int t = 0; t < this->trackLoops.size(); t++)
     {
         for (unsigned int c = 0; c < this->trackLoops[t].size(); c++)
@@ -337,7 +316,29 @@ vector<loop_t> MidiWrapper::getLoopArray() const noexcept
             }
         }
     }
+    return max;
+}
 
+vector<loop_t> MidiWrapper::getLoopArray() const noexcept
+{
+    vector<loop_t> loopArr;
+
+    // if the loop should be unrolled and loop info is respected, do not attemtp to search for a potential master loop and simply unroll all midi track loops
+    //
+    // if the loop info is used but the song is not rendered in a single buffer AND the user has requested infinite playback, also unroll everything "forever"
+    if(gConfig.useLoopInfo &&
+        (gConfig.overridingGlobalLoopCount >= 1
+        ||
+        (gConfig.overridingGlobalLoopCount <= 0
+        && !gConfig.RenderWholeSong)))
+    {
+        return loopArr;
+    }
+
+    // so, here we are, having a bunch of individually looped midi tracks (maybe)
+    // somehow trying to put those loops together so that we find a valid master loop within the generated PCM
+
+    const MidiLoopInfo *max = this->getLongestMidiTrackLoop();
     if (max != nullptr)
     {
         loop_t l;
