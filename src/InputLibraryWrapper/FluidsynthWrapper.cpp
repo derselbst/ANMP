@@ -480,23 +480,15 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
             return;
 
         case 0xA0:
-            CLOG(LogLevel_t::Debug, "Aftertouch, channel " << chan << ", note " << static_cast<int>(event->midi_buffer[1]) << ", pressure " << static_cast<int>(event->midi_buffer[2]));
-            CLOG(LogLevel_t::Error, "Fluidsynth does not support key specific pressure (aftertouch); discarding event");
-            return;
+            fluid_event_key_pressure(this->synthEvent, chan, event->midi_buffer[1], event->midi_buffer[2]);            CLOG(LogLevel_t::Debug, "Aftertouch, channel " << chan << ", note " << static_cast<int>(event->midi_buffer[1]) << ", pressure " << static_cast<int>(event->midi_buffer[2]));
             break;
 
         case 0xB0: // ctrl change
-        {
-            //         if(IsLoopStart(event) || IsLoopStop(event))
-            //         {
-            //             // loops are handled within MidiWrapper, we dont even receive them here
-            //         }
             // just a usual control change
             fluid_event_control_change(this->synthEvent, chan, event->midi_buffer[1], event->midi_buffer[2]);
 
             CLOG(LogLevel_t::Debug, "Controller, channel " << chan << ", controller " << static_cast<int>(event->midi_buffer[1]) << ", value " << static_cast<int>(event->midi_buffer[2]));
-        }
-        break;
+            break;
 
         case 0xC0:
             fluid_event_program_change(this->synthEvent, chan, event->midi_buffer[1]);
