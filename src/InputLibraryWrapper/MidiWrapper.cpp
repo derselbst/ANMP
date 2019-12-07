@@ -127,7 +127,6 @@ void MidiWrapper::open()
     }
 
     this->synth = new FluidsynthWrapper(::findSoundfont(this->Filename));
-    this->synth->ConfigureChannels(&this->Format);
 
     smf_rewind(this->smf);
     smf_event_t *event;
@@ -150,6 +149,8 @@ void MidiWrapper::open()
     // finally send note offs on all channels
     // we have to do this, because some wind might be blowing (DK64)
     this->synth->FinishSong(this->fileLen.Value);
+
+    this->synth->ConfigureChannels(&this->Format);
 
     this->Format.SampleRate = this->synth->GetSampleRate();
     this->buildLoopTree();
@@ -304,7 +305,7 @@ frame_t MidiWrapper::getFrames() const
     //         len += (gConfig.FluidsynthRoomSize*10.0 * gConfig.FluidsynthLevel * 1000) / 2;
     //     }
 
-    return msToFrames(len, this->Format.SampleRate);
+    return (this->Format.Voices == 0) ? 0 : msToFrames(len, this->Format.SampleRate);
 }
 
 const MidiLoopInfo* MidiWrapper::getLongestMidiTrackLoop() const

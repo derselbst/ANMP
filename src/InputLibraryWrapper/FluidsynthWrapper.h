@@ -35,6 +35,7 @@ class FluidsynthWrapper
     // returns the samplerate that will be synthesized at
     unsigned int GetSampleRate();
 
+    int GetActiveMidiChannels();
     int GetAudioVoices();
     int GetEffectVoices();
     int GetEffectCount();
@@ -87,6 +88,8 @@ class FluidsynthWrapper
 
     // temporary buffer to store all our custom NoteOn events, to make sure they get deleted, even if the NoteOn-callback is not called
     std::vector<std::unique_ptr<MidiNoteInfo>> noteOnContainer;
+
+    std::vector<bool> midiChannelHasNoteOn;
 
     void setupSettings();
     void setupMixdownBuffer();

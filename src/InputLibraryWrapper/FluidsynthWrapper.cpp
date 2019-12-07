@@ -10,7 +10,7 @@
 #include <thread> // std::this_thread::sleep_for
 #include <algorithm>
 
-FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2)
+FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2) : midiChannelHasNoteOn(NMidiChannels)
 {
     if((this->synthEvent = new_fluid_event()) == nullptr ||
        (this->callbackEvent = new_fluid_event()) == nullptr ||
@@ -25,7 +25,6 @@ FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2)
     fluid_event_set_source(this->callbackNoteEvent, -1);
 
     this->setupSettings();
-    this->setupMixdownBuffer();
 
     // find a soundfont
     Nullable<string> soundfont;
@@ -355,7 +354,8 @@ void FluidsynthWrapper::setupMixdownBuffer()
     // setup buffers to mix dry stereo audio to
     for(int i=0; i<channels; i++)
     {
-        this->dry[i] = &this->sampleBuffer.data()[i * gConfig.FramesToRender];
+        // if the corresponding MIDI channel has sound, assign a pointer to sample buffer, otherwise assign null so that this audio channel is not rendered
+        this->dry[i] = (audVoices==1 || this->midiChannelHasNoteOn[i/ChanPerV]) ? &this->sampleBuffer.data()[i * gConfig.FramesToRender] : nullptr;
     }
     
     for(int i=0; i<fxVoices; i++)
@@ -375,43 +375,50 @@ void FluidsynthWrapper::setupMixdownBuffer()
 
 void FluidsynthWrapper::ConfigureChannels(SongFormat *f)
 {
-    int nAudVoices = this->GetAudioVoices();
-    int nVoices = nAudVoices;
-    f->SetVoices(nVoices);
-    for (int i = 0; i < nVoices; i++)
+    this->setupMixdownBuffer();
+
+    int activeMidiChannels = this->GetActiveMidiChannels();
+    int nAudVoices = std::min(this->GetAudioVoices(), activeMidiChannels);
+    f->SetVoices(nAudVoices);
+
+    if(nAudVoices <= 0)
     {
-        f->VoiceChannels[i] = FluidsynthWrapper::GetChannelsPerVoice();
+        return;
     }
 
-    if (nAudVoices == 1)
+    unsigned int j = 0;
+    for (int i = 0; i < nAudVoices; i++)
+    {
+        f->VoiceChannels[i] = FluidsynthWrapper::GetChannelsPerVoice();
+
+        for (; j < this->midiChannelHasNoteOn.size(); j++)
+        {
+            if(this->midiChannelHasNoteOn[j])
+            {
+                f->VoiceName[i] = "Midi Channel " + to_string(j);
+                j++;
+                break;
+            }
+        }
+    }
+
+    if (!gConfig.FluidsynthMultiChannel)
     {
         f->VoiceName[0] = "Everything";
     }
-    else
+}
+
+int FluidsynthWrapper::GetActiveMidiChannels()
+{
+    int activeMidiChannels = 0;
+    for (unsigned int i = 0; i < this->midiChannelHasNoteOn.size(); i++)
     {
-        for (int i = 0; i < nAudVoices; i++)
+        if(this->midiChannelHasNoteOn[i])
         {
-            f->VoiceName[i] = "Midi Channel " + to_string(i);
+            activeMidiChannels++;
         }
     }
-    
-//     for (int i = nAudVoices; i < nVoices; i++)
-//     {
-//         int fxid = i - nAudVoices;
-//         f->VoiceName[i] = "Fx Channel " + to_string(fxid);
-//         if (fxid == 0)
-//         {
-//             f->VoiceName[i] += " (reverb)";
-//         }
-//         else if (fxid == 1)
-//         {
-//             f->VoiceName[i] += " (chorus)";
-//         }
-//         else
-//         {
-//             f->VoiceName[i] += " (unknown fx)";
-//         }
-//     }
+    return activeMidiChannels;
 }
 
 int FluidsynthWrapper::GetAudioVoices()
@@ -457,7 +464,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
     uint16_t chan = event->midi_buffer[0] & 0x0F;
     switch (event->midi_buffer[0] & 0xF0)
     {
-        case 0x80: // notoff
+        case 0x80: // noteoff
             n.chan = chan;
             n.key = event->midi_buffer[1];
             n.vel = 0;
@@ -465,6 +472,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
             return;
 
         case 0x90:
+            this->midiChannelHasNoteOn[chan] = true;
             n.chan = chan;
             n.key = event->midi_buffer[1];
             n.vel = event->midi_buffer[2];
@@ -688,7 +696,7 @@ void FluidsynthWrapper::Render(float *bufferToFill, frame_t framesToRender)
     // lookup number of audio and effect (stereo-)channels of the synth
     // see „synth.audio-channels“ and „synth.effects-channels“ settings respectively
     int audVoices = this->GetAudioVoices();
-    int channels = audVoices * ChanPerV;
+    int channels = std::min(audVoices, this->GetActiveMidiChannels()) * ChanPerV;
     
     float **dry = this->dry.data(), **fx = this->fx.data();
     
@@ -699,13 +707,17 @@ void FluidsynthWrapper::Render(float *bufferToFill, frame_t framesToRender)
     if(err == FLUID_FAILED)
         THROW_RUNTIME_ERROR("fluid_synth_process() failed!");
 
-    for (int c = 0; c < audVoices; c++)
+    for (int in = 0, out = 0; in < audVoices; in++)
     {
-        for (int frame = 0; frame < framesToRender; frame++)
+        if(audVoices == 1 || this->midiChannelHasNoteOn[in])
         {
-            // frame by frame write planar audio to interleaved buffer
-            bufferToFill[frame * channels + (ChanPerV * c + 0)] = dry[ChanPerV * c + 0][frame];
-            bufferToFill[frame * channels + (ChanPerV * c + 1)] = dry[ChanPerV * c + 1][frame];
+            for (int frame = 0; frame < framesToRender; frame++)
+            {
+                // frame by frame write planar audio to interleaved buffer
+                bufferToFill[frame * channels + (ChanPerV * out + 0)] = dry[ChanPerV * in + 0][frame];
+                bufferToFill[frame * channels + (ChanPerV * out + 1)] = dry[ChanPerV * in + 1][frame];
+            }
+            out++;
         }
     }
 }
