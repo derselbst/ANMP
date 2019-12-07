@@ -89,6 +89,7 @@ class MidiWrapper : public StandardWrapper<float>
     smf_t *smf = nullptr;
     FluidsynthWrapper *synth = nullptr;
     int lastOverridingLoopCount;
+    bool lastUseLoopInfo;
 
     // first dimension: no. of the midi track
     // second dim: midi channel

@@ -56,6 +56,7 @@ void MidiWrapper::initAttr()
 {
     this->Format.SampleFormat = SampleFormat_t::float32;
     this->lastOverridingLoopCount = gConfig.overridingGlobalLoopCount;
+    this->lastUseLoopInfo = gConfig.useLoopInfo;
     this->initialize();
 }
 
@@ -121,7 +122,8 @@ MidiWrapper::~MidiWrapper()
 
 void MidiWrapper::open()
 {
-    if(gConfig.overridingGlobalLoopCount != this->lastOverridingLoopCount)
+    if(gConfig.overridingGlobalLoopCount != this->lastOverridingLoopCount
+        || gConfig.useLoopInfo != this->lastUseLoopInfo)
     {
         this->initAttr();
     }
@@ -172,6 +174,11 @@ void MidiWrapper::parseEvents()
         if (!smf_event_is_valid(event))
         {
             CLOG(LogLevel_t::Warning, "invalid midi event found, ignoring:" << MidiWrapper::SmfEventToString(event));
+            continue;
+        }
+
+        if (!this->lastUseLoopInfo)
+        {
             continue;
         }
 
