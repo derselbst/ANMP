@@ -11,8 +11,6 @@
 #include <vector>
 #include <memory>
 
-class MidiWrapper;
-struct MidiLoopInfo;
 struct MidiNoteInfo;
 struct SongFormat;
 
@@ -45,7 +43,6 @@ class FluidsynthWrapper
     unsigned int GetInitTick();
 
     void AddEvent(smf_event_t *event, double offset = 0.0);
-    void ScheduleLoop(MidiLoopInfo *loopInfo);
     void ScheduleNote(const MidiNoteInfo &noteInfo, unsigned int time);
     void NoteOnOff(MidiNoteInfo *nInfo);
     void FinishSong(int millisec);
@@ -59,9 +56,6 @@ class FluidsynthWrapper
 
     // common fluid_event_t used for most MIDI CCs and stuff
     fluid_event_t *synthEvent = nullptr;
-
-    // event used for scheduling midi track loops and calling back MidiWrapper
-    fluid_event_t *callbackEvent = nullptr;
 
     // event used for triggering note on/offs by calling back ourselfs
     fluid_event_t *callbackNoteEvent = nullptr;

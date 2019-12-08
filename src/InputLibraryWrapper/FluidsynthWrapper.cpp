@@ -13,7 +13,6 @@
 FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2) : midiChannelHasNoteOn(NMidiChannels)
 {
     if((this->synthEvent = new_fluid_event()) == nullptr ||
-       (this->callbackEvent = new_fluid_event()) == nullptr ||
        (this->callbackNoteEvent = new_fluid_event()) == nullptr)
     {
         this->deleteEvents();
@@ -21,7 +20,6 @@ FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2) : mid
     }
 
     fluid_event_set_source(this->synthEvent, -1);
-    fluid_event_set_source(this->callbackEvent, -1);
     fluid_event_set_source(this->callbackNoteEvent, -1);
 
     this->setupSettings();
@@ -72,12 +70,9 @@ FluidsynthWrapper::~FluidsynthWrapper()
 
 void FluidsynthWrapper::deleteEvents()
 {
-    delete_fluid_event(this->callbackEvent);
-    this->callbackEvent = nullptr;
-    
     delete_fluid_event(this->callbackNoteEvent);
     this->callbackNoteEvent = nullptr;
-    
+
     delete_fluid_event(this->synthEvent);
     this->synthEvent = nullptr;
 }
@@ -99,19 +94,19 @@ void FluidsynthWrapper::setupSeq()
 
         // register synth as first destination
         this->synthId = fluid_sequencer_register_fluidsynth(this->sequencer, this->synth);
-        
+
         fluid_event_set_dest(this->synthEvent, this->synthId);
     }
 
     // register myself as second destination
     this->myselfID = fluid_sequencer_register_client(this->sequencer, "schedule_note_callback", &FluidsynthWrapper::FluidSeqNoteCallback, this);
-    
+
     // destination may have changed, refresh it
     fluid_event_set_dest(this->callbackNoteEvent, this->myselfID);
 
     // remove all events from the sequencer's queue
     fluid_sequencer_remove_events(this->sequencer, -1, -1, -1);
-    
+
     this->initTick = fluid_sequencer_get_tick(this->sequencer);
 }
 
@@ -123,7 +118,7 @@ void FluidsynthWrapper::deleteSeq()
         fluid_sequencer_unregister_client(this->sequencer, this->myselfID);
         fluid_event_unregistering(this->synthEvent);
         fluid_sequencer_send_now(this->sequencer, this->synthEvent);
-        
+
         delete_fluid_sequencer(this->sequencer);
         this->sequencer = nullptr;
     }
@@ -143,7 +138,7 @@ void FluidsynthWrapper::setupSynth()
 
     // press the big red panic/reset button
     fluid_synth_system_reset(this->synth);
-    
+
     if(!gConfig.FluidsynthChannel9IsDrum)
     {
         fluid_synth_set_channel_type(this->synth, 9, CHANNEL_TYPE_MELODIC);
@@ -168,7 +163,7 @@ void FluidsynthWrapper::setupSynth()
     {
         fluid_synth_cc(this->synth, i, CBFD_FILTERQ_CC, 0);
         fluid_synth_cc(this->synth, i, CBFD_FILTERFC_CC, 127);
-        
+
         fluid_synth_cc(this->synth, i, DP_ATTACK_CC, 0);
         fluid_synth_cc(this->synth, i, DP_HOLD_CC, 0);
         fluid_synth_cc(this->synth, i, DP_DECAY_CC, 0);
@@ -522,35 +517,6 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
         CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
     }
 }
-
-// in case MidiWrapper experiences a loop event, schedule an event that calls MidiWrapper back at the end of that loop, so it can feed all the midi events with that loop back to fluidsynth again
-void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo *loopInfo)
-{
-    int ret;
-    unsigned int callbackdate = fluid_sequencer_get_tick(this->sequencer); // now
-
-    callbackdate += static_cast<unsigned int>((loopInfo->stop.Value - loopInfo->start.Value) * 1000); // postpone the callback date by the duration of this midi track loop
-
-// HACK: before scheduling the callback, make sure no note is sounding anymore at loopend
-// for some ambiance tunes of DK64 the noteoff events happen after the loopend, as a consequence, note the have been turned on during a note will never be stopped.
-// this hack however breaks JFG, so disable it for now
-#if 0
-    fluid_event_all_notes_off(this->synthEvent, loopInfo->channel);
-    ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, callbackdate-1, true);
-    if(ret != FLUID_OK)
-    {
-        CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
-    }
-#endif
-
-    fluid_event_timer(this->callbackEvent, loopInfo);
-    ret = fluid_sequencer_send_at(this->sequencer, this->callbackEvent, callbackdate, true);
-    if (ret != FLUID_OK)
-    {
-        CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
-    }
-
-    }
 
 // use a very complicated way to turn on and off notes by scheduling callbacks to \c this
 //
