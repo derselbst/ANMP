@@ -13,6 +13,7 @@
 #include <thread> // std::this_thread::sleep_for
 #include <utility>
 #include <fstream>
+#include <bitset>
 
 #define IsControlChange(e) ((e->midi_buffer[0] & 0xF0) == 0xB0)
 #define IsLoopStart(e) (IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopStart))
@@ -240,46 +241,84 @@ void MidiWrapper::parseEvents()
                     // The old callback based approach with fluidsynth's sequencer was not able to handle tempo changes that occur during (unrolled) loops.
                     // By adding the events back to smf, smf takes care of correct timing with existing tempo changes.
                     {
-                        if (smf_seek_to_pulses(this->smf, info.start_tick.Value) != 0)
-                        {
-                            CLOG(LogLevel_t::Error, "unable to seek, cant unroll loops.");
-                            break;
-                        }
-
-                        smf_event_t *evt_of_loop;
+                        std::bitset<128> noteIsPlaying;
+                        int numberOfEvents = event->track->number_of_events;
+                        std::vector<smf_event_t> eventsInLoop;
+                        eventsInLoop.reserve(numberOfEvents);
                         // read in every single event following the position we currently are
-                        while ((evt_of_loop = smf_get_next_event(this->smf)) != nullptr)
+                        for(int i=0; i < numberOfEvents; i++)
                         {
+                            smf_event_t *evt_of_loop = smf_track_get_event_by_number(event->track, i+1);
+                            
                             // does this event belong to the same track and plays on the same channel as where we found the corresponding loop event?
-                            if (evt_of_loop->track_number == info.trackId && (evt_of_loop->midi_buffer[0] & 0x0F) == info.channel && !((IsLoopStart(evt_of_loop)) || (IsLoopCount(evt_of_loop)) || (IsLoopStop(evt_of_loop))))
+                            if (evt_of_loop != nullptr &&
+                                evt_of_loop->track_number == info.trackId && //redundant?
+                                info.start_tick.Value <= evt_of_loop->time_pulses &&
+                                (evt_of_loop->midi_buffer[0] & 0x0F) == info.channel &&
+                                !((IsLoopStart(evt_of_loop)) || (IsLoopCount(evt_of_loop)) || (IsLoopStop(evt_of_loop))))
                             {
                                 // events shall not be looped beyond the end of the song
-                                const double evtTime = evt_of_loop->time_seconds;
-                                bool isInfinite = info.count == 0;
+                                unsigned char key = evt_of_loop->midi_buffer[1];
 
-                                if (evtTime >= info.stop.Value)
+                                if (evt_of_loop->time_pulses >= info.stop_tick.Value)
                                 {
-                                    // all events of this loop handled, stop here
-                                    break;
+                                    if(noteIsPlaying.none())
+                                    {
+                                        // all events of this loop handled, stop here
+                                        break;
+                                    }
+                                    else if(!((evt_of_loop->midi_buffer[0] & 0xF0) == 0x80
+                                        ||  ((evt_of_loop->midi_buffer[0] & 0xF0) == 0x90
+                                            && evt_of_loop->midi_buffer[2] == 0)))
+                                    {
+                                        // smth. else than noteoff
+                                        continue;
+                                    }
+                                    else if(!noteIsPlaying.test(key))
+                                    {
+                                        // not the noteoff we are looking for
+                                        continue;
+                                    }
+                                }
+                                // for some ambiance tunes of DK64 the noteoff events happen after the loopend, as a consequence, notes that have been turned on during the loop will never be stopped.
+                                // thus, keep track of all notes that have been turned on by this current MIDI track loop and continue searching for a noteoff event beyound the loopend
+                                switch (evt_of_loop->midi_buffer[0] & 0xF0)
+                                {
+                                    NOTEOFF:
+                                    case 0x80: // noteoff
+                                        noteIsPlaying.reset(key);
+                                        break;
+
+                                    case 0x90:
+                                        if(evt_of_loop->midi_buffer[2] == 0)
+                                        {
+                                            goto NOTEOFF;
+                                        }
+                                        noteIsPlaying.set(key);
+                                        [[fallthrough]];
+                                    default:
+                                        break;
                                 }
 
-                                const double loopDurSec = (info.stop.Value - info.start.Value);
-                                const double loopDurTick = (info.stop_tick.Value - info.start_tick.Value);
-
-                                for(int i=1; (isInfinite || i < info.count) && ((evtTime + loopDurSec * i) < endOfSong); i++)
-                                {
-                                    smf_event_t* newEvt = smf_event_new_from_pointer(evt_of_loop->midi_buffer, evt_of_loop->midi_buffer_length);
-
-                                    int pulses = evt_of_loop->time_pulses + loopDurTick * i;
-                                    smf_track_add_event_pulses(evt_of_loop->track, newEvt, pulses);
-                                }
+                                // this event is confirmed to be part of the loop. save it.
+                                // do no save the pointer though, because the underlying array might be sorted as soon as we add events to smf below.
+                                eventsInLoop.push_back(*evt_of_loop);
                             }
                         }
 
-                        if (smf_seek_to_event(this->smf, event) != 0)
+                        const double loopDurSec = (info.stop.Value - info.start.Value);
+                        const double loopDurTick = (info.stop_tick.Value - info.start_tick.Value);
+                        bool isInfinite = info.count == 0;
+
+                        for(unsigned int k=0; k < eventsInLoop.size(); k++)
                         {
-                            CLOG(LogLevel_t::Error, "unable to seek, cant unroll loops.");
-                            break;
+                            for(int i=1; (isInfinite || i < info.count) && ((eventsInLoop[k].time_seconds + loopDurSec * i) < endOfSong); i++)
+                            {
+                                smf_event_t* newEvt = smf_event_new_from_pointer(eventsInLoop[k].midi_buffer, eventsInLoop[k].midi_buffer_length);
+
+                                int pulses = eventsInLoop[k].time_pulses + loopDurTick * i;
+                                smf_track_add_event_pulses(eventsInLoop[k].track, newEvt, pulses);
+                            }
                         }
                     }
                 }
