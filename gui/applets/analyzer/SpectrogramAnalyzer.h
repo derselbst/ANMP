@@ -47,10 +47,9 @@ protected slots:
     
 private:
 
-    std::atomic<int> m_xPos={0};
-    std::atomic<int> prevWidth{0};
-    std::atomic<int> currentWidth{0};
-    std::atomic<int> currentHeight{0};
+    int m_xPos{0};
+    std::atomic<int> m_currentWidth{0};
+    std::atomic<int> m_currentHeight{0};
     QVector<float> m_scope, m_logScope; //so we don't create a vector every frame
 
     QImage m_spectrogram;

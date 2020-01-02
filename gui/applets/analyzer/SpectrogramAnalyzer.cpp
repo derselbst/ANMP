@@ -38,9 +38,8 @@ void SpectrogramAnalyzer::display(const QImage& img)
 
 void SpectrogramAnalyzer::resizeEvent(QResizeEvent * event)
 {
-    this->currentHeight = event->size().height();
-    this->prevWidth = this->currentWidth.load();
-    this->currentWidth = event->size().width();
+    m_currentHeight = event->size().height();
+    m_currentWidth = event->size().width();
 
     event->accept();
 }
@@ -66,15 +65,18 @@ void SpectrogramAnalyzer::transform(QVector<float> &s)
 
 void SpectrogramAnalyzer::analyze(const QVector<float> &s, uint32_t srate)
 {
-    if (this->currentHeight == 0 || s.size() == 0)
+    auto currentH = m_currentHeight.load(),
+    currentW = m_currentWidth.load();
+
+    if (currentH == 0 || s.size() == 0)
     {
         return;
     }
 
-    m_scope.resize(this->currentHeight);
-    m_logScope.resize(this->currentHeight);
+    m_scope.resize(currentH);
+    m_logScope.resize(currentH);
 
-    m_spectrogram = m_spectrogram.scaled(this->currentWidth, this->currentHeight);
+    m_spectrogram = m_spectrogram.scaled(currentW, currentH);
 
     interpolate(s, m_scope);
 
@@ -109,7 +111,7 @@ void SpectrogramAnalyzer::analyze(const QVector<float> &s, uint32_t srate)
     }
 
     m_xPos += xStepWidth;
-    if (m_xPos >= this->currentWidth)
+    if (m_xPos >= currentW)
     {
         m_xPos = 0;
     }
