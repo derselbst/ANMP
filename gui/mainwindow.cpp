@@ -41,9 +41,6 @@ MainWindow::MainWindow(QWidget *parent)
   playlistModel(new PlaylistModel(playlist, this)),
   player(new Player(this->playlist)),
   channelConfigModel(new ChannelConfigModel(0, 1, this)),
-#ifdef USE_VISUALIZER
-  analyzerWindow(new AnalyzerApplet(this->player, this)),
-#endif
   settingsView(new ConfigDialog(this))
 {
     qRegisterMetaType<const Song *>("const Song*");
@@ -160,6 +157,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    this->Stop();
     this->player->onBufferHealthChanged -= this;
     this->player->onPlayheadChanged -= this;
     this->player->onCurrentSongChanged -= this;
@@ -170,7 +168,7 @@ MainWindow::~MainWindow()
     delete this->playctrl;
 
     // manually delete applets before deleting player, since they hold this.player
-    delete this->analyzerWindow;
+    this->analyzerWindows.clear();
 
     delete this->player;
     delete this->playlistModel;
@@ -313,9 +311,11 @@ void MainWindow::setWindowTitleCustom(QString title)
 void MainWindow::showAnalyzer(enum AnalyzerApplet::AnalyzerType type)
 {
 #ifdef USE_VISUALIZER
-    this->analyzerWindow->setAnalyzer(type);
-    this->analyzerWindow->startGraphics();
-    this->analyzerWindow->show();
+    std::unique_ptr<AnalyzerApplet> app(new AnalyzerApplet(this->player, this));
+    app->setAnalyzer(type);
+    app->startGraphics();
+    app->show();
+    this->analyzerWindows.push_back(std::move(app));
 #else
     this->showNoVisualizer();
 #endif

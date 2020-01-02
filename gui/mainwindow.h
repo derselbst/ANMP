@@ -5,6 +5,8 @@
 
 #include <QMainWindow>
 #include <QString>
+#include <memory>
+#include <vector>
 
 namespace Ui
 {
@@ -61,7 +63,9 @@ class MainWindow : public QMainWindow
     Player *player = nullptr;
     ChannelConfigModel *channelConfigModel = nullptr;
 
-    AnalyzerApplet *analyzerWindow = nullptr;
+#ifdef USE_VISUALIZER
+    std::vector<std::unique_ptr<AnalyzerApplet>> analyzerWindows;
+#endif
     ConfigDialog *settingsView = nullptr;
     ChannelConfigView *channelView = nullptr;
     QListView *listView = nullptr;

@@ -73,8 +73,7 @@ void AnalyzerApplet::setAnalyzer(AnalyzerType type)
 {
     if (this->analyzerWidget != nullptr)
     {
-        this->ui->horizontalLayout->removeWidget(this->analyzerWidget);
-        delete this->analyzerWidget;
+        throw std::logic_error("Analyzer: widget already set!");
     }
 
     switch (type)
