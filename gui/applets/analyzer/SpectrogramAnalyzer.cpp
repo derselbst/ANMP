@@ -15,8 +15,9 @@ static inline uint myMax(uint v1, uint v2)
 }
 
 SpectrogramAnalyzer::SpectrogramAnalyzer(QWidget *parent)
-: AnalyzerBase(parent), m_spectrogram(0,0,QImage::Format_Invalid)
+: AnalyzerBase(parent), m_spectrogram(1,1,QImage::Format_RGB32)
 {
+    m_spectrogram.fill(Qt::black);
     setObjectName("SpectrogramAnalyzer");
     this->setAttribute(Qt::WA_OpaquePaintEvent);
     
@@ -37,16 +38,10 @@ void SpectrogramAnalyzer::display(const QImage& img)
 
 void SpectrogramAnalyzer::resizeEvent(QResizeEvent * event)
 {
-    int h = event->size().height(), w = event->size().width();
-    
-    m_scope.resize(h);
-    m_logScope.resize(h);
-    m_xPos = 0;
-    
-    m_spectrogram = QImage(w,h,QImage::Format_RGB32);
-    m_spectrogram.fill(Qt::black);
-    m_currentWidth = w;
-    
+    this->currentHeight = event->size().height();
+    this->prevWidth = this->currentWidth.load();
+    this->currentWidth = event->size().width();
+
     event->accept();
 }
 
@@ -55,7 +50,7 @@ void SpectrogramAnalyzer::paintEvent(QPaintEvent* event)
 {
     QPainter painter(this);
     painter.drawImage(this->rect(), m_toBeDrawn);
-    
+
     event->accept();
 }
 
@@ -71,21 +66,26 @@ void SpectrogramAnalyzer::transform(QVector<float> &s)
 
 void SpectrogramAnalyzer::analyze(const QVector<float> &s, uint32_t srate)
 {
-    if (m_scope.size() == 0 || s.size() == 0)
+    if (this->currentHeight == 0 || s.size() == 0)
     {
         return;
     }
 
+    m_scope.resize(this->currentHeight);
+    m_logScope.resize(this->currentHeight);
+
+    m_spectrogram = m_spectrogram.scaled(this->currentWidth, this->currentHeight);
+
     interpolate(s, m_scope);
-    
-    constexpr int xStepWidth = 4;
-    
+
+    const int xStepWidth = static_cast<int>(pow(2.0f, 44100.f/srate + 1));
+
     QPainter painter(&m_spectrogram);
-    
+
     double w = 1 / sqrt(srate);
     int yTargetOld = m_scope.size();
     auto scopeSize = yTargetOld/2;
-    for (int y = 0; y < scopeSize; y++)
+    for (int y = 1; y < scopeSize; y++)
     {
         int a = 255*sqrt(w * sqrt(m_scope[y + 0] * m_scope[y + 0] + m_scope[y + scopeSize] * m_scope[y + scopeSize]));
         int b = /*(nb_display_channels == 2 ) ? sqrt(w * hypot(data[1][2 * y + 0], data[1][2 * y + 1]))
@@ -93,19 +93,27 @@ void SpectrogramAnalyzer::analyze(const QVector<float> &s, uint32_t srate)
         a = std::min(a, 255);
         b = std::min(b, 255);
 
-        int yTarget = this->getYForFrequency(srate/2.0 * (y+1.0)/scopeSize, 1.0/scopeSize * srate/2.0, srate/2.0, true);
-        
-        painter.fillRect(m_xPos, yTarget, xStepWidth, yTargetOld-yTarget, QColor(qRgb(a, b, (a + b) >> 1)));
-        
+        int aPrev = 255*sqrt(w * sqrt(m_scope[y - 1] * m_scope[y - 1] + m_scope[y-1 + scopeSize] * m_scope[y-1 + scopeSize]));
+        aPrev = std::min(aPrev, 255);
+
+        int yTarget = this->getYForFrequency(srate/2.0 * (y)/scopeSize, 1.0/scopeSize * srate/2.0, srate/2.0, true);
+
+        for(auto yy=yTarget; yy<yTargetOld; yy++)
+        {
+            double fraction = (yy-yTarget) * 1.0 / (yTargetOld-yTarget);
+            int r = (aPrev - a) * fraction + a;
+            painter.fillRect(m_xPos, yy, xStepWidth, 1, QColor(qRgb(r, r, (r+r) >> 1)));
+        }
+
         yTargetOld = yTarget;
     }
-    
+
     m_xPos += xStepWidth;
-    if (m_xPos >= m_currentWidth)
+    if (m_xPos >= this->currentWidth)
     {
         m_xPos = 0;
     }
-    
+
     this->display(m_spectrogram);
 }
 
