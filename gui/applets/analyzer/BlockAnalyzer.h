@@ -32,13 +32,13 @@ class BlockAnalyzer : public AnalyzerBase
     public:
     BlockAnalyzer(QWidget *);
 
-    static GLuint createTexture(const QImage &image)
+    GLuint createTexture(const QImage &image)
     {
-        return instance->bindTexture(image);
+        return this->bindTexture(image);
     }
-    static void freeTexture(GLuint id)
+    void freeTexture(GLuint id)
     {
-        instance->deleteTexture(id);
+        this->deleteTexture(id);
     }
 
     // Signed ints because most of what we compare them against are ints
@@ -62,28 +62,23 @@ class BlockAnalyzer : public AnalyzerBase
     private:
     struct Texture
     {
-        Texture(const QPixmap &pixmap)
-        : id(BlockAnalyzer::createTexture(pixmap.toImage().mirrored())), // Flip texture vertically for OpenGL bottom-left coordinate system
+        Texture(BlockAnalyzer* analyzer, const QPixmap &pixmap)
+        : analyzer(analyzer),
+          id(analyzer->createTexture(pixmap.toImage().mirrored())), // Flip texture vertically for OpenGL bottom-left coordinate system
           size(pixmap.size())
         {
         }
-        Texture(const Texture &texture)
-        {
-            id = texture.id;
-            size = texture.size;
-        }
         ~Texture()
         {
-            BlockAnalyzer::freeTexture(id);
+            analyzer->freeTexture(id);
         }
 
+        BlockAnalyzer* analyzer;
         GLuint id;
         QSize size;
     };
 
     void drawTexture(Texture *texture, int x, int y, int sx, int sy);
-
-    static BlockAnalyzer *instance;
 
     int m_columns, m_rows; //number of rows and columns of blocks
     QPixmap m_barPixmap;

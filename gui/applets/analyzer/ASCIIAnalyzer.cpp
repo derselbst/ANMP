@@ -23,15 +23,11 @@
 #include <QPainter>
 #include <QResizeEvent>
 
-
-ASCIIAnalyzer *ASCIIAnalyzer::instance = 0;
-
 ASCIIAnalyzer::ASCIIAnalyzer(QWidget *parent)
 : AnalyzerBase(parent), m_columns(0) //int
   ,
   m_rows(0) //int
 {
-    instance = this;
     setObjectName("ASCII");
 
     setMaximumWidth(MAX_COLUMNS * (BLOCK_WIDTH + 1) - 1);
@@ -200,7 +196,7 @@ void ASCIIAnalyzer::paletteChange(const QPalette &) //virtual
     tbp.setBackground(palette().background().color());
     tbp.setFont(font);
     tbp.drawText(topBar.rect(), Qt::AlignCenter, ".");
-    m_topBarTexture = QSharedPointer<Texture>(new Texture(topBar));
+    m_topBarTexture = QSharedPointer<Texture>(new Texture(this, topBar));
 
     QPixmap topSecondBar(BLOCK_WIDTH, BLOCK_HEIGHT);
     // red on top, black on bottom
@@ -213,7 +209,7 @@ void ASCIIAnalyzer::paletteChange(const QPalette &) //virtual
     tsbp.setBrush(gradient);
     tsbp.setFont(font);
     tsbp.drawText(topSecondBar.rect(), Qt::AlignCenter, "o");
-    m_topSecondBarTexture = QSharedPointer<Texture>(new Texture(topSecondBar));
+    m_topSecondBarTexture = QSharedPointer<Texture>(new Texture(this, topSecondBar));
 
     m_barPixmap.fill(bg);
     QPainter p(&m_barPixmap);
@@ -226,7 +222,7 @@ void ASCIIAnalyzer::paletteChange(const QPalette &) //virtual
         p.drawText(rect, Qt::AlignCenter, "#");
     }
 
-    m_barTexture = QSharedPointer<Texture>(new Texture(m_barPixmap));
+    m_barTexture = QSharedPointer<Texture>(new Texture(this, m_barPixmap));
     drawBackground();
 }
 
@@ -236,5 +232,5 @@ void ASCIIAnalyzer::drawBackground()
     QPixmap background(size());
     background.fill(bg);
 
-    m_background = QSharedPointer<Texture>(new Texture(background));
+    m_background = QSharedPointer<Texture>(new Texture(this, background));
 }

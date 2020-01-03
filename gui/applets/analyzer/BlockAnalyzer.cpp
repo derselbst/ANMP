@@ -25,8 +25,6 @@
 #include <QResizeEvent>
 
 
-BlockAnalyzer *BlockAnalyzer::instance = 0;
-
 static inline uint myMax(uint v1, uint v2)
 {
     return v1 > v2 ? v1 : v2;
@@ -43,7 +41,6 @@ BlockAnalyzer::BlockAnalyzer(QWidget *parent)
   ,
   m_fade_intensity(MAX_COLUMNS, 32) //vector<uint>
 {
-    instance = this;
     setObjectName("Blocky");
 
     setMaximumWidth(MAX_COLUMNS * (BLOCK_WIDTH + 1) - 1);
@@ -224,7 +221,7 @@ void BlockAnalyzer::paletteChange(const QPalette &) //virtual
 
     QPixmap topBar(BLOCK_WIDTH, BLOCK_HEIGHT);
     topBar.fill(fg);
-    m_topBarTexture = QSharedPointer<Texture>(new Texture(topBar));
+    m_topBarTexture = QSharedPointer<Texture>(new Texture(this, topBar));
 
     const double dr = 15 * double(bg.red() - fg.red()) / (m_rows * 16);
     const double dg = 15 * double(bg.green() - fg.green()) / (m_rows * 16);
@@ -266,11 +263,11 @@ void BlockAnalyzer::paletteChange(const QPalette &) //virtual
                 f.fillRect(0, z * (BLOCK_HEIGHT + 1), BLOCK_WIDTH, BLOCK_HEIGHT, QColor(r + int(dr * Y), g + int(dg * Y), b + int(db * Y)));
             }
 
-            m_fade_bars[y] = QSharedPointer<Texture>(new Texture(fadeBar));
+            m_fade_bars[y] = QSharedPointer<Texture>(new Texture(this, fadeBar));
         }
     }
 
-    m_barTexture = QSharedPointer<Texture>(new Texture(m_barPixmap));
+    m_barTexture = QSharedPointer<Texture>(new Texture(this, m_barPixmap));
     drawBackground();
 }
 
@@ -291,5 +288,5 @@ void BlockAnalyzer::drawBackground()
         }
     }
 
-    m_background = QSharedPointer<Texture>(new Texture(background));
+    m_background = QSharedPointer<Texture>(new Texture(this, background));
 }
