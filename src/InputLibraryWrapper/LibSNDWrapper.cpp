@@ -12,6 +12,7 @@
 #include <utility>
 #include <fstream>
 #include <regex>
+#include <array>
 
 
 LibSNDWrapper::LibSNDWrapper(string filename)
