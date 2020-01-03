@@ -1,5 +1,5 @@
 pkgname=anmp
-pkgver=8
+pkgver=9
 pkgrel=1
 pkgdesc='Audio Player for Video Game Music'
 url='http://www.github.com/derselbst/ANMP/'
