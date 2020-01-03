@@ -29,7 +29,9 @@ LibSNDWrapper::LibSNDWrapper(string filename, Nullable<size_t> offset, Nullable<
 void LibSNDWrapper::init()
 {
     std::ifstream ifs(this->Filename, ios::binary);
-    std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+    std::array<char, 1<<14> buf;
+    ifs.read(buf.data(), sizeof(buf));
+    std::string str(buf.data(), ifs.gcount());
     std::regex rxStart("LOOPSTART=([0-9]+)");
     std::regex rxLen("LOOPLENGTH=([0-9]+)");
 
