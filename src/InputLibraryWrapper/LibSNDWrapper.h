@@ -49,8 +49,11 @@ class LibSNDWrapper : public StandardWrapper<sndfile_sample_t>
     void buildMetadata() noexcept override;
 
     private:
+    void init();
     SNDFILE *sndfile = nullptr;
     SF_INFO sfinfo;
+    loop_t legacyLoop;
+
 };
 
 #endif // LIBSNDWRAPPER_H

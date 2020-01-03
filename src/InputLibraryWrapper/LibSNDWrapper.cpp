@@ -10,16 +10,42 @@
 #include <cstring>
 #include <thread> // std::this_thread::sleep_for
 #include <utility>
+#include <fstream>
+#include <regex>
 
 
 LibSNDWrapper::LibSNDWrapper(string filename)
 : StandardWrapper(std::move(filename))
 {
+    this->init();
 }
 
 LibSNDWrapper::LibSNDWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
 : StandardWrapper(std::move(filename), offset, len)
 {
+    this->init();
+}
+
+void LibSNDWrapper::init()
+{
+    std::ifstream ifs(this->Filename, ios::binary);
+    std::string str((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+    std::regex rxStart("LOOPSTART=([0-9]+)");
+    std::regex rxLen("LOOPLENGTH=([0-9]+)");
+
+    auto lstart_begin = std::sregex_iterator(str.begin(), str.end(), rxStart);
+    auto llength_begin = std::sregex_iterator(str.begin(), str.end(), rxLen);
+    auto words_end = std::sregex_iterator();
+
+    if(lstart_begin != words_end && llength_begin != words_end)
+    {
+        std::smatch start_match = *lstart_begin, len_match = *llength_begin;
+        if(start_match.size() == 2 && len_match.size() == 2)
+        {
+            this->legacyLoop.start = std::stoi(start_match[1].str());
+            this->legacyLoop.stop = this->legacyLoop.start + std::stoi(len_match[1].str());
+        }
+    }
 }
 
 LibSNDWrapper::~LibSNDWrapper()
@@ -186,6 +212,13 @@ vector<loop_t> LibSNDWrapper::getLoopArray() const noexcept
 
                 l.count = inst.loops[i].count;
                 res.push_back(l);
+            }
+        }
+        else
+        {
+            if(this->legacyLoop.stop - this->legacyLoop.start > 0)
+            {
+                res.push_back(this->legacyLoop);
             }
         }
     }
