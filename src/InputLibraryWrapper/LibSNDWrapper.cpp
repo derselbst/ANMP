@@ -18,13 +18,11 @@
 LibSNDWrapper::LibSNDWrapper(string filename)
 : StandardWrapper(std::move(filename))
 {
-    this->init();
 }
 
 LibSNDWrapper::LibSNDWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
 : StandardWrapper(std::move(filename), offset, len)
 {
-    this->init();
 }
 
 void LibSNDWrapper::init()
@@ -76,6 +74,8 @@ void LibSNDWrapper::open()
     {
         THROW_RUNTIME_ERROR("channels == " << sfinfo.channels);
     };
+
+    this->init();
 
     // group all available channels to individual stereo voices
     this->Format.ConfigureVoices(sfinfo.channels, 2);
