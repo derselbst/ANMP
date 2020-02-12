@@ -476,7 +476,7 @@ void Player::playFrames(frame_t framesToPlay)
            )
     {
         // seek within the pcm buffer to that item where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
-        int itemOffset = FramesToItems(memorizedPlayhead) % bufSize;
+        size_t itemOffset = FramesToItems(memorizedPlayhead) % bufSize;
         // number of frames we will write to audioDriver in this run
         int framesToPush = min(gConfig.FramesToRender, framesToPlay);
 

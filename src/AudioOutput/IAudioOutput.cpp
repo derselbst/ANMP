@@ -41,7 +41,7 @@ void IAudioOutput::SetMuteMask(decltype(SongFormat::VoiceIsMuted) &mask)
 }
 
 // takes care of pointer arithmetic
-int IAudioOutput::write(const pcm_t *frameBuffer, frame_t frames, int offset)
+int IAudioOutput::write(const pcm_t *frameBuffer, frame_t frames, size_t offset)
 {
     switch (this->currentFormat.SampleFormat)
     {

@@ -110,12 +110,12 @@ class IAudioOutput
      *
      * @return see private write()
      */
-    int write(const pcm_t *frameBuffer, frame_t frames, int offset);
+    int write(const pcm_t *frameBuffer, frame_t frames, size_t offset);
 
 
     protected:
     SongFormat currentFormat;
-    
+
     // mixed_and_converted_to_float_but_not_resampled buffer used in this->write()
     std::vector<unsigned char> processedBuffer;
 
