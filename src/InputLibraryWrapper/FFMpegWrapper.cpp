@@ -194,11 +194,6 @@ void FFMpegWrapper::close() noexcept
     avformat_close_input(&this->handle);
 }
 
-void FFMpegWrapper::fillBuffer()
-{
-    StandardWrapper::fillBuffer(this);
-}
-
 int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo)
 {
     char errstr[AV_ERROR_MAX_STRING_SIZE];

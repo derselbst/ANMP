@@ -31,8 +31,6 @@ class LibGMEWrapper : public StandardWrapper<int16_t>
 
     void close() noexcept override;
 
-    void fillBuffer() override;
-
     frame_t getFrames() const override;
 
     vector<loop_t> getLoopArray() const noexcept override;

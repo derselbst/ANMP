@@ -107,4 +107,4 @@ cmake .. -G "Visual Studio 14 2015" -DENABLE_ALSA=0 -DENABLE_JACK=0 -DLIBSND_LIB
 ANMP is licensed under the terms of the *GNU GENERAL PUBLIC LICENSE Version 2*, see [LICENSE](LICENSE).
 
 
-Copyright (C) 2016-2019 Tom Moebert (derselbst)
+Copyright (C) 2016-2020 Tom Moebert (derselbst)

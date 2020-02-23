@@ -28,8 +28,6 @@ class AopsfWrapper : public StandardWrapper<int16_t>
 
     void close() noexcept override;
 
-    void fillBuffer() override;
-
     frame_t getFrames() const override;
 
     void buildMetadata() noexcept override;

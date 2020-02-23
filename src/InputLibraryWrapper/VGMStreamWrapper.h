@@ -33,8 +33,6 @@ class VGMStreamWrapper : public StandardWrapper<int16_t>
 
     void close() noexcept override;
 
-    void fillBuffer() override;
-
     vector<loop_t> getLoopArray() const noexcept override;
 
     frame_t getFrames() const override;

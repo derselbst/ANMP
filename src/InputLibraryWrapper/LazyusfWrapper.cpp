@@ -97,11 +97,6 @@ void LazyusfWrapper::close() noexcept
     }
 }
 
-void LazyusfWrapper::fillBuffer()
-{
-    StandardWrapper::fillBuffer(this);
-}
-
 void LazyusfWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender)
 {
 // TODO: UGLY CAST AHEAD!

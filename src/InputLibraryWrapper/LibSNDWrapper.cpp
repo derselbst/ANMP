@@ -117,13 +117,13 @@ void LibSNDWrapper::fillBuffer()
         }
     }
 
-    StandardWrapper::fillBuffer(this);
+    StandardWrapper::fillBuffer();
 }
 
 void LibSNDWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender)
 {
     // what we are doing below is nothing more than efficiently reading audio frames from libsndfile. it got a bit more complex due to
-    //   - performance improvements (avoid unnecessary to in conversion if file contains floats)
+    //   - performance improvements (avoid unnecessary to int conversion if file contains floats)
     //   - supporting the pretty rare ILP64 ABI (unfortuately libsndfile does not provide fixed integer width API, we can only ask to read ints from it which we then have to force to int32)
 
     constexpr bool haveInt32 = sizeof(int) == 4;

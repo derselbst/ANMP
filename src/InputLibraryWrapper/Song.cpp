@@ -56,7 +56,7 @@ void Song::buildLoopTree()
             CLOG(LogLevel_t::Warning, "\"" << this->Filename << "\" specifies a zero size or negative loop, skipping." << endl);
             continue;
         }
-        
+
         core::tree<loop_t> &subNode = findRootLoopNode(this->loopTree, *it);
         subNode.insert(*it);
     }

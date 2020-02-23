@@ -82,8 +82,8 @@ class StandardWrapper : public Song
     virtual void render(pcm_t *const bufferToFill, const uint32_t channels, frame_t framesToRender) = 0;
 
     protected:
-    // used for double buffering, whenever we were unable to allocate a buffer big enough to hold the whole song in memory
-    pcm_t *preRenderBuf = nullptr;
+
+    std::FILE* backingFile = nullptr;
 
     // a flag that indicates a prematurely abort of async buffer fill
     bool stopFillBuffer = false;
@@ -91,8 +91,7 @@ class StandardWrapper : public Song
     // number of frames that have been rendered to this->pcm since the song has been opened
     std::atomic<frame_t> framesAlreadyRendered = {0};
 
-    template<typename WRAPPERCLASS>
-    void fillBuffer(WRAPPERCLASS *context);
+    void fillBuffer() override;
 
     template<typename REAL_SAMPLEFORMAT>
     void doAudioNormalization(REAL_SAMPLEFORMAT *bufferToFill, const frame_t framesToProcess);
@@ -105,9 +104,14 @@ class StandardWrapper : public Song
     float gainCorrection = 1.0f;
 
     private:
+    // used for double buffering, whenever we were unable to allocate a buffer big enough to hold the whole song in memory
+    pcm_t *preRenderBuf = nullptr;
+
     future<void> futureFillBuffer;
 
     void init() noexcept;
+    SAMPLEFORMAT* allocPcmBuffer(size_t) noexcept;
+    void renderAsync(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender);
 };
 
 #endif // STANDARDWRAPPER_H

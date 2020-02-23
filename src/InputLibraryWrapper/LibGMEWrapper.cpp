@@ -202,14 +202,9 @@ void LibGMEWrapper::close() noexcept
     }
 }
 
-void LibGMEWrapper::fillBuffer()
-{
-    StandardWrapper::fillBuffer(this);
-}
-
 void LibGMEWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender)
 {
-STANDARDWRAPPER_RENDER(int16_t, gme_play(this->handle, framesToDoNow * Channels, pcm))
+    STANDARDWRAPPER_RENDER(int16_t, gme_play(this->handle, framesToDoNow * Channels, pcm))
 }
 
 frame_t LibGMEWrapper::getFrames() const

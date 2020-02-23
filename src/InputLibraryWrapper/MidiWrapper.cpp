@@ -249,7 +249,7 @@ void MidiWrapper::parseEvents()
                         for(int i=0; i < numberOfEvents; i++)
                         {
                             smf_event_t *evt_of_loop = smf_track_get_event_by_number(event->track, i+1);
-                            
+
                             // does this event belong to the same track and plays on the same channel as where we found the corresponding loop event?
                             if (evt_of_loop != nullptr &&
                                 evt_of_loop->track_number == info.trackId && //redundant?
@@ -335,11 +335,6 @@ void MidiWrapper::close() noexcept
         delete this->synth;
         this->synth = nullptr;
     }
-}
-
-void MidiWrapper::fillBuffer()
-{
-    StandardWrapper::fillBuffer(this);
 }
 
 frame_t MidiWrapper::getFrames() const

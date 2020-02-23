@@ -225,11 +225,6 @@ void LibMadWrapper::close() noexcept
     }
 }
 
-void LibMadWrapper::fillBuffer()
-{
-    StandardWrapper::fillBuffer(this);
-}
-
 void LibMadWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender)
 {
     framesToRender = min(framesToRender, this->getFrames() - this->framesAlreadyRendered);
