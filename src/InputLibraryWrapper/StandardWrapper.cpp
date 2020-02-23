@@ -258,9 +258,12 @@ void StandardWrapper<SAMPLEFORMAT>::releaseBuffer() noexcept
     WAIT(this->futureFillBuffer);
 
 #if _POSIX_MAPPED_FILES && _POSIX_C_SOURCE >= 200112L
-    if (::munmap(this->data, this->count * sizeof(SAMPLEFORMAT)) != 0)
+    if (this->data != nullptr)
     {
-        CLOG(LogLevel_t::Error, "munmap() failed: " << strerror(errno));
+        if (::munmap(this->data, this->count * sizeof(SAMPLEFORMAT)) != 0)
+        {
+            CLOG(LogLevel_t::Error, "munmap() failed: " << strerror(errno));
+        }
     }
     this->data = nullptr;
 #endif
