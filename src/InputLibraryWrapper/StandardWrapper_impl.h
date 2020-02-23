@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <sys/mman.h>
 #include <fcntl.h> // posix_fallocate()
+#include <linux/version.h>
 #include <cstring>
 
 template<typename SAMPLEFORMAT>
@@ -119,7 +120,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer()
 {
     const auto Channels = this->Format.Channels();
     const auto TotalFrames = this->getFrames();
-    
+
     if (this->count == static_cast<size_t>(TotalFrames) * Channels)
     {
         // Song::data already filled up with all the audiofile's PCM, nothing to do here (most likely case)
@@ -158,7 +159,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer()
                     /* advance the pcm pointer by that many items where we previously ended filling it */
                     SAMPLEFORMAT *pcm = static_cast<SAMPLEFORMAT *>(this->data);
                     pcm += (this->framesAlreadyRendered * Channels);
-                
+
                     this->futureFillBuffer = async(launch::async, &StandardWrapper::renderAsync, this, pcm, Channels, restFrames /*render everything*/);
 
                     // allow the render thread to do his work
@@ -218,7 +219,7 @@ void StandardWrapper<SAMPLEFORMAT>::renderAsync(pcm_t *const bufferToFill, const
 {
     this->render(bufferToFill, Channels, framesToRender);
 
-#if _POSIX_MAPPED_FILES && _POSIX_C_SOURCE >= 200112L
+#if _POSIX_MAPPED_FILES && _POSIX_C_SOURCE >= 200112L && LINUX_VERSION_CODE >= KERNEL_VERSION(4,12,0)
     if (this->preRenderBuf == nullptr)
     {
         // If we allocated a PCM buffer for the whole file, advice the kernel to free related pages when the system comes under memory pressure.
@@ -230,6 +231,9 @@ void StandardWrapper<SAMPLEFORMAT>::renderAsync(pcm_t *const bufferToFill, const
         // http://linux-kernel.2935.n7.nabble.com/wrong-madvise-MADV-DONTNEED-semantic-td18033.html
         // https://www.youtube.com/watch?v=bg6-LVCHmGM&feature=youtu.be&t=3518
         // https://stackoverflow.com/q/14968309
+        //
+        // Although MADV_FREE is available since linux 4.5, we require at least 4.12, because (madvise man page):
+        // "In Linux before version 4.12, when freeing pages on a swapless system, the pages in the given range are freed instantly, regardless of memory pressure."
         if (::madvise(this->data, this->count * sizeof(SAMPLEFORMAT), MADV_FREE) != 0)
         {
             CLOG(LogLevel_t::Debug, "madvise(MADV_FREE) failed: " << strerror(errno));
