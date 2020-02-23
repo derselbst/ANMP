@@ -68,6 +68,8 @@ class StandardWrapper : public Song
 
     ~StandardWrapper() override;
 
+    void fillBuffer() override;
+
     void releaseBuffer() noexcept override;
 
     frame_t getFramesRendered() const noexcept override;
@@ -90,8 +92,6 @@ class StandardWrapper : public Song
 
     // number of frames that have been rendered to this->pcm since the song has been opened
     std::atomic<frame_t> framesAlreadyRendered = {0};
-
-    void fillBuffer() override;
 
     template<typename REAL_SAMPLEFORMAT>
     void doAudioNormalization(REAL_SAMPLEFORMAT *bufferToFill, const frame_t framesToProcess);

@@ -40,11 +40,6 @@ class TestSong : public StandardWrapper<FORMAT>
     {
     }
 
-    void fillBuffer() override
-    {
-        StandardWrapper<FORMAT>::fillBuffer(this);
-    }
-
     frame_t getFrames() const override
     {
         return this->frames;

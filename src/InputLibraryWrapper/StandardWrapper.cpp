@@ -19,6 +19,11 @@ template class StandardWrapper<int32_t>;
 template class StandardWrapper<float>;
 template class StandardWrapper<sndfile_sample_t>;
 
+// only required for unit testing
+template class StandardWrapper<double>;
+template class StandardWrapper<uint8_t>;
+
+
 template<typename SAMPLEFORMAT>
 StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename)
 : Song(filename)
