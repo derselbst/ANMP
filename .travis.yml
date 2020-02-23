@@ -1,9 +1,9 @@
 language: cpp
-sudo: required
 dist: trusty
+os: linux
 #compiler:
 #- clang
-matrix:
+jobs:
   include:
   # works on Precise and Trusty
     - os: linux
@@ -204,29 +204,15 @@ matrix:
             #- libqt5opengl5-dev
       #env:
         #- MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
-  allow_failures:
-    - os: osx
-      osx_image: xcode8
-      env:
-        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
-
-    - os: osx
-      osx_image: xcode8
-      env:
-        - MATRIX_EVAL="brew install gcc5 && CC=gcc-5 && CXX=g++-5"
-
-    - os: osx
-      osx_image: xcode8
-      env:
-        - MATRIX_EVAL="brew install gcc && CC=gcc-6 && CXX=g++-6"
 
 before_install:
     - sudo apt-get update
     - eval "${MATRIX_EVAL}"
-    
+
 before_script:
     - mkdir build && cd build
-    
+
 script:
     - cmake "-DUSE_LIBCXX=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo" ..
     - make -j4 anmp-qt
+    - make check
