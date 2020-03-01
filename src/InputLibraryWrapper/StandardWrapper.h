@@ -117,3 +117,21 @@ class StandardWrapper : public Song
 #endif // STANDARDWRAPPER_H
 
 #include "StandardWrapper_impl.h"
+
+// explicit template instantiation
+#define TYPE_LIST(PRC) \
+PRC(int16_t) \
+PRC(int32_t) \
+PRC(float) \
+PRC(sndfile_sample_t) \
+/* only required for unit testing */ \
+PRC(double) \
+PRC(uint8_t)
+
+#define DECL(TYPE) extern template class StandardWrapper<TYPE>;
+#define DEF(TYPE)         template class StandardWrapper<TYPE>;
+
+#define DECLARE_INSTANCES TYPE_LIST(DECL)
+#define DEFINE_INSTANCES TYPE_LIST(DEF)
+
+DECLARE_INSTANCES

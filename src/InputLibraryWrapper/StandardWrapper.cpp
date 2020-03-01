@@ -294,12 +294,5 @@ frame_t StandardWrapper<SAMPLEFORMAT>::getFramesRendered() const noexcept
 }
 
 
-template class StandardWrapper<int16_t>;
-template class StandardWrapper<int32_t>;
-template class StandardWrapper<float>;
-template class StandardWrapper<sndfile_sample_t>;
-
-// only required for unit testing
-template class StandardWrapper<double>;
-template class StandardWrapper<uint8_t>;
+DEFINE_INSTANCES
 
