@@ -98,7 +98,7 @@ void ModPlugWrapper::open()
     ModPlugWrapper::settings.mSurroundDepth = gConfig.ModPlugSurroundDepth;
     ModPlugWrapper::settings.mSurroundDelay = gConfig.ModPlugSurroundDelay;
 
-    ModPlugWrapper::settings.mLoopCount = 2;
+    ModPlugWrapper::settings.mLoopCount = gConfig.overridingGlobalLoopCount;
 
     // settings must be set before loading a file
     ModPlug_SetSettings(&ModPlugWrapper::settings);
