@@ -3,7 +3,7 @@ project(anmp-input)
 
 SET(ANMP_INPUT_SRC
        Song.cpp
-       StandardWrapper.cpp   
+       StandardWrapper.cpp
 )
 
 if(LIBGME_FOUND)
@@ -48,6 +48,10 @@ endif(USE_FLUIDSYNTH)
 if(USE_MODPLUG)
     set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} ModPlugWrapper.cpp)
 endif(USE_MODPLUG)
+
+if(USE_OPENMPT)
+    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} OpenMPTWrapper.cpp)
+endif(USE_OPENMPT)
 
 
 #---------------------------------------------------------------------------------------------

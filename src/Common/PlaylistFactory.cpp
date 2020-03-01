@@ -28,6 +28,10 @@
 #include "ModPlugWrapper.h"
 #endif
 
+#ifdef USE_OPENMPT
+#include "OpenMPTWrapper.h"
+#endif
+
 #ifdef USE_VGMSTREAM
 #include "VGMStreamWrapper.h"
 #endif
@@ -227,15 +231,19 @@ bool PlaylistFactory::addSong(std::vector<Song*> &playlist, const string& filePa
     }
 #endif
 
-#ifdef USE_MODPLUG
+#if defined(USE_MODPLUG) || defined(USE_OPENMPT)
     else if (iEquals(ext, "MOD") || iEquals(ext, "MDZ") || iEquals(ext, "MDR") || iEquals(ext, "MDGZ") ||
              iEquals(ext, "S3M") || iEquals(ext, "S3Z") || iEquals(ext, "S3R") || iEquals(ext, "S3GZ") ||
              iEquals(ext, "XM") || iEquals(ext, "XMZ") || iEquals(ext, "XMR") || iEquals(ext, "XMGZ") ||
              iEquals(ext, "IT") || iEquals(ext, "ITZ") || iEquals(ext, "ITR") || iEquals(ext, "ITGZ") ||
              iEquals(ext, "669") || iEquals(ext, "AMF") || iEquals(ext, "AMS") || iEquals(ext, "DBM") || iEquals(ext, "DMF") || iEquals(ext, "DSM") || iEquals(ext, "FAR") || iEquals(ext, "MDL") || iEquals(ext, "MED") || iEquals(ext, "MTM") || iEquals(ext, "OKT") || iEquals(ext, "PTM") || iEquals(ext, "STM") || iEquals(ext, "ULT") || iEquals(ext, "UMX") || iEquals(ext, "MT2") || iEquals(ext, "PSM"))
     {
-        // tracker formats (.mod, .it)
+#ifdef USE_OPENMPT
+        PlaylistFactory::tryWith<OpenMPTWrapper>(pcm, filePath, offset, len);
+#endif
+#ifdef USE_MODPLUG
         PlaylistFactory::tryWith<ModPlugWrapper>(pcm, filePath, offset, len);
+#endif
     }
 #endif
 

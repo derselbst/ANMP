@@ -178,6 +178,7 @@ option(ENABLE_VGMSTREAM "Use vgmstream to support innumerable streamed audio for
 option(ENABLE_FFMPEG "Use ffmpeg to support innumerable streamed audio formats, also from video streams." ON)
 option(ENABLE_FLUIDSYNTH "Use fluidsynth to synthesize MIDI files." ON)
 option(ENABLE_MODPLUG "Use libmodplug to support multiple tracker formats." ON)
+option(ENABLE_OPENMPT "A better libmodplug to support multiple tracker formats." ON)
 
 if(ENABLE_LIBGME)
     MY_FIND_LIB(LIBGME gme)
@@ -274,49 +275,64 @@ if(ENABLE_FLUIDSYNTH)
   PKG_CHECK_MODULES(LIBSMF smf)
   
   if(LIBSMF_FOUND AND FLUIDSYNTH_FOUND)
-                add_definitions(-DUSE_FLUIDSYNTH)
-                add_definitions(-DUSE_SMF)
-                if(DEFINED FLUIDSYNTH_DEFAULT_SF2)
-                    add_definitions(-DFLUIDSYNTH_DEFAULT_SF2="${FLUIDSYNTH_DEFAULT_SF2}")
-                endif()
-                
-                set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${FLUIDSYNTH_INCLUDE_DIRS})
-                set(LD_FLAGS ${LD_FLAGS} ${FLUIDSYNTH_LIBRARIES})
-                
-                MY_PRINT(FLUIDSYNTH)
-                
-                
-                set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${LIBSMF_INCLUDE_DIRS})
-                set(LD_FLAGS ${LD_FLAGS} ${LIBSMF_LIBRARIES})
-                
-                MY_PRINT(LIBSMF)
-                
-                set(USE_FLUIDSYNTH TRUE)
-                set(USE_SMF TRUE)
+    add_definitions(-DUSE_FLUIDSYNTH)
+    add_definitions(-DUSE_SMF)
+    if(DEFINED FLUIDSYNTH_DEFAULT_SF2)
+        add_definitions(-DFLUIDSYNTH_DEFAULT_SF2="${FLUIDSYNTH_DEFAULT_SF2}")
+    endif()
+
+    set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${FLUIDSYNTH_INCLUDE_DIRS})
+    set(LD_FLAGS ${LD_FLAGS} ${FLUIDSYNTH_LIBRARIES})
+
+    MY_PRINT(FLUIDSYNTH)
+
+    set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${LIBSMF_INCLUDE_DIRS})
+    set(LD_FLAGS ${LD_FLAGS} ${LIBSMF_LIBRARIES})
+
+    MY_PRINT(LIBSMF)
+
+    set(USE_FLUIDSYNTH TRUE)
+    set(USE_SMF TRUE)
   endif(LIBSMF_FOUND AND FLUIDSYNTH_FOUND)
-  
+
   summary_add("fluidsynth support" USE_FLUIDSYNTH)
 endif(ENABLE_FLUIDSYNTH)
 
 
 if(ENABLE_MODPLUG)
   PKG_CHECK_MODULES(LIBMODPLUG libmodplug)
-  
+
   if(LIBMODPLUG_FOUND)
-                add_definitions(-DUSE_MODPLUG)
-                
+    add_definitions(-DUSE_MODPLUG)
+
 # modplug ships an sndfile.h, which conflicts with libsndfile's sndfile.h
 # so dont include modplugs include path in compiler search list to avoid wrong includes
-#                 set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${LIBMODPLUG_INCLUDE_DIRS})
-                set(LD_FLAGS ${LD_FLAGS} ${LIBMODPLUG_LIBRARIES})
-                
-                MY_PRINT(LIBMODPLUG)
-                
-                set(USE_MODPLUG TRUE)
+#    set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${LIBMODPLUG_INCLUDE_DIRS})
+    set(LD_FLAGS ${LD_FLAGS} ${LIBMODPLUG_LIBRARIES})
+
+    MY_PRINT(LIBMODPLUG)
+
+    set(USE_MODPLUG TRUE)
   endif(LIBMODPLUG_FOUND)
-  
+
   summary_add("modplug support" USE_MODPLUG)
 endif(ENABLE_MODPLUG)
+
+if(ENABLE_OPENMPT)
+  PKG_CHECK_MODULES(LIBOPENMPT libopenmpt)
+
+  if(LIBOPENMPT_FOUND)
+    add_definitions(-DUSE_OPENMPT)
+    set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${LIBOPENMPT_INCLUDE_DIRS})
+    set(LD_FLAGS ${LD_FLAGS} ${LIBOPENMPT_LIBRARIES})
+
+    MY_PRINT(LIBOPENMPT)
+
+    set(USE_OPENMPT TRUE)
+  endif(LIBOPENMPT_FOUND)
+
+  summary_add("openmpt support" USE_OPENMPT)
+endif(ENABLE_OPENMPT)
 
 ##################################
 ### miscellaneous dependencies ###
