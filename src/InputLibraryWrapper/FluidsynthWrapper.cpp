@@ -1,4 +1,5 @@
 #include "FluidsynthWrapper.h"
+#include "MidiWrapper.h"
 
 #include "AtomicWrite.h"
 #include "Common.h"
@@ -8,6 +9,16 @@
 #include <chrono>
 #include <thread> // std::this_thread::sleep_for
 #include <algorithm>
+
+
+struct MidiNoteInfo
+{
+    uint8_t chan;
+
+    uint8_t key;
+
+    uint8_t vel;
+};
 
 FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2, MidiWrapper& midiWrapper) : midiChannelHasNoteOn(NMidiChannels)
 {
@@ -73,10 +84,10 @@ void FluidsynthWrapper::deleteEvents()
 {
     delete_fluid_event(this->callbackEvent);
     this->callbackEvent = nullptr;
-    
+
     delete_fluid_event(this->callbackNoteEvent);
     this->callbackNoteEvent = nullptr;
-    
+
     delete_fluid_event(this->synthEvent);
     this->synthEvent = nullptr;
 }
@@ -169,7 +180,7 @@ void FluidsynthWrapper::setupSynth()
     {
         fluid_synth_cc(this->synth, i, CBFD_FILTERQ_CC, 0);
         fluid_synth_cc(this->synth, i, CBFD_FILTERFC_CC, 127);
-        
+
         fluid_synth_cc(this->synth, i, DP_ATTACK_CC, 0);
         fluid_synth_cc(this->synth, i, DP_HOLD_CC, 0);
         fluid_synth_cc(this->synth, i, DP_DECAY_CC, 0);

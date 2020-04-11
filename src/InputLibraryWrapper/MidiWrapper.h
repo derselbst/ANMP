@@ -44,15 +44,6 @@ struct MidiLoopInfo
     std::vector<smf_event_t*> eventsInLoop;
 };
 
-struct MidiNoteInfo
-{
-    uint8_t chan;
-
-    uint8_t key;
-
-    uint8_t vel;
-};
-
 /**
   * class MidiWrapper
   * 

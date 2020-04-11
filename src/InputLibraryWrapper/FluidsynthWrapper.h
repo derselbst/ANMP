@@ -10,12 +10,12 @@
 #include <vector>
 #include <memory>
 
+struct MidiNoteInfo;
+
 /**
   * class FluidsynthWrapper
   *
   */
-
-
 class FluidsynthWrapper
 {
     public:
