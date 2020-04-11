@@ -60,7 +60,7 @@ void MidiWrapper::FluidSeqCallback(unsigned int time, fluid_event_t* e, fluid_se
     }
 
     // seek back to where the loop started
-    if(smf_seek_to_seconds(pthis->smf, loopInfo->start.Value) != 0)
+    if(smf_seek_to_pulses(pthis->smf, loopInfo->start_tick.Value) != 0)
     {
         CLOG(LogLevel_t::Error, "unable to seek to "<< loopInfo->start.Value << " seconds.");
         return;
@@ -128,7 +128,6 @@ void MidiWrapper::initAttr()
     this->Format.SampleFormat = SampleFormat_t::float32;
     this->lastOverridingLoopCount = gConfig.overridingGlobalLoopCount;
     this->lastUseLoopInfo = gConfig.useLoopInfo;
-    this->initialize();
 }
 
 // calling libsmf, parsing through all events is expensive
@@ -169,14 +168,6 @@ void MidiWrapper::initialize()
         this->trackLoops[i].clear();
         this->trackLoops[i].resize(NMidiChannels);
     }
-
-    this->parseEvents();
-
-    const auto* max = this->getLongestMidiTrackLoop();
-    if(gConfig.useLoopInfo && max != nullptr)
-    {
-        this->fileLen.Value += (max->stop.Value - max->start.Value)*1000 * std::max(0, this->lastOverridingLoopCount-1);
-    }
 }
 
 MidiWrapper::~MidiWrapper()
@@ -193,47 +184,38 @@ MidiWrapper::~MidiWrapper()
 
 void MidiWrapper::open()
 {
+    this->synth = new FluidsynthWrapper(::findSoundfont(this->Filename), *this);
+    this->Format.SampleRate = this->synth->GetSampleRate();
+
     if(gConfig.overridingGlobalLoopCount != this->lastOverridingLoopCount
         || gConfig.useLoopInfo != this->lastUseLoopInfo)
     {
         this->initAttr();
     }
 
-    this->synth = new FluidsynthWrapper(::findSoundfont(this->Filename), *this);
+    this->initialize();
+    this->parseEvents();
 
-    smf_rewind(this->smf);
-    smf_event_t *event;
-    while ((event = smf_get_next_event(this->smf)) != nullptr)
+    const auto* max = this->getLongestMidiTrackLoop();
+    if(this->lastUseLoopInfo && max != nullptr)
     {
-        if (!smf_event_is_valid(event)
-            || smf_event_is_metadata(event)
-            || smf_event_is_sysex(event)
-            || IsLoopCount(event)
-            || IsLoopStart(event)
-            || IsLoopStop(event)
-            || static_cast<unsigned int>((event->time_seconds * 1000) >= this->fileLen.Value))
-        {
-            continue;
-        }
-
-        this->synth->AddEvent(event);
-    } // end of while
+        this->fileLen.Value += (max->stop.Value - max->start.Value)*1000 * std::max(0, this->lastOverridingLoopCount-1);
+    }
 
     // finally send note offs on all channels
     // we have to do this, because some wind might be blowing (DK64)
     this->synth->FinishSong(this->fileLen.Value);
-
     this->synth->ConfigureChannels(&this->Format);
 
-    this->Format.SampleRate = this->synth->GetSampleRate();
+
     this->buildLoopTree();
 }
 
 void MidiWrapper::parseEvents()
 {
     int lastestLoopCount[NMidiChannels] = {};
-    const double endOfSong = this->fileLen.Value * std::max(1, this->lastOverridingLoopCount) / 1000;
 
+    smf_rewind(this->smf);
     smf_event_t *event;
     while ((event = smf_get_next_event(this->smf)) != nullptr)
     {
@@ -248,65 +230,65 @@ void MidiWrapper::parseEvents()
             continue;
         }
 
-        if (!this->lastUseLoopInfo)
+        if (this->lastUseLoopInfo)
         {
-            continue;
-        }
-
-        uint16_t chan = event->midi_buffer[0] & 0x0F;
-        if (IsLoopCount(event))
-        {
-            lastestLoopCount[chan] = event->midi_buffer[2];
-            continue;
-        }
-
-        vector<MidiLoopInfo> &loops = this->trackLoops[event->track_number - 1 /*because one based*/][chan];
-        if (IsLoopStart(event))
-        {
-            // zero-based
-            unsigned int loopId = event->midi_buffer[2];
-            if (loops.size() <= loopId)
+            uint16_t chan = event->midi_buffer[0] & 0x0F;
+            if (IsLoopCount(event))
             {
-                loops.resize(loopId + 1);
-            }
-
-            MidiLoopInfo &info = loops[loopId];
-
-            info.trackId = event->track_number;
-            info.eventId = event->event_number;
-            info.channel = chan;
-            info.loopId = loopId;
-
-            if (!info.start.hasValue) // avoid multiple sets
-            {
-                info.start = event->time_seconds;
-            }
-
-            continue;
-        }
-
-        if (IsLoopStop(event))
-        {
-            // zero-based
-            unsigned int loopId = event->midi_buffer[2];
-            if (loops.size() <= loopId)
-            {
-                CLOG(LogLevel_t::Warning, "Received loop end, but there was no corresponding loop start");
-
-                // ...well, cant do anything here
+                lastestLoopCount[chan] = event->midi_buffer[2];
                 continue;
             }
-            else
-            {
-                MidiLoopInfo &info = loops[loopId];
 
-                if (!info.stop.hasValue)
+            vector<MidiLoopInfo> &loops = this->trackLoops[event->track_number - 1 /*because one based*/][chan];
+            if (IsLoopStart(event))
+            {
+                // zero-based
+                unsigned int loopId = event->midi_buffer[2];
+                if (loops.size() <= loopId)
                 {
-                    info.stop = event->time_seconds;
-                    info.count = lastestLoopCount[chan];
+                    loops.resize(loopId + 1);
                 }
 
-                this->synth->ScheduleLoop(&info);
+                MidiLoopInfo &info = loops[loopId];
+
+                info.trackId = event->track_number;
+                info.eventId = event->event_number;
+                info.channel = chan;
+                info.loopId = loopId;
+
+                if (!info.start.hasValue) // avoid multiple sets
+                {
+                    info.start = event->time_seconds;
+                    info.start_tick = event->time_pulses;
+                }
+
+                continue;
+            }
+
+            if (IsLoopStop(event))
+            {
+                // zero-based
+                unsigned int loopId = event->midi_buffer[2];
+                if (loops.size() <= loopId)
+                {
+                    CLOG(LogLevel_t::Warning, "Received loop end, but there was no corresponding loop start");
+
+                    // ...well, cant do anything here
+                    continue;
+                }
+                else
+                {
+                    MidiLoopInfo &info = loops[loopId];
+
+                    if (!info.stop.hasValue)
+                    {
+                        info.stop = event->time_seconds;
+                        info.stop_tick = event->time_pulses;
+                        info.count = lastestLoopCount[chan];
+                    }
+
+                    this->synth->ScheduleLoop(&info);
+                }
             }
         }
 
@@ -315,10 +297,6 @@ void MidiWrapper::parseEvents()
     } // end of while
 
     smf_rewind(this->smf);
-    
-    // finally send note offs on all channels
-    // we have to do this, because some wind might be blowing (DK64)
-    this->synth->FinishSong(endOfSong);
 }
 
 

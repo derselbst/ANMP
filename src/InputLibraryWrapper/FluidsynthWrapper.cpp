@@ -518,8 +518,6 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
 
     ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, static_cast<unsigned int>((event->time_seconds + offset) * 1000) + fluid_sequencer_get_tick(this->sequencer), true);
 
-    ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, static_cast<unsigned int>((event->time_seconds - offset)*1000) + fluid_sequencer_get_tick(this->sequencer), true);
-
     if (ret != FLUID_OK)
     {
         CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
