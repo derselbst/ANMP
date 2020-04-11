@@ -199,7 +199,7 @@ void MidiWrapper::open()
         this->initAttr();
     }
 
-    this->synth = new FluidsynthWrapper(::findSoundfont(this->Filename));
+    this->synth = new FluidsynthWrapper(::findSoundfont(this->Filename), *this);
 
     smf_rewind(this->smf);
     smf_event_t *event;

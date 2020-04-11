@@ -19,7 +19,7 @@
 class FluidsynthWrapper
 {
     public:
-    FluidsynthWrapper(const Nullable<string>& suggestedSf2);
+    FluidsynthWrapper(const Nullable<string>& suggestedSf2, MidiWrapper&);
     ~FluidsynthWrapper();
 
     // forbid copying
@@ -92,7 +92,7 @@ class FluidsynthWrapper
 
     void setupSettings();
     void setupMixdownBuffer();
-    void setupSynth(MidiWrapper&);
+    void setupSynth();
     void setupSeq(MidiWrapper&);
 
     void deleteEvents();

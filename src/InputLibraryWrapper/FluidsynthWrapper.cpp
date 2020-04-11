@@ -9,7 +9,7 @@
 #include <thread> // std::this_thread::sleep_for
 #include <algorithm>
 
-FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2) : midiChannelHasNoteOn(NMidiChannels)
+FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2, MidiWrapper& midiWrapper) : midiChannelHasNoteOn(NMidiChannels)
 {
     if((this->synthEvent = new_fluid_event()) == nullptr ||
        (this->callbackEvent = new_fluid_event()) == nullptr ||
@@ -44,7 +44,7 @@ FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2) : mid
     }
 
     this->setupSynth();
-    this->setupSeq();
+    this->setupSeq(midiWrapper);
 
     if ((this->cachedSf2Id = fluid_synth_sfload(this->synth, soundfont.Value.c_str(), true)) == -1)
     {
@@ -100,28 +100,18 @@ void FluidsynthWrapper::setupSeq(MidiWrapper& midi)
         this->synthId = fluid_sequencer_register_fluidsynth(this->sequencer, this->synth);
         fluid_event_set_dest(this->synthEvent, this->synthId);
     }
-    
-    if(this->midiwrapperID.hasValue)
-    {
-        // unregister any client
-        fluid_sequencer_unregister_client(this->sequencer, this->midiwrapperID.Value);
-    }
+
     // register myself as second destination
     this->midiwrapperID = fluid_sequencer_register_client(this->sequencer, "schedule_loop_callback", &MidiWrapper::FluidSeqCallback, &midi);
-    fluid_event_set_dest(this->callbackEvent, this->midiwrapperID.Value);
-        
-    if(this->myselfID.hasValue)
-    {
-        // unregister any client
-        fluid_sequencer_unregister_client(this->sequencer, this->myselfID.Value);
-    }
+    fluid_event_set_dest(this->callbackEvent, this->midiwrapperID);
+
     // register myself as second destination
     this->myselfID = fluid_sequencer_register_client(this->sequencer, "schedule_note_callback", &FluidsynthWrapper::FluidSeqNoteCallback, this);
     fluid_event_set_dest(this->callbackNoteEvent, this->myselfID);
 
     // remove all events from the sequencer's queue
     fluid_sequencer_remove_events(this->sequencer, -1, -1, -1);
-    
+
     this->initTick = fluid_sequencer_get_tick(this->sequencer);
 }
 
@@ -131,9 +121,10 @@ void FluidsynthWrapper::deleteSeq()
     {
         // explictly unregister all clients before deleting the seq
         fluid_sequencer_unregister_client(this->sequencer, this->myselfID);
+        fluid_sequencer_unregister_client(this->sequencer, this->midiwrapperID);
         fluid_event_unregistering(this->synthEvent);
         fluid_sequencer_send_now(this->sequencer, this->synthEvent);
-        
+
         delete_fluid_sequencer(this->sequencer);
         this->sequencer = nullptr;
     }
@@ -153,7 +144,7 @@ void FluidsynthWrapper::setupSynth()
 
     // press the big red panic/reset button
     fluid_synth_system_reset(this->synth);
-    
+
     if(!gConfig.FluidsynthChannel9IsDrum)
     {
         fluid_synth_set_channel_type(this->synth, 9, CHANNEL_TYPE_MELODIC);
@@ -345,7 +336,6 @@ void FluidsynthWrapper::setupSettings()
 
 void FluidsynthWrapper::setupMixdownBuffer()
 {
-<<<<<<< HEAD
     constexpr int ChanPerV = FluidsynthWrapper::GetChannelsPerVoice();
 
     // lookup number of audio and effect (stereo-)channels of the synth
