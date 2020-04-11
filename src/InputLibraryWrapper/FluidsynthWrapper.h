@@ -1,8 +1,7 @@
 
 #pragma once
 
-#include "Nullable.h"
-#include "types.h"
+#include "MidiWrapper.h"
 
 #include <fluidsynth.h>
 
@@ -11,15 +10,12 @@
 #include <vector>
 #include <memory>
 
-class MidiWrapper;
-struct MidiLoopInfo;
-struct MidiNoteInfo;
-struct SongFormat;
-
 /**
   * class FluidsynthWrapper
   *
   */
+
+
 class FluidsynthWrapper
 {
     public:
@@ -69,6 +65,9 @@ class FluidsynthWrapper
     // fluidsynth's internal synth
     fluid_seq_id_t synthId;
 
+    // callback ID for our parent MidiWrapper instance
+    fluid_seq_id_t midiwrapperID;
+
     // callback ID for ourself
     fluid_seq_id_t myselfID;
 
@@ -79,10 +78,10 @@ class FluidsynthWrapper
     unsigned int initTick = 0;
 
     int cachedSf2Id = -1;
-    
+
     // temporary sample mixdown buffer used by fluid_synth_process
     std::vector<float> sampleBuffer;
-    
+
     // pointer to small buffers within sampleBuffer of dry and effects audio
     std::vector<float*> dry, fx;
 
@@ -93,8 +92,8 @@ class FluidsynthWrapper
 
     void setupSettings();
     void setupMixdownBuffer();
-    void setupSynth();
-    void setupSeq();
+    void setupSynth(MidiWrapper&);
+    void setupSeq(MidiWrapper&);
 
     void deleteEvents();
     void deleteSynth();

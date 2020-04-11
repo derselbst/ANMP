@@ -1,5 +1,4 @@
 #include "FluidsynthWrapper.h"
-#include "MidiWrapper.h"
 
 #include "AtomicWrite.h"
 #include "Common.h"
@@ -87,7 +86,7 @@ constexpr int FluidsynthWrapper::GetChannelsPerVoice()
     return 2; //stereo
 }
 
-void FluidsynthWrapper::setupSeq()
+void FluidsynthWrapper::setupSeq(MidiWrapper& midi)
 {
     if (this->sequencer == nullptr) // only create the sequencer once
     {
@@ -99,14 +98,25 @@ void FluidsynthWrapper::setupSeq()
 
         // register synth as first destination
         this->synthId = fluid_sequencer_register_fluidsynth(this->sequencer, this->synth);
-        
         fluid_event_set_dest(this->synthEvent, this->synthId);
     }
-
+    
+    if(this->midiwrapperID.hasValue)
+    {
+        // unregister any client
+        fluid_sequencer_unregister_client(this->sequencer, this->midiwrapperID.Value);
+    }
+    // register myself as second destination
+    this->midiwrapperID = fluid_sequencer_register_client(this->sequencer, "schedule_loop_callback", &MidiWrapper::FluidSeqCallback, &midi);
+    fluid_event_set_dest(this->callbackEvent, this->midiwrapperID.Value);
+        
+    if(this->myselfID.hasValue)
+    {
+        // unregister any client
+        fluid_sequencer_unregister_client(this->sequencer, this->myselfID.Value);
+    }
     // register myself as second destination
     this->myselfID = fluid_sequencer_register_client(this->sequencer, "schedule_note_callback", &FluidsynthWrapper::FluidSeqNoteCallback, this);
-    
-    // destination may have changed, refresh it
     fluid_event_set_dest(this->callbackNoteEvent, this->myselfID);
 
     // remove all events from the sequencer's queue
@@ -335,6 +345,7 @@ void FluidsynthWrapper::setupSettings()
 
 void FluidsynthWrapper::setupMixdownBuffer()
 {
+<<<<<<< HEAD
     constexpr int ChanPerV = FluidsynthWrapper::GetChannelsPerVoice();
 
     // lookup number of audio and effect (stereo-)channels of the synth
@@ -516,6 +527,8 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
     }
 
     ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, static_cast<unsigned int>((event->time_seconds + offset) * 1000) + fluid_sequencer_get_tick(this->sequencer), true);
+
+    ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, static_cast<unsigned int>((event->time_seconds - offset)*1000) + fluid_sequencer_get_tick(this->sequencer), true);
 
     if (ret != FLUID_OK)
     {
