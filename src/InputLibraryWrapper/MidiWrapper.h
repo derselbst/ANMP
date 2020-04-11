@@ -39,6 +39,9 @@ struct MidiLoopInfo
     // how often this loop is repeated, 0 for infinite loops
     // specified by MIDI CC104
     uint8_t count = 0;
+
+    // pointer to events which are part of this midi track loop
+    std::vector<smf_event_t*> eventsInLoop;
 };
 
 struct MidiNoteInfo

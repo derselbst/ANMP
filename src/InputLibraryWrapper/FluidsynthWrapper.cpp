@@ -532,18 +532,6 @@ void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo *loopInfo)
 
     callbackdate += static_cast<unsigned int>((loopInfo->stop.Value - loopInfo->start.Value) * 1000); // postpone the callback date by the duration of this midi track loop
 
-// HACK: before scheduling the callback, make sure no note is sounding anymore at loopend
-// for some ambiance tunes of DK64 the noteoff events happen after the loopend, as a consequence, note the have been turned on during a note will never be stopped.
-// this hack however breaks JFG, so disable it for now
-#if 0
-    fluid_event_all_notes_off(this->synthEvent, loopInfo->channel);
-    ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, callbackdate-1, true);
-    if(ret != FLUID_OK)
-    {
-        CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
-    }
-#endif
-
     fluid_event_timer(this->callbackEvent, loopInfo);
     ret = fluid_sequencer_send_at(this->sequencer, this->callbackEvent, callbackdate, true);
     if (ret != FLUID_OK)

@@ -59,55 +59,27 @@ void MidiWrapper::FluidSeqCallback(unsigned int time, fluid_event_t* e, fluid_se
         return;
     }
 
-    // seek back to where the loop started
-    if(smf_seek_to_pulses(pthis->smf, loopInfo->start_tick.Value) != 0)
-    {
-        CLOG(LogLevel_t::Error, "unable to seek to "<< loopInfo->start.Value << " seconds.");
-        return;
-    }
-
     // the sequencer's tick is not necessarily resetted when playing the next midi file, however, we need his tick to perform that check down there
     // thus, set it relative to the beginning of the current midi
     time -= pthis->synth->GetInitTick();
-    
-    smf_event_t* event;
-    // read in every single event following the position we currently are
-    while((event = smf_get_next_event(pthis->smf)) != nullptr)
+
+    // read in every single event of the loop
+    for(unsigned int k=0; k < loopInfo->eventsInLoop.size(); k++)
     {
-        // does this event belong to the same track and plays on the same channel as where we found the corresponding loop event?
-        if(event->track_number == loopInfo->trackId && (event->midi_buffer[0] & 0x0F) == loopInfo->channel)
+        smf_event_t* event = loopInfo->eventsInLoop[k];
+
+        // events shall not be looped beyond the end of the song
+        if(time + event->time_seconds*1000 < pthis->fileLen.Value)
         {
-            // events shall not be looped beyond the end of the song
-            if(time + event->time_seconds*1000 < pthis->fileLen.Value)
-            {
-                if(IsLoopStop(event))
-                {
-                    // is that our corresponding loop stop?
-                    if(event->midi_buffer[2] == loopInfo->loopId &&
-                        // is there still loop count left? 2 because one loop was already scheduled by parseEvents() and 0 is excluded
-                       (loopInfo->count == 0 || loopInfo->count > 2)
-                    )
-                    {
-                        loopInfo->count--;
-                        pthis->synth->ScheduleLoop(loopInfo);
-                        break;
-                    }
-                    else
-                    {
-                        // dont pass loop events to the synth
-                        continue;
-                    }
-                }
-                else if(IsLoopStart(event))
-                {
-                    continue;
-                }
-                else
-                {
-                    pthis->synth->AddEvent(event);
-                }
-            }
+            pthis->synth->AddEvent(event);
         }
+    }
+
+    bool isInfinite = loopInfo->count == 0;
+    // is there still loop count left? 2 because one loop was already scheduled by parseEvents() and 0 is excluded
+    if(isInfinite || loopInfo->count-- > 2)
+    {
+        pthis->synth->ScheduleLoop(loopInfo);
     }
 }
 
@@ -285,6 +257,77 @@ void MidiWrapper::parseEvents()
                         info.stop = event->time_seconds;
                         info.stop_tick = event->time_pulses;
                         info.count = lastestLoopCount[chan];
+
+                        // collect all events that are part of this loop, as well as note off events that are already outside
+                        // of the loop but belong to note on events that have been triggered within the loop.
+                        //
+                        // This workaround is required because for some ambiance tunes in DK64 the noteoff events happen 
+                        // after the loopend. As a consequence, note the have been turned on during a note will never be stopped.
+                        {
+                            std::bitset<128> noteIsPlaying;
+                            int numberOfEvents = event->track->number_of_events;
+                            info.eventsInLoop.reserve(numberOfEvents);
+                            // read in every single event following the position we currently are
+                            for(int i=0; i < numberOfEvents; i++)
+                            {
+                                smf_event_t *evt_of_loop = smf_track_get_event_by_number(event->track, i+1);
+
+                                // does this event belong to the same track and plays on the same channel as where we found the corresponding loop event?
+                                if (evt_of_loop != nullptr &&
+                                    evt_of_loop->track_number == info.trackId && //redundant?
+                                    info.start_tick.Value <= evt_of_loop->time_pulses &&
+                                    (evt_of_loop->midi_buffer[0] & 0x0F) == info.channel &&
+                                    !((IsLoopStart(evt_of_loop)) || (IsLoopCount(evt_of_loop)) || (IsLoopStop(evt_of_loop))))
+                                {
+                                    // events shall not be looped beyond the end of the song
+                                    unsigned char key = evt_of_loop->midi_buffer[1];
+
+                                    if (evt_of_loop->time_pulses >= info.stop_tick.Value)
+                                    {
+                                        if(noteIsPlaying.none())
+                                        {
+                                            // all events of this loop handled, stop here
+                                            break;
+                                        }
+                                        else if(!((evt_of_loop->midi_buffer[0] & 0xF0) == 0x80
+                                            ||  ((evt_of_loop->midi_buffer[0] & 0xF0) == 0x90
+                                                && evt_of_loop->midi_buffer[2] == 0)))
+                                        {
+                                            // smth. else than noteoff
+                                            continue;
+                                        }
+                                        else if(!noteIsPlaying.test(key))
+                                        {
+                                            // not the noteoff we are looking for
+                                            continue;
+                                        }
+                                    }
+                                    // for some ambiance tunes of DK64 the noteoff events happen after the loopend, as a consequence, notes that have been turned on during the loop will never be stopped.
+                                    // thus, keep track of all notes that have been turned on by this current MIDI track loop and continue searching for a noteoff event beyound the loopend
+                                    switch (evt_of_loop->midi_buffer[0] & 0xF0)
+                                    {
+                                        NOTEOFF:
+                                        case 0x80: // noteoff
+                                            noteIsPlaying.reset(key);
+                                            break;
+
+                                        case 0x90:
+                                            if(evt_of_loop->midi_buffer[2] == 0)
+                                            {
+                                                goto NOTEOFF;
+                                            }
+                                            noteIsPlaying.set(key);
+                                            [[fallthrough]];
+                                        default:
+                                            break;
+                                    }
+
+                                    // this event is confirmed to be part of the loop. save it.
+                                    // do no save the pointer though, because the underlying array might be sorted as soon as we add events to smf below.
+                                    info.eventsInLoop.push_back(evt_of_loop);
+                                }
+                            }
+                        }
                     }
 
                     this->synth->ScheduleLoop(&info);
