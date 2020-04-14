@@ -146,12 +146,6 @@ MidiWrapper::~MidiWrapper()
 {
     this->releaseBuffer();
     this->close();
-
-    if (this->smf != nullptr)
-    {
-        smf_delete(this->smf);
-        this->smf = nullptr;
-    }
 }
 
 void MidiWrapper::open()
@@ -262,7 +256,7 @@ void MidiWrapper::parseEvents()
                         // of the loop but belong to note on events that have been triggered within the loop.
                         //
                         // This workaround is required because for some ambiance tunes in DK64 the noteoff events happen 
-                        // after the loopend. As a consequence, note the have been turned on during a note will never be stopped.
+                        // after the loopend. As a consequence, notes that have been turned on during the loop will never be stopped.
                         {
                             std::bitset<128> noteIsPlaying;
                             int numberOfEvents = event->track->number_of_events;
@@ -302,8 +296,8 @@ void MidiWrapper::parseEvents()
                                             continue;
                                         }
                                     }
-                                    // for some ambiance tunes of DK64 the noteoff events happen after the loopend, as a consequence, notes that have been turned on during the loop will never be stopped.
-                                    // thus, keep track of all notes that have been turned on by this current MIDI track loop and continue searching for a noteoff event beyound the loopend
+
+                                    // keep track of all notes that have been turned on by this current MIDI track loop and continue searching for a noteoff event beyound the loopend
                                     switch (evt_of_loop->midi_buffer[0] & 0xF0)
                                     {
                                         NOTEOFF:
@@ -328,9 +322,8 @@ void MidiWrapper::parseEvents()
                                 }
                             }
                         }
+                        this->synth->ScheduleLoop(&info);
                     }
-
-                    this->synth->ScheduleLoop(&info);
                 }
             }
         }
@@ -349,6 +342,12 @@ void MidiWrapper::close() noexcept
     {
         delete this->synth;
         this->synth = nullptr;
+    }
+
+    if (this->smf != nullptr)
+    {
+        smf_delete(this->smf);
+        this->smf = nullptr;
     }
 }
 

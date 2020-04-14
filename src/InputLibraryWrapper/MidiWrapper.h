@@ -84,9 +84,9 @@ class MidiWrapper : public StandardWrapper<float>
     int lastOverridingLoopCount;
     bool lastUseLoopInfo;
 
-    // first dimension: no. of the midi track
+    // first, outermost dimension: no. of the midi track
     // second dim: midi channel
-    // third dim: id of the loop within that track
+    // third, innermost dim: id of the loop within that track
     vector<vector<vector<MidiLoopInfo>>> trackLoops;
 
     void initAttr();

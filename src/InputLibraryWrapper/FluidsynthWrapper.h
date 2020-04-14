@@ -89,6 +89,7 @@ class FluidsynthWrapper
     std::vector<std::unique_ptr<MidiNoteInfo>> noteOnContainer;
 
     std::vector<bool> midiChannelHasNoteOn;
+    std::vector<bool> midiChannelHasProgram;
 
     void setupSettings();
     void setupMixdownBuffer();

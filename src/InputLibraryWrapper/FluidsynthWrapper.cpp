@@ -20,7 +20,7 @@ struct MidiNoteInfo
     uint8_t vel;
 };
 
-FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2, MidiWrapper& midiWrapper) : midiChannelHasNoteOn(NMidiChannels)
+FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2, MidiWrapper& midiWrapper) : midiChannelHasNoteOn(NMidiChannels), midiChannelHasProgram(NMidiChannels)
 {
     if((this->synthEvent = new_fluid_event()) == nullptr ||
        (this->callbackEvent = new_fluid_event()) == nullptr ||
@@ -186,6 +186,18 @@ void FluidsynthWrapper::setupSynth()
         fluid_synth_cc(this->synth, i, DP_DECAY_CC, 0);
         fluid_synth_cc(this->synth, i, DP_SUSTAIN_CC, 127);
         fluid_synth_cc(this->synth, i, DP_RELEASE_CC, 0);
+
+        if (!gConfig.FluidsynthMultiChannel)
+        {
+            // After startup, the MIDI channels have assigned their default bank and program. We don't want this. When a MIDI channel has no
+            // program assigned, no notes shall be played. At least, this is the behaviour found in Jet Force Gemini's software synthesizer.
+            // Take a look at the eigth MIDI channel in Sparse 0x25 (Cerulean). Seems like these notes are supposed to be soundeffects. But
+            // since the channel is never assigned with a program, the notes are never being heard.
+            //
+            // That's why, when multichannel rendering is enabled, mute that channel, otherwise don't render that channel at all, by unassigning
+            // all default presets here.
+            fluid_synth_unset_program(this->synth, i);
+        }
     }
 
     fluid_synth_set_custom_filter(this->synth, FLUID_IIR_LOWPASS, FLUID_IIR_NO_GAIN_AMP | FLUID_IIR_Q_LINEAR | FLUID_IIR_Q_ZERO_OFF);
@@ -398,6 +410,13 @@ void FluidsynthWrapper::ConfigureChannels(SongFormat *f)
         return;
     }
 
+    if (!gConfig.FluidsynthMultiChannel)
+    {
+        f->VoiceChannels[0] = FluidsynthWrapper::GetChannelsPerVoice();
+        f->VoiceName[0] = "Everything";
+        return;
+    }
+
     unsigned int j = 0;
     for (int i = 0; i < nAudVoices; i++)
     {
@@ -408,15 +427,16 @@ void FluidsynthWrapper::ConfigureChannels(SongFormat *f)
             if(this->midiChannelHasNoteOn[j])
             {
                 f->VoiceName[i] = "Midi Channel " + to_string(j);
+
+                if(!midiChannelHasProgram[j])
+                {
+                    f->VoiceIsMuted[i] = true;
+                    f->VoiceName[i] += " (no program assigned)";
+                }
                 j++;
                 break;
             }
         }
-    }
-
-    if (!gConfig.FluidsynthMultiChannel)
-    {
-        f->VoiceName[0] = "Everything";
     }
 }
 
@@ -503,6 +523,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
             break;
 
         case 0xC0:
+            this->midiChannelHasProgram[chan] = true;
             fluid_event_program_change(this->synthEvent, chan, event->midi_buffer[1]);
             CLOG(LogLevel_t::Debug, "ProgChange, channel " << chan << ", program " << static_cast<int>(event->midi_buffer[1]));
             break;
