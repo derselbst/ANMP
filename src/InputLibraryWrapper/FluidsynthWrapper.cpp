@@ -503,7 +503,9 @@ unsigned int FluidsynthWrapper::GetInitTick()
 
 double FluidsynthWrapper::GetTempoScale(unsigned int uspqn, unsigned int ppqn)
 {
-    return (ppqn * 1000.0) / (uspqn / 1000.0);
+    return (ppqn * 1000.0) // 1000 because the scale is divided by 1000 in fluid_sequencer_get_tick()
+           /
+           (uspqn / 1000.0); // 1000 because we convert from microsec to millisec
 }
 
 void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
