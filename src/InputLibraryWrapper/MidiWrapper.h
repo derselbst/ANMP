@@ -64,7 +64,6 @@ class MidiWrapper : public StandardWrapper<float>
     ~MidiWrapper() override;
 
     static string SmfEventToString(smf_event_t *event);
-    static void FluidSeqCallback(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data);
 
     // interface methods declaration
 

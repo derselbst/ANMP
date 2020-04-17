@@ -44,45 +44,6 @@ string MidiWrapper::SmfEventToString(smf_event_t *event)
     return ret;
 }
 
-/**
- * @param time value returned by fluid_sequencer_get_tick(), i.e. usually time in milliseconds
- */
-void MidiWrapper::FluidSeqCallback(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data)
-{
-    (void)seq;
-
-    MidiWrapper* pthis = static_cast<MidiWrapper*>(data);
-    MidiLoopInfo* loopInfo = static_cast<MidiLoopInfo*>(fluid_event_get_data(e));
-
-    if(pthis==nullptr || loopInfo == nullptr)
-    {
-        return;
-    }
-
-    // the sequencer's tick is not necessarily resetted when playing the next midi file, however, we need his tick to perform that check down there
-    // thus, set it relative to the beginning of the current midi
-    time -= pthis->synth->GetInitTick();
-
-    // read in every single event of the loop
-    for(unsigned int k=0; k < loopInfo->eventsInLoop.size(); k++)
-    {
-        smf_event_t* event = loopInfo->eventsInLoop[k];
-
-        // events shall not be looped beyond the end of the song
-        if(time + event->time_seconds*1000 < pthis->fileLen.Value)
-        {
-            pthis->synth->AddEvent(event);
-        }
-    }
-
-    bool isInfinite = loopInfo->count == 0;
-    // is there still loop count left? 2 because one loop was already scheduled by parseEvents() and 0 is excluded
-    if(isInfinite || loopInfo->count-- > 2)
-    {
-        pthis->synth->ScheduleLoop(loopInfo);
-    }
-}
-
 MidiWrapper::MidiWrapper(string filename)
 : StandardWrapper(std::move(filename))
 {
@@ -150,7 +111,7 @@ MidiWrapper::~MidiWrapper()
 
 void MidiWrapper::open()
 {
-    this->synth = new FluidsynthWrapper(::findSoundfont(this->Filename), *this);
+    this->synth = new FluidsynthWrapper(::findSoundfont(this->Filename));
     this->Format.SampleRate = this->synth->GetSampleRate();
 
     if(gConfig.overridingGlobalLoopCount != this->lastOverridingLoopCount
@@ -162,15 +123,17 @@ void MidiWrapper::open()
     this->initialize();
     this->parseEvents();
 
+    auto finishAtTick = smf_get_length_pulses(this->smf);
     const auto* max = this->getLongestMidiTrackLoop();
     if(this->lastUseLoopInfo && max != nullptr)
     {
         this->fileLen.Value += (max->stop.Value - max->start.Value)*1000 * std::max(0, this->lastOverridingLoopCount-1);
+        finishAtTick += (max->stop_tick.Value - max->start_tick.Value)   * std::max(0, this->lastOverridingLoopCount-1);
     }
 
     // finally send note offs on all channels
     // we have to do this, because some wind might be blowing (DK64)
-    this->synth->FinishSong(this->fileLen.Value);
+    this->synth->FinishSong(finishAtTick);
     this->synth->ConfigureChannels(&this->Format);
 
 
@@ -185,7 +148,7 @@ void MidiWrapper::parseEvents()
     smf_event_t *event;
     while ((event = smf_get_next_event(this->smf)) != nullptr)
     {
-        if (smf_event_is_metadata(event) || smf_event_is_sysex(event))
+        if (smf_event_is_sysex(event))
         {
             continue;
         }
