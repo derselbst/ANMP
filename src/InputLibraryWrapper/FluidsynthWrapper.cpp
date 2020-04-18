@@ -530,16 +530,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
 
         double scale = this->GetTempoScale(uspqn, event->track->smf->ppqn);
         CLOG(LogLevel_t::Info, "Tempo: " << uspqn << " usPQN, " << scale << " scale, " << 60000000.0 / uspqn << " BPM, ppqn: " << event->track->smf->ppqn);
-        if(event->time_pulses == 0)
-        {
-            // This is the initial tempo change event. All events must be scheduled at this tempo.
-            // To achieve this we must set the sequencer scale immediately.
-            fluid_sequencer_set_time_scale(this->sequencer, scale);
-        }
-        else
-        {
-            this->ScheduleTempoChange(scale, event->time_pulses + offset);
-        }
+        this->ScheduleTempoChange(scale, event->time_pulses + offset);
 
         return;
     }
@@ -645,11 +636,11 @@ void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo *loopInfo)
     callbackdate += static_cast<unsigned int>(loopInfo->stop_tick.Value - loopInfo->start_tick.Value); // postpone the callback date by the duration of this midi track loop
 
     fluid_event_timer(this->callbackEvent, loopInfo);
-//     ret = fluid_sequencer_send_at(this->sequencer, this->callbackEvent, callbackdate, true);
-//     if (ret != FLUID_OK)
-//     {
-//         CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
-//     }
+    ret = fluid_sequencer_send_at(this->sequencer, this->callbackEvent, callbackdate, true);
+    if (ret != FLUID_OK)
+    {
+        CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
+    }
 }
 
 void FluidsynthWrapper::FluidSeqLoopCallback(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data)
