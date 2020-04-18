@@ -116,6 +116,7 @@ void MidiWrapper::open()
     }
 
     this->initialize();
+    this->synth->SetDefaultSeqTempoScale(this->smf->ppqn);
     this->parseEvents();
 
     auto finishAtTick = smf_get_length_pulses(this->smf);

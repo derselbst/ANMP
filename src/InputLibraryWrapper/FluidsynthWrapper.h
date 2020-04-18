@@ -27,6 +27,7 @@ class FluidsynthWrapper
     FluidsynthWrapper &operator=(FluidsynthWrapper const &) = delete;
 
     void ConfigureChannels(SongFormat *f);
+    void SetDefaultSeqTempoScale(unsigned int ppqn);
 
     // returns the samplerate that will be synthesized at
     unsigned int GetSampleRate();
@@ -37,16 +38,8 @@ class FluidsynthWrapper
     int GetEffectCount();
     static constexpr int GetChannelsPerVoice();
 
-    // returns the tick count the sequencer had during a call to this.DeepInit()
-    unsigned int GetInitTick();
-
-    double GetTempoScale(unsigned int uspqn, unsigned int ppqn);
-
     void AddEvent(smf_event_t *event, double offset = 0.0);
-    void ScheduleTempoChange(double newScale, int atTick);
     void ScheduleLoop(MidiLoopInfo *loopInfo);
-    void ScheduleNote(const MidiNoteInfo &noteInfo, unsigned int time);
-    void NoteOnOff(MidiNoteInfo *nInfo);
     void FinishSong(int millisec);
 
     void Render(float *bufferToFill, frame_t framesToRender);
@@ -83,8 +76,7 @@ class FluidsynthWrapper
     // fluidsynth's synth has no samplerate getter, so cache it here
     unsigned int cachedSampleRate = 0;
 
-    // tick count of the sequencer when this->DeepInit() was called
-    unsigned int initTick = 0;
+    // tick count when the song ends
     unsigned int lastTick = 0;
 
     int cachedSf2Id = -1;
@@ -112,6 +104,11 @@ class FluidsynthWrapper
     void deleteSynth();
     void deleteSeq();
 
+    void ScheduleNote(const MidiNoteInfo &noteInfo, unsigned int time);
+    void NoteOnOff(MidiNoteInfo *nInfo);
+    void ScheduleTempoChange(double newScale, int atTick);
+
+    static double GetTempoScale(unsigned int uspqn, unsigned int ppqn);
     static void FluidSeqLoopCallback(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data);
     static void FluidSeqNoteCallback(unsigned int time, fluid_event_t *e, fluid_sequencer_t *seq, void *data);
     static void FluidSeqTempoCallback(unsigned int time, fluid_event_t *e, fluid_sequencer_t * seq, void *data);

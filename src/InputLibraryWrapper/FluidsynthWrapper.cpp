@@ -131,11 +131,12 @@ void FluidsynthWrapper::setupSeq()
 
     // remove all events from the sequencer's queue
     fluid_sequencer_remove_events(this->sequencer, -1, -1, -1);
+}
 
+void FluidsynthWrapper::SetDefaultSeqTempoScale(unsigned int ppqn)
+{
     // initialize to default MIDI tempo
-    fluid_sequencer_set_time_scale(this->sequencer, this->GetTempoScale(500000 /* 120 BPM as per MIDI spec*/, 384));
-
-    this->initTick = fluid_sequencer_get_tick(this->sequencer);
+    fluid_sequencer_set_time_scale(this->sequencer, GetTempoScale(500000 /* 120 BPM as per MIDI spec*/, ppqn));
 }
 
 void FluidsynthWrapper::deleteSeq()
@@ -496,11 +497,6 @@ unsigned int FluidsynthWrapper::GetSampleRate()
     return this->cachedSampleRate;
 }
 
-unsigned int FluidsynthWrapper::GetInitTick()
-{
-    return this->initTick;
-}
-
 double FluidsynthWrapper::GetTempoScale(unsigned int uspqn, unsigned int ppqn)
 {
     return (ppqn * 1000.0) // 1000 because the scale is divided by 1000 in fluid_sequencer_get_tick()
@@ -524,12 +520,13 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
         int uspqn = (event->midi_buffer[3] << 16) + (event->midi_buffer[4] << 8) + event->midi_buffer[5];
         if (uspqn <= 0)
         {
-            CLOG(LogLevel_t::Error, "Ignoring invalid tempo change.");
+            CLOG(LogLevel_t::Warning, "Ignoring invalid tempo change.");
             return;
         }
 
-        double scale = this->GetTempoScale(uspqn, event->track->smf->ppqn);
-        CLOG(LogLevel_t::Info, "Tempo: " << uspqn << " usPQN, " << scale << " scale, " << 60000000.0 / uspqn << " BPM, ppqn: " << event->track->smf->ppqn);
+        double scale = GetTempoScale(uspqn, event->track->smf->ppqn);
+        CLOG(LogLevel_t::Debug, "Tempo: " << uspqn << " usPQN, " << scale << " scale, " << 60000000.0 / uspqn << " BPM, ppqn: " << event->track->smf->ppqn);
+
         this->ScheduleTempoChange(scale, event->time_pulses + offset);
 
         return;
@@ -542,7 +539,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
             n.chan = chan;
             n.key = event->midi_buffer[1];
             n.vel = 0;
-            this->ScheduleNote(n, static_cast<unsigned int>(event->time_pulses + offset) + fluid_sequencer_get_tick(this->sequencer));
+            this->ScheduleNote(n, static_cast<unsigned int>(event->time_pulses + offset));
             return;
 
         case 0x90:
@@ -550,7 +547,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
             n.chan = chan;
             n.key = event->midi_buffer[1];
             n.vel = event->midi_buffer[2];
-            this->ScheduleNote(n, static_cast<unsigned int>(event->time_pulses + offset) + fluid_sequencer_get_tick(this->sequencer));
+            this->ScheduleNote(n, static_cast<unsigned int>(event->time_pulses + offset));
             return;
 
         case 0xA0:
@@ -591,7 +588,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
             return;
     }
 
-    ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, static_cast<unsigned int>(event->time_pulses + offset) + fluid_sequencer_get_tick(this->sequencer), true);
+    ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, static_cast<unsigned int>(event->time_pulses + offset), false);
 
     if (ret != FLUID_OK)
     {
@@ -631,12 +628,10 @@ void FluidsynthWrapper::FluidSeqTempoCallback(unsigned int /*time*/, fluid_event
 void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo *loopInfo)
 {
     int ret;
-    unsigned int callbackdate = fluid_sequencer_get_tick(this->sequencer); // now
-
-    callbackdate += static_cast<unsigned int>(loopInfo->stop_tick.Value - loopInfo->start_tick.Value); // postpone the callback date by the duration of this midi track loop
+    unsigned int callbackdate = static_cast<unsigned int>(loopInfo->stop_tick.Value - loopInfo->start_tick.Value); // postpone the callback date by the duration of this midi track loop
 
     fluid_event_timer(this->callbackEvent, loopInfo);
-    ret = fluid_sequencer_send_at(this->sequencer, this->callbackEvent, callbackdate, true);
+    ret = fluid_sequencer_send_at(this->sequencer, this->callbackEvent, callbackdate, false);
     if (ret != FLUID_OK)
     {
         CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
@@ -654,10 +649,6 @@ void FluidsynthWrapper::FluidSeqLoopCallback(unsigned int time, fluid_event_t* e
     {
         return;
     }
-
-    // the sequencer's tick is not necessarily resetted when playing the next midi file, however, we need his tick to perform that check down there
-    // thus, set it relative to the beginning of the current midi
-    time -= pthis->GetInitTick();
 
     // read in every single event of the loop
     for(unsigned int k=0; k < loopInfo->eventsInLoop.size(); k++)
@@ -690,7 +681,7 @@ void FluidsynthWrapper::ScheduleNote(const MidiNoteInfo &noteInfo, unsigned int 
     MidiNoteInfo* dup = new MidiNoteInfo(noteInfo);
     fluid_event_timer(this->callbackNoteEvent, dup);
 
-    int ret = fluid_sequencer_send_at(this->sequencer, this->callbackNoteEvent, time, true);
+    int ret = fluid_sequencer_send_at(this->sequencer, this->callbackNoteEvent, time, false);
     if (ret != FLUID_OK)
     {
         delete dup;
@@ -805,8 +796,8 @@ void FluidsynthWrapper::NoteOnOff(MidiNoteInfo *nInfo)
 void FluidsynthWrapper::FinishSong(int ticks)
 {
     fluid_event_all_notes_off(this->synthEvent, -1);
-    this->lastTick = fluid_sequencer_get_tick(this->sequencer) + ticks;
-    fluid_sequencer_send_at(this->sequencer, this->synthEvent, this->lastTick, true);
+    this->lastTick = ticks;
+    fluid_sequencer_send_at(this->sequencer, this->synthEvent, ticks, false);
 }
 
 void FluidsynthWrapper::Render(float *bufferToFill, frame_t framesToRender)
