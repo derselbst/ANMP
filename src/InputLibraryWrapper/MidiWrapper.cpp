@@ -96,11 +96,6 @@ void MidiWrapper::initialize()
 
     this->trackLoops.clear();
     this->trackLoops.resize(this->smf->number_of_tracks);
-    for (unsigned int i = 0; i < this->trackLoops.size(); i++)
-    {
-        this->trackLoops[i].clear();
-        this->trackLoops[i].resize(NMidiChannels);
-    }
 }
 
 MidiWrapper::~MidiWrapper()
@@ -142,7 +137,8 @@ void MidiWrapper::open()
 
 void MidiWrapper::parseEvents()
 {
-    int lastestLoopCount[NMidiChannels] = {};
+    // N64 SDK section 20.5.1: "A loop count of zero, the default, will loop forever."
+    int lastestLoopCount = 0;
 
     smf_rewind(this->smf);
     smf_event_t *event;
@@ -161,14 +157,13 @@ void MidiWrapper::parseEvents()
 
         if (this->lastUseLoopInfo)
         {
-            uint16_t chan = event->midi_buffer[0] & 0x0F;
             if (IsLoopCount(event))
             {
-                lastestLoopCount[chan] = event->midi_buffer[2];
+                lastestLoopCount = event->midi_buffer[2];
                 continue;
             }
 
-            vector<MidiLoopInfo> &loops = this->trackLoops[event->track_number - 1 /*because one based*/][chan];
+            vector<MidiLoopInfo> &loops = this->trackLoops[event->track_number - 1 /*because one based*/];
             if (IsLoopStart(event))
             {
                 // zero-based
@@ -182,7 +177,6 @@ void MidiWrapper::parseEvents()
 
                 info.trackId = event->track_number;
                 info.eventId = event->event_number;
-                info.channel = chan;
                 info.loopId = loopId;
 
                 if (!info.start.hasValue) // avoid multiple sets
@@ -213,7 +207,7 @@ void MidiWrapper::parseEvents()
                     {
                         info.stop = event->time_seconds;
                         info.stop_tick = event->time_pulses;
-                        info.count = lastestLoopCount[chan];
+                        info.count = lastestLoopCount;
 
                         // collect all events that are part of this loop, as well as note off events that are already outside
                         // of the loop but belong to note on events that have been triggered within the loop.
@@ -224,63 +218,65 @@ void MidiWrapper::parseEvents()
                             std::bitset<128> noteIsPlaying;
                             int numberOfEvents = event->track->number_of_events;
                             info.eventsInLoop.reserve(numberOfEvents);
-                            // read in every single event following the position we currently are
+
+                            // collect all events that are part of the MIDI track loop
                             for(int i=0; i < numberOfEvents; i++)
                             {
                                 smf_event_t *evt_of_loop = smf_track_get_event_by_number(event->track, i+1);
 
-                                // does this event belong to the same track and plays on the same channel as where we found the corresponding loop event?
+                                // does this event belong to the same track as where we found the corresponding loop event?
                                 if (evt_of_loop != nullptr &&
                                     evt_of_loop->track_number == info.trackId && //redundant?
                                     info.start_tick.Value <= evt_of_loop->time_pulses &&
-                                    (evt_of_loop->midi_buffer[0] & 0x0F) == info.channel &&
                                     !((IsLoopStart(evt_of_loop)) || (IsLoopCount(evt_of_loop)) || (IsLoopStop(evt_of_loop))))
                                 {
-                                    // events shall not be looped beyond the end of the song
-                                    unsigned char key = evt_of_loop->midi_buffer[1];
-
-                                    if (evt_of_loop->time_pulses >= info.stop_tick.Value)
+                                    if (!smf_event_is_metadata(event))
                                     {
-                                        if(noteIsPlaying.none())
-                                        {
-                                            // all events of this loop handled, stop here
-                                            break;
-                                        }
-                                        else if(!((evt_of_loop->midi_buffer[0] & 0xF0) == 0x80
-                                            ||  ((evt_of_loop->midi_buffer[0] & 0xF0) == 0x90
-                                                && evt_of_loop->midi_buffer[2] == 0)))
-                                        {
-                                            // smth. else than noteoff
-                                            continue;
-                                        }
-                                        else if(!noteIsPlaying.test(key))
-                                        {
-                                            // not the noteoff we are looking for
-                                            continue;
-                                        }
-                                    }
+                                        // events shall not be looped beyond the end of the song
+                                        unsigned char key = evt_of_loop->midi_buffer[1];
 
-                                    // keep track of all notes that have been turned on by this current MIDI track loop and continue searching for a noteoff event beyound the loopend
-                                    switch (evt_of_loop->midi_buffer[0] & 0xF0)
-                                    {
-                                        NOTEOFF:
-                                        case 0x80: // noteoff
-                                            noteIsPlaying.reset(key);
-                                            break;
-
-                                        case 0x90:
-                                            if(evt_of_loop->midi_buffer[2] == 0)
+                                        if (evt_of_loop->time_pulses >= info.stop_tick.Value)
+                                        {
+                                            if(noteIsPlaying.none())
                                             {
-                                                goto NOTEOFF;
+                                                // all events of this loop handled, stop here
+                                                break;
                                             }
-                                            noteIsPlaying.set(key);
-                                            [[fallthrough]];
-                                        default:
-                                            break;
+                                            else if(!((evt_of_loop->midi_buffer[0] & 0xF0) == 0x80
+                                                ||  ((evt_of_loop->midi_buffer[0] & 0xF0) == 0x90
+                                                    && evt_of_loop->midi_buffer[2] == 0)))
+                                            {
+                                                // smth. else than noteoff
+                                                continue;
+                                            }
+                                            else if(!noteIsPlaying.test(key))
+                                            {
+                                                // not the noteoff we are looking for
+                                                continue;
+                                            }
+                                        }
+
+                                        // keep track of all notes that have been turned on by this current MIDI track loop and continue searching for a noteoff event beyound the loopend
+                                        switch (evt_of_loop->midi_buffer[0] & 0xF0)
+                                        {
+                                            NOTEOFF:
+                                            case 0x80: // noteoff
+                                                noteIsPlaying.reset(key);
+                                                break;
+
+                                            case 0x90:
+                                                if(evt_of_loop->midi_buffer[2] == 0)
+                                                {
+                                                    goto NOTEOFF;
+                                                }
+                                                noteIsPlaying.set(key);
+                                                [[fallthrough]];
+                                            default:
+                                                break;
+                                        }
                                     }
 
                                     // this event is confirmed to be part of the loop. save it.
-                                    // do no save the pointer though, because the underlying array might be sorted as soon as we add events to smf below.
                                     info.eventsInLoop.push_back(evt_of_loop);
                                 }
                             }
@@ -331,27 +327,24 @@ const MidiLoopInfo* MidiWrapper::getLongestMidiTrackLoop() const
     const MidiLoopInfo *max = nullptr;
     for (unsigned int t = 0; t < this->trackLoops.size(); t++)
     {
-        for (unsigned int c = 0; c < this->trackLoops[t].size(); c++)
+        for (unsigned int l = 0; l < this->trackLoops[t].size(); l++)
         {
-            for (unsigned int l = 0; l < this->trackLoops[t][c].size(); l++)
-            {
-                const MidiLoopInfo &info = this->trackLoops[t][c][l];
+            const MidiLoopInfo &info = this->trackLoops[t][l];
 
-                // only infinite midi track loops are considered as master loop for the entire song
-                if (info.start_tick.hasValue && info.stop_tick.hasValue && info.count == 0)
+            // only infinite midi track loops are considered as master loop for the entire song
+            if (info.start_tick.hasValue && info.stop_tick.hasValue && info.count == 0)
+            {
+                int duration = info.stop_tick.Value - info.start_tick.Value;
+                if (max == nullptr)
                 {
-                    int duration = info.stop_tick.Value - info.start_tick.Value;
-                    if (max == nullptr)
+                    max = &info;
+                }
+                else
+                {
+                    int durationMax = max->stop_tick.Value - max->start_tick.Value;
+                    if (durationMax < duration)
                     {
                         max = &info;
-                    }
-                    else
-                    {
-                        int durationMax = max->stop_tick.Value - max->start_tick.Value;
-                        if (durationMax < duration)
-                        {
-                            max = &info;
-                        }
                     }
                 }
             }

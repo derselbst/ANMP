@@ -21,10 +21,6 @@ struct MidiLoopInfo
     // unique id of this midi event given by libsmf
     int eventId;
 
-    // the channel this loop is valid for
-    // same as event->channel
-    uint8_t channel;
-
     // unique id of this loop, as specified by value of MIDI CC102 and CC103
     uint8_t loopId;
 
@@ -84,9 +80,8 @@ class MidiWrapper : public StandardWrapper<float>
     bool lastUseLoopInfo;
 
     // first, outermost dimension: no. of the midi track
-    // second dim: midi channel
-    // third, innermost dim: id of the loop within that track
-    vector<vector<vector<MidiLoopInfo>>> trackLoops;
+    // second, innermost dim: id of the loop within that track
+    vector<vector<MidiLoopInfo>> trackLoops;
 
     void initAttr();
     void initialize();
