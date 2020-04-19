@@ -20,7 +20,7 @@ struct MidiNoteInfo
     uint8_t vel;
 };
 
-FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2) : midiChannelHasNoteOn(NMidiChannels), midiChannelHasProgram(NMidiChannels)
+FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2) : lastRenderNotesWithoutPreset(gConfig.FluidsynthRenderNotesWithoutPreset), midiChannelHasNoteOn(NMidiChannels), midiChannelHasProgram(NMidiChannels)
 {
     if((this->synthEvent = new_fluid_event()) == nullptr ||
        (this->callbackEvent = new_fluid_event()) == nullptr ||
@@ -37,32 +37,8 @@ FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2) : mid
     fluid_event_set_source(this->callbackTempoEvent, -1);
 
     this->setupSettings();
-
-    // find a soundfont
-    Nullable<string> soundfont;
-    if (!gConfig.FluidsynthForceDefaultSoundfont)
-    {
-        soundfont = suggestedSf2;
-    }
-
-    if (!soundfont.hasValue)
-    {
-        // so, either we were forced to use default, or we didnt find any suitable sf2
-        soundfont = gConfig.FluidsynthDefaultSoundfont;
-    }
-
-    if (!::myExists(soundfont.Value))
-    {
-        THROW_RUNTIME_ERROR("Cant synthesize this MIDI, soundfont not found: \"" << soundfont.Value << "\"");
-    }
-
-    this->setupSynth();
+    this->setupSynth(suggestedSf2);
     this->setupSeq();
-
-    if ((this->cachedSf2Id = fluid_synth_sfload(this->synth, soundfont.Value.c_str(), true)) == -1)
-    {
-        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid or not supported: \"" << soundfont.Value << "\"");
-    }
 }
 
 FluidsynthWrapper::~FluidsynthWrapper()
@@ -155,7 +131,7 @@ void FluidsynthWrapper::deleteSeq()
     }
 }
 
-void FluidsynthWrapper::setupSynth()
+void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
 {
     if (this->synth == nullptr)
     {
@@ -179,6 +155,30 @@ void FluidsynthWrapper::setupSynth()
     // set highest resampler quality on all channels
     fluid_synth_set_interp_method(this->synth, -1, FLUID_INTERP_HIGHEST);
 
+    // find a soundfont
+    Nullable<string> soundfont;
+    if (!gConfig.FluidsynthForceDefaultSoundfont)
+    {
+        soundfont = suggestedSf2;
+    }
+
+    if (!soundfont.hasValue)
+    {
+        // so, either we were forced to use default, or we didnt find any suitable sf2
+        soundfont = gConfig.FluidsynthDefaultSoundfont;
+    }
+
+    if (!::myExists(soundfont.Value))
+    {
+        THROW_RUNTIME_ERROR("Cant synthesize this MIDI, soundfont not found: \"" << soundfont.Value << "\"");
+    }
+
+    // load the soundfont and assign default channel presets
+    if ((this->cachedSf2Id = fluid_synth_sfload(this->synth, soundfont.Value.c_str(), true)) == -1)
+    {
+        THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid or not supported: \"" << soundfont.Value << "\"");
+    }
+
     constexpr int ACTUAL_FILTERFC_THRESHOLD = 22050/2 /* Hz */;
 
     constexpr int CBFD_FILTERFC_CC = 34;
@@ -201,17 +201,20 @@ void FluidsynthWrapper::setupSynth()
         fluid_synth_cc(this->synth, i, DP_SUSTAIN_CC, 127);
         fluid_synth_cc(this->synth, i, DP_RELEASE_CC, 0);
 
-        if (!gConfig.FluidsynthMultiChannel)
+        if(this->defaultProg == -1)
         {
-            // After startup, the MIDI channels have assigned their default bank and program. We don't want this. When a MIDI channel has no
-            // program assigned, no notes shall be played. At least, this is the behaviour found in Jet Force Gemini's software synthesizer.
-            // Take a look at the eigth MIDI channel in Sparse 0x25 (Cerulean). Seems like these notes are supposed to be soundeffects. But
-            // since the channel is never assigned with a program, the notes are never being heard.
-            //
-            // That's why, when multichannel rendering is enabled, mute that channel, otherwise don't render that channel at all, by unassigning
-            // all default presets here.
-            fluid_synth_unset_program(this->synth, i);
+            int dummy;
+            fluid_synth_get_program(this->synth, i, &dummy, &dummy, &this->defaultProg);
         }
+
+        // After startup, the MIDI channels have assigned their default bank and program. We don't want this. When a MIDI channel has no
+        // program assigned, no notes shall be played. At least, this is the behaviour found in Jet Force Gemini's software synthesizer.
+        // Take a look at the eigth MIDI channel in Sparse 0x25 (Cerulean). Seems like these notes are supposed to be soundeffects. But
+        // since the channel is never assigned with a program, the notes are never being heard.
+        //
+        // That's why, when multichannel rendering is enabled, mute that channel, otherwise don't render that channel at all, by unassigning
+        // all default presets here.
+        fluid_synth_unset_program(this->synth, i);
     }
 
     fluid_synth_set_custom_filter(this->synth, FLUID_IIR_LOWPASS, FLUID_IIR_NO_GAIN_AMP | FLUID_IIR_Q_LINEAR | FLUID_IIR_Q_ZERO_OFF);
@@ -357,7 +360,7 @@ void FluidsynthWrapper::setupSettings()
     fluid_settings_setint(this->settings, "synth.audio-groups", stereoChannels);
     fluid_settings_setint(this->settings, "synth.audio-channels", stereoChannels);
     fluid_settings_setint(this->settings, "synth.effects-groups", stereoChannels);
-    
+
     // reverb and chrous settings might have changed
     // those are realtime settings, so they will update the synth in every case
     fluid_settings_setint(this->settings, "synth.chorus.active", gConfig.FluidsynthEnableChorus);
@@ -786,7 +789,35 @@ void FluidsynthWrapper::NoteOnOff(MidiNoteInfo *nInfo)
         }
         id = ((id.Value) * 128 * nMidiChan) + (chan * 128) + (key);
         fluid_preset_t *preset = fluid_synth_get_channel_preset(this->synth, chan);
-        if (preset != nullptr)
+        if (preset == nullptr)
+        {
+            // this MIDI channel has no preset assigned yet
+
+            int sf, bnk, dummy;
+            fluid_synth_get_program(this->synth, chan, &sf, &bnk, &dummy);
+            fluid_sfont_t* sfont = fluid_synth_get_sfont(this->synth, sf);
+            fluid_preset_t *defaultPreset = fluid_sfont_get_preset(sfont, bnk, this->defaultProg);
+
+            if(this->lastRenderNotesWithoutPreset)
+            {
+                preset = defaultPreset;
+            }
+            else // we should not render notes without assigned preset
+            {
+                if(midiChannelHasProgram[chan])
+                {
+                    // At some time in the future, there will be a program assigned. For now, do nothing, this note remains unsounded. (JetForceGemini Sparse 0x29)
+                }
+                else
+                {
+                    // A program will never be assigned to this channel. Play the note with the default preset.
+                    // In case FluidsynthMultiChannel is true, we will mute that channel later on.
+                    preset = defaultPreset;
+                }
+            }
+        }
+
+        if(preset != nullptr)
         {
             fluid_synth_start(this->synth, id.Value, preset, 0, chan, key, vel);
         }

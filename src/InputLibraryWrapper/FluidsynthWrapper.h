@@ -73,6 +73,10 @@ class FluidsynthWrapper
     // callback ID for FluidSeqTempoCallback
     fluid_seq_id_t myselfTempoID;
 
+    int defaultSf = -1;
+    int defaultBank = -1;
+    int defaultProg = -1;
+
     // fluidsynth's synth has no samplerate getter, so cache it here
     unsigned int cachedSampleRate = 0;
 
@@ -80,6 +84,8 @@ class FluidsynthWrapper
     unsigned int lastTick = 0;
 
     int cachedSf2Id = -1;
+
+    bool lastRenderNotesWithoutPreset;
 
     // temporary sample mixdown buffer used by fluid_synth_process
     std::vector<float> sampleBuffer;
@@ -97,7 +103,7 @@ class FluidsynthWrapper
 
     void setupSettings();
     void setupMixdownBuffer();
-    void setupSynth();
+    void setupSynth(const Nullable<string>&);
     void setupSeq();
 
     void deleteEvents();
