@@ -35,6 +35,7 @@ void ConfigDialog::fillProperties()
     this->ui->spinPreRenderTime->setValue(this->newConfig.PreRenderTime);
     this->ui->checkAudioNorm->setChecked(this->newConfig.useAudioNormalization);
     this->ui->checkRenderWhole->setChecked(this->newConfig.RenderWholeSong);
+    this->ui->checkMADVFREE->setChecked(this->newConfig.useMadvFree);
 
     this->ui->checkLoopInfo->setChecked(this->newConfig.useLoopInfo);
     this->ui->spinFadePause->setValue(this->newConfig.fadeTimePause);
@@ -63,6 +64,7 @@ void ConfigDialog::fillProperties()
     this->ui->checkChan9Drum->setChecked(this->newConfig.FluidsynthChannel9IsDrum);
     this->ui->comboBankSelMode->setCurrentText(QString::fromStdString(this->newConfig.FluidsynthBankSelect));
     this->ui->spinFilterQ->setValue(this->newConfig.FluidsynthFilterQ);
+    this->ui->checkRenderNoPresetAssigned->setChecked(this->newConfig.FluidsynthRenderNotesWithoutPreset);
 
     this->ui->checkModBass->setChecked(this->newConfig.ModPlugEnableBass);
     this->ui->checkModNoise->setChecked(this->newConfig.ModPlugEnableNoiseRed);
@@ -203,6 +205,7 @@ void ConfigDialog::buttonBoxClicked(QAbstractButton *btn)
         this->newConfig.RenderWholeSong = this->ui->checkRenderWhole->isChecked();
         this->newConfig.useAudioNormalization = this->ui->checkAudioNorm->isChecked();
         this->newConfig.PreRenderTime = static_cast<unsigned int>(this->ui->spinPreRenderTime->value());
+        this->newConfig.useMadvFree = this->ui->checkMADVFREE->isChecked();
 
         this->newConfig.useLoopInfo = this->ui->checkLoopInfo->isChecked();
         this->newConfig.overridingGlobalLoopCount = this->ui->spinLoopCount->value();
@@ -230,6 +233,7 @@ void ConfigDialog::buttonBoxClicked(QAbstractButton *btn)
         this->newConfig.FluidsynthChannel9IsDrum = this->ui->checkChan9Drum->isChecked();
         this->newConfig.FluidsynthBankSelect = this->ui->comboBankSelMode->currentText().toStdString();
         this->newConfig.FluidsynthFilterQ = this->ui->spinFilterQ->value();
+        this->newConfig.FluidsynthRenderNotesWithoutPreset = this->ui->checkRenderNoPresetAssigned->isChecked();
 
         this->newConfig.ModPlugEnableBass = this->ui->checkModBass->isChecked();
         this->newConfig.ModPlugEnableNoiseRed = this->ui->checkModNoise->isChecked();

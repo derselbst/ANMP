@@ -220,7 +220,7 @@ void StandardWrapper<SAMPLEFORMAT>::renderAsync(pcm_t *const bufferToFill, const
     this->render(bufferToFill, Channels, framesToRender);
 
 #if _POSIX_MAPPED_FILES && _POSIX_C_SOURCE >= 200112L && LINUX_VERSION_CODE >= KERNEL_VERSION(4,12,0)
-    if (this->preRenderBuf == nullptr)
+    if (this->preRenderBuf == nullptr && gConfig.useMadvFree)
     {
         // If we allocated a PCM buffer for the whole file, advice the kernel to free related pages when the system comes under memory pressure.
         // This avoids triggering the OOM killer and prevents potentially heavy disk activity leading to system unresponsiveness.
