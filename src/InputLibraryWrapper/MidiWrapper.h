@@ -21,10 +21,6 @@ struct MidiLoopInfo
     // unique id of this midi event given by libsmf
     int eventId;
 
-    // the channel this loop is valid for
-    // same as event->channel
-    uint8_t channel;
-
     // unique id of this loop, as specified by value of MIDI CC102 and CC103
     uint8_t loopId;
 
@@ -39,15 +35,9 @@ struct MidiLoopInfo
     // how often this loop is repeated, 0 for infinite loops
     // specified by MIDI CC104
     uint8_t count = 0;
-};
 
-struct MidiNoteInfo
-{
-    uint8_t chan;
-
-    uint8_t key;
-
-    uint8_t vel;
+    // pointer to events which are part of this midi track loop
+    std::vector<smf_event_t*> eventsInLoop;
 };
 
 /**
@@ -89,10 +79,9 @@ class MidiWrapper : public StandardWrapper<float>
     int lastOverridingLoopCount;
     bool lastUseLoopInfo;
 
-    // first dimension: no. of the midi track
-    // second dim: midi channel
-    // third dim: id of the loop within that track
-    vector<vector<vector<MidiLoopInfo>>> trackLoops;
+    // first, outermost dimension: no. of the midi track
+    // second, innermost dim: id of the loop within that track
+    vector<vector<MidiLoopInfo>> trackLoops;
 
     void initAttr();
     void initialize();
