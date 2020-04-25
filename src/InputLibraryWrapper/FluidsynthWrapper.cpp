@@ -354,6 +354,8 @@ void FluidsynthWrapper::setupSettings()
         fluid_settings_setint(this->settings, "synth.dynamic-sample-loading", 0);
         fluid_settings_setint(this->settings, "synth.polyphony", 2048);
         fluid_settings_setint(this->settings, "synth.cpu-cores", 4);
+        // disable high prio threads, you won't have permission anyway
+        fluid_settings_setint(this->settings, "audio.realtime-prio", 0);
     }
 
     int stereoChannels = gConfig.FluidsynthMultiChannel ? NMidiChannels : 1;
