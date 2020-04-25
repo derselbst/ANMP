@@ -26,7 +26,6 @@ FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2) : las
 {
     if((this->synthEvent = new_fluid_event()) == nullptr ||
        (this->callbackEvent = new_fluid_event()) == nullptr ||
-       (this->callbackNoteEvent = new_fluid_event()) == nullptr ||
        (this->callbackTempoEvent = new_fluid_event()) == nullptr)
     {
         this->deleteEvents();
@@ -35,7 +34,6 @@ FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2) : las
 
     fluid_event_set_source(this->synthEvent, -1);
     fluid_event_set_source(this->callbackEvent, -1);
-    fluid_event_set_source(this->callbackNoteEvent, -1);
     fluid_event_set_source(this->callbackTempoEvent, -1);
 
     this->setupSettings();
@@ -64,9 +62,6 @@ void FluidsynthWrapper::deleteEvents()
 {
     delete_fluid_event(this->callbackEvent);
     this->callbackEvent = nullptr;
-
-    delete_fluid_event(this->callbackNoteEvent);
-    this->callbackNoteEvent = nullptr;
 
     delete_fluid_event(this->callbackTempoEvent);
     this->callbackTempoEvent = nullptr;
@@ -100,10 +95,6 @@ void FluidsynthWrapper::setupSeq()
     fluid_event_set_dest(this->callbackEvent, this->midiwrapperID);
 
     // register myself as second destination
-    this->myselfID = fluid_sequencer_register_client(this->sequencer, "schedule_note_callback", &FluidsynthWrapper::FluidSeqNoteCallback, this);
-    fluid_event_set_dest(this->callbackNoteEvent, this->myselfID);
-
-    // register myself as second destination
     this->myselfTempoID = fluid_sequencer_register_client(this->sequencer, "schedule_tempo_callback", &FluidsynthWrapper::FluidSeqTempoCallback, this);
     fluid_event_set_dest(this->callbackTempoEvent, this->myselfTempoID);
 
@@ -122,7 +113,6 @@ void FluidsynthWrapper::deleteSeq()
     if (this->sequencer != nullptr)
     {
         // explictly unregister all clients before deleting the seq
-        fluid_sequencer_unregister_client(this->sequencer, this->myselfID);
         fluid_sequencer_unregister_client(this->sequencer, this->myselfTempoID);
         fluid_sequencer_unregister_client(this->sequencer, this->midiwrapperID);
         fluid_event_unregistering(this->synthEvent);
@@ -620,7 +610,7 @@ void FluidsynthWrapper::ScheduleTempoChange(double newScale, int atTick)
 }
 
 
-void FluidsynthWrapper::FluidSeqTempoCallback(unsigned int /*time*/, fluid_event_t *e, fluid_sequencer_t * seq, void *data)
+void FluidsynthWrapper::FluidSeqTempoCallback(unsigned int /*time*/, fluid_event_t *e, fluid_sequencer_t * seq, void *)
 {
     auto newScale = static_cast<double *>(fluid_event_get_data(e));
     if (newScale == nullptr)
@@ -688,6 +678,7 @@ void FluidsynthWrapper::ScheduleNote(const MidiNoteInfo &noteInfo, unsigned int 
             if((*it)->chan == noteInfo.chan && (*it)->key == noteInfo.key && (*it)->start_tick < time)
             {
                 auto dur = time - (*it)->start_tick;
+
                 CLOG(LogLevel_t::Debug, "Starting Note on channel " << (int)(*it)->chan << " at key " << (int)(*it)->key << " at start-tick " << fluid_sequencer_get_tick(this->sequencer)+(*it)->start_tick << " with duration " << dur);
                 fluid_event_note(this->synthEvent, (*it)->chan, (*it)->key, (*it)->vel, dur);
 
@@ -707,135 +698,6 @@ void FluidsynthWrapper::ScheduleNote(const MidiNoteInfo &noteInfo, unsigned int 
         MidiNoteInfo* dup = new MidiNoteInfo(noteInfo);
         dup->start_tick = time;
         this->noteOnContainer.emplace_back(dup);
-    }
-}
-
-void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_t *e, fluid_sequencer_t * /*seq*/, void *data)
-{
-    auto pthis = static_cast<FluidsynthWrapper *>(data);
-    auto ninfo = static_cast<MidiNoteInfo *>(fluid_event_get_data(e));
-    if (pthis == nullptr || ninfo == nullptr)
-    {
-        return;
-    }
-
-    pthis->NoteOnOff(ninfo);
-}
-
-// switch voices on and off via FIFO occurrence of noteon/offs
-//
-// i.e. the first noteon is switched off by the first noteoff,
-//      the second noteon is switched off by the second noteoff, etc.
-void FluidsynthWrapper::NoteOnOff(MidiNoteInfo *nInfo)
-{
-    const int nMidiChan = fluid_synth_count_midi_channels(this->synth);
-    const int chan = nInfo->chan;
-    const int key = nInfo->key;
-    const int vel = nInfo->vel;
-    const int activeVoices = fluid_synth_get_active_voice_count(this->synth);
-    const bool isNoteOff = vel == 0;
-
-    Nullable<int> id;
-
-    // look through currently playing voices to determine the voice group id to start or stop voices later on
-    if (activeVoices > 0)
-    {
-        vector<fluid_voice_t *> voiceList;
-        voiceList.reserve(activeVoices);
-
-        fluid_synth_get_voicelist(this->synth, voiceList.data(), activeVoices, -1);
-
-        fluid_voice_t *v;
-        for (int i = 0; i < activeVoices && ((v = voiceList.data()[i]) != nullptr); i++)
-        {
-            if (fluid_voice_is_on(v) && fluid_voice_get_channel(v) == chan && fluid_voice_get_key(v) == key)
-            {
-                int foundID = fluid_voice_get_id(v);
-                foundID -= key;
-                foundID -= chan * 128;
-                foundID /= 128 * nMidiChan;
-
-                if (!id.hasValue)
-                {
-                    // so if this is the first voice already playing at this key and chan found, just use its id
-                    id = foundID;
-                }
-                else
-                {
-                    // else if this is a noteoff:
-                    id = isNoteOff ?
-                         // find the id of that voice that was switched on first (smallest id)
-                         min(id.Value, foundID)
-                         // it's a noteon? find out how many voices of the same key, chan are already playing (get largest id available)
-                         :
-                         max(id.Value, foundID);
-                }
-            }
-        }
-    }
-
-    // find a way of creating unique voice group ids depending on channel and key
-    //
-    // the id needs to include information about what key and what channel the voice is playing on.
-    // just do this the same way like accessing a 3 dimensional array
-    //     id = (id*128*nMidiChan)+(chan*128)+(key);
-
-    if (isNoteOff)
-    {
-        if (id.hasValue)
-        {
-            id = (id.Value * 128 * nMidiChan) + (chan * 128) + (key);
-            fluid_synth_stop(this->synth, id.Value);
-        }
-        else
-        {
-            // strange, no voice playing at this key and channel was found, however, we got a noteoff for it. silently ignore.
-        }
-    }
-    else
-    {
-        if (!id.hasValue)
-        {
-            id = 0;
-        }
-        else
-        {
-            id = id.Value + 1;
-        }
-        id = ((id.Value) * 128 * nMidiChan) + (chan * 128) + (key);
-        fluid_preset_t *preset = fluid_synth_get_channel_preset(this->synth, chan);
-        if (preset == nullptr)
-        {
-            // this MIDI channel has no preset assigned yet
-
-            int sf, bnk, dummy;
-            fluid_synth_get_program(this->synth, chan, &sf, &bnk, &dummy);
-            fluid_sfont_t* sfont = fluid_synth_get_sfont(this->synth, sf);
-            fluid_preset_t *defaultPreset = fluid_sfont_get_preset(sfont, bnk, this->defaultProg);
-
-            if(this->lastRenderNotesWithoutPreset)
-            {
-                preset = defaultPreset;
-            }
-            else // we should not render notes without assigned preset
-            {
-                if(midiChannelHasProgram[chan])
-                {
-                    // At some time in the future, there will be a program assigned. For now, do nothing, this note remains unsounded. (JetForceGemini Sparse 0x29)
-                }
-                else
-                {
-                    // A program will never be assigned to this channel. Play the note with the default preset.
-                    // In case FluidsynthMultiChannel is true, we will mute that channel later on.
-                    preset = defaultPreset;
-                }
-            }
-        }
-
-        if(preset != nullptr)
-        {
-            fluid_synth_start(this->synth, id.Value, preset, 0, chan, key, vel);
-        }
     }
 }
 
