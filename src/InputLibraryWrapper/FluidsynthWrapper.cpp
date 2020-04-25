@@ -351,7 +351,7 @@ void FluidsynthWrapper::setupSettings()
         fluid_settings_setstr(this->settings, "synth.midi-bank-select", gConfig.FluidsynthBankSelect.c_str());
         fluid_settings_setint(this->settings, "synth.threadsafe-api", 1);
         fluid_settings_setint(this->settings, "synth.lock-memory", 0);
-        fluid_settings_setint(this->settings, "synth.dynamic-sample-loading", 1);
+        fluid_settings_setint(this->settings, "synth.dynamic-sample-loading", 0);
         fluid_settings_setint(this->settings, "synth.polyphony", 2048);
         fluid_settings_setint(this->settings, "synth.cpu-cores", 4);
     }
