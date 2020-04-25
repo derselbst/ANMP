@@ -18,6 +18,8 @@ struct MidiNoteInfo
     uint8_t key;
 
     uint8_t vel;
+
+    unsigned int start_tick;
 };
 
 FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2) : lastRenderNotesWithoutPreset(gConfig.FluidsynthRenderNotesWithoutPreset), midiChannelHasNoteOn(NMidiChannels), midiChannelHasProgram(NMidiChannels)
@@ -660,8 +662,9 @@ void FluidsynthWrapper::FluidSeqLoopCallback(unsigned int time, fluid_event_t* e
     {
         smf_event_t* event = loopInfo->eventsInLoop[k];
 
-        // events shall not be looped beyond the end of the song
-        if(time + event->time_pulses < pthis->lastTick)
+        // events shall not be looped beyond the end of the song, unless it's a noteoff
+        if(time + event->time_pulses < pthis->lastTick ||
+        ((event->midi_buffer[0] & 0xF0) == 0x80 || ((event->midi_buffer[0] & 0xF0) == 0x90 && event->midi_buffer[2] == 0)))
         {
             pthis->AddEvent(event);
         }
@@ -675,26 +678,36 @@ void FluidsynthWrapper::FluidSeqLoopCallback(unsigned int time, fluid_event_t* e
     }
 }
 
-// use a very complicated way to turn on and off notes by scheduling callbacks to \c this
-//
-// purpose: using fluid_synth_noteon|off() would kill overlapping notes (i.e. noteons on the same key and channel)
-//
-// unfortunately many N64 games seem to have overlapping notes in their sequences (or is it only a bug when converting from it to MIDI??)
-// anyway, to avoid missing notes we are scheduling a callback on every noteon and off, so that this.FluidSeqNoteCallback() (resp. this.NoteOnOff()) takes care of switching voices on and off
 void FluidsynthWrapper::ScheduleNote(const MidiNoteInfo &noteInfo, unsigned int time)
 {
-    MidiNoteInfo* dup = new MidiNoteInfo(noteInfo);
-    fluid_event_timer(this->callbackNoteEvent, dup);
-
-    int ret = fluid_sequencer_send_at(this->sequencer, this->callbackNoteEvent, time, false);
-    if (ret != FLUID_OK)
+    if(noteInfo.vel == 0)
     {
-        delete dup;
-        CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
-        return;
-    }
+        // noteoff, need to find its noteon and assign duration
+        for (auto it = this->noteOnContainer.begin(); it != this->noteOnContainer.end(); it++)
+        {
+            if((*it)->chan == noteInfo.chan && (*it)->key == noteInfo.key && (*it)->start_tick < time)
+            {
+                auto dur = time - (*it)->start_tick;
+                CLOG(LogLevel_t::Debug, "Starting Note on channel " << (int)(*it)->chan << " at key " << (int)(*it)->key << " at start-tick " << fluid_sequencer_get_tick(this->sequencer)+(*it)->start_tick << " with duration " << dur);
+                fluid_event_note(this->synthEvent, (*it)->chan, (*it)->key, (*it)->vel, dur);
 
-    this->noteOnContainer.emplace_back(dup);
+                int ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, (*it)->start_tick, false);
+                if (ret != FLUID_OK)
+                {
+                    CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
+                }
+
+                this->noteOnContainer.erase(it);
+                break;
+            }
+        }
+    }
+    else
+    {
+        MidiNoteInfo* dup = new MidiNoteInfo(noteInfo);
+        dup->start_tick = time;
+        this->noteOnContainer.emplace_back(dup);
+    }
 }
 
 void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_t *e, fluid_sequencer_t * /*seq*/, void *data)
