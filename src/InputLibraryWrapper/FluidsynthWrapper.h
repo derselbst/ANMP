@@ -67,6 +67,9 @@ class FluidsynthWrapper
     // callback ID for our parent MidiWrapper instance
     fluid_seq_id_t midiwrapperID;
 
+    // callback ID for FluidSeqNoteCallback
+    fluid_seq_id_t myselfID;
+
     // callback ID for FluidSeqTempoCallback
     fluid_seq_id_t myselfTempoID;
 
@@ -90,7 +93,7 @@ class FluidsynthWrapper
     // pointer to small buffers within sampleBuffer of dry and effects audio
     std::vector<float*> dry, fx;
 
-    // temporary buffer to store all our custom NoteOn events, to make sure they get deleted, even if matching noteoffs are not found, causing notes to remain silent
+    // temporary buffer to store all our custom NoteOn events, to make sure they get deleted, even if the NoteOn-callback is not called
     std::vector<std::unique_ptr<MidiNoteInfo>> noteOnContainer;
 
     std::vector<std::unique_ptr<double>> tempoChangeContainer;
@@ -108,9 +111,11 @@ class FluidsynthWrapper
     void deleteSeq();
 
     void ScheduleNote(const MidiNoteInfo &noteInfo, unsigned int time);
+    void NoteOnOff(MidiNoteInfo *nInfo);
     void ScheduleTempoChange(double newScale, int atTick);
 
     static double GetTempoScale(unsigned int uspqn, unsigned int ppqn);
     static void FluidSeqLoopCallback(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data);
+    static void FluidSeqNoteCallback(unsigned int time, fluid_event_t *e, fluid_sequencer_t *seq, void *data);
     static void FluidSeqTempoCallback(unsigned int time, fluid_event_t *e, fluid_sequencer_t * seq, void *data);
 };
