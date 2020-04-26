@@ -206,7 +206,10 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
         //
         // That's why, when multichannel rendering is enabled, mute that channel, otherwise don't render that channel at all, by unassigning
         // all default presets here.
-        fluid_synth_unset_program(this->synth, i);
+        if (!gConfig.FluidsynthMultiChannel && !gConfig.FluidsynthRenderNotesWithoutPreset)
+        {
+            fluid_synth_unset_program(this->synth, i);
+        }
     }
 
     fluid_synth_set_custom_filter(this->synth, FLUID_IIR_LOWPASS, FLUID_IIR_NO_GAIN_AMP | FLUID_IIR_Q_LINEAR | FLUID_IIR_Q_ZERO_OFF);
@@ -441,7 +444,7 @@ void FluidsynthWrapper::ConfigureChannels(SongFormat *f)
 
                 if(!midiChannelHasProgram[j])
                 {
-                    f->VoiceIsMuted[i] = true;
+                    f->VoiceIsMuted[i] = !gConfig.FluidsynthRenderNotesWithoutPreset;
                     f->VoiceName[i] += " (no program assigned)";
                 }
                 j++;
