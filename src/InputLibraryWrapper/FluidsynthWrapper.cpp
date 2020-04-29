@@ -18,9 +18,11 @@ struct MidiNoteInfo
     uint8_t key;
 
     uint8_t vel;
+
+    unsigned int start_tick;
 };
 
-FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2) : lastRenderNotesWithoutPreset(gConfig.FluidsynthRenderNotesWithoutPreset), midiChannelHasNoteOn(NMidiChannels), midiChannelHasProgram(NMidiChannels)
+FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2) : lastRenderNotesWithoutPreset(gConfig.FluidsynthRenderNotesWithoutPreset), midiChannelHasNoteOn(NMidiChannels), midiChannelHasProgram(NMidiChannels), notesCurrentlyActive(NMidiChannels * 128)
 {
     if((this->synthEvent = new_fluid_event()) == nullptr ||
        (this->callbackEvent = new_fluid_event()) == nullptr ||
@@ -683,113 +685,80 @@ void FluidsynthWrapper::FluidSeqLoopCallback(unsigned int time, fluid_event_t* e
 // anyway, to avoid missing notes we are scheduling a callback on every noteon and off, so that this.FluidSeqNoteCallback() (resp. this.NoteOnOff()) takes care of switching voices on and off
 void FluidsynthWrapper::ScheduleNote(const MidiNoteInfo &noteInfo, unsigned int time)
 {
-    MidiNoteInfo* dup = new MidiNoteInfo(noteInfo);
-    fluid_event_timer(this->callbackNoteEvent, dup);
-
-    int ret = fluid_sequencer_send_at(this->sequencer, this->callbackNoteEvent, time, false);
-    if (ret != FLUID_OK)
+    if(noteInfo.vel == 0)
     {
-        delete dup;
-        CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
-        return;
-    }
+        // noteoff, need to find its noteon and assign duration
+        for (auto it = this->noteOnContainer.begin(); it != this->noteOnContainer.end(); it++)
+        {
+            if((*it)->chan == noteInfo.chan && (*it)->key == noteInfo.key && (*it)->start_tick < time)
+            {
+                auto dur = time - (*it)->start_tick;
+                CLOG(LogLevel_t::Debug, "Starting Note on channel " << (int)(*it)->chan << " at key " << (int)(*it)->key << " at start-tick " << fluid_sequencer_get_tick(this->sequencer)+(*it)->start_tick << " with duration " << dur);
+                fluid_event_note(this->callbackNoteEvent, (*it)->chan, (*it)->key, (*it)->vel, dur);
 
-    this->noteOnContainer.emplace_back(dup);
+                int ret = fluid_sequencer_send_at(this->sequencer, this->callbackNoteEvent, (*it)->start_tick, false);
+                if (ret != FLUID_OK)
+                {
+                    CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
+                }
+
+                this->noteOnContainer.erase(it);
+                break;
+            }
+        }
+    }
+    else
+    {
+        MidiNoteInfo* dup = new MidiNoteInfo(noteInfo);
+        dup->start_tick = time;
+        this->noteOnContainer.emplace_back(dup);
+    }
 }
 
 void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_t *e, fluid_sequencer_t * /*seq*/, void *data)
 {
     auto pthis = static_cast<FluidsynthWrapper *>(data);
-    auto ninfo = static_cast<MidiNoteInfo *>(fluid_event_get_data(e));
-    if (pthis == nullptr || ninfo == nullptr)
+    if (pthis == nullptr)
     {
         return;
     }
 
-    pthis->NoteOnOff(ninfo);
+    pthis->NoteOnOff(e);
 }
 
 // switch voices on and off via FIFO occurrence of noteon/offs
 //
 // i.e. the first noteon is switched off by the first noteoff,
 //      the second noteon is switched off by the second noteoff, etc.
-void FluidsynthWrapper::NoteOnOff(MidiNoteInfo *nInfo)
+void FluidsynthWrapper::NoteOnOff(fluid_event_t *e)
 {
     const int nMidiChan = fluid_synth_count_midi_channels(this->synth);
-    const int chan = nInfo->chan;
-    const int key = nInfo->key;
-    const int vel = nInfo->vel;
-    const int activeVoices = fluid_synth_get_active_voice_count(this->synth);
-    const bool isNoteOff = vel == 0;
+    const int chan = fluid_event_get_channel(e);
 
-    Nullable<int> id;
-
-    // look through currently playing voices to determine the voice group id to start or stop voices later on
-    if (activeVoices > 0)
+    if (fluid_event_get_type(e) == FLUID_SEQ_NOTEOFF)
     {
-        vector<fluid_voice_t *> voiceList;
-        voiceList.reserve(activeVoices);
-
-        fluid_synth_get_voicelist(this->synth, voiceList.data(), activeVoices, -1);
-
-        fluid_voice_t *v;
-        for (int i = 0; i < activeVoices && ((v = voiceList.data()[i]) != nullptr); i++)
-        {
-            if (fluid_voice_is_on(v) && fluid_voice_get_channel(v) == chan && fluid_voice_get_key(v) == key)
-            {
-                int foundID = fluid_voice_get_id(v);
-                foundID -= key;
-                foundID -= chan * 128;
-                foundID /= 128 * nMidiChan;
-
-                if (!id.hasValue)
-                {
-                    // so if this is the first voice already playing at this key and chan found, just use its id
-                    id = foundID;
-                }
-                else
-                {
-                    // else if this is a noteoff:
-                    id = isNoteOff ?
-                         // find the id of that voice that was switched on first (smallest id)
-                         min(id.Value, foundID)
-                         // it's a noteon? find out how many voices of the same key, chan are already playing (get largest id available)
-                         :
-                         max(id.Value, foundID);
-                }
-            }
-        }
+        fluid_synth_stop(this->synth, chan);
     }
-
-    // find a way of creating unique voice group ids depending on channel and key
-    //
-    // the id needs to include information about what key and what channel the voice is playing on.
-    // just do this the same way like accessing a 3 dimensional array
-    //     id = (id*128*nMidiChan)+(chan*128)+(key);
-
-    if (isNoteOff)
+    else if (fluid_event_get_type(e) == FLUID_SEQ_NOTE)
     {
-        if (id.hasValue)
+        const int key = fluid_event_get_key(e);
+        const int vel = fluid_event_get_velocity(e);
+        const unsigned int dur = fluid_event_get_duration(e);
+
+        unsigned int id = 128 * chan + key;
+        int activeNotes = this->notesCurrentlyActive[id]++;
+
+        // enqueue the corresponding noteoff event
+        id += (activeNotes * 128 * nMidiChan);
+        fluid_event_noteoff(this->callbackNoteEvent, id, 0);
+
+        int ret = fluid_sequencer_send_at(this->sequencer, this->callbackNoteEvent, dur, false);
+        if (ret != FLUID_OK)
         {
-            id = (id.Value * 128 * nMidiChan) + (chan * 128) + (key);
-            fluid_synth_stop(this->synth, id.Value);
+            CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
+            return;
         }
-        else
-        {
-            // strange, no voice playing at this key and channel was found, however, we got a noteoff for it. silently ignore.
-        }
-    }
-    else
-    {
-        if (!id.hasValue)
-        {
-            id = 0;
-        }
-        else
-        {
-            id = id.Value + 1;
-        }
-        id = ((id.Value) * 128 * nMidiChan) + (chan * 128) + (key);
+
         fluid_preset_t *preset = fluid_synth_get_channel_preset(this->synth, chan);
         if (preset == nullptr)
         {
@@ -806,7 +775,7 @@ void FluidsynthWrapper::NoteOnOff(MidiNoteInfo *nInfo)
             }
             else // we should not render notes without assigned preset
             {
-                if(midiChannelHasProgram[chan])
+                if(this->midiChannelHasProgram[chan])
                 {
                     // At some time in the future, there will be a program assigned. For now, do nothing, this note remains unsounded. (JetForceGemini Sparse 0x29)
                 }
@@ -821,7 +790,7 @@ void FluidsynthWrapper::NoteOnOff(MidiNoteInfo *nInfo)
 
         if(preset != nullptr)
         {
-            fluid_synth_start(this->synth, id.Value, preset, 0, chan, key, vel);
+            fluid_synth_start(this->synth, id, preset, 0, chan, key, vel);
         }
     }
 }

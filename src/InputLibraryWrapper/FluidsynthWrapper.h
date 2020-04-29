@@ -93,13 +93,17 @@ class FluidsynthWrapper
     // pointer to small buffers within sampleBuffer of dry and effects audio
     std::vector<float*> dry, fx;
 
-    // temporary buffer to store all our custom NoteOn events, to make sure they get deleted, even if the NoteOn-callback is not called
+    // temporary buffer to store all our custom NoteOn events, used to derive their noteOn duration
     std::vector<std::unique_ptr<MidiNoteInfo>> noteOnContainer;
 
     std::vector<std::unique_ptr<double>> tempoChangeContainer;
 
     std::vector<bool> midiChannelHasNoteOn;
     std::vector<bool> midiChannelHasProgram;
+
+    // index: ID (combination of channel and key)
+    // indexed int: number of active notes on that channel and key (will be one in most cases, >1 for overlapping notes)
+    std::vector<int> notesCurrentlyActive;
 
     void setupSettings();
     void setupMixdownBuffer();
@@ -111,7 +115,7 @@ class FluidsynthWrapper
     void deleteSeq();
 
     void ScheduleNote(const MidiNoteInfo &noteInfo, unsigned int time);
-    void NoteOnOff(MidiNoteInfo *nInfo);
+    void NoteOnOff(fluid_event_t *e);
     void ScheduleTempoChange(double newScale, int atTick);
 
     static double GetTempoScale(unsigned int uspqn, unsigned int ppqn);
