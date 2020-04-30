@@ -167,8 +167,10 @@ MainWindow::~MainWindow()
 
     delete this->playctrl;
 
+#ifdef USE_VISUALIZER
     // manually delete applets before deleting player, since they hold this.player
     this->analyzerWindows.clear();
+#endif
 
     delete this->player;
     delete this->playlistModel;
