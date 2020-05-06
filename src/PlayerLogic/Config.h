@@ -200,6 +200,9 @@ class Config
     {
         switch (version)
         {
+            case 6:
+                archive(CEREAL_NVP(this->FluidsynthRenderNotesWithoutPreset));
+                archive(CEREAL_NVP(this->useMadvFree));
             case 5:
                 archive(CEREAL_NVP(this->FluidsynthFilterQ));
                 [[fallthrough]];
@@ -265,7 +268,7 @@ class Config
     }
 };
 
-CEREAL_CLASS_VERSION(Config, 5)
+CEREAL_CLASS_VERSION(Config, 6)
 
 // global var holding the singleton Config instance
 // just a nice little shortcut, so one doesnt always have to write Config::Singleton()
