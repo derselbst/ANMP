@@ -1,5 +1,6 @@
 #include "FluidsynthWrapper.h"
 #include "MidiWrapper.h"
+#include "N64CSeqWrapper.h"
 
 #include "AtomicWrite.h"
 #include "Common.h"
@@ -11,18 +12,7 @@
 #include <algorithm>
 
 
-struct MidiNoteInfo
-{
-    uint8_t chan;
-
-    uint8_t key;
-
-    uint8_t vel;
-
-    unsigned int start_tick;
-};
-
-FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2) : lastRenderNotesWithoutPreset(gConfig.FluidsynthRenderNotesWithoutPreset), midiChannelHasNoteOn(NMidiChannels), midiChannelHasProgram(NMidiChannels), notesCurrentlyActive(NMidiChannels * 128)
+FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2, N64CSeqWrapper* cseq) : lastRenderNotesWithoutPreset(gConfig.FluidsynthRenderNotesWithoutPreset), midiChannelHasNoteOn(NMidiChannels), midiChannelHasProgram(NMidiChannels)
 {
     if((this->synthEvent = new_fluid_event()) == nullptr ||
        (this->callbackEvent = new_fluid_event()) == nullptr ||
@@ -40,7 +30,7 @@ FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2) : las
 
     this->setupSettings();
     this->setupSynth(suggestedSf2);
-    this->setupSeq();
+    this->setupSeq(cseq);
 }
 
 FluidsynthWrapper::~FluidsynthWrapper()
@@ -80,7 +70,7 @@ constexpr int FluidsynthWrapper::GetChannelsPerVoice()
     return 2; //stereo
 }
 
-void FluidsynthWrapper::setupSeq()
+void FluidsynthWrapper::setupSeq(N64CSeqWrapper* cseq)
 {
     if (this->sequencer == nullptr) // only create the sequencer once
     {
@@ -95,15 +85,18 @@ void FluidsynthWrapper::setupSeq()
         fluid_event_set_dest(this->synthEvent, this->synthId);
     }
 
-    // register myself as second destination
     this->midiwrapperID = fluid_sequencer_register_client(this->sequencer, "schedule_loop_callback", &FluidsynthWrapper::FluidSeqLoopCallback, this);
     fluid_event_set_dest(this->callbackEvent, this->midiwrapperID);
+
+    if(cseq != nullptr)
+    {
+        this->cseqID = fluid_sequencer_register_client(this->sequencer, "schedule_cseq_loop_callback", &N64CSeqWrapper::SequencerCallback, cseq);
+    }
 
     // register myself as second destination
     this->myselfID = fluid_sequencer_register_client(this->sequencer, "schedule_note_callback", &FluidsynthWrapper::FluidSeqNoteCallback, this);
     fluid_event_set_dest(this->callbackNoteEvent, this->myselfID);
 
-    // register myself as second destination
     this->myselfTempoID = fluid_sequencer_register_client(this->sequencer, "schedule_tempo_callback", &FluidsynthWrapper::FluidSeqTempoCallback, this);
     fluid_event_set_dest(this->callbackTempoEvent, this->myselfTempoID);
 
@@ -125,6 +118,10 @@ void FluidsynthWrapper::deleteSeq()
         fluid_sequencer_unregister_client(this->sequencer, this->myselfID);
         fluid_sequencer_unregister_client(this->sequencer, this->myselfTempoID);
         fluid_sequencer_unregister_client(this->sequencer, this->midiwrapperID);
+        if(this->cseqID != -1)
+        {
+            fluid_sequencer_unregister_client(this->sequencer, this->cseqID);
+        }
         fluid_event_unregistering(this->synthEvent);
         fluid_sequencer_send_now(this->sequencer, this->synthEvent);
 
@@ -360,6 +357,7 @@ void FluidsynthWrapper::setupSettings()
         fluid_settings_setint(this->settings, "audio.realtime-prio", 0);
     }
 
+    fluid_settings_setint(this->settings, "synth.midi-channels", NMidiChannels);
     int stereoChannels = gConfig.FluidsynthMultiChannel ? NMidiChannels : 1;
     fluid_settings_setint(this->settings, "synth.audio-groups", stereoChannels);
     fluid_settings_setint(this->settings, "synth.audio-channels", stereoChannels);
@@ -447,7 +445,7 @@ void FluidsynthWrapper::ConfigureChannels(SongFormat *f)
         {
             if(this->midiChannelHasNoteOn[j])
             {
-                f->VoiceName[i] = "Midi Channel " + to_string(j);
+                f->VoiceName[i] = (this->cseqID == -1 ? "Midi Channel " : "Sequence Track ") + to_string(j);
 
                 if(!midiChannelHasProgram[j])
                 {
@@ -486,14 +484,14 @@ int FluidsynthWrapper::GetEffectVoices()
 {
     int i;
     fluid_settings_getint(this->settings, "synth.effects-groups", &i);
-    
+
     return i;
 }
 
 int FluidsynthWrapper::GetEffectCount()
 {
     int chan;
-    
+
     // dont read from the synth, we need this at a time when the synth hasnt been created
     fluid_settings_getint(this->settings, "synth.effects-channels", &chan);
     return chan;
@@ -513,8 +511,7 @@ double FluidsynthWrapper::GetTempoScale(unsigned int uspqn, unsigned int ppqn)
 
 void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
 {
-    int ret; // fluidsynths return value
-    MidiNoteInfo n;
+    int ret;
 
     if(event->midi_buffer[0] == 0xFF && event->midi_buffer[1] == 0x51)
     {
@@ -539,44 +536,50 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
         return;
     }
 
-    uint16_t chan = event->midi_buffer[0] & 0x0F;
+    int key, vel, chan = event->midi_buffer[0] & 0x0F;
+    fluid_event_t *fluidEvt = this->synthEvent;
     switch (event->midi_buffer[0] & 0xF0)
     {
-        case 0x80: // noteoff
-            n.chan = chan;
-            n.key = event->midi_buffer[1];
-            n.vel = 0;
-            this->ScheduleNote(n, static_cast<unsigned int>(event->time_pulses + offset));
-            return;
-
         case 0x90:
-            this->midiChannelHasNoteOn[chan] = true;
-            n.chan = chan;
-            n.key = event->midi_buffer[1];
-            n.vel = event->midi_buffer[2];
-            this->ScheduleNote(n, static_cast<unsigned int>(event->time_pulses + offset));
-            return;
+            fluidEvt = this->callbackNoteEvent;
+            key = event->midi_buffer[1];
+            vel = event->midi_buffer[2];
+            if(vel != 0)
+            {
+                this->InformHasNoteOn(chan);
+                fluid_event_noteon(fluidEvt, chan, key, vel);
+                CLOG(LogLevel_t::Debug, "NoteOn, channel " << chan << ", key " << key << ", vel " << vel);
+                break;
+            }
+            [[fallthrough]];
+
+        case 0x80: // noteoff
+            fluidEvt = this->callbackNoteEvent;
+            key = event->midi_buffer[1];
+            fluid_event_noteoff(fluidEvt, chan, key);
+            CLOG(LogLevel_t::Debug, "NoteOff, channel " << chan << ", key " << key);
+            break;
 
         case 0xA0:
-            fluid_event_key_pressure(this->synthEvent, chan, event->midi_buffer[1], event->midi_buffer[2]);
+            fluid_event_key_pressure(fluidEvt, chan, event->midi_buffer[1], event->midi_buffer[2]);
             CLOG(LogLevel_t::Debug, "Aftertouch, channel " << chan << ", note " << static_cast<int>(event->midi_buffer[1]) << ", pressure " << static_cast<int>(event->midi_buffer[2]));
             break;
 
         case 0xB0: // ctrl change
             // just a usual control change
-            fluid_event_control_change(this->synthEvent, chan, event->midi_buffer[1], event->midi_buffer[2]);
+            fluid_event_control_change(fluidEvt, chan, event->midi_buffer[1], event->midi_buffer[2]);
 
             CLOG(LogLevel_t::Debug, "Controller, channel " << chan << ", controller " << static_cast<int>(event->midi_buffer[1]) << ", value " << static_cast<int>(event->midi_buffer[2]));
             break;
 
         case 0xC0:
-            this->midiChannelHasProgram[chan] = true;
-            fluid_event_program_change(this->synthEvent, chan, event->midi_buffer[1]);
+            this->InformHasProgChange(chan);
+            fluid_event_program_change(fluidEvt, chan, event->midi_buffer[1]);
             CLOG(LogLevel_t::Debug, "ProgChange, channel " << chan << ", program " << static_cast<int>(event->midi_buffer[1]));
             break;
 
         case 0xD0:
-            fluid_event_channel_pressure(this->synthEvent, chan, event->midi_buffer[1]);
+            fluid_event_channel_pressure(fluidEvt, chan, event->midi_buffer[1]);
             CLOG(LogLevel_t::Debug, "Channel Pressure, channel " << chan << ", pressure " << static_cast<int>(event->midi_buffer[1]));
             break;
 
@@ -586,22 +589,64 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
             pitch <<= 7;
             pitch |= event->midi_buffer[1];
 
-            fluid_event_pitch_bend(this->synthEvent, chan, pitch);
+            fluid_event_pitch_bend(fluidEvt, chan, pitch);
             CLOG(LogLevel_t::Debug, "Pitch Wheel, channel " << chan << ", value " << pitch);
+            break;
         }
-        break;
 
         default:
             return;
     }
 
-    ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, static_cast<unsigned int>(event->time_pulses + offset), false);
+    ret = fluid_sequencer_send_at(this->sequencer, fluidEvt, static_cast<unsigned int>(event->time_pulses + offset), false);
 
     if (ret != FLUID_OK)
     {
         CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
     }
 }
+
+void FluidsynthWrapper::AddEvent(fluid_event_t *event, uint32_t tick)
+{
+    if (tick + fluid_sequencer_get_tick(this->sequencer) >= this->lastTick)
+    {
+        return;
+    }
+
+    switch (fluid_event_get_type(event))
+    {
+        case FLUID_SEQ_NOTE:
+        case FLUID_SEQ_NOTEON:
+        case FLUID_SEQ_NOTEOFF:
+            fluid_event_set_dest(event, fluid_event_get_dest(this->callbackNoteEvent));
+            break;
+
+        case FLUID_SEQ_TIMER:
+            fluid_event_set_dest(event, cseqID);
+            break;
+
+        default:
+            fluid_event_set_dest(event, fluid_event_get_dest(this->synthEvent));
+            break;
+    }
+
+    int ret = fluid_sequencer_send_at(this->sequencer, event, tick, false);
+    if (ret != FLUID_OK)
+    {
+        CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
+    }
+}
+
+void FluidsynthWrapper::InformHasNoteOn(int chan)
+{
+    this->midiChannelHasNoteOn[chan] = true;
+}
+
+void FluidsynthWrapper::InformHasProgChange(int chan)
+{
+    this->midiChannelHasProgram[chan] = true;
+}
+
 
 void FluidsynthWrapper::ScheduleTempoChange(double newScale, int atTick)
 {
@@ -620,10 +665,10 @@ void FluidsynthWrapper::ScheduleTempoChange(double newScale, int atTick)
 }
 
 
-void FluidsynthWrapper::FluidSeqTempoCallback(unsigned int /*time*/, fluid_event_t *e, fluid_sequencer_t * seq, void *data)
+void FluidsynthWrapper::FluidSeqTempoCallback(unsigned int /*time*/, fluid_event_t *e, fluid_sequencer_t * seq, void */*data*/)
 {
     auto newScale = static_cast<double *>(fluid_event_get_data(e));
-    if (newScale == nullptr)
+    if (newScale == nullptr || fluid_event_get_type(e) != FLUID_SEQ_TIMER)
     {
         return;
     }
@@ -652,7 +697,7 @@ void FluidsynthWrapper::FluidSeqLoopCallback(unsigned int time, fluid_event_t* e
     FluidsynthWrapper* pthis = static_cast<FluidsynthWrapper*>(data);
     MidiLoopInfo* loopInfo = static_cast<MidiLoopInfo*>(fluid_event_get_data(e));
 
-    if(pthis==nullptr || loopInfo == nullptr)
+    if(pthis==nullptr || loopInfo == nullptr || fluid_event_get_type(e) != FLUID_SEQ_TIMER)
     {
         return;
     }
@@ -677,44 +722,6 @@ void FluidsynthWrapper::FluidSeqLoopCallback(unsigned int time, fluid_event_t* e
     }
 }
 
-// use a very complicated way to turn on and off notes by scheduling callbacks to \c this
-//
-// purpose: using fluid_synth_noteon|off() would kill overlapping notes (i.e. noteons on the same key and channel)
-//
-// unfortunately many N64 games seem to have overlapping notes in their sequences (or is it only a bug when converting from it to MIDI??)
-// anyway, to avoid missing notes we are scheduling a callback on every noteon and off, so that this.FluidSeqNoteCallback() (resp. this.NoteOnOff()) takes care of switching voices on and off
-void FluidsynthWrapper::ScheduleNote(const MidiNoteInfo &noteInfo, unsigned int time)
-{
-    if(noteInfo.vel == 0)
-    {
-        // noteoff, need to find its noteon and assign duration
-        for (auto it = this->noteOnContainer.begin(); it != this->noteOnContainer.end(); it++)
-        {
-            if((*it)->chan == noteInfo.chan && (*it)->key == noteInfo.key && (*it)->start_tick < time)
-            {
-                auto dur = time - (*it)->start_tick;
-                CLOG(LogLevel_t::Debug, "Starting Note on channel " << (int)(*it)->chan << " at key " << (int)(*it)->key << " at start-tick " << fluid_sequencer_get_tick(this->sequencer)+(*it)->start_tick << " with duration " << dur);
-                fluid_event_note(this->callbackNoteEvent, (*it)->chan, (*it)->key, (*it)->vel, dur);
-
-                int ret = fluid_sequencer_send_at(this->sequencer, this->callbackNoteEvent, (*it)->start_tick, false);
-                if (ret != FLUID_OK)
-                {
-                    CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
-                }
-
-                this->noteOnContainer.erase(it);
-                break;
-            }
-        }
-    }
-    else
-    {
-        MidiNoteInfo* dup = new MidiNoteInfo(noteInfo);
-        dup->start_tick = time;
-        this->noteOnContainer.emplace_back(dup);
-    }
-}
-
 void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_t *e, fluid_sequencer_t * /*seq*/, void *data)
 {
     auto pthis = static_cast<FluidsynthWrapper *>(data);
@@ -726,39 +733,81 @@ void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_
     pthis->NoteOnOff(e);
 }
 
-// switch voices on and off via FIFO occurrence of noteon/offs
+static unsigned int computeVoiceId(int chan, int key, int slot)
+{
+    return slot * 128 * NMidiChannels + 128 * chan + key;
+}
+
+// use a very complicated way to turn on and off notes by scheduling callbacks to \c this
+//
+// purpose: using fluid_synth_noteon|off() would kill overlapping notes (i.e. noteons on the same key and channel)
+//
+// unfortunately many N64 games seem to have overlapping notes in their sequences (or is it only a bug when converting from it to MIDI??)
+// anyway, to avoid missing notes we are scheduling a callback on every noteon and off, so that this.FluidSeqNoteCallback() (resp. this.NoteOnOff()) takes care
+// of switching voices on and off via FIFO occurrence of noteon/offs
 //
 // i.e. the first noteon is switched off by the first noteoff,
 //      the second noteon is switched off by the second noteoff, etc.
 void FluidsynthWrapper::NoteOnOff(fluid_event_t *e)
 {
-    const int nMidiChan = fluid_synth_count_midi_channels(this->synth);
     const int chan = fluid_event_get_channel(e);
+    const int key = fluid_event_get_key(e);
+    auto &que = this->noteOnQueue[chan][key];
+    unsigned slot;
+    unsigned id;
 
-    if (fluid_event_get_type(e) == FLUID_SEQ_NOTEOFF)
+    if (fluid_event_get_type(e) == FLUID_SEQ_PROGRAMSELECT)
     {
-        fluid_synth_stop(this->synth, chan);
-    }
-    else if (fluid_event_get_type(e) == FLUID_SEQ_NOTE)
-    {
-        const int key = fluid_event_get_key(e);
-        const int vel = fluid_event_get_velocity(e);
-        const unsigned int dur = fluid_event_get_duration(e);
+        que = this->noteOnQueue[chan][fluid_event_get_bank(e)];
+        id = fluid_event_get_sfont_id(e);
+        fluid_synth_stop(this->synth, id);
 
-        unsigned int id = 128 * chan + key;
-        int activeNotes = this->notesCurrentlyActive[id]++;
-
-        // enqueue the corresponding noteoff event
-        id += (activeNotes * 128 * nMidiChan);
-        fluid_event_noteoff(this->callbackNoteEvent, id, 0);
-
-        int ret = fluid_sequencer_send_at(this->sequencer, this->callbackNoteEvent, dur, false);
-        if (ret != FLUID_OK)
+        auto it = std::find(que.begin(), que.end(), id);
+        if (it != que.end())
         {
-            CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
-            return;
+            que.erase(it);
+        }
+    }
+    else if (fluid_event_get_type(e) == FLUID_SEQ_NOTEOFF)
+    {
+        if(!que.empty())
+        {
+            slot = que.front();
+            id = computeVoiceId(chan, key, slot);
+            fluid_synth_stop(this->synth, id);
+            que.pop_front();
+        }
+    }
+    else if (fluid_event_get_type(e) == FLUID_SEQ_NOTEON || fluid_event_get_type(e) == FLUID_SEQ_NOTE)
+    {
+        if(que.empty())
+        {
+            slot = 0;
+        }
+        else
+        {
+            auto it = std::max_element(que.begin(), que.end());
+            slot = *it + 1;
+        }
+        que.push_back(slot);
+        id = computeVoiceId(chan, key, slot);
+
+        if (fluid_event_get_type(e) == FLUID_SEQ_NOTE)
+        {
+            const unsigned int dur = fluid_event_get_duration(e);
+
+            // enqueue the corresponding noteoff event by abusing a progSelect event
+            fluid_event_program_select(this->callbackNoteEvent, chan, id, key, 0);
+
+            int ret = fluid_sequencer_send_at(this->sequencer, this->callbackNoteEvent, dur, false);
+            if (ret != FLUID_OK)
+            {
+                CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
+                return;
+            }
         }
 
+        // search for a viable preset to turn on this note
         fluid_preset_t *preset = fluid_synth_get_channel_preset(this->synth, chan);
         if (preset == nullptr)
         {
@@ -788,8 +837,10 @@ void FluidsynthWrapper::NoteOnOff(fluid_event_t *e)
             }
         }
 
+        // turn it on finally
         if(preset != nullptr)
         {
+            const int vel = fluid_event_get_velocity(e);
             fluid_synth_start(this->synth, id, preset, 0, chan, key, vel);
         }
     }

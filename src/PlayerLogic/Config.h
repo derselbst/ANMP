@@ -203,6 +203,7 @@ class Config
             case 6:
                 archive(CEREAL_NVP(this->FluidsynthRenderNotesWithoutPreset));
                 archive(CEREAL_NVP(this->useMadvFree));
+                [[fallthrough]];
             case 5:
                 archive(CEREAL_NVP(this->FluidsynthFilterQ));
                 [[fallthrough]];

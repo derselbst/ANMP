@@ -36,6 +36,10 @@
 #include "VGMStreamWrapper.h"
 #endif
 
+#ifdef USE_FLUIDSYNTH
+#include "N64CSeqWrapper.h"
+#endif
+
 #ifdef USE_FFMPEG
 #include "FFMpegWrapper.h"
 #endif
@@ -214,6 +218,10 @@ bool PlaylistFactory::addSong(std::vector<Song*> &playlist, const string& filePa
     else if (iEquals(ext, "mid") || iEquals(ext, "midi"))
     {
         PlaylistFactory::tryWith<MidiWrapper>(pcm, filePath, offset, len);
+    }
+    else if (iEquals(ext, "cmf") || iEquals(ext, "btmf"))
+    {
+        PlaylistFactory::tryWith<N64CSeqWrapper>(pcm, filePath, offset, len);
     }
 #endif
 

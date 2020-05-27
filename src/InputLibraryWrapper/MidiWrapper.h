@@ -6,8 +6,6 @@
 // libsmf - helper lib for reading midi files
 #include <smf.h>
 
-constexpr int NMidiChannels = 16;
-
 typedef struct _fluid_event_t fluid_event_t;
 typedef struct _fluid_sequencer_t fluid_sequencer_t;
 class FluidsynthWrapper;
