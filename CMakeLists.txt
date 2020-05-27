@@ -55,7 +55,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -stdlib=${STDCXX}")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3 -O0 -Wextra -Wdocumentation -fstack-protector-all -fno-inline-functions")
-    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g3 -Rpass=loop-vectorize -Rpass-analysis=loop-vectorize")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g3 -Rpass=loop-vectorize -Rpass-analysis=loop-vectorize -fsanitize=address")
 endif()
 
 ### setup project include dirs
@@ -271,7 +271,7 @@ endif(ENABLE_FFMPEG)
 
 
 if(ENABLE_FLUIDSYNTH)
-  PKG_CHECK_MODULES(FLUIDSYNTH fluidsynth>=2.0.0)
+  PKG_CHECK_MODULES(FLUIDSYNTH fluidsynth>=2.2.0)
   PKG_CHECK_MODULES(LIBSMF smf)
   
   if(LIBSMF_FOUND AND FLUIDSYNTH_FOUND)

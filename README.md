@@ -22,7 +22,7 @@ ANMP aims to be a versatile but lightweight audio player, just as the other hund
   * unrolling [looped MIDI tracks](https://github.com/derselbst/ANMP/wiki/MIDI-Customizations)
   * volume response compatible to N64's software synth
   * supports an IIR lowpass filter compatible to Rareware's N64 games (Conkers Bad Fur Day, Jet Force Gemini)
-* native support for the Ultra64 **C**ompressed **M**IDI **F**ormat (.cmf files) as used in many games (Rareware)
+* native support for the Ultra64 **C**ompressed **M**IDI **F**ormat (.cmf files) as used in many games (used by Rareware and others)
 * support for cue sheets
 * support for audio normalization based on EBU R 128
 * exposes basic commands via D-Bus
