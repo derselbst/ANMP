@@ -43,6 +43,7 @@ endif(USE_SMF)
 
 if(USE_FLUIDSYNTH)
     set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} FluidsynthWrapper.cpp)
+    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} N64CSeqWrapper.cpp)
 endif(USE_FLUIDSYNTH)
 
 if(USE_MODPLUG)
