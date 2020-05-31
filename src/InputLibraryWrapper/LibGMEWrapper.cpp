@@ -187,7 +187,11 @@ void LibGMEWrapper::open()
         this->buildLoopTree();
     }
 
+#if GME_VERSION >= 0x000700
+    gme_set_fade(this->handle, this->fileLen.Value, 0);
+#else
     gme_set_fade(this->handle, this->fileLen.Value);
+#endif
 }
 
 void LibGMEWrapper::close() noexcept
