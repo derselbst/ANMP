@@ -52,12 +52,12 @@ BuildRequires: lazyusf2-devel
 %endif
 
 # SuSE specific:
-# everything newer openSUSE 13.2 or openSUSE Leap
-%if 0%{?suse_version} >= 1320 || 0%{?suse_version} == 1315
-BuildRequires: libavcodec-devel >= 3.1
-BuildRequires: libavformat-devel >= 3.1
-BuildRequires: libavutil-devel >= 3.1
-BuildRequires: libswresample-devel >= 3.1
+# everything newer openSUSE Leap 15.0 or openSUSE Tumbleweed
+%if 0%{?sle_version} >= 150000 || 0%{?suse_version} > 1500
+BuildRequires: ffmpeg-4-libavcodec-devel
+BuildRequires: ffmpeg-4-libavformat-devel
+BuildRequires: ffmpeg-4-libavutil-devel
+BuildRequires: ffmpeg-4-libswresample-devel
 
 BuildRequires: update-desktop-files
 %endif
