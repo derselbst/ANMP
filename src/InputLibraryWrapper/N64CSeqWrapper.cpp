@@ -287,7 +287,7 @@ uint32_t N64CSeqWrapper::cSeqGetTrackEvent(CSeqState *seq, uint32_t track, CSeqE
         {
             if (seq->lastStatus[track] == 0)
             {
-                CLOG(LogLevel_t::Error, "Zero Running Status");
+                THROW_RUNTIME_ERROR("Zero Running Status, unlikely a valid CSeq file");
             }
 
             event->msg.midi.status = seq->lastStatus[track];

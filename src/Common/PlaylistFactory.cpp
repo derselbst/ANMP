@@ -407,9 +407,9 @@ void PlaylistFactory::tryWith(Song *(&pcm), const string &filePath, Nullable<siz
 {
     if (pcm == nullptr)
     {
-        pcm = new T(filePath, offset, len);
         try
         {
+            pcm = new T(filePath, offset, len);
             pcm->open();
 
             if (pcm->getFrames() <= 0)
