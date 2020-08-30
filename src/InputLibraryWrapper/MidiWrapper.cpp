@@ -68,34 +68,42 @@ void MidiWrapper::initAttr()
 void MidiWrapper::initialize()
 {
     std::ifstream file(this->Filename, std::ios::binary | std::ios::ate);
-    std::streamsize size = file.tellg();
-    file.seekg(0, std::ios::beg);
 
-    std::vector<char> buffer(size);
-    if (!file.read(buffer.data(), size))
+    if(file)
     {
-        THROW_RUNTIME_ERROR("Unable to load midi " << this->Filename);
-    }
+        std::streamsize size = file.tellg();
+        file.seekg(0, std::ios::beg);
 
-    if (this->smf != nullptr)
-    {
-        smf_delete(this->smf);
-    }
-    this->smf = smf_load_from_memory(buffer.data(), size);
-    if (this->smf == nullptr)
-    {
-        THROW_RUNTIME_ERROR("Something is wrong with that midi, loading failed");
-    }
+        std::vector<char> buffer(size);
+        if (!file.read(buffer.data(), size))
+        {
+            THROW_RUNTIME_ERROR("Unable to read midi " << this->Filename);
+        }
 
-    double playtime = smf_get_length_seconds(this->smf);
-    if (playtime <= 0.0)
-    {
-        THROW_RUNTIME_ERROR("How can playtime be negative?!?");
-    }
-    this->fileLen = static_cast<size_t>(playtime * 1000);
+        if (this->smf != nullptr)
+        {
+            smf_delete(this->smf);
+        }
+        this->smf = smf_load_from_memory(buffer.data(), size);
+        if (this->smf == nullptr)
+        {
+            THROW_RUNTIME_ERROR("Something is wrong with that midi, loading failed");
+        }
 
-    this->trackLoops.clear();
-    this->trackLoops.resize(this->smf->number_of_tracks);
+        double playtime = smf_get_length_seconds(this->smf);
+        if (playtime <= 0.0)
+        {
+            THROW_RUNTIME_ERROR("How can playtime be negative?!?");
+        }
+        this->fileLen = static_cast<size_t>(playtime * 1000);
+
+        this->trackLoops.clear();
+        this->trackLoops.resize(this->smf->number_of_tracks);
+    }
+    else
+    {
+        THROW_RUNTIME_ERROR("Unable to open midi " << this->Filename);
+    }
 }
 
 MidiWrapper::~MidiWrapper()
