@@ -24,8 +24,9 @@ constexpr int NMidiChannels = 32;
 class FluidsynthWrapper
 {
     public:
-    FluidsynthWrapper(const Nullable<string>& suggestedSf2, N64CSeqWrapper* cseq=nullptr);
+    FluidsynthWrapper();
     ~FluidsynthWrapper();
+    void Init(const Nullable<string>& suggestedSf2, N64CSeqWrapper* cseq=nullptr);
 
     // forbid copying
     FluidsynthWrapper(FluidsynthWrapper const &) = delete;

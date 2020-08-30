@@ -12,7 +12,7 @@
 #include <algorithm>
 
 
-FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2, N64CSeqWrapper* cseq) : lastRenderNotesWithoutPreset(gConfig.FluidsynthRenderNotesWithoutPreset), midiChannelHasNoteOn(NMidiChannels), midiChannelHasProgram(NMidiChannels)
+FluidsynthWrapper::FluidsynthWrapper() : lastRenderNotesWithoutPreset(gConfig.FluidsynthRenderNotesWithoutPreset), midiChannelHasNoteOn(NMidiChannels), midiChannelHasProgram(NMidiChannels)
 {
     if((this->synthEvent = new_fluid_event()) == nullptr ||
        (this->callbackEvent = new_fluid_event()) == nullptr ||
@@ -27,7 +27,10 @@ FluidsynthWrapper::FluidsynthWrapper(const Nullable<string>& suggestedSf2, N64CS
     fluid_event_set_source(this->callbackEvent, -1);
     fluid_event_set_source(this->callbackNoteEvent, -1);
     fluid_event_set_source(this->callbackTempoEvent, -1);
+}
 
+void FluidsynthWrapper::Init(const Nullable<string>& suggestedSf2, N64CSeqWrapper* cseq)
+{
     this->setupSettings();
     this->setupSynth(suggestedSf2);
     this->setupSeq(cseq);

@@ -114,7 +114,9 @@ MidiWrapper::~MidiWrapper()
 
 void MidiWrapper::open()
 {
-    this->synth = new FluidsynthWrapper(::findSoundfont(this->Filename));
+    this->synth = new FluidsynthWrapper();
+    this->synth->Init(::findSoundfont(this->Filename));
+
     this->Format.SampleRate = this->synth->GetSampleRate();
 
     if(gConfig.overridingGlobalLoopCount != this->lastOverridingLoopCount

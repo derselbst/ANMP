@@ -720,7 +720,9 @@ void N64CSeqWrapper::handleMetaMsg(CSeqState *seq, CSeqEvent *event, bool dispat
 void N64CSeqWrapper::open()
 {
     this->evt = new_fluid_event();
-    this->synth = new FluidsynthWrapper(::findSoundfont(this->Filename), this);
+    this->synth = new FluidsynthWrapper();
+    this->synth->Init(::findSoundfont(this->Filename), this);
+
     this->Format.SampleRate = this->synth->GetSampleRate();
 
     if (gConfig.overridingGlobalLoopCount != this->lastOverridingLoopCount || gConfig.useLoopInfo != this->lastUseLoopInfo)
