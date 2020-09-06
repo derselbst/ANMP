@@ -1,13 +1,15 @@
 language: cpp
-dist: trusty
+sudo: false
 os: linux
-#compiler:
-#- clang
+dist: trusty
+git:
+  depth: false # disable shallow fetch, history is needed by SonarQube
 jobs:
   include:
-  # works on Precise and Trusty
     - os: linux
       addons:
+        sonarcloud:
+          organization: "derselbst"
         apt:
           sources:
             - ubuntu-toolchain-r-test
@@ -31,9 +33,10 @@ jobs:
             - qtbase5-dev
             - libqt5opengl5-dev
       env:
-         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+        - BW="build-wrapper-linux-x86-64 --out-dir bw-output"
+        - SONARSC="sonar-scanner -Dsonar.cfamily.build-wrapper-output=build/bw-output"
 
-    # works on Precise and Trusty
     - os: linux
       addons:
         apt:
@@ -61,7 +64,6 @@ jobs:
       env:
          - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
 
-    # works on Precise and Trusty
     - os: linux
       addons:
         apt:
@@ -89,7 +91,6 @@ jobs:
       env:
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
 
-    # works on Precise and Trusty
     - os: linux
       addons:
         apt:
@@ -119,7 +120,6 @@ jobs:
       env:
         - MATRIX_EVAL="CC=clang-3.8 && CXX=clang++-3.8"
 
-    # works on Trusty
     - os: linux
       addons:
         apt:
@@ -148,7 +148,6 @@ jobs:
       env:
         - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
 
-    # works on Trusty
     - os: linux
       addons:
         apt:
@@ -214,5 +213,11 @@ before_script:
 
 script:
     - cmake "-DUSE_LIBCXX=1 -DCMAKE_BUILD_TYPE=RelWithDebInfo" ..
-    - make -j4 anmp-qt
+    - ${BW} make -j4 anmp-qt
     - make check
+    - cd ..
+    - ${SONARSC}
+
+cache:
+  directories:
+    - '$HOME/.sonar/cache'
