@@ -6,36 +6,10 @@ git:
   depth: false # disable shallow fetch, history is needed by SonarQube
 jobs:
   include:
-    - addons:
-        sonarcloud:
-          organization: "derselbst"
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - cmake-data
-            - cmake
-            - libcue-dev
-            - libgme-dev
-            - libfluidsynth-dev
-            - libsmf-dev
-            - libmad0-dev
-            - libid3tag0-dev
-            - libsndfile-dev
-            - libasound2-dev
-            - libjack-dev
-            - libsamplerate0-dev
-            - libmodplug-dev
-            - portaudio19-dev
-            - qt5-default
-            - qtbase5-dev
-            - libqt5opengl5-dev
-      env:
-        - BW="build-wrapper-linux-x86-64 --out-dir bw-output"
-        - SONARSC="sonar-scanner -Dsonar.cfamily.build-wrapper-output=build/bw-output"
-
     - os: linux
       addons:
+        sonarcloud:
+          organization: "derselbst"
         apt:
           sources:
             - ubuntu-toolchain-r-test
@@ -59,7 +33,9 @@ jobs:
             - qtbase5-dev
             - libqt5opengl5-dev
       env:
-         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+        - BW="build-wrapper-linux-x86-64 --out-dir bw-output"
+        - SONARSC="sonar-scanner -Dsonar.cfamily.build-wrapper-output=build/bw-output"
 
     - os: linux
       addons:
