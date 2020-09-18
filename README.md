@@ -1,9 +1,7 @@
 # ANMP
 **A**nother **N**ameless **M**usic **P**layer
 
-[![Build Status](https://travis-ci.org/derselbst/ANMP.svg?branch=master)](https://travis-ci.org/derselbst/ANMP/branches)
-
-[![Project Stats](https://www.openhub.net/p/ANMP/widgets/project_thin_badge?format=gif)](https://www.openhub.net/p/ANMP)
+[![Build Status](https://travis-ci.org/derselbst/ANMP.svg?branch=master)](https://travis-ci.org/derselbst/ANMP/branches) [![Project Stats](https://www.openhub.net/p/ANMP/widgets/project_thin_badge?format=gif)](https://www.openhub.net/p/ANMP) [![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/dashboard?id=derselbst_ANMP)
 
 ![ANMP Screenshot](ANMP.png)
 
