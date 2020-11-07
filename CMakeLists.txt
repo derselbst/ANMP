@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR) # because of CMAKE_CXX_STANDARD
+cmake_minimum_required(VERSION 3.12.0 FATAL_ERROR) # because of CMAKE_CXX_STANDARD
 project (ANMP)
 
 ### setup binary output directories
@@ -58,7 +58,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g3 -Rpass=loop-vectorize -Rpass-analysis=loop-vectorize")
 endif()
 
-add_compile_definitions(_USE_MATH_DEFINES)
+add_definitions(_USE_MATH_DEFINES)
 
 ### setup project include dirs
 set(PROJECT_LOCAL_INCLUDE_DIRS
