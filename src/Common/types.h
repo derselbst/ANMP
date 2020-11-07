@@ -4,10 +4,7 @@
 
 #if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
 #define restrict __restrict__
-#elif defined(_MSC_VER)
-#define restrict __restrict
 #else
-#warning "Dont know how this compiler handles restrict pointers, refuse using them."
 #define restrict
 #endif
 

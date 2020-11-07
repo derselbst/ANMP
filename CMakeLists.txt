@@ -21,8 +21,8 @@ endif()
 # Global setting: build everything position independent
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# by default, force c++11
-set(CMAKE_CXX_STANDARD 11)
+# by default, force c++17
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # in case we have any c code, use the best c standard ever
@@ -57,6 +57,8 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3 -O0 -Wextra -Wdocumentation -fstack-protector-all -fno-inline-functions -fsanitize=address")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g3 -Rpass=loop-vectorize -Rpass-analysis=loop-vectorize")
 endif()
+
+add_compile_definitions(_USE_MATH_DEFINES)
 
 ### setup project include dirs
 set(PROJECT_LOCAL_INCLUDE_DIRS
