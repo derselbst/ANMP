@@ -69,9 +69,6 @@ class FluidsynthWrapper
     // event used for triggering note on/offs by calling back ourselfs
     fluid_event_t *callbackNoteEvent = nullptr;
 
-    // event used for changing the tempo scale of the seq
-    fluid_event_t *callbackTempoEvent = nullptr;
-
     // fluidsynth's internal synth
     fluid_seq_id_t synthId;
 
@@ -80,9 +77,6 @@ class FluidsynthWrapper
 
     // callback ID for FluidSeqNoteCallback
     fluid_seq_id_t myselfID;
-
-    // callback ID for FluidSeqTempoCallback
-    fluid_seq_id_t myselfTempoID;
 
     // callback ID for N64CSeqWrapper::LoopCallback
     fluid_seq_id_t cseqID = -1;
@@ -107,8 +101,6 @@ class FluidsynthWrapper
     // pointer to small buffers within sampleBuffer of dry and effects audio
     std::vector<float*> dry, fx;
 
-    std::vector<std::unique_ptr<double>> tempoChangeContainer;
-
     std::vector<bool> midiChannelHasNoteOn;
     std::vector<bool> midiChannelHasProgram;
 
@@ -128,5 +120,4 @@ class FluidsynthWrapper
 
     static void FluidSeqLoopCallback(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data);
     static void FluidSeqNoteCallback(unsigned int time, fluid_event_t *e, fluid_sequencer_t *seq, void *data);
-    static void FluidSeqTempoCallback(unsigned int time, fluid_event_t *e, fluid_sequencer_t * seq, void *data);
 };
