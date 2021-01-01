@@ -32,9 +32,9 @@ ANMP aims to be a versatile but lightweight audio player, just as the other hund
 * support ReplayGain tags, since video game codecs don't do (instead it uses a custom approach using helper files to handle loudness normalization independently from audio formats)
 * provide a multilingual GUI; everything is done in English!
 
-ANMP handles audio differently than others: Instead of retrieving only small buffers that hold the raw pcm data, ANMP fetches the pcm of the whole file and puts that into memory. Todays computers have enough memory to hold raw pcm of even longer audio files. Uncompressing big audio files can take a long time, though. Thus filling the pcm buffer is usually done asynchronously. When the next song shall be played, the pcm buffer of the former song is released.
+ANMP handles audio differently than others: Instead of retrieving only small buffers that hold the raw PCM data, ANMP fetches the PCM of the whole file and puts that into memory. Todays computers have enough memory to hold raw PCM of even longer audio files. Uncompressing big audio files can take a long time, though. Thus filling the PCM buffer is usually done asynchronously. When the next song shall be played, the PCM buffer of the former song is released.
 
-However, ANMP also supports rendering pcm to a small buffer. This method will be used if there is not enough memory available to hold a whole song in memory. This is esp. true, if the user requests infinite playback and the underlying song supports that but doesnt specify any loop points (as it applies to emulated sound formats like the Ultra64 Sound Format (USF)). In this case pcm gets rendered to a small buffer. Whenever this method is used, there will be no seeking within the song possible though.
+However, ANMP also supports rendering PCM to a small buffer. This method will be used if there is not enough memory available to hold a whole song in memory. This is esp. true, if the user requests infinite playback and the underlying song supports that but doesnt specify any loop points (as it applies to emulated sound formats like the Ultra64 Sound Format (USF)). In this case PCM gets rendered to a small buffer. Whenever this method is used, there will be no seeking within the song possible though.
 
 Cue sheets will just add the same song file multiple times to a playlist, but with different file-offsets.
 
@@ -60,7 +60,7 @@ See [HERE](https://software.opensuse.org/download.html?project=home%3Aderselbst%
 * [libgme](https://bitbucket.org/mpyne/game-music-emu) (Famicom (nsf), SuperFamicon (spc), GameBoy (gbs), etc.)
 * [vgmstream](https://gitlab.kode54.net/kode54/vgmstream) (various audio formats from sixth generation video game consoles and following)
 * [aopsf](https://gitlab.kode54.net/kode54/aopsf) (Portable Sound Format (PSF1 and PSF2))
-* [modplug](https://github.com/Konstanty/libmodplug) (Tracker formats, like MOD, IT, XM, ...)
+* [modplug](https://github.com/Konstanty/libmodplug) or [libopenmpt](https://lib.openmpt.org/libopenmpt/) (Tracker formats, like MOD, IT, XM, ...)
 * [fluidsynth](https://github.com/FluidSynth/fluidsynth) and [libsmf](https://sourceforge.net/projects/libsmf/) (synthesize and play MIDI files)
 
 #### For audio playback: at least one of the following audio I/O libraries
@@ -83,27 +83,13 @@ make
 
 Also see [[Wiki] About the buildsystem](https://github.com/derselbst/ANMP/wiki/About-the-buildsystem)
 
-## Building from Source (Windows)
-You probably want to use Visual Studio to get a native (preferably static) build of ANMP. Decide for one build architecture and one runtime library. Then:
-
-1. Make sure you have built the depending libraries you would like ANMP to use (see above)
-2. Instruct cmake where to find each and every of those libraries as well as its include dirs (see below)
-3. Get a bunch of library conflict errors
-4. Mess around
-5. Start again at 1. with different architecture / runtime library
-
-I had several attempts to get ANMP built on Windows, couldnt get it working after spending a bunches of hours though. Static standalone Win32 builds welcome!
-
-```shell
-mkdir build && cd build
-cmake .. -G "Visual Studio 14 2015" -DENABLE_ALSA=0 -DENABLE_JACK=0 -DLIBSND_LIBRARIES=/path/to/sndfile
-```
 ## TODO
 * support loading playlists (.m3u !)
 * serialize playlist to file on close, restore on open
+* support surround and quadraphonic files
 
 ## Legal
 ANMP is licensed under the terms of the *GNU GENERAL PUBLIC LICENSE Version 2*, see [LICENSE](LICENSE).
 
 
-Copyright (C) 2016-2020 Tom Moebert (derselbst)
+Copyright (C) 2016-2021 Tom Moebert (derselbst)
