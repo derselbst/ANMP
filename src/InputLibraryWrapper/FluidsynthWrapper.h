@@ -50,7 +50,7 @@ class FluidsynthWrapper
     void AddEvent(smf_event_t *event, double offset = 0.0);
     void AddEvent(fluid_event_t *event, uint32_t tick);
     void ScheduleLoop(MidiLoopInfo *loopInfo);
-    void ScheduleTempoChange(double newScale, int atTick);
+    void ScheduleTempoChange(double newScale, int atTick, bool absolute);
     void FinishSong(int millisec);
 
     void Render(float *bufferToFill, frame_t framesToRender);

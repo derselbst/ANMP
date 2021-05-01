@@ -34,6 +34,17 @@
 // Tick 96: NoteOn Event chan: 1 key: 45 vel: 127 dur: 96
 // Tick 192: NoteOn Event chan: 1 key: 44 vel: 127 dur: 96
 
+//
+// So how does this work? What does it do?
+//
+// In this->open() we go through the entire sequence once to determine its playduration. We write out all loops so that
+// we can build up a loop tree, etc.
+// Then, we start from the beginning of the sequence again. We handle (=dispatch) the first event by sending it
+// to the synth. At the same time we schedule a callback for ourselve at the same tick to which the first event
+// has been dispatched. Then we leave this->open(). The next callback to ourselve will enqueue the next event for the
+// synth and ourselve again. We do this, until we reach the play duration end that we've determined in this->open().
+//
+
 N64CSeqWrapper::N64CSeqWrapper(string filename)
 : StandardWrapper(std::move(filename))
 {
@@ -211,7 +222,7 @@ uint32_t N64CSeqWrapper::cSeqGetTrackEvent(CSeqState *seq, uint32_t track, CSeqE
             int x = getTrackByte(seq, track); /* get next two bytes, ignore them */
             int y = getTrackByte(seq, track);
 
-            CLOG(LogLevel_t::Debug, "Tick " << event->ticks + seq->lastTicks << ": Loop Start Event track: " << track << " (" << x << " | " << y << ")");
+            CLOG(LogLevel_t::Debug, "Tick " << seq->lastTicks << ": Loop Start Event track: " << track << " (" << x << " | " << y << ")");
 
             seq->lastStatus[track] = 0;
             seq->lastLoopStartId[track].push(x);
@@ -224,7 +235,7 @@ uint32_t N64CSeqWrapper::cSeqGetTrackEvent(CSeqState *seq, uint32_t track, CSeqE
             tmpPtr = seq->cur[track];
             loopCt = *tmpPtr++;
             curLpCt = *tmpPtr;
-            CLOG(LogLevel_t::Debug, "Tick " << event->ticks + seq->lastTicks << ": Loop Stop Event track: " << track << " count: " << (int)loopCt);
+            CLOG(LogLevel_t::Debug, "Tick " << seq->lastTicks << ": Loop Stop Event track: " << track << " count: " << (int)loopCt);
             if (ignoreLoops || curLpCt == 0) /* done looping */
             {
                 *tmpPtr = loopCt; /* reset current loop count */
@@ -394,9 +405,10 @@ void N64CSeqWrapper::handleNextSeqEvent(CSeqState *seq, CSeqEvent *evt, uint32_t
     }
 
     fluid_event_timer(this->evt, nullptr);
-    this->synth->AddEvent(this->evt, evt->ticks);
+    this->synth->AddEvent(this->evt, seq->lastTicks);
 }
 
+// quickly go through all events to determine play duration
 void N64CSeqWrapper::parseFirstTime(CSeqState *seq)
 {
     CSeqEvent evt;
@@ -684,16 +696,17 @@ void N64CSeqWrapper::handleMIDIMsg(CSeqState *seq, CSeqEvent *event, uint32_t tr
 
     if (fluid_event_get_type(this->evt) == FLUID_SEQ_NOTE)
     {
-        fluid_event_noteon(this->evt, chan, key, vel);
-        this->synth->AddEvent(this->evt, event->ticks);
-
         const unsigned int dur = fluid_event_get_duration(this->evt);
+
+        fluid_event_noteon(this->evt, chan, key, vel);
+        this->synth->AddEvent(this->evt, seq->lastTicks);
+
         fluid_event_noteoff(this->evt, chan, key);
-        this->synth->AddEvent(this->evt, event->ticks + dur);
+        this->synth->AddEvent(this->evt, seq->lastTicks + dur);
     }
     else
     {
-        this->synth->AddEvent(this->evt, event->ticks);
+        this->synth->AddEvent(this->evt, seq->lastTicks);
     }
 }
 
@@ -711,7 +724,7 @@ void N64CSeqWrapper::handleMetaMsg(CSeqState *seq, CSeqEvent *event, bool dispat
 
             if (dispatchEvent)
             {
-                this->synth->ScheduleTempoChange(FluidsynthWrapper::GetTempoScale(tempo, seq->division), event->ticks);
+                this->synth->ScheduleTempoChange(FluidsynthWrapper::GetTempoScale(tempo, seq->division), seq->lastTicks, true);
             }
         }
     }
@@ -759,7 +772,7 @@ void N64CSeqWrapper::open()
     }
 
     // finally send note offs on all channels
-    // we have to do this, because some wind might be blowing (DK64)
+    // we have to do this, because some wind might be blowing in DK64
     this->synth->FinishSong(finishAtTick);
     this->synth->ConfigureChannels(&this->Format);
     this->buildLoopTree();
