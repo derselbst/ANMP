@@ -602,7 +602,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
 
 void FluidsynthWrapper::AddEvent(fluid_event_t *event, uint32_t tick)
 {
-    if (tick + fluid_sequencer_get_tick(this->sequencer) >= this->lastTick)
+    if (tick >= this->lastTick)
     {
         return;
     }

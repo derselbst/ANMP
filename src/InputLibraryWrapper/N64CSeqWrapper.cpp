@@ -34,6 +34,17 @@
 // Tick 96: NoteOn Event chan: 1 key: 45 vel: 127 dur: 96
 // Tick 192: NoteOn Event chan: 1 key: 44 vel: 127 dur: 96
 
+//
+// So how does this work? What does it do?
+//
+// In this->open() we go through the entire sequence once to determine its playduration. We write out all loops so that
+// we can build up a loop tree, etc.
+// Then, we start from the beginning of the sequence again. We handle (=dispatch) the first event by sending it
+// to the synth. At the same time we schedule a callback for ourselve at the same tick to which the first event
+// has been dispatched. Then we leave this->open(). The next callback to ourselve will enqueue the next event for the
+// synth and ourselve again. We do this, until we reach the play duration end that we've determined in this->open().
+//
+
 N64CSeqWrapper::N64CSeqWrapper(string filename)
 : StandardWrapper(std::move(filename))
 {
@@ -685,10 +696,11 @@ void N64CSeqWrapper::handleMIDIMsg(CSeqState *seq, CSeqEvent *event, uint32_t tr
 
     if (fluid_event_get_type(this->evt) == FLUID_SEQ_NOTE)
     {
+        const unsigned int dur = fluid_event_get_duration(this->evt);
+
         fluid_event_noteon(this->evt, chan, key, vel);
         this->synth->AddEvent(this->evt, seq->lastTicks);
 
-        const unsigned int dur = fluid_event_get_duration(this->evt);
         fluid_event_noteoff(this->evt, chan, key);
         this->synth->AddEvent(this->evt, seq->lastTicks + dur);
     }
