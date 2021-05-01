@@ -542,7 +542,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
             {
                 this->InformHasNoteOn(chan);
                 fluid_event_noteon(fluidEvt, chan, key, vel);
-                CLOG(LogLevel_t::Debug, "NoteOn, channel " << chan << ", key " << key << ", vel " << vel);
+                CLOG(LogLevel_t::Debug, "NoteOn at tick " << event->time_pulses + offset << ", channel " << chan << ", key " << key << ", vel " << vel);
                 break;
             }
             [[fallthrough]];
@@ -551,30 +551,30 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
             fluidEvt = this->callbackNoteEvent;
             key = event->midi_buffer[1];
             fluid_event_noteoff(fluidEvt, chan, key);
-            CLOG(LogLevel_t::Debug, "NoteOff, channel " << chan << ", key " << key);
+            CLOG(LogLevel_t::Debug, "NoteOff at tick " << event->time_pulses + offset << ", channel " << chan << ", key " << key);
             break;
 
         case 0xA0:
             fluid_event_key_pressure(fluidEvt, chan, event->midi_buffer[1], event->midi_buffer[2]);
-            CLOG(LogLevel_t::Debug, "Aftertouch, channel " << chan << ", note " << static_cast<int>(event->midi_buffer[1]) << ", pressure " << static_cast<int>(event->midi_buffer[2]));
+            CLOG(LogLevel_t::Debug, "Aftertouch at tick " << event->time_pulses + offset << ", channel " << chan << ", note " << static_cast<int>(event->midi_buffer[1]) << ", pressure " << static_cast<int>(event->midi_buffer[2]));
             break;
 
         case 0xB0: // ctrl change
             // just a usual control change
             fluid_event_control_change(fluidEvt, chan, event->midi_buffer[1], event->midi_buffer[2]);
 
-            CLOG(LogLevel_t::Debug, "Controller, channel " << chan << ", controller " << static_cast<int>(event->midi_buffer[1]) << ", value " << static_cast<int>(event->midi_buffer[2]));
+            CLOG(LogLevel_t::Debug, "Controller at tick " << event->time_pulses + offset << ", channel " << chan << ", controller " << static_cast<int>(event->midi_buffer[1]) << ", value " << static_cast<int>(event->midi_buffer[2]));
             break;
 
         case 0xC0:
             this->InformHasProgChange(chan);
             fluid_event_program_change(fluidEvt, chan, event->midi_buffer[1]);
-            CLOG(LogLevel_t::Debug, "ProgChange, channel " << chan << ", program " << static_cast<int>(event->midi_buffer[1]));
+            CLOG(LogLevel_t::Debug, "ProgChange at tick " << event->time_pulses + offset << ", channel " << chan << ", program " << static_cast<int>(event->midi_buffer[1]));
             break;
 
         case 0xD0:
             fluid_event_channel_pressure(fluidEvt, chan, event->midi_buffer[1]);
-            CLOG(LogLevel_t::Debug, "Channel Pressure, channel " << chan << ", pressure " << static_cast<int>(event->midi_buffer[1]));
+            CLOG(LogLevel_t::Debug, "Channel Pressure at tick " << event->time_pulses + offset << ", channel " << chan << ", pressure " << static_cast<int>(event->midi_buffer[1]));
             break;
 
         case 0xE0:
@@ -584,7 +584,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
             pitch |= event->midi_buffer[1];
 
             fluid_event_pitch_bend(fluidEvt, chan, pitch);
-            CLOG(LogLevel_t::Debug, "Pitch Wheel, channel " << chan << ", value " << pitch);
+            CLOG(LogLevel_t::Debug, "Pitch Wheel at tick " << event->time_pulses + offset << ", channel " << chan << ", value " << pitch);
             break;
         }
 
@@ -624,7 +624,7 @@ void FluidsynthWrapper::AddEvent(fluid_event_t *event, uint32_t tick)
             break;
     }
 
-    int ret = fluid_sequencer_send_at(this->sequencer, event, tick, false);
+    int ret = fluid_sequencer_send_at(this->sequencer, event, tick, true);
     if (ret != FLUID_OK)
     {
         CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
@@ -644,6 +644,7 @@ void FluidsynthWrapper::InformHasProgChange(int chan)
 
 void FluidsynthWrapper::ScheduleTempoChange(double newScale, int atTick)
 {
+    CLOG(LogLevel_t::Debug, "TEMPO CHANGE! newScale: " << newScale << ", atTick " << atTick);
     fluid_event_scale(this->synthEvent, newScale);
 
     int ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, atTick, false);
