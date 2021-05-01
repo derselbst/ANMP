@@ -724,7 +724,7 @@ void N64CSeqWrapper::handleMetaMsg(CSeqState *seq, CSeqEvent *event, bool dispat
 
             if (dispatchEvent)
             {
-                this->synth->ScheduleTempoChange(FluidsynthWrapper::GetTempoScale(tempo, seq->division), seq->lastTicks);
+                this->synth->ScheduleTempoChange(FluidsynthWrapper::GetTempoScale(tempo, seq->division), seq->lastTicks, true);
             }
         }
     }

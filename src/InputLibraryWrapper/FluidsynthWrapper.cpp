@@ -525,7 +525,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
         double scale = GetTempoScale(uspqn, event->track->smf->ppqn);
         CLOG(LogLevel_t::Debug, "Tempo: " << uspqn << " usPQN, " << scale << " scale, " << 60000000.0 / uspqn << " BPM, ppqn: " << event->track->smf->ppqn);
 
-        this->ScheduleTempoChange(scale, event->time_pulses + offset);
+        this->ScheduleTempoChange(scale, event->time_pulses + offset, false);
 
         return;
     }
@@ -642,12 +642,12 @@ void FluidsynthWrapper::InformHasProgChange(int chan)
 }
 
 
-void FluidsynthWrapper::ScheduleTempoChange(double newScale, int atTick)
+void FluidsynthWrapper::ScheduleTempoChange(double newScale, int atTick, bool absolute)
 {
     CLOG(LogLevel_t::Debug, "TEMPO CHANGE! newScale: " << newScale << ", atTick " << atTick);
     fluid_event_scale(this->synthEvent, newScale);
 
-    int ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, atTick, false);
+    int ret = fluid_sequencer_send_at(this->sequencer, this->synthEvent, atTick, absolute);
     if (ret != FLUID_OK)
     {
         CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
