@@ -136,15 +136,17 @@ void LibSNDWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, f
     if (haveInt32)
     {
         // no extra work necessary here, as usual write directly to pcm buffer
-        STANDARDWRAPPER_RENDER(
-        sndfile_sample_t,
         if (cachedFormat == SampleFormat_t::float32) {
+            STANDARDWRAPPER_RENDER(
+            float,
             // the file contains floats, thus read floats
-            sf_read_float(this->sndfile, reinterpret_cast<float *>(pcm), framesToDoNow * Channels);
+            sf_read_float(this->sndfile, reinterpret_cast<float *>(pcm), framesToDoNow * Channels))
         } else if (cachedFormat == SampleFormat_t::int32) {
+            STANDARDWRAPPER_RENDER(
+            int32_t,
             // or read int32s
-            sf_read_int(this->sndfile, reinterpret_cast<int32_t *>(pcm), framesToDoNow * Channels);
-        } else THROW_RUNTIME_ERROR("THIS SHOULD NEVER HAPPEN: SampleFormat neither int32 nor float32");)
+            sf_read_int(this->sndfile, reinterpret_cast<int32_t *>(pcm), framesToDoNow * Channels))
+        } else THROW_RUNTIME_ERROR("THIS SHOULD NEVER HAPPEN: SampleFormat neither int32 nor float32");
     }
     else if (haveInt64)
     {
@@ -159,12 +161,14 @@ void LibSNDWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, f
             int64_temp_buf = tmp.data();
         }
 
-        STANDARDWRAPPER_RENDER(
-        sndfile_sample_t, // bufferToFill shall be of this type
         if (cachedFormat == SampleFormat_t::float32) {
+            STANDARDWRAPPER_RENDER(
+            float,
             // just read out floats
-            sf_read_float(this->sndfile, reinterpret_cast<float *>(pcm), framesToDoNow * Channels);
+            sf_read_float(this->sndfile, reinterpret_cast<float *>(pcm), framesToDoNow * Channels))
         } else if (cachedFormat == SampleFormat_t::int32) {
+            STANDARDWRAPPER_RENDER(
+            int32_t,
             // hm, int is 64 bits wide. write it to temp buffer and force it to int32 and amplify it within the same run.
             sf_read_int(this->sndfile, int64_temp_buf, framesToDoNow * Channels);
 
@@ -173,18 +177,10 @@ void LibSNDWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, f
                 // see http://www.mega-nerd.com/libsndfile/api.html#note1:
                 // Whenever integer data is moved from one sized container to another sized container, the
                 // most significant bit in the source container will become the most significant bit in the destination container.
-                pcm[i].i = static_cast<int32_t>(int64_temp_buf[i] >> ((sizeof(int) - sizeof(sndfile_sample_t)) * 8) /*==32*/);
+                pcm[i] = static_cast<int32_t>(int64_temp_buf[i] >> ((sizeof(int) - sizeof(sndfile_sample_t)) * 8) /*==32*/);
             }
-        } else THROW_RUNTIME_ERROR("THIS SHOULD NEVER HAPPEN: SampleFormat neither int32 nor float32");)
-    }
-
-    if (cachedFormat == SampleFormat_t::float32)
-    {
-        this->doAudioNormalization(static_cast<float *>(bufferToFill), framesToRender);
-    }
-    else if (cachedFormat == SampleFormat_t::int32)
-    {
-        this->doAudioNormalization(static_cast<int32_t *>(bufferToFill), framesToRender);
+            )
+        } else THROW_RUNTIME_ERROR("THIS SHOULD NEVER HAPPEN: SampleFormat neither int32 nor float32");
     }
 }
 

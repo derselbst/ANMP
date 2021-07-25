@@ -13,11 +13,11 @@ void StandardWrapper<IGNORE>::doAudioNormalization(SAMPLEFORMAT *pcm, const fram
     }
 
     const uint32_t Channels = this->Format.Channels();
-    const unsigned int itemsToProcess = framesToProcess * Channels;
+    const frame_t itemsToProcess = framesToProcess * Channels;
 
     /* audio normalization factor */
     const float AbsoluteGain = (numeric_limits<SAMPLEFORMAT>::max()) / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);
-    for (unsigned int i = 0; i < itemsToProcess && !this->stopFillBuffer; i++)
+    for (frame_t i = 0; i < itemsToProcess && !this->stopFillBuffer; i++)
     {
         pcm[i] = static_cast<SAMPLEFORMAT>(pcm[i] * AbsoluteGain);
     }

@@ -44,6 +44,7 @@
                                                                                                                                                   \
             /* call the function whatever is responsible for decoding to raw pcm */                                                               \
             LIB_SPECIFIC_RENDER_FUNCTION;                                                                                                         \
+            this->doAudioNormalization(pcm, framesToDoNow);                                                                                       \
                                                                                                                                                   \
             /* advance the pcm pointer by that many items that have just been rendered */                                                         \
             pcm += (framesToDoNow * Channels) % this->count;                                                                                      \

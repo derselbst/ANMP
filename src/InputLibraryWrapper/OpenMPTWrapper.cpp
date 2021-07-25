@@ -74,8 +74,6 @@ void OpenMPTWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, 
                            {
                                break;
                            })
-
-    this->doAudioNormalization(static_cast<float *>(bufferToFill), framesToRender);
 }
 
 frame_t OpenMPTWrapper::getFrames() const

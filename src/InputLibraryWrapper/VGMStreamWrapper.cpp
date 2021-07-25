@@ -69,8 +69,6 @@ void VGMStreamWrapper::close() noexcept
 void VGMStreamWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender)
 {
     STANDARDWRAPPER_RENDER(int16_t, render_vgmstream(pcm, framesToDoNow, this->handle))
-
-    this->doAudioNormalization(static_cast<int16_t *>(bufferToFill), framesToRender);
 }
 
 vector<loop_t> VGMStreamWrapper::getLoopArray() const noexcept

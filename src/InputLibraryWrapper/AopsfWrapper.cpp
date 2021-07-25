@@ -179,8 +179,6 @@ void AopsfWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, fr
                                    THROW_RUNTIME_ERROR("PSF emulation failed with unknown error.");
                                }
                            })
-
-    this->doAudioNormalization(static_cast<int16_t *>(bufferToFill), framesToRender);
 }
 
 frame_t AopsfWrapper::getFrames() const

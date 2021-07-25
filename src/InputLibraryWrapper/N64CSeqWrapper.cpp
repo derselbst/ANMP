@@ -886,6 +886,4 @@ vector<loop_t> N64CSeqWrapper::getLoopArray() const noexcept
 void N64CSeqWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender)
 {
     STANDARDWRAPPER_RENDER(float, this->synth->Render(pcm, framesToDoNow))
-
-    this->doAudioNormalization(static_cast<float *>(bufferToFill), framesToRender);
 }
