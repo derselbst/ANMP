@@ -177,7 +177,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer()
         try
         {
             auto len = itemsToAlloc * 2;
-            SAMPLEFORMAT* tmp = new SAMPLEFORMAT[len];
+            SAMPLEFORMAT* tmp = this->allocPcmBuffer(len);
             this->data = tmp;
             this->preRenderBuf = tmp + itemsToAlloc;
             this->count = itemsToAlloc;
@@ -255,8 +255,11 @@ void StandardWrapper<SAMPLEFORMAT>::releaseBuffer() noexcept
         {
             CLOG(LogLevel_t::Error, "munmap() failed: " << strerror(errno));
         }
+        else
+        {
+            this->data = nullptr;
+        }
     }
-    this->data = nullptr;
 #endif
 
     if (this->backingFile != nullptr)
