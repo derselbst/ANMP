@@ -441,10 +441,28 @@ void FluidsynthWrapper::ConfigureChannels(SongFormat *f)
             {
                 f->VoiceName[i] = (this->cseqID == -1 ? "Midi Channel " : "Sequence Track ") + to_string(j);
 
-                if(!midiChannelHasProgram[j])
+                if(this->midiChannelHasProgram[j])
+                {
+                    f->VoiceName[i] += " (no program assigned, using default ";
+                    if(gConfig.FluidsynthChannel9IsDrum)
+                    {
+                        f->VoiceName[i] += "percussion bank)";
+                    }
+                    else
+                    {
+                        f->VoiceName[i] += "melodic bank)";
+                    }
+                }
+
+                if(this->lastRenderNotesWithoutPreset || // user said, notes without preset should be audible
+                   this->midiChannelHasProgram[j] || // the channel has a program assigned
+                   (j==9 && gConfig.FluidsynthChannel9IsDrum)) // drum channel 9 is implicitly assumend to be percussion
+                {
+                    // channel won't be muted
+                }
+                else
                 {
                     f->VoiceIsMuted[i] = true;
-                    f->VoiceName[i] += " (no program assigned)";
                 }
                 j++;
                 break;
