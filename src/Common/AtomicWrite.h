@@ -4,7 +4,14 @@
 #include <mutex>
 #include <sstream>
 
+#if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
 #define INFUNCTION string(__PRETTY_FUNCTION__) + ": "
+#elif defined(_MSC_VER)
+#define INFUNCTION string(__FUNCSIG__) + ": "
+#else
+#define INFUNCTION string(__func__) + ": "
+#endif
+
 #define LOG_MSG(MSG)     \
     stringstream logmsg; \
     logmsg << INFUNCTION << MSG
