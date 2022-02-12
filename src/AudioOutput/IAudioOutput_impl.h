@@ -7,7 +7,7 @@
 
 
 template<typename TIN, typename TOUT>
-void IAudioOutput::Mix(const frame_t frames, const TIN *restrict in, const SongFormat &inputFormat, TOUT *restrict out) noexcept
+void IAudioOutput::Mix(const frame_t frames, const TIN *RESTRICT in, const SongFormat &inputFormat, TOUT *RESTRICT out) noexcept
 {
     const auto N = this->GetOutputChannels();
     const unsigned int nVoices = inputFormat.Voices;
