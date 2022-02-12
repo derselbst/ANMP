@@ -208,7 +208,7 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
         fluid_synth_unset_program(this->synth, i);
     }
 
-    fluid_synth_set_custom_filter(this->synth, FLUID_IIR_LOWPASS, FLUID_IIR_NO_GAIN_AMP | FLUID_IIR_Q_LINEAR | FLUID_IIR_Q_ZERO_OFF);
+    fluid_synth_set_custom_filter(this->synth, FLUID_IIR_LOWPASS, FLUID_IIR_Q_ZERO_OFF);
 
     fluid_mod_t *my_mod = new_fluid_mod();
 
@@ -235,7 +235,7 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
     // add a custom default modulator Custom CC33 to CBFD's lowpass Filter Q*/
     {
         fluid_mod_set_source1(my_mod, CBFD_FILTERQ_CC,
-                              FLUID_MOD_CC | FLUID_MOD_LINEAR | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
+                              FLUID_MOD_CC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
         fluid_mod_set_source2(my_mod, FLUID_MOD_NONE, 0);
         fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERQ);
         fluid_mod_set_amount(my_mod, gConfig.FluidsynthFilterQ);

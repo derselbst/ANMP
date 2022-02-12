@@ -148,8 +148,8 @@ class Config
     int FluidsynthWidth = 0;
     double FluidsynthLevel = 0.8;
 
-    double FluidsynthFilterQ = 8;
-    int FluidsynthFilterFC = 22050/2;
+    double FluidsynthFilterQ = 250;
+    int FluidsynthFilterFC = 11525;
 
     string FluidsynthBankSelect = "mma";
     bool FluidsynthChannel9IsDrum = false;
