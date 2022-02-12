@@ -172,8 +172,6 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
         THROW_RUNTIME_ERROR("Specified soundfont seems to be invalid or not supported: \"" << soundfont.Value << "\"");
     }
 
-    constexpr int ACTUAL_FILTERFC_THRESHOLD = 22050/2 /* Hz */;
-
     constexpr int CBFD_FILTERFC_CC = 34;
     constexpr int CBFD_FILTERQ_CC = 33;
     constexpr int DP_ATTACK_CC = 20;
@@ -230,7 +228,7 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
                               FLUID_MOD_CC | FLUID_MOD_SIN | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
         fluid_mod_set_source2(my_mod, FLUID_MOD_NONE, 0);
         fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERFC);
-        fluid_mod_set_amount(my_mod, ACTUAL_FILTERFC_THRESHOLD);
+        fluid_mod_set_amount(my_mod, gConfig.FluidsynthFilterFC);
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
 
@@ -368,6 +366,7 @@ void FluidsynthWrapper::setupSettings()
 
     this->cachedSampleRate = gConfig.FluidsynthSampleRate;
     fluid_settings_setnum(this->settings, "synth.sample-rate", this->cachedSampleRate);
+    fluid_settings_setnum(this->settings, "synth.gain", gConfig.FluidsynthGain);
 }
 
 void FluidsynthWrapper::setupMixdownBuffer()

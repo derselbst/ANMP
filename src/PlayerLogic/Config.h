@@ -148,12 +148,14 @@ class Config
     int FluidsynthWidth = 0;
     double FluidsynthLevel = 0.8;
 
-    double FluidsynthFilterQ = 14;
+    double FluidsynthFilterQ = 8;
+    int FluidsynthFilterFC = 22050/2;
 
     string FluidsynthBankSelect = "mma";
     bool FluidsynthChannel9IsDrum = false;
     bool FluidsynthRenderNotesWithoutPreset = true;
 
+    double FluidsynthGain = 0.8;
     //**********************************
     //   LIBMODPLUG-SPECIFIC SECTION   *
     //**********************************
@@ -200,6 +202,10 @@ class Config
     {
         switch (version)
         {
+            case 7:
+                archive(CEREAL_NVP(this->FluidsynthFilterFC));
+                archive(CEREAL_NVP(this->FluidsynthGain));
+                [[fallthrough]];
             case 6:
                 archive(CEREAL_NVP(this->FluidsynthRenderNotesWithoutPreset));
                 archive(CEREAL_NVP(this->useMadvFree));
@@ -269,7 +275,7 @@ class Config
     }
 };
 
-CEREAL_CLASS_VERSION(Config, 6)
+CEREAL_CLASS_VERSION(Config, 7)
 
 // global var holding the singleton Config instance
 // just a nice little shortcut, so one doesnt always have to write Config::Singleton()
