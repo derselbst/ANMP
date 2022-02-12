@@ -19,20 +19,17 @@ jobs:
     steps:
     - checkout: self
       submodules: true
-    - task: Bash@3
+    - bash: |
+        sudo -E apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
+        sudo apt-get update
       displayName: 'apt-get update'
-      inputs:
-        targetType: 'inline'
-        script: 'sudo  apt-get update'
-    - task: Bash@3
+    - bash: |
+        sudo apt-get install -y --no-install-suggests --no-install-recommends cmake libcue-dev libgme-dev libfluidsynth-dev libsmf-dev libmad0-dev libid3tag0-dev libsndfile-dev libasound2-dev libjack-dev libsamplerate0-dev libmodplug-dev portaudio19-dev libebur128-dev qt5-default qtbase5-dev libqt5opengl5-dev
       displayName: 'apt-get install'
-      inputs:
-        targetType: 'inline'
-        script: 'sudo apt-get install -y cmake libcue-dev, libgme-dev, libfluidsynth-dev, libsmf-dev, libmad0-dev, libid3tag0-dev, libsndfile-dev, libasound2-dev, libjack-dev, libsamplerate0-dev, libmodplug-dev, portaudio19-dev, libebur128-dev, qt5-default, qtbase5-dev, libqt5opengl5-dev'
     - task: CMake@1
       displayName: 'CMake configure'
       inputs:
-        cmakeArgs: ..
+        cmakeArgs: -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
         workingDirectory: 'build'
     - task: CMake@1
       displayName: 'CMake Build'
@@ -117,7 +114,7 @@ jobs:
           pathtoPublish: $(VCPKG_INSTALLATION_ROOT)/installed
           artifactName: vcpkg-deps-$(platform)-$(poo)
       condition: or(succeeded(), failed())
-      enabled: false
+      enabled: true
     - bash: |
         set -ex
         mkdir build
@@ -126,13 +123,16 @@ jobs:
         cmake -Werror=dev -G "$(generator)" -A "$(cmake_platform)" -T "$(toolset)" -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows-static -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows-static -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 ..
         cmake --build . --config $(configuration) --parallel 3 --target anmp
       displayName: 'Compile static ANMP'
+      enabled: false
     - task: CopyFiles@2
+      enabled: false
       continueOnError: true
       inputs:
         SourceFolder: 'build\$(configuration)'
         Contents: '**'
         TargetFolder: '$(Build.ArtifactStagingDirectory)'
     - task: PublishBuildArtifacts@1
+      enabled: false
       inputs:
           pathtoPublish: $(Build.ArtifactStagingDirectory)
           artifactName: ANMP-standalone-$(platform)-$(poo)
