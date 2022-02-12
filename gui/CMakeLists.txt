@@ -56,8 +56,8 @@ if(USE_GUI)
     
     add_executable(${PROJECT_NAME} ${UI_HEADERS} ${GUI_SRCS} ${ANMP_LAUNCHER_SRC} icons.qrc)
     
-    # should add all necessary compile and link flags
-    qt5_use_modules(${PROJECT_NAME} Core OpenGL)
+    # this will add all necessary compile and link flags
+    target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::OpenGL)
 
     if(USE_VISUALIZER)
         # name of libraries that will be build in the applets subdir
