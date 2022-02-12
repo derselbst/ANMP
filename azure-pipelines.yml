@@ -3,23 +3,19 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
-resources:
-  containers:
-  - container: qt6Container
-    image: mdevriesdekimo/qt6:ubuntu2104
-    options: '-v /usr/bin/sudo:/usr/bin/sudo -v /usr/lib/sudo/libsudo_util.so.0:/usr/lib/sudo/libsudo_util.so.0 -v /usr/lib/sudo/sudoers.so:/usr/lib/sudo/sudoers.so -v /etc/sudoers:/etc/sudoers'
-
 parameters:
 - name: UseCache
   displayName: Use Dependency Cache
   type: boolean
   default: true
 
+variables:
+  DEBIAN_FRONTEND: 'noninteractive'
+
 jobs:
   - job: Linux
     pool:
       vmImage: 'ubuntu-20.04'
-    container: qt6Container
     steps:
     - checkout: self
       submodules: true
@@ -27,16 +23,16 @@ jobs:
       displayName: 'apt-get update'
       inputs:
         targetType: 'inline'
-        script: 'sudo DEBIAN_FRONTEND=noninteractive apt-get update'
+        script: 'sudo  apt-get update'
     - task: Bash@3
       displayName: 'apt-get install'
       inputs:
         targetType: 'inline'
-        script: 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y cmake libraw-dev libtiff-dev libjpeg-dev extra-cmake-modules libkf5kdcraw-dev libexiv2-dev'
+        script: 'sudo apt-get install -y cmake libcue-dev, libgme-dev, libfluidsynth-dev, libsmf-dev, libmad0-dev, libid3tag0-dev, libsndfile-dev, libasound2-dev, libjack-dev, libsamplerate0-dev, libmodplug-dev, portaudio19-dev, libebur128-dev, qt5-default, qtbase5-dev, libqt5opengl5-dev'
     - task: CMake@1
       displayName: 'CMake configure'
       inputs:
-        cmakeArgs: -DCMAKE_PREFIX_PATH=/opt/Qt/6.2.0/gcc_64/ ..
+        cmakeArgs: ..
         workingDirectory: 'build'
     - task: CMake@1
       displayName: 'CMake Build'
@@ -75,7 +71,7 @@ jobs:
       displayName: "Cache vcpkg's packages"
       condition: and(not(in(variables['Build.Reason'], 'Schedule')), ${{ parameters.useCache }})
       inputs:
-        key: $(VCPKG_REVISION) | "$(platform)" | "$(poo)" | "withstaticlibs2"
+        key: $(VCPKG_REVISION) | "$(platform)" | "$(poo)" | "withstaticlibs"
         path: '$(VCPKG_INSTALLATION_ROOT)\installed'
         cacheHitVar: CACHE_RESTORED
     - bash: |
@@ -86,7 +82,7 @@ jobs:
         # ninja --version
         cmake --version
         rm -rf C:/Strawberry/perl/bin/pkg-config*
-        choco install --svc --sdc -i pkgconfiglite
+        choco install --svc --sdc -i pkgconfiglite make
         # chocoTask=$!
         # manually update vcpkg
         cd $VCPKG_INSTALLATION_ROOT
@@ -101,21 +97,13 @@ jobs:
       displayName: 'Update vcpkg'
     - bash: |
         set -ex
-        vcpkg install libjpeg-turbo:$(platform)-windows tiff:$(platform)-windows exiv2:$(platform)-windows libraw:$(platform)-windows ecm:$(platform)-windows
-        vcpkg install libjpeg-turbo:$(platform)-windows-static tiff:$(platform)-windows-static exiv2:$(platform)-windows-static libraw:$(platform)-windows-static ecm:$(platform)-windows-static
+        vcpkg install sndfile:$(platform)-windows-static libmad:$(platform)-windows-static ffmpeg:$(platform)-windows-static libopenmpt:$(platform)-windows-static portaudio:$(platform)-windows-static libebur128:$(platform)-windows-static
       displayName: 'vcpkg build Dependencies'
       condition: and(succeeded(), ne(variables.CACHE_RESTORED, 'true'))
     - bash: |
         set -ex
-        vcpkg install qtbase:$(platform)-windows qtsvg:$(platform)-windows
-        vcpkg install qtbase:$(platform)-windows-static qtsvg:$(platform)-windows-static
-      displayName: 'vcpkg build Qt6'
-      condition: and(succeeded(), ne(variables.CACHE_RESTORED, 'true'))
-    - bash: |
-        set -ex
-        vcpkg install qtimageformats:$(platform)-windows
-        vcpkg install qtimageformats:$(platform)-windows-static
-      displayName: 'vcpkg build QtImageformats'
+        vcpkg install qt5-base:$(platform)-windows-static
+      displayName: 'vcpkg build Qt5'
       condition: and(succeeded(), ne(variables.CACHE_RESTORED, 'true'))
     - bash: |
         set -ex
@@ -136,8 +124,8 @@ jobs:
         cd build
         export PKG_CONFIG_PATH=$VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows-static/lib/pkgconfig
         cmake -Werror=dev -G "$(generator)" -A "$(cmake_platform)" -T "$(toolset)" -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows-static -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows-static -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 ..
-        cmake --build . --config $(configuration) --parallel 3 --target anpv
-      displayName: 'Compile static ANPV'
+        cmake --build . --config $(configuration) --parallel 3 --target anmp
+      displayName: 'Compile static ANMP'
     - task: CopyFiles@2
       continueOnError: true
       inputs:
@@ -147,4 +135,4 @@ jobs:
     - task: PublishBuildArtifacts@1
       inputs:
           pathtoPublish: $(Build.ArtifactStagingDirectory)
-          artifactName: ANPV-standalone-$(platform)-$(poo)
+          artifactName: ANMP-standalone-$(platform)-$(poo)
