@@ -53,13 +53,13 @@ int main(int argc, char *argv[])
             {
                 if (is_regular_file(dirEntry.status()))
                 {
-                    PlaylistFactory::addSong(tempSongBuf, dirEntry.path());
+                    PlaylistFactory::addSong(tempSongBuf, dirEntry.path().string());
                 }
             }
         }
         else if (is_regular_file(argv[i]))
         {
-            PlaylistFactory::addSong(tempSongBuf, absolute(argv[i]));
+            PlaylistFactory::addSong(tempSongBuf, absolute(argv[i]).string());
         }
     }
 
