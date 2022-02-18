@@ -30,7 +30,7 @@ void SongFormat::SetVoices(uint16_t nVoices)
 
     for (uint16_t i = 0; i < nVoices; i++)
     {
-        this->VoiceName[i] = "Voice " + to_string(i);
+        this->VoiceName[i] = "Voice " + std::to_string(i);
     }
 
     this->Voices = nVoices;

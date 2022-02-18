@@ -53,7 +53,7 @@ void Song::buildLoopTree()
         if(it->stop <= it->start)
         {
             // that wont work
-            CLOG(LogLevel_t::Warning, "\"" << this->Filename << "\" specifies a zero size or negative loop, skipping." << endl);
+            CLOG(LogLevel_t::Warning, "\"" << this->Filename << "\" specifies a zero size or negative loop, skipping." << std::endl);
             continue;
         }
 

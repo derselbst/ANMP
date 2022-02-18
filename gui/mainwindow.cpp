@@ -144,10 +144,10 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     // set callbacks for the underlying player
-    this->player->onBufferHealthChanged += make_pair(this, &MainWindow::callbackBufferHealth);
-    this->player->onPlayheadChanged += make_pair(this, &MainWindow::callbackSeek);
-    this->player->onCurrentSongChanged += make_pair(this, &MainWindow::callbackCurrentSongChanged);
-    this->player->onIsPlayingChanged += make_pair(this, &MainWindow::callbackIsPlayingChanged);
+    this->player->onBufferHealthChanged += std::make_pair(this, &MainWindow::callbackBufferHealth);
+    this->player->onPlayheadChanged += std::make_pair(this, &MainWindow::callbackSeek);
+    this->player->onCurrentSongChanged += std::make_pair(this, &MainWindow::callbackCurrentSongChanged);
+    this->player->onIsPlayingChanged += std::make_pair(this, &MainWindow::callbackIsPlayingChanged);
 
     this->createShortcuts();
 

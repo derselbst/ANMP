@@ -13,7 +13,7 @@
 #endif
 
 #define LOG_MSG(MSG)     \
-    stringstream logmsg; \
+    std::stringstream logmsg; \
     logmsg << INFUNCTION << MSG
 #define CLOG(LEVEL, MSG)                                        \
     {                                                           \
@@ -25,7 +25,7 @@
 #define THROW_RUNTIME_ERROR(MSG)           \
     {                                      \
         LOG_MSG(MSG);                      \
-        throw runtime_error(logmsg.str()); \
+        throw std::runtime_error(logmsg.str()); \
     }
 
 

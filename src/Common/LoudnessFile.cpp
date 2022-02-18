@@ -4,9 +4,9 @@
 #include <cmath>
 #include <cstdio>
 
-mutex LoudnessFile::mtx;
+std::mutex LoudnessFile::mtx;
 
-string LoudnessFile::toebur128Filename(const std::string& filePath)
+std::string LoudnessFile::toebur128Filename(const std::string &filePath)
 {
     std::string file = mybasename(filePath);
     std::string dir = mydirname(filePath);

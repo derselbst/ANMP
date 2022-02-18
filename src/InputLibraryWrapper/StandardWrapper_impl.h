@@ -16,7 +16,7 @@ void StandardWrapper<IGNORE>::doAudioNormalization(SAMPLEFORMAT *pcm, const fram
     const frame_t itemsToProcess = framesToProcess * Channels;
 
     /* audio normalization factor */
-    const float AbsoluteGain = (numeric_limits<SAMPLEFORMAT>::max()) / (numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);
+    const float AbsoluteGain = (std::numeric_limits<SAMPLEFORMAT>::max()) / (std::numeric_limits<SAMPLEFORMAT>::max() * this->gainCorrection);
     for (frame_t i = 0; i < itemsToProcess && !this->stopFillBuffer; i++)
     {
         pcm[i] = static_cast<SAMPLEFORMAT>(pcm[i] * AbsoluteGain);

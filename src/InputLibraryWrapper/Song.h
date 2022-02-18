@@ -11,8 +11,6 @@
 #include "tree.h"
 #include "types.h"
 
-using namespace std;
-
 /**
   * @brief abstract class Song
   *

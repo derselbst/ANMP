@@ -16,7 +16,6 @@ class IAudioOutput;
 class IPlaylist;
 class Song;
 
-using namespace std;
 
 /**
   * class Player
@@ -100,7 +99,7 @@ class Player
 
     void Mute(int i, bool);
 
-    Event<bool, Nullable<string>> onIsPlayingChanged;
+    Event<bool, Nullable<std::string>> onIsPlayingChanged;
     Event<frame_t> onPlayheadChanged;
     Event<frame_t> onBufferHealthChanged;
     Event<const Song *> onCurrentSongChanged;
@@ -118,17 +117,17 @@ class Player
     IPlaylist *playlist = nullptr;
 
     // frame offset; (currentSong.data + playhead*currentSong.Format.Channels) points to the frame(s) that will be played on subsequent call to playFrames(frame_t)
-    atomic<frame_t> playhead{0};
+    std::atomic<frame_t> playhead{0};
 
     // pointer to the audioDriver, we currently use
     // we DO own this instance and should care about destruction
     IAudioOutput *audioDriver = nullptr;
 
     // are we currently playing back?
-    atomic<bool> isPlaying{false};
+    std::atomic<bool> isPlaying{false};
 
     // future for the playing thread
-    future<void> futurePlayInternal;
+    std::future<void> futurePlayInternal;
 
 
     /**

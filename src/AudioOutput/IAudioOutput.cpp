@@ -67,7 +67,7 @@ int IAudioOutput::write(const pcm_t *frameBuffer, frame_t frames, size_t offset)
             break;
         }
         case SampleFormat_t::unknown:
-            throw invalid_argument("pcmFormat mustnt be unknown");
+            throw std::invalid_argument("pcmFormat mustnt be unknown");
             break;
 
         default:

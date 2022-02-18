@@ -301,7 +301,7 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo)
 
 void FFMpegWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender)
 {
-    int framesToDo = framesToRender = min(framesToRender, this->getFrames() - this->framesAlreadyRendered);
+    int framesToDo = framesToRender = std::min(framesToRender, this->getFrames() - this->framesAlreadyRendered);
 
     // int16 because we told swr to convert everything to int16
     int16_t *pcm = static_cast<int16_t *>(bufferToFill);

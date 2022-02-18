@@ -141,7 +141,7 @@ void MainWindow::selectSong(const QModelIndex &index)
         this->player->setCurrentSong(this->playlist->setCurrentSong(index.row()));
         this->Play();
     }
-    catch (const exception &e)
+    catch (const std::exception &e)
     {
         this->showError(e.what());
     }
@@ -189,7 +189,7 @@ void MainWindow::clearPlaylist()
         this->player->setCurrentSong(nullptr);
         this->playlistModel->clear();
     }
-    catch (const exception &e)
+    catch (const std::exception &e)
     {
         this->showError(e.what(), "Clearing the Playlist failed");
     }
@@ -226,7 +226,7 @@ void MainWindow::Play()
     {
         this->player->play();
     }
-    catch (const exception &e)
+    catch (const std::exception &e)
     {
         this->showError(e.what(), "Failed to start playback");
     }
@@ -238,7 +238,7 @@ void MainWindow::Pause()
     {
         this->player->pause();
     }
-    catch (const exception &e)
+    catch (const std::exception &e)
     {
         this->showError(e.what(), "Failed to pause playback");
     }
@@ -256,7 +256,7 @@ void MainWindow::Stop()
     {
         this->player->stop();
     }
-    catch (const exception &e)
+    catch (const std::exception &e)
     {
         this->showError(e.what(), "Failed to stop playback");
     }
@@ -274,7 +274,7 @@ void MainWindow::Next()
             this->Play();
         }
     }
-    catch (const exception &e)
+    catch (const std::exception &e)
     {
         this->showError(e.what(), "Failed to play the next Song");
     }
@@ -292,7 +292,7 @@ void MainWindow::Previous()
             this->Play();
         }
     }
-    catch (const exception &e)
+    catch (const std::exception &e)
     {
         this->showError(e.what(), "Failed to play the previous Song");
     }
@@ -304,7 +304,7 @@ void MainWindow::reinitAudioDriver()
     {
         this->player->initAudio();
     }
-    catch (const exception &e)
+    catch (const std::exception &e)
     {
         this->showError(e.what(), "Unable to initialize the audio driver");
     }
@@ -312,22 +312,22 @@ void MainWindow::reinitAudioDriver()
 
 void MainWindow::SeekForward()
 {
-    this->relativeSeek(max(static_cast<frame_t>(this->playctrl->seekBar->maximum() * this->SeekNormal), gConfig.FramesToRender));
+    this->relativeSeek(std::max(static_cast<frame_t>(this->playctrl->seekBar->maximum() * this->SeekNormal), gConfig.FramesToRender));
 }
 
 void MainWindow::SeekBackward()
 {
-    this->relativeSeek(-1 * max(static_cast<frame_t>(this->playctrl->seekBar->maximum() * this->SeekNormal), gConfig.FramesToRender));
+    this->relativeSeek(-1 * std::max(static_cast<frame_t>(this->playctrl->seekBar->maximum() * this->SeekNormal), gConfig.FramesToRender));
 }
 
 void MainWindow::FastSeekForward()
 {
-    this->relativeSeek(max(static_cast<frame_t>(this->playctrl->seekBar->maximum() * this->SeekFast), gConfig.FramesToRender));
+    this->relativeSeek(std::max(static_cast<frame_t>(this->playctrl->seekBar->maximum() * this->SeekFast), gConfig.FramesToRender));
 }
 
 void MainWindow::FastSeekBackward()
 {
-    this->relativeSeek(-1 * max(static_cast<frame_t>(this->playctrl->seekBar->maximum() * this->SeekFast), gConfig.FramesToRender));
+    this->relativeSeek(-1 * std::max(static_cast<frame_t>(this->playctrl->seekBar->maximum() * this->SeekFast), gConfig.FramesToRender));
 }
 
 void MainWindow::AddSongs(const QStringList& files)

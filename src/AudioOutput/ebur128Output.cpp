@@ -15,7 +15,7 @@
 ebur128Output::ebur128Output(Player *p)
 : player(p)
 {
-    this->player->onCurrentSongChanged += make_pair(this, ebur128Output::onCurrentSongChanged);
+    this->player->onCurrentSongChanged += std::make_pair(this, ebur128Output::onCurrentSongChanged);
 }
 
 ebur128Output::~ebur128Output()
@@ -29,7 +29,7 @@ ebur128Output::~ebur128Output()
 //
 void ebur128Output::open()
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     if (gConfig.RenderWholeSong && gConfig.PreRenderTime != 0)
     {
@@ -56,7 +56,7 @@ void ebur128Output::onCurrentSongChanged(void *context, const Song *newSong)
 {
     ebur128Output *pthis = static_cast<ebur128Output *>(context);
 
-    lock_guard<recursive_mutex> lck(pthis->mtx);
+    std::lock_guard<std::recursive_mutex> lck(pthis->mtx);
     try
     {
         pthis->close();
@@ -107,7 +107,7 @@ void ebur128Output::onCurrentSongChanged(void *context, const Song *newSong)
 
 void ebur128Output::close()
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     if (this->handle != nullptr)
     {
@@ -117,7 +117,7 @@ void ebur128Output::close()
             double peak = -0.0;
             if (ebur128_true_peak(this->handle, c, &peak) == EBUR128_SUCCESS)
             {
-                overallSamplePeak = max(peak, overallSamplePeak);
+                overallSamplePeak = std::max(peak, overallSamplePeak);
             }
         }
 
@@ -146,7 +146,7 @@ void ebur128Output::close()
 
 int ebur128Output::write(const float *buffer, frame_t frames)
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     if (this->handle == nullptr)
     {
@@ -165,7 +165,7 @@ int ebur128Output::write(const float *buffer, frame_t frames)
 
 int ebur128Output::write(const int16_t *buffer, frame_t frames)
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     if (this->handle == nullptr)
     {
@@ -193,7 +193,7 @@ int ebur128Output::write(const int16_t *buffer, frame_t frames)
 
 int ebur128Output::write(const int32_t *buffer, frame_t frames)
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     if (this->handle == nullptr)
     {

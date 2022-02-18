@@ -7,6 +7,8 @@
 #include <QtDBus>
 #include <QDBusConnectionInterface>
 
+using namespace std;
+
 int main(int argc, char *argv[])
 {
     int ret = -1;

@@ -45,7 +45,7 @@ class WaveOutput : public IAudioOutput
 
     private:
     // because this.stop() might be called concurrently to this.write()
-    mutable recursive_mutex mtx;
+    mutable std::recursive_mutex mtx;
 
     Player *player = nullptr;
     FILE *handle = nullptr;

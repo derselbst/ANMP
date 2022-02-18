@@ -41,7 +41,7 @@ class ebur128Output : public IAudioOutput
 
     private:
     // because this.stop() might be called concurrently to this.write()
-    mutable recursive_mutex mtx;
+    mutable std::recursive_mutex mtx;
 
     Player *player = nullptr;
     ebur128_state *handle = nullptr;

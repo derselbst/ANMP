@@ -7,8 +7,6 @@
 #include <vector>
 
 
-using namespace std;
-
 /**
   * Abstract base class for all classes that handle audio playback in ANMP
   *

@@ -123,7 +123,7 @@ struct WaveHeader
                 break;
 
             case SampleFormat_t::unknown:
-                throw invalid_argument("pcmFormat mustnt be unknown");
+                throw std::invalid_argument("pcmFormat mustnt be unknown");
                 break;
 
             default:
@@ -271,7 +271,7 @@ struct WaveHeader
 WaveOutput::WaveOutput(Player *player)
 : player(player)
 {
-    this->player->onCurrentSongChanged += make_pair(this, WaveOutput::onCurrentSongChanged);
+    this->player->onCurrentSongChanged += std::make_pair(this, WaveOutput::onCurrentSongChanged);
 }
 
 WaveOutput::~WaveOutput()
@@ -285,7 +285,7 @@ WaveOutput::~WaveOutput()
 //
 void WaveOutput::open()
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     if (gConfig.RenderWholeSong && gConfig.PreRenderTime != 0)
     {
@@ -303,7 +303,7 @@ void WaveOutput::onCurrentSongChanged(void *context, const Song *newSong)
 {
     WaveOutput *pthis = static_cast<WaveOutput *>(context);
 
-    lock_guard<recursive_mutex> lck(pthis->mtx);
+    std::lock_guard<std::recursive_mutex> lck(pthis->mtx);
     try
     {
         pthis->close();
@@ -332,7 +332,7 @@ void WaveOutput::onCurrentSongChanged(void *context, const Song *newSong)
 
 void WaveOutput::close()
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     if (this->handle != nullptr && this->currentSong != nullptr && this->framesWritten > 0)
     {
@@ -356,7 +356,7 @@ int WaveOutput::write(const T *buffer, frame_t frames)
 {
     int ret = 0;
 
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     if (this->handle != nullptr)
     {

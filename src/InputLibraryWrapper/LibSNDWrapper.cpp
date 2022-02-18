@@ -27,7 +27,7 @@ LibSNDWrapper::LibSNDWrapper(std::string filename, Nullable<size_t> offset, Null
 
 void LibSNDWrapper::init()
 {
-    std::ifstream ifs(this->Filename, ios::binary);
+    std::ifstream ifs(this->Filename, std::ios::binary);
     std::array<char, 1<<14> buf;
     ifs.read(buf.data(), sizeof(buf));
     std::string str(buf.data(), ifs.gcount());

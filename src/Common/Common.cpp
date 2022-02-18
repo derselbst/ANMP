@@ -27,7 +27,6 @@ extern "C" {
 #include <unistd.h>
 #endif
 
-using namespace std;
 // namespace fs = std::filesystem;
 
 #ifndef _POSIX_SOURCE
@@ -60,7 +59,7 @@ bool iEquals(const std::string &str1, const std::string &str2)
 #endif
 }
 
-string getFileExtension(const std::string &filePath)
+std::string getFileExtension(const std::string &filePath)
 {
     return filePath.substr(filePath.find_last_of('.') + 1);
 }
@@ -148,15 +147,15 @@ unsigned long parse_time_crap(const char *input)
     return value;
 }
 
-string framesToTimeStr(frame_t frames, const unsigned int &sampleRate)
+std::string framesToTimeStr(frame_t frames, const unsigned int &sampleRate)
 {
     int sec = frames / sampleRate;
     int min = sec / 60;
     sec %= 60;
     int msec100 = frames % sampleRate % 10;
 
-    stringstream ssTime;
-    ssTime << min << ":" << setw(2) << setfill('0') << sec << "." << msec100;
+    std::stringstream ssTime;
+    ssTime << min << ":" << std::setw(2) << std::setfill('0') << sec << "." << msec100;
 
     // stringstream::str() returns a temporary object
     std::string temp = ssTime.str();
@@ -195,7 +194,7 @@ char fnameBuf[_MAX_FNAME];
 char extBuf[_MAX_EXT];
 #endif
 
-string mybasename(const std::string &path)
+std::string mybasename(const std::string &path)
 {
     std::string s = std::string(path.c_str());
 
@@ -224,13 +223,13 @@ string mybasename(const std::string &path)
 #endif
 }
 
-string mydirname(const std::string &path)
+std::string mydirname(const std::string &path)
 {
     std::filesystem::path p(path);
     return std::string(p.parent_path().string());
 }
 
-string getUniqueFilename(const std::string &path)
+std::string getUniqueFilename(const std::string &path)
 {
     constexpr int Max = 1000;
     const std::string ext = getFileExtension(path);
@@ -245,7 +244,7 @@ string getUniqueFilename(const std::string &path)
         unique.erase(unique.find_last_of('.') + 1);
 
         // add a unique number with leading zeros
-        unique += std::string(log10(Max) - to_string(i).length(), '0') + to_string(i);
+        unique += std::string(log10(Max) - std::to_string(i).length(), '0') + std::to_string(i);
 
         // readd the extension
         unique += "." + ext;
@@ -255,7 +254,7 @@ string getUniqueFilename(const std::string &path)
 
     if (i >= Max)
     {
-        throw runtime_error("failed to get unique filename, max try count exceeded");
+        throw std::runtime_error("failed to get unique filename, max try count exceeded");
     }
 
     return unique;
@@ -302,7 +301,7 @@ bool myExists(const std::string &name)
     }
 }
 
-string myHomeDir()
+std::string myHomeDir()
 {
     std::string home;
 
@@ -342,7 +341,7 @@ string myHomeDir()
     return home;
 }
 
-Nullable<string> findSoundfont(std::string midFile)
+Nullable<std::string> findSoundfont(std::string midFile)
 {
     static const char *ext[] = {".sf2", ".dls"};
     
@@ -357,7 +356,7 @@ Nullable<string> findSoundfont(std::string midFile)
         if (myExists(soundffile))
         {
             // a soundfont named like midi file, but with sf2 extension
-            return Nullable<string>(soundffile);
+            return Nullable<std::string>(soundffile);
         }
 
         // get path to directory this file is in
@@ -370,11 +369,11 @@ Nullable<string> findSoundfont(std::string midFile)
         //     if(fs::exists(dir + e))
         if (myExists(soundffile))
         {
-            return Nullable<string>(soundffile);
+            return Nullable<std::string>(soundffile);
         }
     }
     
-    return Nullable<string>(nullptr);
+    return Nullable<std::string>(nullptr);
 }
 
 bool PageLockMemory(void* ptr, size_t bytes)
