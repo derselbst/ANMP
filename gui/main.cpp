@@ -14,6 +14,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     QMessageBox msgBox;
 
+    QDBusReply<bool> reply;
     QDBusConnection dbus = QDBusConnection::sessionBus();
     if (!dbus.isConnected())
     {
@@ -25,9 +26,11 @@ int main(int argc, char *argv[])
         msgBox.setIcon(QMessageBox::Warning);
         msgBox.exec();
     }
+    else
+    {
+        reply = dbus.interface()->isServiceRegistered(org::anmp::staticInterfaceName());
+    }
     
-    
-    QDBusReply<bool> reply = dbus.interface()->isServiceRegistered(org::anmp::staticInterfaceName());
     if (
 #if !defined(NDEBUG)
         true ||

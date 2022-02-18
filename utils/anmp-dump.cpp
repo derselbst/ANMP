@@ -6,12 +6,12 @@
 #include <anmp.hpp>
 
 #include <chrono>
-#include <experimental/filesystem>
+#include <filesystem>
 #include <getopt.h>
 #include <thread>
 
 using namespace std;
-using namespace std::experimental::filesystem;
+using namespace std::filesystem;
 
 void onSongChanged(void *pthis, const Song *s)
 {

@@ -24,6 +24,9 @@
 #define ANMP_WEBSITE "https://www.github.com/derselbst/ANMP"
 #define ANMP_COPYRIGHT "Tom Moebert (derselbst)"
 
+#define STRING2(x) #x
+#define STRING(x) STRING2(x)
+
 // sadly concatination of c-strings doesnt work with constexpr variables, have to use macros here
 #if defined(__clang__)
 #define ANMP_COMPILER_USED "Clang"
@@ -47,7 +50,7 @@
 
 #elif defined(_MSC_VER)
 #define ANMP_COMPILER_USED "Microsoft Visual Studio"
-#define ANMP_COMPILER_VERSION_USED _MSC_FULL_VER
+#define ANMP_COMPILER_VERSION_USED STRING(_MSC_FULL_VER)
 
 #elif defined(__PGI)
 #define ANMP_COMPILER_USED "Portland Group PGCC/PGCPP"

@@ -11,8 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-
-// #include <filesystem>
+#include <filesystem>
 
 #ifdef _POSIX_SOURCE
 #include <strings.h> // strncasecmp
@@ -227,8 +226,8 @@ string mybasename(const string &path)
 
 string mydirname(const string &path)
 {
-    string s = string(path.c_str());
-    return string(dirname(const_cast<char *>(s.c_str())));
+    std::filesystem::path p(path);
+    return string(p.parent_path().string());
 }
 
 string getUniqueFilename(const string &path)

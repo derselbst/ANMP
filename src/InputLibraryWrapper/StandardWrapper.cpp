@@ -3,17 +3,18 @@
 #include "AtomicWrite.h"
 #include "Common.h"
 #include "LoudnessFile.h"
-#include "LibSNDWrapper.h"
 
 #include <utility> // std::swap
 #include <cstdio> // std::tmpfile
+#include <cstring>
+
+#ifdef _POSIX_C_SOURCE
 #include <unistd.h> // _POSIX_MAPPED_FILES
 #include <errno.h>
 #include <sys/mman.h>
 #include <fcntl.h> // posix_fallocate()
 #include <linux/version.h>
-#include <cstring>
-
+#endif
 
 template<typename SAMPLEFORMAT>
 StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename)
