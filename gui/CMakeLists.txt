@@ -17,16 +17,24 @@ if(USE_GUI)
 
     set(GUI_SRCS
         configdialog.cpp
+        configdialog.h
         main.cpp
         mainwindow.cpp
+        mainwindow.h
         mainwindow.slots.cpp
         mainwindow.callback.cpp
-        PlaylistModel.cpp
-        PlaylistView.cpp
         PlayheadSlider.cpp
-        ChannelConfigView.cpp
+        PlayheadSlider.h
+        PlaylistModel.cpp
+        PlaylistModel.h
+        PlaylistView.cpp
+        PlaylistView.h
         ChannelConfigModel.cpp
+        ChannelConfigModel.h
+        ChannelConfigView.cpp
+        ChannelConfigView.h
         songinspector.cpp
+        songinspector.h
     )
     
     qt5_generate_dbus_interface(

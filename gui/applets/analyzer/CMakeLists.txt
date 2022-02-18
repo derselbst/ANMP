@@ -8,12 +8,19 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(analyzer_SRCS
     AnalyzerApplet.cpp
+    AnalyzerApplet.h
     AnalyzerBase.cpp
-    BlockAnalyzer.cpp
+    AnalyzerBase.h
     ASCIIAnalyzer.cpp
+    ASCIIAnalyzer.h
+    BlockAnalyzer.cpp
+    BlockAnalyzer.h
     SpectrogramAnalyzer.cpp
+    SpectrogramAnalyzer.h
     PaletteHandler.cpp
+    PaletteHandler.h
     fht.cpp
+    fht.h
 )
 
 qt5_wrap_ui(UI_ANAL_HEADER
