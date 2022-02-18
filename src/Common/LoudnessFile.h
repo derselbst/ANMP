@@ -26,7 +26,7 @@ class LoudnessFile
     static float read(std::string filePath) noexcept;
 
     private:
-    static mutex mtx;
+    static std::mutex mtx;
 
     static std::string toebur128Filename(const std::string& filePath);
 };
