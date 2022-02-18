@@ -30,7 +30,7 @@ class LibSNDWrapper : public StandardWrapper<sndfile_sample_t>
 
     void fillBuffer() override;
 
-    vector<loop_t> getLoopArray() const noexcept override;
+    std::vector<loop_t> getLoopArray() const noexcept override;
 
     frame_t getFrames() const override;
 

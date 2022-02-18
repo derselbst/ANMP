@@ -153,7 +153,7 @@ void LibSNDWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, f
         // allocate an extra tempbuffer to store the int64s in
         // then convert them to int32
 
-        vector<int> tmp;
+        std::vector<int> tmp;
         int *int64_temp_buf = nullptr;
         if (cachedFormat == SampleFormat_t::int32)
         {
@@ -186,7 +186,7 @@ void LibSNDWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, f
 
 vector<loop_t> LibSNDWrapper::getLoopArray() const noexcept
 {
-    vector<loop_t> res;
+    std::vector<loop_t> res;
 
     if (res.empty())
     {

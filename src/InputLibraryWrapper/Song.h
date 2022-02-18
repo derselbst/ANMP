@@ -157,9 +157,9 @@ class Song
     /**
      * returns an unsorted array of loops that could be found in this->Filename. Its only valid to call this method while the song is this->open(). Though it may work after calling this->close().
      * 
-     * the song has no loops? --> return an empty vector
+     * the song has no loops? --> return an empty std::vector
      */
-    virtual vector<loop_t> getLoopArray() const noexcept;
+    virtual std::vector<loop_t> getLoopArray() const noexcept;
 
 
     /**

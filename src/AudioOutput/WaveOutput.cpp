@@ -98,9 +98,9 @@ struct WaveHeader
     static constexpr chunk_size_t DataOffset = sizeof(RiffID) + sizeof(RiffSize) + sizeof(WaveID) + sizeof(FormatID) + sizeof(FormatSize) + FormatSize + sizeof(DataID) + sizeof(DataSize); // == 44
 
     // contains the riff, fmt and data chunks, i.e. fixed length
-    vector<chunk_element_t> header;
+    std::vector<chunk_element_t> header;
     // contains list and smpl chunks, i.e. might be there, or not
-    vector<chunk_element_t> meta;
+    std::vector<chunk_element_t> meta;
 
     WaveHeader(const Song *s, const int framesWritten)
     {
@@ -161,7 +161,7 @@ struct WaveHeader
         this->header.push_back(DataSize);
 
 
-        const vector<loop_t> &loops = s->getLoopArray();
+        const std::vector<loop_t> &loops = s->getLoopArray();
         if ((SampleLoops = loops.size()) > 0)
         {
             // smpl chunk

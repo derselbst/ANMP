@@ -31,7 +31,7 @@ public:
     /**
      * try to add a song to the playlist
      * 
-     * @param  playlist an empty vector to push all added songs to
+     * @param  playlist an empty std::vector to push all added songs to
      * @param  filePath full path to an audio file on your HDD
      * @param  offset see Song::fileOffset
      * @param  len see Song::fileLen
