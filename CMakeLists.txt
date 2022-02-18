@@ -164,7 +164,6 @@ if(ENABLE_EBUR128)
         set(LD_FLAGS ${LD_FLAGS} ${EBUR128_LIBRARIES})
         link_directories(${EBUR128_LIBRARY_DIRS})
 
-        
         MY_PRINT(EBUR128)
   endif(EBUR128_FOUND)
   
