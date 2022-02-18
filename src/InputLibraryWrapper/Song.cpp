@@ -8,12 +8,12 @@
 
 // Constructors/Destructors
 //
-Song::Song(string filename)
+Song::Song(std::string filename)
 : Filename(std::move(filename))
 {
 }
 
-Song::Song(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen)
+Song::Song(std::string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen)
 : Filename(std::move(filename)), fileOffset(fileOffset), fileLen(fileLen)
 {
 }

@@ -58,7 +58,7 @@ void MainWindow::slotSeek(long long pos)
     playheadSlider->setSliderPosition(pos);
     playheadSlider->blockSignals(oldState);
 
-    string temp;
+    std::string temp;
     
     const Song *s = this->player->getCurrentSong();
     if (s == nullptr)
@@ -377,7 +377,7 @@ void MainWindow::aboutQt()
 
 void MainWindow::aboutAnmp()
 {
-    // build up the huge constexpr about anmp string
+    // build up the huge constexpr about anmp std::string
     static constexpr char text[] = "<p>\n"
                                    "<b>" ANMP_TITLE " - " ANMP_SUBTITLE "</b><br />\n"
                                    "<br />\n"

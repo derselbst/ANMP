@@ -25,8 +25,8 @@ class FFMpegWrapper : public StandardWrapper<int16_t>
     /**
      * Empty Constructor
      */
-    FFMpegWrapper(string filename);
-    FFMpegWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len);
+    FFMpegWrapper(std::string filename);
+    FFMpegWrapper(std::string filename, Nullable<size_t> offset, Nullable<size_t> len);
     void initAttr();
 
     // forbid copying

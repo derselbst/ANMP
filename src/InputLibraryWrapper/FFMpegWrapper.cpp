@@ -9,13 +9,13 @@
 #include <utility>
 
 
-FFMpegWrapper::FFMpegWrapper(string filename)
+FFMpegWrapper::FFMpegWrapper(std::string filename)
 : StandardWrapper(std::move(filename))
 {
     this->Format.SampleFormat = SampleFormat_t::int16;
 }
 
-FFMpegWrapper::FFMpegWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
+FFMpegWrapper::FFMpegWrapper(std::string filename, Nullable<size_t> offset, Nullable<size_t> len)
 : StandardWrapper(std::move(filename), offset, len)
 {
     this->Format.SampleFormat = SampleFormat_t::int16;

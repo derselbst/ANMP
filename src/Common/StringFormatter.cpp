@@ -54,9 +54,9 @@ void StringFormatter::UpdateReplacements(const SongInfo &info)
     this->wildcards.push_back(wild);
 }
 
-string StringFormatter::GetFilename(const Song *song, const string& extension)
+string StringFormatter::GetFilename(const Song *song, const std::string& extension)
 {
-    string filename;
+    std::string filename;
     if (!this->pattern.empty())
     {
         this->UpdateReplacements(song->Metadata);
@@ -67,13 +67,13 @@ string StringFormatter::GetFilename(const Song *song, const string& extension)
         {
             // find placeholder
             size_t pos = filename.find(this->wildcards[i].wildcard);
-            if (pos != string::npos)
+            if (pos != std::string::npos)
             {
                 filename.replace(pos, this->wildcards[i].wildcard.size(), this->wildcards[i].replacement->c_str());
             }
         }
 
-        string path = mydirname(song->Filename);
+        std::string path = mydirname(song->Filename);
 
         filename = path + "/" + filename + extension;
     }
@@ -85,7 +85,7 @@ string StringFormatter::GetFilename(const Song *song, const string& extension)
     return ::getUniqueFilename(filename);
 }
 
-void StringFormatter::SetFormat(string pattern) noexcept
+void StringFormatter::SetFormat(std::string pattern) noexcept
 {
     this->pattern = std::move(pattern);
 }

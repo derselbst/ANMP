@@ -30,8 +30,8 @@ class Song
     protected:
     // even if there were no pure virtual methods, allow
     // construction for child classes only
-    Song(string filename);
-    Song(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
+    Song(std::string filename);
+    Song(std::string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
 
     public:
     // empty virtual destructor for proper cleanup
@@ -45,7 +45,7 @@ class Song
     // File specific level
     //--------------------------------------------------------------------
     // fullpath to underlying audio file
-    string Filename = "";
+    std::string Filename = "";
 
     // an in-file-offset. its usage can be determined by child classes
     //

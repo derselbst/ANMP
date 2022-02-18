@@ -6,10 +6,10 @@
 
 mutex LoudnessFile::mtx;
 
-string LoudnessFile::toebur128Filename(const string& filePath)
+string LoudnessFile::toebur128Filename(const std::string& filePath)
 {
-    string file = mybasename(filePath);
-    string dir = mydirname(filePath);
+    std::string file = mybasename(filePath);
+    std::string dir = mydirname(filePath);
 
     file = "." + file + ".ebur128";
 
@@ -18,7 +18,7 @@ string LoudnessFile::toebur128Filename(const string& filePath)
 
 static const double Target = 1.0f;
 
-void LoudnessFile::write(string filePath, const float &gainCorrection) noexcept
+void LoudnessFile::write(std::string filePath, const float &gainCorrection) noexcept
 {
     filePath = toebur128Filename(filePath);
 
@@ -40,7 +40,7 @@ void LoudnessFile::write(string filePath, const float &gainCorrection) noexcept
  *
  * @return gain correction factor (i.e. a relative gain), 1.0 is full amplitude (i.e. no correction necessary),
  */
-float LoudnessFile::read(string filePath) noexcept
+float LoudnessFile::read(std::string filePath) noexcept
 {
     filePath = toebur128Filename(filePath);
 

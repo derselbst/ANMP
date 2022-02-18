@@ -21,12 +21,12 @@ class LoudnessFile
     // no assign
     LoudnessFile &operator=(const LoudnessFile &) = delete;
 
-    static void write(string filePath, const float &gainCorrection) noexcept;
+    static void write(std::string filePath, const float &gainCorrection) noexcept;
 
-    static float read(string filePath) noexcept;
+    static float read(std::string filePath) noexcept;
 
     private:
     static mutex mtx;
 
-    static string toebur128Filename(const string& filePath);
+    static std::string toebur128Filename(const std::string& filePath);
 };

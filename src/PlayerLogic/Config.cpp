@@ -28,7 +28,7 @@ Config &Config::Singleton()
 
 void Config::Load() noexcept
 {
-    string file = ::myHomeDir() + "/" + this->UserDir + "/" + this->UserFile;
+    std::string file = ::myHomeDir() + "/" + this->UserDir + "/" + this->UserFile;
 
     if (::myExists(file))
     {
@@ -51,7 +51,7 @@ void Config::Load() noexcept
 
 void Config::Save() noexcept
 {
-    string file = ::myHomeDir() + "/" + this->UserDir + "/";
+    std::string file = ::myHomeDir() + "/" + this->UserDir + "/";
 
     if (!::myExists(file))
     {

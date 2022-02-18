@@ -17,14 +17,14 @@
 #endif
 
 template<typename SAMPLEFORMAT>
-StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename)
+StandardWrapper<SAMPLEFORMAT>::StandardWrapper(std::string filename)
 : Song(filename)
 {
     this->init();
 }
 
 template<typename SAMPLEFORMAT>
-StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
+StandardWrapper<SAMPLEFORMAT>::StandardWrapper(std::string filename, Nullable<size_t> offset, Nullable<size_t> len)
 : Song(filename, offset, len)
 {
     this->init();

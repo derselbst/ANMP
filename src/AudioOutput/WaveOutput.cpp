@@ -227,7 +227,7 @@ struct WaveHeader
         }                                                                                    \
     }
 
-            string meta = m.Artist;
+            std::string meta = m.Artist;
             WRITE_META('I', 'A', 'R', 'T');
 
             meta = m.Genre;
@@ -310,7 +310,7 @@ void WaveOutput::onCurrentSongChanged(void *context, const Song *newSong)
 
         if (newSong != nullptr)
         {
-            string outFile = StringFormatter::Singleton().GetFilename(newSong, ".wav");
+            std::string outFile = StringFormatter::Singleton().GetFilename(newSong, ".wav");
 
             pthis->handle = fopen(outFile.c_str(), "wb");
             if (pthis->handle == nullptr)

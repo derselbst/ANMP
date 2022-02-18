@@ -60,8 +60,8 @@ template<typename SAMPLEFORMAT>
 class StandardWrapper : public Song
 {
     public:
-    StandardWrapper(string filename);
-    StandardWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
+    StandardWrapper(std::string filename);
+    StandardWrapper(std::string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
 
     // forbid copying
     StandardWrapper(StandardWrapper const &) = delete;

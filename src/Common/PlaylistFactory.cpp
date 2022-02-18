@@ -66,12 +66,12 @@ using namespace std;
 
 #ifdef USE_CUE
 
-void PlaylistFactory::parseCue(std::vector<Song*> &playlist, const string &filePath)
+void PlaylistFactory::parseCue(std::vector<Song*> &playlist, const std::string &filePath)
 {
 #define cue_assert(ERRMSG, COND)                                                                                    \
     if (!(COND))                                                                                                    \
     {                                                                                                               \
-        throw runtime_error(string("Error: Failed to parse CUE-Sheet file \"") + filePath + "\" (" + ERRMSG + ")"); \
+        throw runtime_error(std::string("Error: Failed to parse CUE-Sheet file \"") + filePath + "\" (" + ERRMSG + ")"); \
     }
 
     std::unique_ptr<FILE, decltype(&fclose)> f(fopen(filePath.c_str(), "r"), &fclose);
@@ -89,21 +89,21 @@ void PlaylistFactory::parseCue(std::vector<Song*> &playlist, const string &fileP
         if (val != nullptr)
         {
             // overall CD interpret
-            overridingMetadata.Artist = string(val);
+            overridingMetadata.Artist = std::string(val);
         }
 
         val = cdtext_get(PTI_COMPOSER, albumtext);
         if (val != nullptr)
         {
             // overall CD Composer
-            overridingMetadata.Composer = string(val);
+            overridingMetadata.Composer = std::string(val);
         }
 
         val = cdtext_get(PTI_TITLE, albumtext);
         if (val != nullptr)
         {
             // album title
-            overridingMetadata.Album = string(val);
+            overridingMetadata.Album = std::string(val);
         }
     }
 
@@ -127,25 +127,25 @@ void PlaylistFactory::parseCue(std::vector<Song*> &playlist, const string &fileP
             const char *val = cdtext_get(PTI_PERFORMER, cdtext);
             if (val != nullptr)
             {
-                overridingMetadata.Artist = string(val);
+                overridingMetadata.Artist = std::string(val);
             }
 
             val = cdtext_get(PTI_COMPOSER, cdtext);
             if (val != nullptr)
             {
-                overridingMetadata.Composer = string(val);
+                overridingMetadata.Composer = std::string(val);
             }
 
             val = cdtext_get(PTI_TITLE, cdtext);
             if (val != nullptr)
             {
-                overridingMetadata.Title = string(val);
+                overridingMetadata.Title = std::string(val);
             }
 
             val = cdtext_get(PTI_GENRE, cdtext);
             if (val != nullptr)
             {
-                overridingMetadata.Genre = string(val);
+                overridingMetadata.Genre = std::string(val);
             }
         }
 
@@ -171,11 +171,11 @@ void PlaylistFactory::parseCue(std::vector<Song*> &playlist, const string &fileP
 #endif
 
 
-bool PlaylistFactory::addSong(std::vector<Song*> &playlist, const string& filePath, Nullable<size_t> offset, Nullable<size_t> len, Nullable<SongInfo> overridingMetadata)
+bool PlaylistFactory::addSong(std::vector<Song*> &playlist, const std::string& filePath, Nullable<size_t> offset, Nullable<size_t> len, Nullable<SongInfo> overridingMetadata)
 {
     Song *pcm = nullptr;
 
-    string ext = getFileExtension(filePath);
+    std::string ext = getFileExtension(filePath);
 
     if (iEquals(ext, "ebur128") ||
         iEquals(ext, "mood") ||
@@ -403,7 +403,7 @@ bool PlaylistFactory::addSong(std::vector<Song*> &playlist, const string& filePa
 }
 
 template<typename T>
-void PlaylistFactory::tryWith(Song *(&pcm), const string &filePath, Nullable<size_t> offset, Nullable<size_t> len)
+void PlaylistFactory::tryWith(Song *(&pcm), const std::string &filePath, Nullable<size_t> offset, Nullable<size_t> len)
 {
     if (pcm == nullptr)
     {

@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
         switch (ch)
         {
             case 'o':
-                StringFormatter::Singleton().SetFormat(string(optarg));
+                StringFormatter::Singleton().SetFormat(std::string(optarg));
                 break;
 
             case 'l':

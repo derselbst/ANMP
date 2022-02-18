@@ -10,7 +10,7 @@ using namespace std;
 
 int main()
 {
-    const string testFile = "test.ebur128";
+    const std::string testFile = "test.ebur128";
 
     float gain = 2.0f;
     LoudnessFile::write(testFile, gain);

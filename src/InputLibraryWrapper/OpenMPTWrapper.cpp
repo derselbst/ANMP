@@ -10,13 +10,13 @@
 #include <utility>
 #include <fstream>
 
-OpenMPTWrapper::OpenMPTWrapper(string filename)
+OpenMPTWrapper::OpenMPTWrapper(std::string filename)
 : StandardWrapper(std::move(filename))
 {
     this->initAttr();
 }
 
-OpenMPTWrapper::OpenMPTWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
+OpenMPTWrapper::OpenMPTWrapper(std::string filename, Nullable<size_t> offset, Nullable<size_t> len)
 : StandardWrapper(std::move(filename), offset, len)
 {
     this->initAttr();

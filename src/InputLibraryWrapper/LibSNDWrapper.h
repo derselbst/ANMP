@@ -13,8 +13,8 @@
 class LibSNDWrapper : public StandardWrapper<sndfile_sample_t>
 {
     public:
-    LibSNDWrapper(string filename);
-    LibSNDWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len);
+    LibSNDWrapper(std::string filename);
+    LibSNDWrapper(std::string filename, Nullable<size_t> offset, Nullable<size_t> len);
 
     // forbid copying
     LibSNDWrapper(LibSNDWrapper const &) = delete;
