@@ -8,6 +8,8 @@
 #include <iomanip>
 #include <utility>
 
+using namespace std;
+
 LibGMEWrapper::LibGMEWrapper(string filename)
 : StandardWrapper(std::move(filename))
 {
