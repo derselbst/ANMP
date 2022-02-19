@@ -1,5 +1,6 @@
 #include "LoudnessFile.h"
 #include "Common.h"
+#include "AtomicWrite.h"
 
 #include <cmath>
 #include <cstdio>
@@ -54,6 +55,10 @@ float LoudnessFile::read(std::string filePath) noexcept
         fread(&gain, 1, sizeof(float), f);
 
         fclose(f);
+    }
+    else
+    {
+        CLOG(LogLevel_t::Warning, "Could not open LoudnessFile '" << filePath << "'");
     }
 
     return gain;
