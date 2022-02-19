@@ -9,8 +9,8 @@ add_subdirectory(PlayerLogic)
 
 
 add_library(${PROJECT_NAME})
-target_link_libraries(${PROJECT_NAME} anmp-audio-output anmp-common anmp-input anmp-player)
-target_link_libraries(${PROJECT_NAME} ${LD_FLAGS})
+target_link_libraries(${PROJECT_NAME} PUBLIC anmp-audio-output anmp-common anmp-input anmp-player)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${LD_FLAGS})
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 

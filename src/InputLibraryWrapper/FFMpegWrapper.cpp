@@ -8,6 +8,12 @@
 #include <cstring>
 #include <utility>
 
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/opt.h>
+#include <libswresample/swresample.h>
+}
 
 FFMpegWrapper::FFMpegWrapper(std::string filename)
 : StandardWrapper(std::move(filename))

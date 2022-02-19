@@ -3,17 +3,12 @@
 
 #include "StandardWrapper.h"
 
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/opt.h>
-#include <libswresample/swresample.h>
-}
+struct AVFormatContext;
+struct SwrContext;
+struct AVCodecContext;
+struct AVFrame;
+struct AVPacket;
 
-/**
-  * class FFMpegWrapper
-  *
-  */
 
 class FFMpegWrapper : public StandardWrapper<int16_t>
 {
