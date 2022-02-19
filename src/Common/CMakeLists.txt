@@ -24,7 +24,8 @@ SET(ANMP_COMMON_SRC
        types.h
 )
 
-
-#---------------------------------------------------------------------------------------------
-
 add_library(${PROJECT_NAME} OBJECT ${ANMP_COMMON_SRC})
+
+if(USE_LIBCUE)
+  target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::LIBCUE)
+endif()

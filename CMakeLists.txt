@@ -8,6 +8,10 @@ if(POLICY CMP0091)
   cmake_policy(SET CMP0091 NEW)
 endif()
 
+if(POLICY CMP0104)
+  cmake_policy(SET CMP0104 NEW)
+endif()
+
 project (ANMP)
 
 ### setup binary output directories
@@ -114,9 +118,8 @@ option(ENABLE_EBUR128 "Enable support for noise normalization through libebur128
 
 if(ENABLE_ALSA)
   find_package(ALSA)
-  HANDLE_FOUND(ALSA)
-  
   if(ALSA_FOUND)
+        MY_PRINT(ALSA)
         add_definitions(-DUSE_ALSA)
         set(USE_ALSA TRUE)
         
@@ -127,11 +130,8 @@ endif(ENABLE_ALSA)
 
 
 if(ENABLE_JACK)
-  find_package(Jack)
-  HANDLE_FOUND(JACK)
-  
-  find_package(LibSamplerate)
-  HANDLE_FOUND(LIBSAMPLERATE)
+  PKG_CHECK_MODULES(JACK jack IMPORTED_TARGET)
+  PKG_CHECK_MODULES(SAMPLERATE samplerate IMPORTED_TARGET)
   
   if(JACK_FOUND AND LIBSAMPLERATE_FOUND)
         add_definitions(-DUSE_JACK)
@@ -146,14 +146,11 @@ endif(ENABLE_JACK)
 
 
 if(ENABLE_PORTAUDIO)
-  PKG_CHECK_MODULES(PORTAUDIO portaudio-2.0)
+  PKG_CHECK_MODULES(PORTAUDIO portaudio-2.0 IMPORTED_TARGET)
   
   if(PORTAUDIO_FOUND)
         add_definitions(-DUSE_PORTAUDIO)
         set(USE_PORTAUDIO TRUE)
-        set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${PORTAUDIO_INCLUDE_DIRS})
-        set(LD_FLAGS ${LD_FLAGS} ${PORTAUDIO_LIBRARIES})
-        link_directories(${PORTAUDIO_LIBRARY_DIRS})
 
         MY_PRINT(PORTAUDIO)
   endif(PORTAUDIO_FOUND)
@@ -164,14 +161,11 @@ endif(ENABLE_PORTAUDIO)
 
 if(ENABLE_EBUR128)
   # previous versions neither provided pkgconfig, nor did true peak calc work
-  PKG_CHECK_MODULES(EBUR128 libebur128>=1.2.3)
+  PKG_CHECK_MODULES(EBUR128 libebur128>=1.2.3 IMPORTED_TARGET)
   
   if(EBUR128_FOUND)
         add_definitions(-DUSE_EBUR128)
         set(USE_EBUR128 TRUE)
-        set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${EBUR128_INCLUDE_DIRS})
-        set(LD_FLAGS ${LD_FLAGS} ${EBUR128_LIBRARIES})
-        link_directories(${EBUR128_LIBRARY_DIRS})
 
         MY_PRINT(EBUR128)
   endif(EBUR128_FOUND)
@@ -190,7 +184,7 @@ option(ENABLE_AOPSF "Use aopsf to support PSF1 and PSF2 files (Portable Sound Fo
 option(ENABLE_VGMSTREAM "Use vgmstream to support innumerable streamed audio formats from video games." ON)
 option(ENABLE_FFMPEG "Use ffmpeg to support innumerable streamed audio formats, also from video streams." ON)
 option(ENABLE_FLUIDSYNTH "Use fluidsynth to synthesize MIDI files." ON)
-option(ENABLE_MODPLUG "Use libmodplug to support multiple tracker formats." ON)
+option(ENABLE_MODPLUG "Use libmodplug to support multiple tracker formats." OFF)
 option(ENABLE_OPENMPT "A better libmodplug to support multiple tracker formats." ON)
 
 if(ENABLE_LIBGME)
@@ -201,12 +195,9 @@ endif(ENABLE_LIBGME)
 
 
 if(ENABLE_LIBMAD)
-    PKG_CHECK_MODULES(ID3TAG id3tag)
+    PKG_CHECK_MODULES(ID3TAG id3tag IMPORTED_TARGET)
   
   if(ID3TAG_FOUND)
-        
-        set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${ID3TAG_INCLUDE_DIRS})
-        set(LD_FLAGS ${LD_FLAGS} ${ID3TAG_LIBRARIES})
         MY_PRINT(ID3TAG)
         
         MY_FIND_LIB(LIBMAD mad)
@@ -222,7 +213,7 @@ endif(ENABLE_LIBMAD)
 
 
 if(ENABLE_LIBSND)
-    MY_FIND_LIB(LIBSND sndfile)
+    PKG_CHECK_MODULES(LIBSND sndfile IMPORTED_TARGET)
   
     summary_add("libsndfile support" LIBSND_FOUND)
 endif(ENABLE_LIBSND)
@@ -271,51 +262,43 @@ endif(ENABLE_VGMSTREAM)
 
 
 if(ENABLE_FFMPEG)
-  find_package(FFmpeg)
-  HANDLE_FOUND(FFMPEG)
+  PKG_CHECK_MODULES(AVCODEC libavcodec IMPORTED_TARGET)
+  PKG_CHECK_MODULES(AVFORMAT libavformat IMPORTED_TARGET)
+  PKG_CHECK_MODULES(AVUTIL libavutil IMPORTED_TARGET)
+  PKG_CHECK_MODULES(SWRESAMPLE libswresample IMPORTED_TARGET)
   
-  if(FFMPEG_FOUND)
+  if(AVCODEC_FOUND AND AVFORMAT_FOUND AND AVUTIL_FOUND AND SWRESAMPLE_FOUND)
     set(USE_FFMPEG TRUE)
     add_definitions(-DUSE_FFMPEG)
-  endif(FFMPEG_FOUND)
+  endif()
   
   summary_add("FFmpeg support" USE_FFMPEG)
 endif(ENABLE_FFMPEG)
 
 
 if(ENABLE_FLUIDSYNTH)
-  PKG_CHECK_MODULES(FLUIDSYNTH fluidsynth>=2.2.0)
-  PKG_CHECK_MODULES(LIBSMF smf)
-  
-  if(LIBSMF_FOUND AND FLUIDSYNTH_FOUND)
+  PKG_CHECK_MODULES(FLUIDSYNTH fluidsynth>=2.2.0 IMPORTED_TARGET)
+  PKG_CHECK_MODULES(LIBSMF smf IMPORTED_TARGET)
+
+  if(FLUIDSYNTH_FOUND)
     add_definitions(-DUSE_FLUIDSYNTH)
-    add_definitions(-DUSE_SMF)
+    set(USE_FLUIDSYNTH TRUE)
     if(DEFINED FLUIDSYNTH_DEFAULT_SF2)
         add_definitions(-DFLUIDSYNTH_DEFAULT_SF2="${FLUIDSYNTH_DEFAULT_SF2}")
     endif()
-
-    set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${FLUIDSYNTH_INCLUDE_DIRS})
-    set(LD_FLAGS ${LD_FLAGS} ${FLUIDSYNTH_LIBRARIES})
-    link_directories(${FLUIDSYNTH_LIBRARY_DIRS})
-
-    MY_PRINT(FLUIDSYNTH)
-
-    set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${LIBSMF_INCLUDE_DIRS})
-    set(LD_FLAGS ${LD_FLAGS} ${LIBSMF_LIBRARIES})
-    link_directories(${LIBSMF_LIBRARY_DIRS})
-
-    MY_PRINT(LIBSMF)
-
-    set(USE_FLUIDSYNTH TRUE)
-    set(USE_SMF TRUE)
-  endif(LIBSMF_FOUND AND FLUIDSYNTH_FOUND)
+  
+    if(LIBSMF_FOUND)
+      add_definitions(-DUSE_SMF)
+      set(USE_SMF TRUE)
+    endif(LIBSMF_FOUND)
+  endif(FLUIDSYNTH_FOUND)
 
   summary_add("fluidsynth support" USE_FLUIDSYNTH)
 endif(ENABLE_FLUIDSYNTH)
 
 
 if(ENABLE_MODPLUG)
-  PKG_CHECK_MODULES(LIBMODPLUG libmodplug)
+  PKG_CHECK_MODULES(LIBMODPLUG libmodplug IMPORTED_TARGET)
 
   if(LIBMODPLUG_FOUND)
     add_definitions(-DUSE_MODPLUG)
@@ -335,17 +318,13 @@ if(ENABLE_MODPLUG)
 endif(ENABLE_MODPLUG)
 
 if(ENABLE_OPENMPT)
-  PKG_CHECK_MODULES(LIBOPENMPT libopenmpt)
+  PKG_CHECK_MODULES(LIBOPENMPT libopenmpt IMPORTED_TARGET)
 
   if(LIBOPENMPT_FOUND)
     add_definitions(-DUSE_OPENMPT)
-    set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${LIBOPENMPT_INCLUDE_DIRS})
-    set(LD_FLAGS ${LD_FLAGS} ${LIBOPENMPT_LIBRARIES})
-    link_directories(${LIBOPENMPT_LIBRARY_DIRS})
+    set(USE_OPENMPT TRUE)
 
     MY_PRINT(LIBOPENMPT)
-
-    set(USE_OPENMPT TRUE)
   endif(LIBOPENMPT_FOUND)
 
   summary_add("openmpt support" USE_OPENMPT)
@@ -359,14 +338,11 @@ option(ENABLE_GUI "Enable building the QT GUI" ON)
 option(ENABLE_VISUALIZER "Enable nice blinky audio visualizers" ON)
 
 if(ENABLE_CUE)
-  PKG_CHECK_MODULES(LIBCUE libcue)
+  PKG_CHECK_MODULES(LIBCUE libcue IMPORTED_TARGET)
   
   if(LIBCUE_FOUND)
         add_definitions(-DUSE_CUE)
-        set(PROJECT_SYSTEM_INCLUDE_DIRS ${PROJECT_SYSTEM_INCLUDE_DIRS} ${LIBCUE_INCLUDE_DIRS})
-        set(LD_FLAGS ${LD_FLAGS} ${LIBCUE_LIBRARIES})
-        link_directories(${LIBCUE_LIBRARY_DIRS})
-        
+        set(USE_CUE TRUE)
         MY_PRINT(LIBCUE)
   endif(LIBCUE_FOUND)
         

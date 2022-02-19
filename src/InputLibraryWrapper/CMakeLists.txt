@@ -10,55 +10,58 @@ SET(ANMP_INPUT_SRC
        StandardWrapper_impl.h
 )
 
+add_library(${PROJECT_NAME} OBJECT ${ANMP_INPUT_SRC})
+
 if(LIBGME_FOUND)
-    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} LibGMEWrapper.cpp LibGMEWrapper.h)
+    target_sources(${PROJECT_NAME} PRIVATE LibGMEWrapper.cpp LibGMEWrapper.h)
 endif(LIBGME_FOUND)
 
 
 if(USE_MAD)
-    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} LibMadWrapper.cpp LibMadWrapper.h)
+    target_sources(${PROJECT_NAME} PRIVATE LibMadWrapper.cpp LibMadWrapper.h)
+    target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::ID3TAG)
 endif(USE_MAD)
 
 
 if(LIBSND_FOUND)
-    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} LibSNDWrapper.cpp LibSNDWrapper.h)
+    target_sources(${PROJECT_NAME} PRIVATE LibSNDWrapper.cpp LibSNDWrapper.h)
+    target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::LIBSND)
 endif(LIBSND_FOUND)
 
 
 if(USE_LAZYUSF)
-    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} LazyusfWrapper.cpp LazyusfWrapper.h)
+    target_sources(${PROJECT_NAME} PRIVATE LazyusfWrapper.cpp LazyusfWrapper.h)
 endif(USE_LAZYUSF)
 
 if(USE_AOPSF)
-    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} AopsfWrapper.cpp AopsfWrapper.h)
+    target_sources(${PROJECT_NAME} PRIVATE AopsfWrapper.cpp AopsfWrapper.h)
 endif(USE_AOPSF)
 
 if(VGMSTREAM_FOUND)
-    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} VGMStreamWrapper.cpp VGMStreamWrapper.h)
+    target_sources(${PROJECT_NAME} PRIVATE VGMStreamWrapper.cpp VGMStreamWrapper.h)
 endif(VGMSTREAM_FOUND)
 
 if(USE_FFMPEG)
-    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} FFMpegWrapper.cpp FFMpegWrapper.h)
+    target_sources(${PROJECT_NAME} PRIVATE FFMpegWrapper.cpp FFMpegWrapper.h)
+    target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::AVCODEC PkgConfig::AVFORMAT PkgConfig::AVUTIL PkgConfig::SWRESAMPLE)
 endif(USE_FFMPEG)
 
 if(USE_SMF)
-    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} MidiWrapper.cpp MidiWrapper.h)
+    target_sources(${PROJECT_NAME} PRIVATE MidiWrapper.cpp MidiWrapper.h)
+    target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::LIBSMF)
 endif(USE_SMF)
 
 if(USE_FLUIDSYNTH)
-    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} FluidsynthWrapper.cpp FluidsynthWrapper.h)
-    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} N64CSeqWrapper.cpp N64CSeqWrapper.h)
+    target_sources(${PROJECT_NAME} PRIVATE FluidsynthWrapper.cpp FluidsynthWrapper.h)
+    target_sources(${PROJECT_NAME} PRIVATE N64CSeqWrapper.cpp N64CSeqWrapper.h)
+    target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::FLUIDSYNTH)
 endif(USE_FLUIDSYNTH)
 
 if(USE_MODPLUG)
-    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} ModPlugWrapper.cpp ModPlugWrapper.h)
+    target_sources(${PROJECT_NAME} PRIVATE ModPlugWrapper.cpp ModPlugWrapper.h)
 endif(USE_MODPLUG)
 
 if(USE_OPENMPT)
-    set(ANMP_INPUT_SRC ${ANMP_INPUT_SRC} OpenMPTWrapper.cpp OpenMPTWrapper.h)
+    target_sources(${PROJECT_NAME} PRIVATE OpenMPTWrapper.cpp OpenMPTWrapper.h)
+    target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::LIBOPENMPT)
 endif(USE_OPENMPT)
-
-
-#---------------------------------------------------------------------------------------------
-
-add_library(${PROJECT_NAME} OBJECT ${ANMP_INPUT_SRC})

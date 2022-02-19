@@ -8,24 +8,28 @@ SET(ANMP_AUDIO_SRC
        WaveOutput.h
 )
 
+add_library(${PROJECT_NAME} OBJECT ${ANMP_AUDIO_SRC})
 
 if(USE_ALSA)
-    SET(ANMP_AUDIO_SRC ${ANMP_AUDIO_SRC} ALSAOutput.cpp ALSAOutput.h)
+    target_sources(${PROJECT_NAME} PRIVATE ALSAOutput.cpp ALSAOutput.h)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ALSA::ALSA)
 endif(USE_ALSA)
 
 if(USE_JACK)
-    SET(ANMP_AUDIO_SRC ${ANMP_AUDIO_SRC} JackOutput.cpp JackOutput.h)
+    target_sources(${PROJECT_NAME} PRIVATE JackOutput.cpp JackOutput.h)
+    target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::JACK PkgConfig::SAMPLERATE)
 endif(USE_JACK)
 
 if(USE_PORTAUDIO)
-    SET(ANMP_AUDIO_SRC ${ANMP_AUDIO_SRC} PortAudioOutput.cpp PortAudioOutput.h)
+    target_sources(${PROJECT_NAME} PRIVATE PortAudioOutput.cpp PortAudioOutput.h)
+    target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::PORTAUDIO)
 endif(USE_PORTAUDIO)
 
 
 if(EBUR128_FOUND)
-    SET(ANMP_AUDIO_SRC ${ANMP_AUDIO_SRC} ebur128Output.cpp ebur128Output.h)
+    target_sources(${PROJECT_NAME} PRIVATE ebur128Output.cpp ebur128Output.h)
+    target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::EBUR128)
 endif(EBUR128_FOUND)
 
 #---------------------------------------------------------------------------------------------
 
-add_library(${PROJECT_NAME} OBJECT ${ANMP_AUDIO_SRC})
