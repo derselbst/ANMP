@@ -26,6 +26,6 @@ SET(ANMP_COMMON_SRC
 
 add_library(${PROJECT_NAME} OBJECT ${ANMP_COMMON_SRC})
 
-if(USE_LIBCUE)
+if(USE_CUE)
   target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::LIBCUE)
 endif()

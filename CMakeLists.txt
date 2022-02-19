@@ -346,7 +346,7 @@ if(ENABLE_CUE)
         MY_PRINT(LIBCUE)
   endif(LIBCUE_FOUND)
         
-    summary_add("libcue support" LIBCUE_FOUND)
+  summary_add("libcue support" LIBCUE_FOUND)
 endif(ENABLE_CUE)
 
 
