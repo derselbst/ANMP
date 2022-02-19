@@ -115,6 +115,10 @@ jobs:
           artifactName: vcpkg-deps-$(platform)-$(poo)
       condition: or(succeeded(), failed())
       enabled: false
+    - powershell: |
+        cd $(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib\
+        Move-Item -Path libopenmpt.lib -Destination openmpt.lib
+      displayName: 'Fixup things'
     - bash: |
         set -ex
         mkdir build
