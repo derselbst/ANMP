@@ -10,6 +10,8 @@
 
 #include <cstring> // memset
 
+using namespace std;
+
 AopsfWrapper::AopsfWrapper(string filename)
 : StandardWrapper(filename)
 {

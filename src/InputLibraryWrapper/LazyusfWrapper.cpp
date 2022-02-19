@@ -10,6 +10,8 @@
 
 #include <utility>
 
+using namespace std;
+
 LazyusfWrapper::LazyusfWrapper(string filename)
 : StandardWrapper(std::move(filename))
 {
