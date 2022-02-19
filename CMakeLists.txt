@@ -137,6 +137,7 @@ if(ENABLE_JACK)
         add_definitions(-DUSE_JACK)
         set(USE_JACK TRUE)
         
+        MY_PRINT(JACK)
   endif(JACK_FOUND AND LIBSAMPLERATE_FOUND)
   
   
@@ -270,6 +271,10 @@ if(ENABLE_FFMPEG)
   if(AVCODEC_FOUND AND AVFORMAT_FOUND AND AVUTIL_FOUND AND SWRESAMPLE_FOUND)
     set(USE_FFMPEG TRUE)
     add_definitions(-DUSE_FFMPEG)
+    MY_PRINT(AVCODEC)
+    MY_PRINT(AVFORMAT)
+    MY_PRINT(AVUTIL)
+    MY_PRINT(SWRESAMPLE)
   endif()
   
   summary_add("FFmpeg support" USE_FFMPEG)
@@ -286,10 +291,12 @@ if(ENABLE_FLUIDSYNTH)
     if(DEFINED FLUIDSYNTH_DEFAULT_SF2)
         add_definitions(-DFLUIDSYNTH_DEFAULT_SF2="${FLUIDSYNTH_DEFAULT_SF2}")
     endif()
+    MY_PRINT(FLUIDSYNTH)
   
     if(LIBSMF_FOUND)
       add_definitions(-DUSE_SMF)
       set(USE_SMF TRUE)
+      MY_PRINT(LIBSMF)
     endif(LIBSMF_FOUND)
   endif(FLUIDSYNTH_FOUND)
 
