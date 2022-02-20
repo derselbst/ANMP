@@ -22,5 +22,5 @@
         ss.precision(max(numeric_limits<decltype(LHS)>::max_digits10, numeric_limits<decltype(RHS)>::max_digits10)); \
         ss << __FILE__ << ":" << __LINE__ << " : assertion failed: " << fixed << LHS << " == " << RHS;               \
         std::string msg = ss.str();                                                                                  \
-        throw AssertionException(msg);                                                                               \
+        std::exit(-1);                                                                                               \
     }
