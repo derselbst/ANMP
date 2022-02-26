@@ -68,7 +68,7 @@ jobs:
       displayName: "Cache vcpkg's packages"
       condition: and(not(in(variables['Build.Reason'], 'Schedule')), ${{ parameters.useCache }})
       inputs:
-        key: $(VCPKG_REVISION) | "$(platform)" | "$(poo)" | "withstaticlibs" | "withfluidsynth"
+        key: $(VCPKG_REVISION) | "$(platform)" | "$(poo)" | "withstaticlibs"
         path: '$(VCPKG_INSTALLATION_ROOT)\installed'
         cacheHitVar: CACHE_RESTORED
     - bash: |
@@ -99,7 +99,7 @@ jobs:
       condition: and(succeeded(), ne(variables.CACHE_RESTORED, 'true'))
     - bash: |
         set -ex
-        vcpkg install qt5-base:$(platform)-windows-static
+        vcpkg install qt5-base:$(platform)-windows-static qt5-svg:$(platform)-windows-static
       displayName: 'vcpkg build Qt5'
       condition: and(succeeded(), ne(variables.CACHE_RESTORED, 'true'))
     - bash: |
