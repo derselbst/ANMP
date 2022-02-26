@@ -65,18 +65,21 @@ if(USE_GUI)
     add_executable(${PROJECT_NAME} ${UI_HEADERS} ${GUI_SRCS} ${ANMP_LAUNCHER_SRC} icons.qrc)
     
     # this will add all necessary compile and link flags
-    target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::OpenGL)
+    target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Widgets Qt5::DBus)
 
     if(USE_VISUALIZER)
         # name of libraries that will be build in the applets subdir
         SET(LIBANAL analyzer)
         add_subdirectory(applets/analyzer)
-        target_link_libraries(${PROJECT_NAME} ${LIBANAL})
+        target_link_libraries(${PROJECT_NAME} ${LIBANAL} Qt5::OpenGL)
     endif(USE_VISUALIZER)
+
+    if(WIN32)
+      set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
+    endif()
 
     target_link_libraries(${PROJECT_NAME}
         anmp
-        ${Qt5DBus_LIBRARIES} ${Qt5Widgets_LIBRARIES}
         ${LD_FLAGS}
     )
     
