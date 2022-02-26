@@ -199,6 +199,11 @@ void PortAudioOutput::start()
         PaError err = Pa_StartStream(d->handle);
         if (err != PaErrorCode::paNoError && err != paStreamIsNotStopped)
         {
+            if (err == paUnanticipatedHostError)
+            {
+                auto *errInfo = Pa_GetLastHostErrorInfo();
+                CLOG(LogLevel_t::Error, "Code " << errInfo->errorCode << ": '" << errInfo->errorText << "' | HostAPI: " << errInfo->hostApiType);
+            }
             THROW_RUNTIME_ERROR("unable to start pcm (" << Pa_GetErrorText(err) << ")");
         }
     }
