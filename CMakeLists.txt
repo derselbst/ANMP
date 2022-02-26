@@ -191,6 +191,12 @@ option(ENABLE_OPENMPT "A better libmodplug to support multiple tracker formats."
 if(ENABLE_LIBGME)
     MY_FIND_LIB(LIBGME gme)
     
+    if(LIBGME_FOUND)
+      add_definitions(-DUSE_LIBGME)
+      set(USE_LIBGME TRUE)
+
+      MY_PRINT(LIBGME)
+    endif(LIBGME_FOUND)
     summary_add("libgme support" LIBGME_FOUND)
 endif(ENABLE_LIBGME)
 
@@ -215,7 +221,13 @@ endif(ENABLE_LIBMAD)
 
 if(ENABLE_LIBSND)
     PKG_CHECK_MODULES(LIBSND sndfile IMPORTED_TARGET)
-  
+
+    if(LIBSND_FOUND)
+      add_definitions(-DUSE_LIBSND)
+      set(USE_LIBSND TRUE)
+
+      MY_PRINT(LIBSND)
+    endif(LIBSND_FOUND)
     summary_add("libsndfile support" LIBSND_FOUND)
 endif(ENABLE_LIBSND)
 
@@ -230,6 +242,7 @@ if(ENABLE_LAZYUSF)
         if(${PSFLIB_FOUND})
             if(${ZLIB_FOUND})
                 set(USE_LAZYUSF TRUE)
+                add_definitions(-DUSE_LAZYUSF)
             endif(${ZLIB_FOUND})
         endif(${PSFLIB_FOUND})
     endif(${LAZYUSF_FOUND})
@@ -244,6 +257,7 @@ if(ENABLE_AOPSF)
     
     if(${AOPSF_FOUND} AND ${PSFLIB_FOUND})
         set(USE_AOPSF TRUE)
+        add_definitions(-DUSE_AOPSF)
     endif(${AOPSF_FOUND} AND ${PSFLIB_FOUND})
     
     summary_add("aopsf support" USE_AOPSF)
@@ -251,14 +265,20 @@ endif(ENABLE_AOPSF)
 
 
 if(ENABLE_VGMSTREAM)
-  MY_FIND_LIB(VGMSTREAM vgmstream)
-  MY_FIND_LIB(VORBISFILE vorbisfile)
-  MY_FIND_LIB(VORBIS vorbis)
-  MY_FIND_LIB(MPG123 mpg123)
-  MY_FIND_LIB(M m)
-  MY_FIND_PKG(ZLIB ZLIB)
+    MY_FIND_LIB(VGMSTREAM vgmstream)
+    MY_FIND_LIB(VORBISFILE vorbisfile)
+    MY_FIND_LIB(VORBIS vorbis)
+    MY_FIND_LIB(MPG123 mpg123)
+    MY_FIND_LIB(M m)
+    MY_FIND_PKG(ZLIB ZLIB)
   
-  summary_add("vgmstream support" VGMSTREAM_FOUND)
+    if(VGMSTREAM_FOUND AND VORBISFILE_FOUND AND VORBIS_FOUND AND MPG123_FOUND AND ZLIB_FOUND)
+      add_definitions(-DUSE_VGMSTREAM)
+      set(USE_VGMSTREAM TRUE)
+
+      MY_PRINT(VGMSTREAM)
+    endif()
+    summary_add("vgmstream support" USE_VGMSTREAM)
 endif(ENABLE_VGMSTREAM)
 
 
