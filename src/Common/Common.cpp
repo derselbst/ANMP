@@ -187,27 +187,50 @@ size_t framesToMs(const frame_t &frames, const unsigned int &sampleRate)
 
 #ifdef _WIN32
 #include <stdlib.h>
-
-char driveBuf[_MAX_DRIVE];
-char dirBuf[_MAX_DIR];
-char fnameBuf[_MAX_FNAME];
-char extBuf[_MAX_EXT];
 #endif
+
+std::string removeTrailingSlash(std::string s)
+{
+    size_t i;
+    for (i = s.size(); i > 0; i--)
+    {
+        auto &c = s[i - 1];
+        if (c == '/' || c == '\\')
+        {
+            continue;
+        }
+        else
+        {
+            break;
+        }
+    }
+    s.resize(i);
+    return s;
+}
 
 std::string mybasename(const std::string &path)
 {
-    std::string s = std::string(path.c_str());
 
 #if defined(_POSIX_SOURCE)
+    std::string s = std::string(path.c_str());
     return std::string(basename(const_cast<char *>(s.c_str())));
 #elif defined(_WIN32)
+    std::string s = removeTrailingSlash(path);
+    if (s == ".")
+    {
+        return ".";
+    }
+    char driveBuf[_MAX_DRIVE];
+    char dirBuf[_MAX_DIR];
+    char fnameBuf[_MAX_FNAME];
+    char extBuf[_MAX_EXT];
     _splitpath(s.c_str(),
                nullptr, // drive
                dirBuf, // dir
                fnameBuf, // filename
                extBuf);
 
-    if (fnameBuf[0] = '\0')
+    if (fnameBuf[0] == '\0')
     {
         throw NotImplementedException();
     }
@@ -225,8 +248,14 @@ std::string mybasename(const std::string &path)
 
 std::string mydirname(const std::string &path)
 {
-    std::filesystem::path p(path);
-    return std::string(p.parent_path().string());
+    std::string s = removeTrailingSlash(path);
+    std::filesystem::path p(s);
+    std::string dir(p.parent_path().string());
+    if (dir.empty())
+    {
+        return std::string(".");
+    }
+    return dir;
 }
 
 std::string getUniqueFilename(const std::string &path)
