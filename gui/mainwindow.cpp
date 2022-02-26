@@ -254,7 +254,15 @@ void MainWindow::createShortcuts()
 
 void MainWindow::buildFileBrowser()
 {
-    QString rootPath = qgetenv("HOME");
+    std::string home;
+    try
+    {
+        ::myHomeDir();
+    }
+    catch(const std::runtime_error& e)
+    {
+    }
+    QString rootPath = QString::fromStdString(home);
     this->drivesModel->setFilter(QDir::NoDotAndDotDot | QDir::Dirs);
 
     QTreeView *treeView = this->treeView = new QTreeView(this->ui->dockDir);
