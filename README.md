@@ -92,4 +92,4 @@ Also see [[Wiki] About the buildsystem](https://github.com/derselbst/ANMP/wiki/A
 ANMP is licensed under the terms of the *GNU GENERAL PUBLIC LICENSE Version 2*, see [LICENSE](LICENSE).
 
 
-Copyright (C) 2016-2021 Tom Moebert (derselbst)
+Copyright (C) 2016-2022 Tom Moebert (derselbst)
