@@ -68,7 +68,7 @@ jobs:
       displayName: "Cache vcpkg's packages"
       condition: and(not(in(variables['Build.Reason'], 'Schedule')), ${{ parameters.useCache }})
       inputs:
-        key: $(VCPKG_REVISION) | "$(platform)" | "$(poo)" | "withstaticlibs"
+        key: $(VCPKG_REVISION) | "$(platform)" | "$(poo)" | "withstaticlibs" | "withfluidsynth"
         path: '$(VCPKG_INSTALLATION_ROOT)\installed'
         cacheHitVar: CACHE_RESTORED
     - bash: |
@@ -94,7 +94,7 @@ jobs:
       displayName: 'Update vcpkg'
     - bash: |
         set -ex
-        vcpkg install sndfile:$(platform)-windows-static libmad:$(platform)-windows-static ffmpeg:$(platform)-windows-static libopenmpt:$(platform)-windows-static portaudio:$(platform)-windows-static libebur128:$(platform)-windows-static
+        vcpkg install sndfile:$(platform)-windows-static libmad:$(platform)-windows-static fluidsynth:$(platform)-windows-static ffmpeg:$(platform)-windows-static libopenmpt:$(platform)-windows-static portaudio:$(platform)-windows-static libebur128:$(platform)-windows-static
       displayName: 'vcpkg build Dependencies'
       condition: and(succeeded(), ne(variables.CACHE_RESTORED, 'true'))
     - bash: |
