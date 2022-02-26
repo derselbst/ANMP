@@ -21,19 +21,26 @@ static const double Target = 1.0f;
 
 void LoudnessFile::write(std::string filePath, const float &gainCorrection) noexcept
 {
-    filePath = toebur128Filename(filePath);
-
-    std::lock_guard<std::mutex> lock(LoudnessFile::mtx);
-
-    FILE *f = fopen(filePath.c_str(), "wb");
-    if (f == nullptr)
+    if (!filePath.empty())
     {
-        // TODO: log
-        return;
-    }
+        filePath = toebur128Filename(filePath);
 
-    fwrite(&gainCorrection, 1, sizeof(float), f);
-    fclose(f);
+        std::lock_guard<std::mutex> lock(LoudnessFile::mtx);
+
+        FILE *f = fopen(filePath.c_str(), "wb");
+        if (f == nullptr)
+        {
+            CLOG(LogLevel_t::Warning, "Could not open LoudnessFile '" << filePath << "' for writing");
+            return;
+        }
+
+        fwrite(&gainCorrection, 1, sizeof(float), f);
+        fclose(f);
+    }
+    else
+    {
+        CLOG(LogLevel_t::Warning, "filePath was empty");
+    }
 }
 
 /**
@@ -43,22 +50,29 @@ void LoudnessFile::write(std::string filePath, const float &gainCorrection) noex
  */
 float LoudnessFile::read(std::string filePath) noexcept
 {
-    filePath = toebur128Filename(filePath);
-
-    std::lock_guard<std::mutex> lock(LoudnessFile::mtx);
-
-    FILE *f = fopen(filePath.c_str(), "rb");
-
     float gain = Target;
-    if (f != nullptr)
+    if (!filePath.empty())
     {
-        fread(&gain, 1, sizeof(float), f);
+        filePath = toebur128Filename(filePath);
 
-        fclose(f);
+        std::lock_guard<std::mutex> lock(LoudnessFile::mtx);
+
+        FILE *f = fopen(filePath.c_str(), "rb");
+
+        if (f != nullptr)
+        {
+            fread(&gain, 1, sizeof(float), f);
+
+            fclose(f);
+        }
+        else
+        {
+            CLOG(LogLevel_t::Warning, "Could not open LoudnessFile '" << filePath << "'");
+        }
     }
     else
     {
-        CLOG(LogLevel_t::Warning, "Could not open LoudnessFile '" << filePath << "'");
+        CLOG(LogLevel_t::Warning, "filePath was empty");
     }
 
     return gain;
