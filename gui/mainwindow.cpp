@@ -257,7 +257,7 @@ void MainWindow::buildFileBrowser()
     std::string home;
     try
     {
-        ::myHomeDir();
+        home = ::myHomeDir();
     }
     catch(const std::runtime_error& e)
     {
