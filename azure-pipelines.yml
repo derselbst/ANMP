@@ -119,6 +119,7 @@ jobs:
         cd $(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib\
         Move-Item -Path libopenmpt.lib -Destination openmpt.lib
       displayName: 'Fixup things'
+      condition: and(succeeded(), ne(variables.CACHE_RESTORED, 'true'))
     - bash: |
         set -ex
         mkdir build
