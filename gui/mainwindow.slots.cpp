@@ -433,6 +433,12 @@ void MainWindow::aboutAnmp()
     SUPPORT_NO("ModPlug")
 #endif
 
+#ifdef USE_OPENMPT
+    SUPPORT_YES("OpenMPT")
+#else
+    SUPPORT_NO("OpenMPT")
+#endif
+
 #ifdef USE_VGMSTREAM
     SUPPORT_YES("VGMStream")
 #else
