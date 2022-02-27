@@ -11,7 +11,7 @@ resources:
     endpoint: 'derselbst'
   - repository: psflib
     type: github
-    name: derselbst/psflib
+    name: kode54/psflib
     endpoint: 'derselbst'
 
 parameters:
@@ -135,7 +135,8 @@ jobs:
         set -ex
         vcpkg install zlib:$(platform)-windows-static
       displayName: 'vcpkg build zlib'
-    - checkout: CIT_OI_BuildAgentTemplate
+    - checkout: psflib
+    - checkout: lazyusf2
     - task: MSBuild@1
       inputs:
         solution: 'psflib\psflib.vcxproj'
