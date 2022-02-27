@@ -3,6 +3,17 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
+resources:
+  repositories:
+  - repository: lazyusf2
+    type: github
+    name: derselbst/lazyusf2
+    endpoint: 'derselbst'
+  - repository: psflib
+    type: github
+    name: derselbst/psflib
+    endpoint: 'derselbst'
+
 parameters:
 - name: UseCache
   displayName: Use Dependency Cache
@@ -120,6 +131,27 @@ jobs:
         Move-Item -Path libopenmpt.lib -Destination openmpt.lib
       displayName: 'Fixup things'
       condition: and(succeeded(), ne(variables.CACHE_RESTORED, 'true'))
+    - bash: |
+        set -ex
+        vcpkg install zlib:$(platform)-windows-static
+      displayName: 'vcpkg build zlib'
+    - checkout: CIT_OI_BuildAgentTemplate
+    - task: MSBuild@1
+      inputs:
+        solution: 'psflib\psflib.vcxproj'
+        msbuildVersion: '16.0'
+        msbuildArchitecture: 'x64'
+        platform: '$(platform)'
+        configuration: '$(configuration)'
+        maximumCpuCount: true
+    - task: MSBuild@1
+      inputs:
+        solution: 'lazyusf2\prj\msvc\lazyusf2.vcxproj'
+        msbuildVersion: '16.0'
+        msbuildArchitecture: 'x64'
+        platform: '$(platform)'
+        configuration: '$(configuration)'
+        maximumCpuCount: true
     - bash: |
         set -ex
         mkdir build
