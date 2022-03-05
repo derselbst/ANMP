@@ -143,7 +143,7 @@ jobs:
         msbuildVersion: '16.0'
         msbuildArchitecture: 'x64'
         platform: '$(platform)'
-        configuration: '$(configuration)'
+        configuration: '$(configuration)-$(toolset)'
         msbuildArguments: '/p:AdditionalIncludeDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include /p:AdditionalLibraryDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
         maximumCpuCount: true
     - task: MSBuild@1
@@ -152,7 +152,7 @@ jobs:
         msbuildVersion: '16.0'
         msbuildArchitecture: 'x64'
         platform: '$(platform)'
-        configuration: '$(configuration)'
+        configuration: '$(configuration)-$(toolset)'
         maximumCpuCount: true
     - bash: |
         set -ex
