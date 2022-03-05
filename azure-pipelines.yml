@@ -182,6 +182,7 @@ jobs:
         TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
     - bash: |
         set -ex
+        ls -la
         mkdir build
         cd build
         export PKG_CONFIG_PATH=$VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows-static/lib/pkgconfig
