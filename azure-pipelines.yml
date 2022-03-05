@@ -11,7 +11,7 @@ resources:
     endpoint: 'derselbst'
   - repository: psflib
     type: github
-    name: kode54/psflib
+    name: derselbst/psflib
     endpoint: 'derselbst'
 
 parameters:
@@ -144,6 +144,7 @@ jobs:
         msbuildArchitecture: 'x64'
         platform: '$(platform)'
         configuration: '$(configuration)'
+        msbuildArguments: '/p:AdditionalIncludeDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include /p:AdditionalLibraryDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
         maximumCpuCount: true
     - task: MSBuild@1
       inputs:
