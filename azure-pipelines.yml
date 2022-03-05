@@ -163,7 +163,7 @@ jobs:
         solution: 'lazyusf2\prj\msvc\lazyusf2.vcxproj'
         msbuildVersion: '16.0'
         msbuildArchitecture: 'x64'
-        platform: '$(platform)'
+        platform: 'Win32'
         configuration: '$(configuration)-$(toolset)'
         msbuildArguments: '/p:AdditionalIncludeDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include /p:AdditionalLibraryDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
         maximumCpuCount: true
@@ -176,7 +176,7 @@ jobs:
     - task: CopyFiles@2
       displayName: 'Install lazyusf2 lib'
       inputs:
-        SourceFolder: 'lazyusf2\$(platform)\$(configuration)-$(toolset)'
+        SourceFolder: 'lazyusf2\Win32\$(configuration)-$(toolset)'
         Contents: 'lazyusf2.lib'
         TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
     - bash: |
