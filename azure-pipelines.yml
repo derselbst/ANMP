@@ -146,6 +146,18 @@ jobs:
         configuration: '$(configuration)-$(toolset)'
         msbuildArguments: '/p:AdditionalIncludeDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include /p:AdditionalLibraryDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
         maximumCpuCount: true
+    - task: CopyFiles@2
+      displayName: 'Install psflib Header'
+      inputs:
+        SourceFolder: 'psflib'
+        Contents: 'psflib.h'
+        TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include'
+    - task: CopyFiles@2
+      displayName: 'Install psflib lib'
+      inputs:
+        SourceFolder: 'psflib\$(platform)\$(configuration)-$(toolset)'
+        Contents: 'psflib.lib'
+        TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
     - task: MSBuild@1
       inputs:
         solution: 'lazyusf2\prj\msvc\lazyusf2.vcxproj'
@@ -153,7 +165,20 @@ jobs:
         msbuildArchitecture: 'x64'
         platform: '$(platform)'
         configuration: '$(configuration)-$(toolset)'
+        msbuildArguments: '/p:AdditionalIncludeDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include /p:AdditionalLibraryDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
         maximumCpuCount: true
+    - task: CopyFiles@2
+      displayName: 'Install lazyusf2 Header'
+      inputs:
+        SourceFolder: 'lazyusf2\usf'
+        Contents: 'usf.h'
+        TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include'
+    - task: CopyFiles@2
+      displayName: 'Install lazyusf2 lib'
+      inputs:
+        SourceFolder: 'lazyusf2\$(platform)\$(configuration)-$(toolset)'
+        Contents: 'lazyusf2.lib'
+        TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
     - bash: |
         set -ex
         mkdir build
