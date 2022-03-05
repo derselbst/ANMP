@@ -75,6 +75,8 @@ jobs:
     steps:
     - checkout: self
       submodules: true
+    - checkout: psflib
+    - checkout: lazyusf2
     - task: Cache@2
       displayName: "Cache vcpkg's packages"
       condition: and(not(in(variables['Build.Reason'], 'Schedule')), ${{ parameters.useCache }})
@@ -135,8 +137,6 @@ jobs:
         set -ex
         vcpkg install zlib:$(platform)-windows-static
       displayName: 'vcpkg build zlib'
-    - checkout: psflib
-    - checkout: lazyusf2
     - task: MSBuild@1
       inputs:
         solution: 'psflib\psflib.vcxproj'
@@ -188,20 +188,21 @@ jobs:
         export PKG_CONFIG_PATH=$VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows-static/lib/pkgconfig
         cmake -Werror=dev -G "$(generator)" -A "$(cmake_platform)" -T "$(toolset)" -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows-static -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows-static -DBUILD_SHARED_LIBS=0 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 -DENABLE_VGMSTREAM=0 -DENABLE_FFMPEG=0 -DENABLE_EBUR128=0 ..
       displayName: 'Compile static ANMP'
+      workingDirectory: 'ANMP'
     - task: CMake@1
       displayName: 'CMake Build'
       inputs:
         cmakeArgs: --build . --config $(configuration) --parallel 3 --target anmp-qt
-        workingDirectory: 'build'
+        workingDirectory: 'ANMP/build'
     - task: CMake@1
       displayName: 'CMake Check'
       inputs:
         cmakeArgs: --build . --config $(configuration) --target check --parallel
-        workingDirectory: 'build'
+        workingDirectory: 'ANMP/build'
     - task: CopyFiles@2
       continueOnError: true
       inputs:
-        SourceFolder: 'build\$(configuration)'
+        SourceFolder: 'ANMP\build\$(configuration)'
         Contents: '**'
         TargetFolder: '$(Build.ArtifactStagingDirectory)'
     - task: PublishBuildArtifacts@1
