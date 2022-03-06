@@ -61,6 +61,7 @@ class LazyusfWrapper : public StandardWrapper<int16_t>
 
 
     static int usf_info(void *context, const char *name, const char *value);
+    static void print_message(void * unused, const char * message);
 };
 
 #endif // LAZYUSFWRAPPER_H
