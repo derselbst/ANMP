@@ -138,6 +138,7 @@ jobs:
         vcpkg install zlib:$(platform)-windows-static
       displayName: 'vcpkg build zlib'
     - task: MSBuild@1
+      displayName: 'Compile psflib'
       inputs:
         solution: 'psflib\psflib.vcxproj'
         msbuildVersion: '16.0'
@@ -159,6 +160,7 @@ jobs:
         Contents: 'psflib.lib'
         TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
     - task: MSBuild@1
+      displayName: 'Compile lazyusf2'
       continueOnError: true
       inputs:
         solution: 'lazyusf2\prj\msvc\lazyusf2.vcxproj'
