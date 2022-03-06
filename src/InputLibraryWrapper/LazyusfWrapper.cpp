@@ -66,7 +66,9 @@ void LazyusfWrapper::open()
                  this->usfHandle, // context, i.e. pointer to the struct we place the usf file in
                  &LazyusfWrapper::usf_info, // callback function to call for info on this usf file
                  this, // info context
-                 1 // yes we want nested info tags, whatever that means
+                 1, // yes we want nested info tags, whatever that means
+                 &LazyusfWrapper::print_message,
+                 NULL
                  ) <= 0)
     {
         THROW_RUNTIME_ERROR("psf_load failed on file \"" << this->Filename << ")\"");
@@ -239,4 +241,9 @@ int LazyusfWrapper::usf_info(void *context, const char *name, const char *value)
     }
 
     return 0;
+}
+
+static void LazyusfWrapper::print_message(void * unused, const char * message)
+{
+	CLOG(LogLevel_t::Info, message);
 }
