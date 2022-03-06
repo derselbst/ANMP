@@ -233,7 +233,7 @@ endif(ENABLE_LIBSND)
 
 
 if(ENABLE_LAZYUSF)
-    MY_FIND_LIB(LAZYUSF lazyusf)
+    MY_FIND_LIB(LAZYUSF lazyusf2)
     MY_FIND_LIB(PSFLIB psflib)
     MY_FIND_PKG(ZLIB ZLIB)
     
