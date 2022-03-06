@@ -42,6 +42,7 @@ LazyusfWrapper::~LazyusfWrapper()
 static psf_file_callbacks stdio_callbacks =
 {
 "\\/:",
+NULL,
 LazyusfWrapper::stdio_fopen,
 LazyusfWrapper::stdio_fread,
 LazyusfWrapper::stdio_fseek,
@@ -127,7 +128,7 @@ void LazyusfWrapper::buildMetadata() noexcept
 
 /// ugly C-helper functions
 
-void *LazyusfWrapper::stdio_fopen(const char *path)
+void *LazyusfWrapper::stdio_fopen(void *ctx, const char *path)
 {
     return fopen(path, "rb");
 }
