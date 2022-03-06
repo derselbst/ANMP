@@ -243,7 +243,7 @@ int LazyusfWrapper::usf_info(void *context, const char *name, const char *value)
     return 0;
 }
 
-static void LazyusfWrapper::print_message(void * unused, const char * message)
+void LazyusfWrapper::print_message(void * unused, const char * message)
 {
 	CLOG(LogLevel_t::Info, message);
 }
