@@ -205,7 +205,7 @@ jobs:
       continueOnError: true
       inputs:
         SourceFolder: 'ANMP\build\$(configuration)'
-        Contents: '**'
+        Contents: 'anmp.exe'
         TargetFolder: '$(Build.ArtifactStagingDirectory)'
     - task: PublishBuildArtifacts@1
       inputs:
