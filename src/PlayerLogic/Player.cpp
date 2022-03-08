@@ -39,8 +39,8 @@
     {                                                                                              \
         throw NotInitializedException();                                                           \
     }
-// Constructors/Destructors
-//
+
+using namespace std::chrono_literals;
 
 Player::Player(IPlaylist *playlist)
 {
@@ -313,8 +313,8 @@ void Player::fadeout(unsigned int fadeTime, int8_t fadeType)
         this->audioDriver->setVolume(0);
     }
 
-    float vol = 0.0f;
-    for (float timePast = 0.0; timePast <= fadeTime; timePast++)
+    float vol = 0.0f, timePast = 0.0f;
+    do
     {
         switch (fadeType)
         {
@@ -334,8 +334,12 @@ void Player::fadeout(unsigned int fadeTime, int8_t fadeType)
 
         float volToPush = vol * this->PreAmpVolume;
         this->audioDriver->setVolume(volToPush);
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    }
+        auto start = std::chrono::high_resolution_clock::now();
+        std::this_thread::sleep_for(1ms);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> elapsed = end - start;
+        timePast += elapsed.count();
+    } while (timePast <= fadeTime);
 }
 
 void Player::Mute(int i, bool isMuted)
