@@ -190,6 +190,22 @@ jobs:
         Contents: 'lazyusf2.lib'
         TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
     - bash: |
+        mkdir build
+        cd build
+        cmake -Werror=dev -G "$(generator)" -A "$(cmake_platform)" -T "$(toolset)" -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows-static -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows-static -DBUILD_SHARED_LIBS=0 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 ..
+      displayName: 'Configure libcue'
+      workingDirectory: 'libcue'
+    - task: CMake@1
+      displayName: 'Build & Check libcue'
+      inputs:
+        cmakeArgs: --build . --config $(configuration) --parallel 3 --target test
+        workingDirectory: 'libcue/build'
+    - task: CMake@1
+      displayName: 'Install libcue'
+      inputs:
+        cmakeArgs: --build . --config $(configuration) --parallel 3 --target install
+        workingDirectory: 'libcue/build'
+    - bash: |
         set -ex
         ls -la
         mkdir build
