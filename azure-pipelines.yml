@@ -30,6 +30,15 @@ jobs:
     steps:
     - checkout: self
       submodules: true
+    - task: DownloadGitHubRelease@0
+      inputs:
+        connection: 'derselbst'
+        userRepository: 'lipnitsk/libcue'
+        defaultVersionType: 'latest'
+        downloadPath: '$(System.ArtifactsDirectory)'
+    - bash: |
+        ls -la $(System.ArtifactsDirectory)
+
     - bash: |
         sudo -E apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
         sudo apt-get update
