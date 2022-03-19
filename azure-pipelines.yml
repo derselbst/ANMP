@@ -17,7 +17,7 @@ resources:
     type: github
     name: lipnitsk/libcue
     endpoint: 'derselbst'
-    ref: 'ref/tags/v2.2.1'
+    ref: 'refs/tags/v2.2.1'
 
 parameters:
 - name: UseCache
