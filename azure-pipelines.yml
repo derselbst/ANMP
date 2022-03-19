@@ -13,11 +13,6 @@ resources:
     type: github
     name: derselbst/psflib
     endpoint: 'derselbst'
-  - repository: libcue
-    type: github
-    name: lipnitsk/libcue
-    endpoint: 'derselbst'
-    ref: 'refs/tags/v2.2.1'
 
 parameters:
 - name: UseCache
@@ -82,7 +77,6 @@ jobs:
       submodules: true
     - checkout: psflib
     - checkout: lazyusf2
-    - checkout: libcue
 
     - task: Cache@2
       displayName: "Cache vcpkg's packages"
@@ -190,22 +184,6 @@ jobs:
         Contents: 'lazyusf2.lib'
         TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
     - bash: |
-        mkdir build
-        cd build
-        cmake -Werror=dev -G "$(generator)" -A "$(cmake_platform)" -T "$(toolset)" -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows-static -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows-static -DBUILD_SHARED_LIBS=0 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 ..
-      displayName: 'Configure libcue'
-      workingDirectory: 'libcue'
-    - task: CMake@1
-      displayName: 'Build & Check libcue'
-      inputs:
-        cmakeArgs: --build . --config $(configuration) --parallel 3 --target test
-        workingDirectory: 'libcue/build'
-    - task: CMake@1
-      displayName: 'Install libcue'
-      inputs:
-        cmakeArgs: --build . --config $(configuration) --parallel 3 --target install
-        workingDirectory: 'libcue/build'
-    - bash: |
         set -ex
         ls -la
         mkdir build
@@ -214,23 +192,28 @@ jobs:
         cmake -Werror=dev -G "$(generator)" -A "$(cmake_platform)" -T "$(toolset)" -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows-static -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows-static -DBUILD_SHARED_LIBS=0 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 -DENABLE_VGMSTREAM=0 -DENABLE_FFMPEG=0 -DENABLE_EBUR128=0 ..
       displayName: 'Compile static ANMP'
       workingDirectory: 'ANMP'
+      enabled: false
     - task: CMake@1
       displayName: 'CMake Build'
       inputs:
         cmakeArgs: --build . --config $(configuration) --parallel 3 --target anmp-qt
         workingDirectory: 'ANMP/build'
+      enabled: false
     - task: CMake@1
       displayName: 'CMake Check'
       inputs:
         cmakeArgs: --build . --config $(configuration) --target check --parallel
         workingDirectory: 'ANMP/build'
+      enabled: false
     - task: CopyFiles@2
       continueOnError: true
       inputs:
         SourceFolder: 'ANMP\build\$(configuration)'
         Contents: 'anmp-qt.exe'
         TargetFolder: '$(Build.ArtifactStagingDirectory)'
+      enabled: false
     - task: PublishBuildArtifacts@1
       inputs:
           pathtoPublish: $(Build.ArtifactStagingDirectory)
           artifactName: ANMP-standalone-$(platform)-$(poo)
+      enabled: false
