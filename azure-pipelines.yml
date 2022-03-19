@@ -13,6 +13,11 @@ resources:
     type: github
     name: derselbst/psflib
     endpoint: 'derselbst'
+  - repository: libcue
+    type: github
+    name: lipnitsk/libcue
+    endpoint: 'derselbst'
+    ref: 'ref/tags/v2.2.1'
 
 parameters:
 - name: UseCache
@@ -77,14 +82,7 @@ jobs:
       submodules: true
     - checkout: psflib
     - checkout: lazyusf2
-    - task: DownloadGitHubRelease@0
-      inputs:
-        connection: 'derselbst'
-        userRepository: 'lipnitsk/libcue'
-        defaultVersionType: 'latest'
-        downloadPath: '$(System.ArtifactsDirectory)'
-    - bash: |
-        ls -la $(System.ArtifactsDirectory)
+    - checkout: libcue
 
     - task: Cache@2
       displayName: "Cache vcpkg's packages"
