@@ -192,28 +192,23 @@ jobs:
         cmake -Werror=dev -G "$(generator)" -A "$(cmake_platform)" -T "$(toolset)" -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows-static -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows-static -DBUILD_SHARED_LIBS=0 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 -DENABLE_VGMSTREAM=0 -DENABLE_FFMPEG=0 -DENABLE_EBUR128=0 ..
       displayName: 'Compile static ANMP'
       workingDirectory: 'ANMP'
-      enabled: false
     - task: CMake@1
       displayName: 'CMake Build'
       inputs:
         cmakeArgs: --build . --config $(configuration) --parallel 3 --target anmp-qt
         workingDirectory: 'ANMP/build'
-      enabled: false
     - task: CMake@1
       displayName: 'CMake Check'
       inputs:
         cmakeArgs: --build . --config $(configuration) --target check --parallel
         workingDirectory: 'ANMP/build'
-      enabled: false
     - task: CopyFiles@2
       continueOnError: true
       inputs:
         SourceFolder: 'ANMP\build\$(configuration)'
         Contents: 'anmp-qt.exe'
         TargetFolder: '$(Build.ArtifactStagingDirectory)'
-      enabled: false
     - task: PublishBuildArtifacts@1
       inputs:
           pathtoPublish: $(Build.ArtifactStagingDirectory)
           artifactName: ANMP-standalone-$(platform)-$(poo)
-      enabled: false
