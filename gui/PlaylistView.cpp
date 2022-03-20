@@ -78,7 +78,7 @@ void PlaylistView::moveItems(int steps)
         int btm = i->bottom();
         int count = abs(top - btm);
 
-        int srcRow = min(top, btm);
+        int srcRow = std::min(top, btm);
         int destRow = srcRow + steps;
 
         QModelIndex newIdx = steps > 0 ? playlistModel->index(destRow + count, 0) : playlistModel->index(srcRow - 1, 0);
@@ -129,7 +129,7 @@ void PlaylistView::keyPressEvent(QKeyEvent *event)
                 }
 
                 lastCount = abs(top - btm) + 1;
-                playlistModel->removeRows(min(btm, top), lastCount);
+                playlistModel->removeRows(std::min(btm, top), lastCount);
             }
         }
         break;
@@ -295,7 +295,7 @@ void PlaylistView::resizeEvent(QResizeEvent *evt)
             int free = this->colSizes[freeColIdx] - sizeHint[freeColIdx];
             free /= fullCols.size();
 
-            free = min(free, needed);
+            free = std::min(free, needed);
 
             this->colSizes[fullColIdx] += free;
             this->colSizes[freeColIdx] -= free;
@@ -306,7 +306,7 @@ void PlaylistView::resizeEvent(QResizeEvent *evt)
     int totalWidth = 0;
     for (unsigned int i = 0; i < colCount; i++)
     {
-        totalWidth += max(this->colSizes[i], this->columnWidth(i));
+        totalWidth += std::max(this->colSizes[i], this->columnWidth(i));
     }
 
     int diff = totalWidth - newWidth;
@@ -315,8 +315,8 @@ void PlaylistView::resizeEvent(QResizeEvent *evt)
     for (unsigned int j = freeCols.size(); j > 0 && diff > 0; j--)
     {
         unsigned int freeColIdx = freeCols[j - 1];
-        int free = max(0, this->colSizes[freeColIdx] - sizeHint[freeColIdx]);
-        free = min(diff, free);
+        int free = std::max(0, this->colSizes[freeColIdx] - sizeHint[freeColIdx]);
+        free = std::min(diff, free);
 
         this->colSizes[freeColIdx] -= free;
         diff -= free;

@@ -7,7 +7,7 @@
 
 
 template<typename TIN, typename TOUT>
-void IAudioOutput::Mix(const frame_t frames, const TIN *restrict in, const SongFormat &inputFormat, TOUT *restrict out) noexcept
+void IAudioOutput::Mix(const frame_t frames, const TIN *RESTRICT in, const SongFormat &inputFormat, TOUT *RESTRICT out) noexcept
 {
     const auto N = this->GetOutputChannels();
     const unsigned int nVoices = inputFormat.Voices;
@@ -30,7 +30,7 @@ void IAudioOutput::Mix(const frame_t frames, const TIN *restrict in, const SongF
             const uint16_t vchan = inputFormat.VoiceChannels[v];
             if (vchan > 0 && !inputFormat.VoiceIsMuted[v])
             {
-                const uint16_t channelsToMix = max<uint16_t>(vchan, N);
+                const uint16_t channelsToMix = std::max<uint16_t>(vchan, N);
                 for (unsigned int m = 0; m < channelsToMix; m++)
                 {
                     temp[m % N] += in[m % vchan];
@@ -56,17 +56,17 @@ void IAudioOutput::Mix(const frame_t frames, const TIN *restrict in, const SongF
                 // normalize
                 if (!std::is_floating_point<TIN>())
                 {
-                    item /= (numeric_limits<TIN>::max() + 1.0);
+                    item /= (std::numeric_limits<TIN>::max() + 1.0);
                 }
 
                 // clip
-                o = min(max(item, -1.0), 1.0);
+                o = std::min(std::max(item, -1.0), 1.0);
             }
             else
             {
                 // clip
-                constexpr auto MAX = numeric_limits<TOUT>::max();
-                constexpr auto MIN = numeric_limits<TOUT>::min();
+                constexpr auto MAX = std::numeric_limits<TOUT>::max();
+                constexpr auto MIN = std::numeric_limits<TOUT>::min();
                 if (item > MAX)
                 {
                     o = MAX;
@@ -77,7 +77,7 @@ void IAudioOutput::Mix(const frame_t frames, const TIN *restrict in, const SongF
                 }
                 else
                 {
-                    o = lround(item);
+                    o = std::lround(item);
                 }
             }
         }

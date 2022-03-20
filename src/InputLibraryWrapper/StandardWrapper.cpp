@@ -3,27 +3,28 @@
 #include "AtomicWrite.h"
 #include "Common.h"
 #include "LoudnessFile.h"
-#include "LibSNDWrapper.h"
 
 #include <utility> // std::swap
 #include <cstdio> // std::tmpfile
+#include <cstring>
+
+#ifdef _POSIX_C_SOURCE
 #include <unistd.h> // _POSIX_MAPPED_FILES
 #include <errno.h>
 #include <sys/mman.h>
 #include <fcntl.h> // posix_fallocate()
 #include <linux/version.h>
-#include <cstring>
-
+#endif
 
 template<typename SAMPLEFORMAT>
-StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename)
+StandardWrapper<SAMPLEFORMAT>::StandardWrapper(std::string filename)
 : Song(filename)
 {
     this->init();
 }
 
 template<typename SAMPLEFORMAT>
-StandardWrapper<SAMPLEFORMAT>::StandardWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
+StandardWrapper<SAMPLEFORMAT>::StandardWrapper(std::string filename, Nullable<size_t> offset, Nullable<size_t> len)
 : Song(filename, offset, len)
 {
     this->init();
@@ -160,10 +161,10 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer()
                     SAMPLEFORMAT *pcm = static_cast<SAMPLEFORMAT *>(this->data);
                     pcm += (this->framesAlreadyRendered * Channels);
 
-                    this->futureFillBuffer = async(launch::async, &StandardWrapper::renderAsync, this, pcm, Channels, restFrames /*render everything*/);
+                    this->futureFillBuffer = std::async(std::launch::async, &StandardWrapper::renderAsync, this, pcm, Channels, restFrames /*render everything*/);
 
                     // allow the render thread to do his work
-                    this_thread::yield();
+                    std::this_thread::yield();
                 }
                 return;
             }
@@ -185,11 +186,11 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer()
             len *= sizeof(SAMPLEFORMAT);
             if(!::PageLockMemory(tmp, len))
             {
-                CLOG(LogLevel_t::Info, "Failed to page-lock " << len << " bytes of memory, swapping possible." << endl);
+                CLOG(LogLevel_t::Info, "Failed to page-lock " << len << " bytes of memory, swapping possible." << std::endl);
             }
             else
             {
-                CLOG(LogLevel_t::Debug, "Successfully page-locked " << len << " bytes of memory." << endl);
+                CLOG(LogLevel_t::Debug, "Successfully page-locked " << len << " bytes of memory." << std::endl);
             }
         }
         catch (const std::bad_alloc &e)
@@ -208,7 +209,7 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer()
         std::swap(this->data, this->preRenderBuf);
     }
 
-    this->futureFillBuffer = async(launch::async, &StandardWrapper::renderAsync, this, this->preRenderBuf, Channels, gConfig.FramesToRender);
+    this->futureFillBuffer = std::async(std::launch::async, &StandardWrapper::renderAsync, this, this->preRenderBuf, Channels, gConfig.FramesToRender);
 }
 
 /**
@@ -219,7 +220,7 @@ void StandardWrapper<SAMPLEFORMAT>::renderAsync(pcm_t *const bufferToFill, const
 {
     this->render(bufferToFill, Channels, framesToRender);
 
-#if _POSIX_MAPPED_FILES && _POSIX_C_SOURCE >= 200112L && LINUX_VERSION_CODE >= KERNEL_VERSION(4,12,0)
+#if defined(_POSIX_C_SOURCE) && _POSIX_MAPPED_FILES && _POSIX_C_SOURCE >= 200112L && LINUX_VERSION_CODE >= KERNEL_VERSION(4, 12, 0)
     if (this->preRenderBuf == nullptr && gConfig.useMadvFree)
     {
         // If we allocated a PCM buffer for the whole file, advice the kernel to free related pages when the system comes under memory pressure.
@@ -248,7 +249,7 @@ void StandardWrapper<SAMPLEFORMAT>::releaseBuffer() noexcept
     this->stopFillBuffer = true;
     WAIT(this->futureFillBuffer);
 
-#if _POSIX_MAPPED_FILES && _POSIX_C_SOURCE >= 200112L
+#if defined(_POSIX_C_SOURCE) && _POSIX_MAPPED_FILES && _POSIX_C_SOURCE >= 200112L
     if (this->data != nullptr)
     {
         if (::munmap(this->data, this->count * sizeof(SAMPLEFORMAT)) != 0)

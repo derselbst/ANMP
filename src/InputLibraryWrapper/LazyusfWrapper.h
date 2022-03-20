@@ -46,7 +46,7 @@ class LazyusfWrapper : public StandardWrapper<int16_t>
     unsigned char *usfHandle = nullptr;
 
     public:
-    static void *stdio_fopen(const char *path);
+    static void *stdio_fopen(void*, const char *path);
 
     static size_t stdio_fread(void *p, size_t size, size_t count, void *f);
 
@@ -61,6 +61,7 @@ class LazyusfWrapper : public StandardWrapper<int16_t>
 
 
     static int usf_info(void *context, const char *name, const char *value);
+    static void print_message(void * unused, const char * message);
 };
 
 #endif // LAZYUSFWRAPPER_H

@@ -1,15 +1,16 @@
 #include "LoudnessFile.h"
 #include "Common.h"
+#include "AtomicWrite.h"
 
 #include <cmath>
 #include <cstdio>
 
-mutex LoudnessFile::mtx;
+std::mutex LoudnessFile::mtx;
 
-string LoudnessFile::toebur128Filename(const string& filePath)
+std::string LoudnessFile::toebur128Filename(const std::string &filePath)
 {
-    string file = mybasename(filePath);
-    string dir = mydirname(filePath);
+    std::string file = mybasename(filePath);
+    std::string dir = mydirname(filePath);
 
     file = "." + file + ".ebur128";
 
@@ -18,21 +19,28 @@ string LoudnessFile::toebur128Filename(const string& filePath)
 
 static const double Target = 1.0f;
 
-void LoudnessFile::write(string filePath, const float &gainCorrection) noexcept
+void LoudnessFile::write(std::string filePath, const float &gainCorrection) noexcept
 {
-    filePath = toebur128Filename(filePath);
-
-    std::lock_guard<std::mutex> lock(LoudnessFile::mtx);
-
-    FILE *f = fopen(filePath.c_str(), "wb");
-    if (f == nullptr)
+    if (!filePath.empty())
     {
-        // TODO: log
-        return;
-    }
+        filePath = toebur128Filename(filePath);
 
-    fwrite(&gainCorrection, 1, sizeof(float), f);
-    fclose(f);
+        std::lock_guard<std::mutex> lock(LoudnessFile::mtx);
+
+        FILE *f = fopen(filePath.c_str(), "wb");
+        if (f == nullptr)
+        {
+            CLOG(LogLevel_t::Warning, "Could not open LoudnessFile '" << filePath << "' for writing");
+            return;
+        }
+
+        fwrite(&gainCorrection, 1, sizeof(float), f);
+        fclose(f);
+    }
+    else
+    {
+        CLOG(LogLevel_t::Warning, "filePath was empty");
+    }
 }
 
 /**
@@ -40,20 +48,31 @@ void LoudnessFile::write(string filePath, const float &gainCorrection) noexcept
  *
  * @return gain correction factor (i.e. a relative gain), 1.0 is full amplitude (i.e. no correction necessary),
  */
-float LoudnessFile::read(string filePath) noexcept
+float LoudnessFile::read(std::string filePath) noexcept
 {
-    filePath = toebur128Filename(filePath);
-
-    std::lock_guard<std::mutex> lock(LoudnessFile::mtx);
-
-    FILE *f = fopen(filePath.c_str(), "rb");
-
     float gain = Target;
-    if (f != nullptr)
+    if (!filePath.empty())
     {
-        fread(&gain, 1, sizeof(float), f);
+        filePath = toebur128Filename(filePath);
 
-        fclose(f);
+        std::lock_guard<std::mutex> lock(LoudnessFile::mtx);
+
+        FILE *f = fopen(filePath.c_str(), "rb");
+
+        if (f != nullptr)
+        {
+            fread(&gain, 1, sizeof(float), f);
+
+            fclose(f);
+        }
+        else
+        {
+            CLOG(LogLevel_t::Warning, "Could not open LoudnessFile '" << filePath << "'");
+        }
+    }
+    else
+    {
+        CLOG(LogLevel_t::Warning, "filePath was empty");
     }
 
     return gain;

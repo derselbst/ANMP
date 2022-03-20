@@ -10,6 +10,8 @@
 
 #include <utility>
 
+using namespace std;
+
 LazyusfWrapper::LazyusfWrapper(string filename)
 : StandardWrapper(std::move(filename))
 {
@@ -40,6 +42,7 @@ LazyusfWrapper::~LazyusfWrapper()
 static psf_file_callbacks stdio_callbacks =
 {
 "\\/:",
+NULL,
 LazyusfWrapper::stdio_fopen,
 LazyusfWrapper::stdio_fread,
 LazyusfWrapper::stdio_fseek,
@@ -63,7 +66,9 @@ void LazyusfWrapper::open()
                  this->usfHandle, // context, i.e. pointer to the struct we place the usf file in
                  &LazyusfWrapper::usf_info, // callback function to call for info on this usf file
                  this, // info context
-                 1 // yes we want nested info tags, whatever that means
+                 1, // yes we want nested info tags, whatever that means
+                 &LazyusfWrapper::print_message,
+                 NULL
                  ) <= 0)
     {
         THROW_RUNTIME_ERROR("psf_load failed on file \"" << this->Filename << ")\"");
@@ -125,7 +130,7 @@ void LazyusfWrapper::buildMetadata() noexcept
 
 /// ugly C-helper functions
 
-void *LazyusfWrapper::stdio_fopen(const char *path)
+void *LazyusfWrapper::stdio_fopen(void *ctx, const char *path)
 {
     return fopen(path, "rb");
 }
@@ -236,4 +241,9 @@ int LazyusfWrapper::usf_info(void *context, const char *name, const char *value)
     }
 
     return 0;
+}
+
+void LazyusfWrapper::print_message(void * unused, const char * message)
+{
+	CLOG(LogLevel_t::Info, message);
 }

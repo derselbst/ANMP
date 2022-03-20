@@ -7,9 +7,19 @@
 
 #include <iostream>
 #include <string>
+#include <portaudio.h>
 
 
-PortAudioOutput::PortAudioOutput()
+struct PortAudioOutput::Impl
+{    
+    PaStream *handle = nullptr;
+
+    // holds the error returned by Pa_Initialize
+    // this class shall only be usable if no error occurred
+    PaError paInitError = ~PaErrorCode::paNoError;
+};
+
+PortAudioOutput::PortAudioOutput() : d(std::make_unique<Impl>())
 {
 }
 
@@ -17,7 +27,7 @@ PortAudioOutput::~PortAudioOutput()
 {
     this->close();
 
-    if (this->paInitError == PaErrorCode::paNoError)
+    if (d->paInitError == PaErrorCode::paNoError)
     {
         Pa_Terminate();
     }
@@ -28,12 +38,12 @@ PortAudioOutput::~PortAudioOutput()
 //
 void PortAudioOutput::open()
 {
-    if (this->handle == nullptr)
+    if (d->handle == nullptr)
     {
-        this->paInitError = Pa_Initialize();
-        if (this->paInitError != PaErrorCode::paNoError)
+        d->paInitError = Pa_Initialize();
+        if (d->paInitError != PaErrorCode::paNoError)
         {
-            THROW_RUNTIME_ERROR("unable to initialize portaudio (" << Pa_GetErrorText(this->paInitError) << ")");
+            THROW_RUNTIME_ERROR("unable to initialize portaudio (" << Pa_GetErrorText(d->paInitError) << ")");
         }
     }
 }
@@ -70,9 +80,9 @@ void PortAudioOutput::init(SongFormat &format, bool realtime)
 
 void PortAudioOutput::_init(SongFormat &format, bool)
 {
-    if (this->paInitError != PaErrorCode::paNoError)
+    if (d->paInitError != PaErrorCode::paNoError)
     {
-        THROW_RUNTIME_ERROR("portaudio not initialized! (" << Pa_GetErrorText(this->paInitError) << ")");
+        THROW_RUNTIME_ERROR("portaudio not initialized! (" << Pa_GetErrorText(d->paInitError) << ")");
     }
 
     PaSampleFormat paSampleFmt;
@@ -104,7 +114,7 @@ void PortAudioOutput::_init(SongFormat &format, bool)
     PaError err;
 
     /* Open an audio I/O stream. */
-    err = Pa_OpenDefaultStream(&this->handle,
+    err = Pa_OpenDefaultStream(&d->handle,
                                0, /* no input channels */
                                this->GetOutputChannels(), /* no. of output channels */
                                paSampleFmt, /* 32 bit floating point output */
@@ -133,10 +143,10 @@ void PortAudioOutput::drop()
 
 void PortAudioOutput::close()
 {
-    if (this->handle != nullptr)
+    if (d->handle != nullptr)
     {
-        Pa_CloseStream(this->handle);
-        this->handle = nullptr;
+        Pa_CloseStream(d->handle);
+        d->handle = nullptr;
     }
 }
 
@@ -158,7 +168,7 @@ int PortAudioOutput::write(const int32_t *buffer, frame_t frames)
 template<typename T>
 int PortAudioOutput::write(const T *buffer, frame_t frames)
 {
-    if (this->handle == nullptr)
+    if (d->handle == nullptr)
     {
         THROW_RUNTIME_ERROR("unable to write pcm since PortAudioOutput::init() has not been called yet or init failed");
     }
@@ -166,7 +176,7 @@ int PortAudioOutput::write(const T *buffer, frame_t frames)
     auto* procBuf = reinterpret_cast<T*>(processedBuffer.data());
     this->Mix<T, T>(frames, buffer, this->currentFormat, procBuf);
 
-    PaError err = Pa_WriteStream(this->handle, procBuf, frames);
+    PaError err = Pa_WriteStream(d->handle, procBuf, frames);
     switch (err)
     {
         case PaErrorCode::paUnanticipatedHostError:
@@ -184,12 +194,18 @@ int PortAudioOutput::write(const T *buffer, frame_t frames)
 
 void PortAudioOutput::start()
 {
-    if (this->handle != nullptr)
+    if (d->handle != nullptr)
     {
-        PaError err = Pa_StartStream(this->handle);
+        PaError err = Pa_StartStream(d->handle);
         if (err != PaErrorCode::paNoError && err != paStreamIsNotStopped)
         {
-            THROW_RUNTIME_ERROR("unable to start pcm (" << Pa_GetErrorText(err) << ")");
+            std::stringstream ss;
+            if (err == paUnanticipatedHostError)
+            {
+                auto *errInfo = Pa_GetLastHostErrorInfo();
+                ss << " Code " << errInfo->errorCode << ": '" << errInfo->errorText << "' | HostAPI: " << errInfo->hostApiType;
+            }
+            THROW_RUNTIME_ERROR("unable to start pcm (" << Pa_GetErrorText(err) << ")" << ss.str());
         }
     }
     else
@@ -200,11 +216,11 @@ void PortAudioOutput::start()
 
 void PortAudioOutput::stop()
 {
-    if (this->handle != nullptr)
+    if (d->handle != nullptr)
     {
         // dont call Pa_StopStream() here since it causes draining the pcm, which takes time and may cause deadlocks
         // use Pa_AbortStream() instead which drops any PCM currently played
-        PaError err = Pa_AbortStream(this->handle);
+        PaError err = Pa_AbortStream(d->handle);
         if (err != PaErrorCode::paNoError && err != PaErrorCode::paStreamIsStopped)
         {
             THROW_RUNTIME_ERROR("unable to stop pcm (" << Pa_GetErrorText(err) << ")");

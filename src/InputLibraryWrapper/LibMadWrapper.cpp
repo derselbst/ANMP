@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+using namespace std;
 
 LibMadWrapper::LibMadWrapper(string filename)
 : StandardWrapper(std::move(filename))

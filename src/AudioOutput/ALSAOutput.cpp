@@ -20,6 +20,8 @@
 #include <sys/soundcard.h>
 #endif
 
+using namespace std;
+
 ALSAOutput::ALSAOutput()
 {
     this->processedBuffer.reserve(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(int32_t));

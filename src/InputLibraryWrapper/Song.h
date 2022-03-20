@@ -11,8 +11,6 @@
 #include "tree.h"
 #include "types.h"
 
-using namespace std;
-
 /**
   * @brief abstract class Song
   *
@@ -30,8 +28,8 @@ class Song
     protected:
     // even if there were no pure virtual methods, allow
     // construction for child classes only
-    Song(string filename);
-    Song(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
+    Song(std::string filename);
+    Song(std::string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
 
     public:
     // empty virtual destructor for proper cleanup
@@ -45,7 +43,7 @@ class Song
     // File specific level
     //--------------------------------------------------------------------
     // fullpath to underlying audio file
-    string Filename = "";
+    std::string Filename = "";
 
     // an in-file-offset. its usage can be determined by child classes
     //
@@ -157,9 +155,9 @@ class Song
     /**
      * returns an unsorted array of loops that could be found in this->Filename. Its only valid to call this method while the song is this->open(). Though it may work after calling this->close().
      * 
-     * the song has no loops? --> return an empty vector
+     * the song has no loops? --> return an empty std::vector
      */
-    virtual vector<loop_t> getLoopArray() const noexcept;
+    virtual std::vector<loop_t> getLoopArray() const noexcept;
 
 
     /**

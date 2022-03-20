@@ -75,14 +75,14 @@ class PlaylistModel : public QAbstractTableModel
         // a queue to be filled with filepaths for songs that shall be added
         std::deque<QString> queue;
 
-        // mutex for that queue
+        // std::mutex for that queue
         mutable std::recursive_mutex mtx;
 
         // cond var for synchronizing the worker thread and queue filler threads
         std::condition_variable_any cv;
 
         // predicate variable for cv used by the queue filler threads
-        // true: the worker thread is currently owner of the mutex, i.e. it's messing around the the queue
+        // true: the worker thread is currently owner of the std::mutex, i.e. it's messing around the the queue
         // false: not owner of mtx, i.e. other threads can fill the queue as soon as they get notified via the condition variable
         bool ready = false;
 

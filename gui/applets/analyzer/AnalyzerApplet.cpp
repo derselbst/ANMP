@@ -41,7 +41,7 @@ void AnalyzerApplet::closeEvent(QCloseEvent *e)
 
 void AnalyzerApplet::startGraphics()
 {
-    this->player->onPlayheadChanged += make_pair(this, &AnalyzerApplet::redraw);
+    this->player->onPlayheadChanged += std::make_pair(this, &AnalyzerApplet::redraw);
     this->analyzerWidget->connectSignals();
 }
 

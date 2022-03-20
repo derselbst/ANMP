@@ -47,6 +47,7 @@ endmacro()
 macro(MY_PRINT prefix)
         message("\t${prefix} include dir  : ${${prefix}_INCLUDE_DIR} ${${prefix}_INCLUDE_DIRS}")
         message("\t${prefix} libraries    : ${${prefix}_LIBRARIES}")
+        message("\t${prefix} static libs  : ${${prefix}_STATIC_LIBRARIES}")
 endmacro()
 
 macro(MY_FIND_LIB prefix libname)

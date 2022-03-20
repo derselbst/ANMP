@@ -4,6 +4,7 @@
 
 #include <cereal/archives/json.hpp>
 #include <fstream>
+#include <filesystem>
 
 // definitions go here
 constexpr frame_t Config::FramesToRender;
@@ -27,7 +28,7 @@ Config &Config::Singleton()
 
 void Config::Load() noexcept
 {
-    string file = ::myHomeDir() + "/" + this->UserDir + "/" + this->UserFile;
+    std::string file = ::myHomeDir() + "/" + this->UserDir + "/" + this->UserFile;
 
     if (::myExists(file))
     {
@@ -48,17 +49,13 @@ void Config::Load() noexcept
     }
 }
 
-// TODO wait for proper c++17 support and then write this mkdir() appropriately
-#include <sys/stat.h>
-#include <sys/types.h>
-
 void Config::Save() noexcept
 {
-    string file = ::myHomeDir() + "/" + this->UserDir + "/";
+    std::string file = ::myHomeDir() + "/" + this->UserDir + "/";
 
     if (!::myExists(file))
     {
-        mkdir(file.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+        std::filesystem::create_directory(file);
     }
 
     file += this->UserFile;

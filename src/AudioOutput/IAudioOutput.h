@@ -7,8 +7,6 @@
 #include <vector>
 
 
-using namespace std;
-
 /**
   * Abstract base class for all classes that handle audio playback in ANMP
   *
@@ -132,7 +130,7 @@ class IAudioOutput
      * @param outChannels number of audio channels in @p out buffer
      */
     template<typename TIN, typename TOUT = TIN>
-    void Mix(const frame_t frames, const TIN *restrict in, const SongFormat &inputFormat, TOUT *restrict out) noexcept;
+    void Mix(const frame_t frames, const TIN *RESTRICT in, const SongFormat &inputFormat, TOUT *RESTRICT out) noexcept;
 
     /**
      * pushes the pcm pointed to by buffer to the underlying audio driver and by that causes it to play

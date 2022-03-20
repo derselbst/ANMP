@@ -15,7 +15,7 @@ Playlist::~Playlist()
 
 size_t Playlist::add(Song *song)
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     this->queue.push_back(song);
 
@@ -25,7 +25,7 @@ size_t Playlist::add(Song *song)
 
 void Playlist::remove(Song *song)
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     this->queue.erase(std::remove(this->queue.begin(), this->queue.end(), song), this->queue.end());
     delete song;
@@ -33,7 +33,7 @@ void Playlist::remove(Song *song)
 
 void Playlist::remove(size_t i)
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     if (this->queue.empty())
     {
@@ -53,7 +53,7 @@ void Playlist::remove(size_t i)
 
 void Playlist::clear()
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     Song *s;
     for (SongQueue_t::iterator it = this->queue.begin(); it != this->queue.end(); ++it)
@@ -69,21 +69,21 @@ void Playlist::clear()
 
 Song *Playlist::getCurrentSong()
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     return this->getSong(this->currentSong);
 }
 
 size_t Playlist::getCurrentSongId()
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     return this->currentSong;
 }
 
 Song *Playlist::next()
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     if (this->queue.empty())
     {
@@ -95,7 +95,7 @@ Song *Playlist::next()
 
 Song *Playlist::previous()
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     if (this->queue.empty())
     {
@@ -107,7 +107,7 @@ Song *Playlist::previous()
 
 Song *Playlist::getSong(size_t id) const
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     if (this->queue.size() > id)
     {
@@ -119,7 +119,7 @@ Song *Playlist::getSong(size_t id) const
 
 Song *Playlist::setCurrentSong(size_t id)
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     Song *s = this->getSong(id);
     if (s != nullptr)
@@ -134,10 +134,10 @@ void Playlist::shuffle(size_t start, size_t end)
 {
     if (start > end)
     {
-        throw invalid_argument("start>end");
+        throw std::invalid_argument("start>end");
     }
 
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     if (start <= this->currentSong && this->currentSong <= end)
     {
@@ -168,7 +168,7 @@ void Playlist::shuffle(size_t start, size_t end)
  */
 void Playlist::move(size_t source, unsigned int count, int steps)
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     SongQueue_t &que = this->queue;
 
@@ -223,7 +223,7 @@ void Playlist::move(size_t source, unsigned int count, int steps)
 
 size_t Playlist::size()
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
     
     return this->queue.size();
 }

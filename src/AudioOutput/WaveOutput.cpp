@@ -98,9 +98,9 @@ struct WaveHeader
     static constexpr chunk_size_t DataOffset = sizeof(RiffID) + sizeof(RiffSize) + sizeof(WaveID) + sizeof(FormatID) + sizeof(FormatSize) + FormatSize + sizeof(DataID) + sizeof(DataSize); // == 44
 
     // contains the riff, fmt and data chunks, i.e. fixed length
-    vector<chunk_element_t> header;
+    std::vector<chunk_element_t> header;
     // contains list and smpl chunks, i.e. might be there, or not
-    vector<chunk_element_t> meta;
+    std::vector<chunk_element_t> meta;
 
     WaveHeader(const Song *s, const int framesWritten)
     {
@@ -123,7 +123,7 @@ struct WaveHeader
                 break;
 
             case SampleFormat_t::unknown:
-                throw invalid_argument("pcmFormat mustnt be unknown");
+                throw std::invalid_argument("pcmFormat mustnt be unknown");
                 break;
 
             default:
@@ -161,7 +161,7 @@ struct WaveHeader
         this->header.push_back(DataSize);
 
 
-        const vector<loop_t> &loops = s->getLoopArray();
+        const std::vector<loop_t> &loops = s->getLoopArray();
         if ((SampleLoops = loops.size()) > 0)
         {
             // smpl chunk
@@ -227,7 +227,7 @@ struct WaveHeader
         }                                                                                    \
     }
 
-            string meta = m.Artist;
+            std::string meta = m.Artist;
             WRITE_META('I', 'A', 'R', 'T');
 
             meta = m.Genre;
@@ -271,7 +271,7 @@ struct WaveHeader
 WaveOutput::WaveOutput(Player *player)
 : player(player)
 {
-    this->player->onCurrentSongChanged += make_pair(this, WaveOutput::onCurrentSongChanged);
+    this->player->onCurrentSongChanged += std::make_pair(this, WaveOutput::onCurrentSongChanged);
 }
 
 WaveOutput::~WaveOutput()
@@ -285,7 +285,7 @@ WaveOutput::~WaveOutput()
 //
 void WaveOutput::open()
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     if (gConfig.RenderWholeSong && gConfig.PreRenderTime != 0)
     {
@@ -303,14 +303,14 @@ void WaveOutput::onCurrentSongChanged(void *context, const Song *newSong)
 {
     WaveOutput *pthis = static_cast<WaveOutput *>(context);
 
-    lock_guard<recursive_mutex> lck(pthis->mtx);
+    std::lock_guard<std::recursive_mutex> lck(pthis->mtx);
     try
     {
         pthis->close();
 
         if (newSong != nullptr)
         {
-            string outFile = StringFormatter::Singleton().GetFilename(newSong, ".wav");
+            std::string outFile = StringFormatter::Singleton().GetFilename(newSong, ".wav");
 
             pthis->handle = fopen(outFile.c_str(), "wb");
             if (pthis->handle == nullptr)
@@ -332,7 +332,7 @@ void WaveOutput::onCurrentSongChanged(void *context, const Song *newSong)
 
 void WaveOutput::close()
 {
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     if (this->handle != nullptr && this->currentSong != nullptr && this->framesWritten > 0)
     {
@@ -356,7 +356,7 @@ int WaveOutput::write(const T *buffer, frame_t frames)
 {
     int ret = 0;
 
-    lock_guard<recursive_mutex> lck(this->mtx);
+    std::lock_guard<std::recursive_mutex> lck(this->mtx);
 
     if (this->handle != nullptr)
     {

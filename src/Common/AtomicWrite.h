@@ -4,9 +4,16 @@
 #include <mutex>
 #include <sstream>
 
-#define INFUNCTION string(__PRETTY_FUNCTION__) + ": "
+#if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
+#define INFUNCTION std::string(__PRETTY_FUNCTION__) + ": "
+#elif defined(_MSC_VER)
+#define INFUNCTION std::string(__FUNCSIG__) + ": "
+#else
+#define INFUNCTION std::string(__func__) + ": "
+#endif
+
 #define LOG_MSG(MSG)     \
-    stringstream logmsg; \
+    std::stringstream logmsg; \
     logmsg << INFUNCTION << MSG
 #define CLOG(LEVEL, MSG)                                        \
     {                                                           \
@@ -18,7 +25,7 @@
 #define THROW_RUNTIME_ERROR(MSG)           \
     {                                      \
         LOG_MSG(MSG);                      \
-        throw runtime_error(logmsg.str()); \
+        throw std::runtime_error(logmsg.str()); \
     }
 
 

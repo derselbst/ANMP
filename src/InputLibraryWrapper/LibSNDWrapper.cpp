@@ -15,19 +15,19 @@
 #include <array>
 
 
-LibSNDWrapper::LibSNDWrapper(string filename)
+LibSNDWrapper::LibSNDWrapper(std::string filename)
 : StandardWrapper(std::move(filename))
 {
 }
 
-LibSNDWrapper::LibSNDWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
+LibSNDWrapper::LibSNDWrapper(std::string filename, Nullable<size_t> offset, Nullable<size_t> len)
 : StandardWrapper(std::move(filename), offset, len)
 {
 }
 
 void LibSNDWrapper::init()
 {
-    std::ifstream ifs(this->Filename, ios::binary);
+    std::ifstream ifs(this->Filename, std::ios::binary);
     std::array<char, 1<<14> buf;
     ifs.read(buf.data(), sizeof(buf));
     std::string str(buf.data(), ifs.gcount());
@@ -153,7 +153,7 @@ void LibSNDWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, f
         // allocate an extra tempbuffer to store the int64s in
         // then convert them to int32
 
-        vector<int> tmp;
+        std::vector<int> tmp;
         int *int64_temp_buf = nullptr;
         if (cachedFormat == SampleFormat_t::int32)
         {
@@ -186,7 +186,7 @@ void LibSNDWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, f
 
 vector<loop_t> LibSNDWrapper::getLoopArray() const noexcept
 {
-    vector<loop_t> res;
+    std::vector<loop_t> res;
 
     if (res.empty())
     {
@@ -252,7 +252,7 @@ void LibSNDWrapper::buildMetadata() noexcept
 {
 #define READ_METADATA(name, id)                      \
     if (sf_get_string(this->sndfile, id) != nullptr) \
-    (name = string(sf_get_string(this->sndfile, id)))
+    (name = std::string(sf_get_string(this->sndfile, id)))
 
     READ_METADATA(this->Metadata.Title, SF_STR_TITLE);
     READ_METADATA(this->Metadata.Artist, SF_STR_ARTIST);

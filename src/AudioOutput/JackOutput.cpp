@@ -13,6 +13,7 @@
 
 #include <jack/jack.h>
 
+using namespace std;
 
 JackOutput::JackOutput()
 {

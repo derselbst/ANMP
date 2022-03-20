@@ -67,7 +67,7 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
             {
                 case 0:
                 {
-                    string s = "";
+                    std::string s = "";
                     if (songToUse->Metadata.Track != "")
                     {
                         s += songToUse->Metadata.Track;

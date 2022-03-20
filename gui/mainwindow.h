@@ -41,7 +41,7 @@ class MainWindow : public QMainWindow
     static void callbackBufferHealth(void *, frame_t pos);
     static void callbackSeek(void *, frame_t pos);
     static void callbackCurrentSongChanged(void *, const Song *newSong);
-    static void callbackIsPlayingChanged(void *context, bool isPlaying, Nullable<string> msg);
+    static void callbackIsPlayingChanged(void *context, bool isPlaying, Nullable<std::string> msg);
 
     protected:
     void resizeEvent(QResizeEvent *event) override;

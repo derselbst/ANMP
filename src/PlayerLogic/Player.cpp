@@ -39,8 +39,8 @@
     {                                                                                              \
         throw NotInitializedException();                                                           \
     }
-// Constructors/Destructors
-//
+
+using namespace std::chrono_literals;
 
 Player::Player(IPlaylist *playlist)
 {
@@ -66,7 +66,7 @@ Player::Player(Player &&other)
 
 Player::~Player()
 {
-    CLOG(LogLevel_t::Debug, "destroy player " << hex << this);
+    CLOG(LogLevel_t::Debug, "destroy player " << std::hex << this);
     this->pause();
 
     delete this->audioDriver;
@@ -175,7 +175,7 @@ void Player::play()
     this->isPlaying = true;
 
     // new thread that runs playInternal
-    this->futurePlayInternal = async(launch::async, &Player::playInternal, this);
+    this->futurePlayInternal = std::async(std::launch::async, &Player::playInternal, this);
 }
 
 
@@ -189,7 +189,7 @@ void Player::setCurrentSong(Song *song)
 {
     if (this->IsPlaying())
     {
-        throw runtime_error("Player: Cannot set song while still playing back.");
+        throw std::runtime_error("Player: Cannot set song while still playing back.");
     }
 
     WAIT(this->futurePlayInternal);
@@ -259,7 +259,7 @@ void Player::_setCurrentSong(Song *newSong)
             oldSong->close();
         }
     }
-    catch (const exception &e)
+    catch (const std::exception &e)
     {
         // cleanup
         if (newSong != nullptr)
@@ -313,8 +313,8 @@ void Player::fadeout(unsigned int fadeTime, int8_t fadeType)
         this->audioDriver->setVolume(0);
     }
 
-    float vol = 0.0f;
-    for (float timePast = 0.0; timePast <= fadeTime; timePast++)
+    float vol = 0.0f, timePast = 0.0f;
+    do
     {
         switch (fadeType)
         {
@@ -334,8 +334,12 @@ void Player::fadeout(unsigned int fadeTime, int8_t fadeType)
 
         float volToPush = vol * this->PreAmpVolume;
         this->audioDriver->setVolume(volToPush);
-        this_thread::sleep_for(chrono::milliseconds(1));
-    }
+        auto start = std::chrono::high_resolution_clock::now();
+        std::this_thread::sleep_for(1ms);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> elapsed = end - start;
+        timePast += elapsed.count();
+    } while (timePast <= fadeTime);
 }
 
 void Player::Mute(int i, bool isMuted)
@@ -370,7 +374,7 @@ void Player::_seekTo(frame_t frame)
 core::tree<loop_t> *Player::getNextLoop(core::tree<loop_t> &l)
 {
     loop_t compareLoop;
-    compareLoop.start = numeric_limits<frame_t>::max();
+    compareLoop.start = std::numeric_limits<frame_t>::max();
 
     core::tree<loop_t> *ptrToNearest = nullptr;
     // find loop that starts closest, i.e. right after, to whereever playhead points to
@@ -444,7 +448,7 @@ void Player::playFrames(frame_t startFrame, frame_t stopFrame)
         if (framesToPlay <= 0)
         {
             // well smth. went wrong...
-            cerr << "THIS SHOULD NEVER HAPPEN! framesToPlay negative" << endl;
+            std::cerr << "THIS SHOULD NEVER HAPPEN! framesToPlay negative" << std::endl;
             return;
         }
 
@@ -478,7 +482,7 @@ void Player::playFrames(frame_t framesToPlay)
         // seek within the pcm buffer to that item where the playhead points to, but make sure we dont run over the buffer; in doubt we should start again at the beginning of the buffer
         size_t itemOffset = FramesToItems(memorizedPlayhead) % bufSize;
         // number of frames we will write to audioDriver in this run
-        int framesToPush = min(gConfig.FramesToRender, framesToPlay);
+        int framesToPush = std::min(gConfig.FramesToRender, framesToPlay);
 
         int framesWritten = 0;
 
@@ -499,7 +503,7 @@ void Player::playFrames(frame_t framesToPlay)
         {
             CLOG(LogLevel_t::Info, "failed to play the rendered pcm chunk, trying again");
             // something went terribly wrong, wait some time, so the cpu doesnt get too busy
-            this_thread::sleep_for(chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
             // and try again
             goto again;
         }
@@ -553,9 +557,9 @@ void Player::playInternal()
             this->_setCurrentSong(this->playlist->next());
         }
     }
-    catch (const exception &e)
+    catch (const std::exception &e)
     {
-        cerr << "An Exception was thrown in Player::playInternal(): " << e.what() << endl;
+        std::cerr << "An Exception was thrown in Player::playInternal(): " << e.what() << std::endl;
         this->_pause();
         exceptionMsg = e.what();
     }

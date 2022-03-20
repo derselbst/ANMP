@@ -9,7 +9,7 @@
 #include "ui_playcontrol.h"
 
 
-void MainWindow::callbackIsPlayingChanged(void *context, bool isPlaying, Nullable<string> msg)
+void MainWindow::callbackIsPlayingChanged(void *context, bool isPlaying, Nullable<std::string> msg)
 {
     MainWindow *ctx = static_cast<MainWindow *>(context);
     QMetaObject::invokeMethod(ctx, "slotIsPlayingChanged", Qt::QueuedConnection, Q_ARG(bool, isPlaying), Q_ARG(bool, msg.hasValue), Q_ARG(QString, QString::fromStdString(msg.Value)));

@@ -1,0 +1,214 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+resources:
+  repositories:
+  - repository: lazyusf2
+    type: github
+    name: derselbst/lazyusf2
+    endpoint: 'derselbst'
+  - repository: psflib
+    type: github
+    name: derselbst/psflib
+    endpoint: 'derselbst'
+
+parameters:
+- name: UseCache
+  displayName: Use Dependency Cache
+  type: boolean
+  default: true
+
+variables:
+  DEBIAN_FRONTEND: 'noninteractive'
+
+jobs:
+  - job: Linux
+    pool:
+      vmImage: 'ubuntu-20.04'
+    steps:
+    - checkout: self
+      submodules: true
+    - bash: |
+        sudo -E apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
+        sudo apt-get update
+      displayName: 'apt-get update'
+    - bash: |
+        sudo apt-get install -y --no-install-suggests --no-install-recommends cmake libcue-dev libgme-dev libfluidsynth-dev libsmf-dev libmad0-dev libid3tag0-dev libsndfile-dev libasound2-dev libjack-dev libsamplerate0-dev libmodplug-dev portaudio19-dev libebur128-dev qt5-default qtbase5-dev libqt5opengl5-dev
+      displayName: 'apt-get install'
+    - task: CMake@1
+      displayName: 'CMake configure'
+      inputs:
+        cmakeArgs: -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+        workingDirectory: 'build'
+    - task: CMake@1
+      displayName: 'CMake Build'
+      inputs:
+        cmakeArgs: --build . --parallel
+        workingDirectory: 'build'
+    - task: CMake@1
+      displayName: 'CMake Check'
+      inputs:
+        cmakeArgs: --build . --target check --parallel
+        workingDirectory: 'build'
+  - job: Windows
+    timeoutInMinutes: 500
+    cancelTimeoutInMinutes: 2
+    strategy:
+      matrix:
+        Win10:
+          toolset: 'v142'
+          generator: 'Visual Studio 16 2019'
+          poo: 'windows-2019'
+#        Win11:
+#          toolset: 'v143'
+#          generator: 'Visual Studio 17 2022'
+#          poo: 'windows-2022'
+    pool:
+      vmImage: $(poo)
+    variables:
+      configuration: 'Release'
+      VCPKG_REVISION: 'af2287382b1991dbdcb7e5112d236f3323b9dd7a'
+      platform: 'x64'
+      cmake_platform: 'x64'
+    steps:
+    - checkout: self
+      submodules: true
+    - checkout: psflib
+    - checkout: lazyusf2
+
+    - task: Cache@2
+      displayName: "Cache vcpkg's packages"
+      condition: and(not(in(variables['Build.Reason'], 'Schedule')), ${{ parameters.useCache }})
+      inputs:
+        key: $(VCPKG_REVISION) | "$(platform)" | "$(poo)" | "withstaticlibsAndFluidsynthAndSvg"
+        path: '$(VCPKG_INSTALLATION_ROOT)\installed'
+        cacheHitVar: CACHE_RESTORED
+    - bash: |
+        set -ex
+        echo $(generator)
+        echo $(toolset)
+        # choco upgrade ninja -y
+        # ninja --version
+        cmake --version
+        rm -rf C:/Strawberry/perl/bin/pkg-config*
+        choco install --svc --sdc -i pkgconfiglite make
+        # chocoTask=$!
+        # manually update vcpkg
+        cd $VCPKG_INSTALLATION_ROOT
+        # git checkout master
+        git remote -v
+        git fetch --tags --prune --progress origin
+        git checkout --force $(VCPKG_REVISION)
+        sed -i 's/arm64/arm/g' ports/glib/portfile.cmake
+        ./bootstrap-vcpkg.sh
+        # wait $chocoTask
+        which pkg-config
+      displayName: 'Update vcpkg'
+    - bash: |
+        set -ex
+        vcpkg install sndfile:$(platform)-windows-static libmad:$(platform)-windows-static ffmpeg:$(platform)-windows-static libopenmpt:$(platform)-windows-static portaudio:$(platform)-windows-static libebur128:$(platform)-windows-static fluidsynth:$(platform)-windows
+      displayName: 'vcpkg build Dependencies'
+      condition: and(succeeded(), ne(variables.CACHE_RESTORED, 'true'))
+    - bash: |
+        set -ex
+        vcpkg install qt5-base:$(platform)-windows-static qt5-svg:$(platform)-windows-static
+      displayName: 'vcpkg build Qt5'
+      condition: and(succeeded(), ne(variables.CACHE_RESTORED, 'true'))
+    - bash: |
+        set -ex
+        rm -rf $VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows-static/tools/meson
+        rm -rf $VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows-static/doc
+        rm -rf $VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows/tools/meson
+        rm -rf $VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows/doc
+      displayName: 'Cleanup vcpkg dir'
+    - task: PublishBuildArtifacts@1
+      inputs:
+          pathtoPublish: $(VCPKG_INSTALLATION_ROOT)/installed
+          artifactName: vcpkg-deps-$(platform)-$(poo)
+      condition: or(succeeded(), failed())
+      enabled: false
+    - powershell: |
+        cd $(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib\
+        Move-Item -Path libopenmpt.lib -Destination openmpt.lib
+      displayName: 'Fixup things'
+      condition: and(succeeded(), ne(variables.CACHE_RESTORED, 'true'))
+    - bash: |
+        set -ex
+        vcpkg install zlib:$(platform)-windows-static
+      displayName: 'vcpkg build zlib'
+    - task: MSBuild@1
+      displayName: 'Compile psflib'
+      inputs:
+        solution: 'psflib\psflib.vcxproj'
+        msbuildVersion: '16.0'
+        msbuildArchitecture: 'x64'
+        platform: '$(platform)'
+        configuration: '$(configuration)-$(toolset)'
+        msbuildArguments: '/p:AdditionalIncludeDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include /p:AdditionalLibraryDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
+        maximumCpuCount: true
+    - task: CopyFiles@2
+      displayName: 'Install psflib Header'
+      inputs:
+        SourceFolder: 'psflib'
+        Contents: 'psflib.h'
+        TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include'
+    - task: CopyFiles@2
+      displayName: 'Install psflib lib'
+      inputs:
+        SourceFolder: 'psflib\$(platform)\$(configuration)-$(toolset)'
+        Contents: 'psflib.lib'
+        TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
+    - task: MSBuild@1
+      displayName: 'Compile lazyusf2'
+      continueOnError: true
+      inputs:
+        solution: 'lazyusf2\prj\msvc\lazyusf2.vcxproj'
+        msbuildVersion: '16.0'
+        msbuildArchitecture: 'x64'
+        platform: '$(platform)'
+        configuration: '$(configuration)-$(toolset)'
+        msbuildArguments: '/p:AdditionalIncludeDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include /p:AdditionalLibraryDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
+        maximumCpuCount: true
+    - task: CopyFiles@2
+      displayName: 'Install lazyusf2 Header'
+      inputs:
+        SourceFolder: 'lazyusf2\usf'
+        Contents: 'usf.h'
+        TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include'
+    - task: CopyFiles@2
+      displayName: 'Install lazyusf2 lib'
+      inputs:
+        SourceFolder: 'lazyusf2\prj\msvc\$(platform)\$(configuration)-$(toolset)'
+        Contents: 'lazyusf2.lib'
+        TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
+    - bash: |
+        set -ex
+        ls -la
+        mkdir build
+        cd build
+        export PKG_CONFIG_PATH=$VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows-static/lib/pkgconfig
+        cmake -Werror=dev -G "$(generator)" -A "$(cmake_platform)" -T "$(toolset)" -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows-static -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows-static -DBUILD_SHARED_LIBS=0 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 -DENABLE_VGMSTREAM=0 -DENABLE_FFMPEG=0 -DENABLE_EBUR128=0 ..
+      displayName: 'Compile static ANMP'
+      workingDirectory: 'ANMP'
+    - task: CMake@1
+      displayName: 'CMake Build'
+      inputs:
+        cmakeArgs: --build . --config $(configuration) --parallel 3 --target anmp-qt
+        workingDirectory: 'ANMP/build'
+    - task: CMake@1
+      displayName: 'CMake Check'
+      inputs:
+        cmakeArgs: --build . --config $(configuration) --target check --parallel
+        workingDirectory: 'ANMP/build'
+    - task: CopyFiles@2
+      continueOnError: true
+      inputs:
+        SourceFolder: 'ANMP\build\$(configuration)'
+        Contents: 'anmp-qt.exe'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: PublishBuildArtifacts@1
+      inputs:
+          pathtoPublish: $(Build.ArtifactStagingDirectory)
+          artifactName: ANMP-standalone-$(platform)-$(poo)

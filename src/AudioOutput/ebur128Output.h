@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IAudioOutput.h"
-#include <ebur128.h>
+#include <memory>
 
 class Player;
 class Song;
@@ -40,12 +40,8 @@ class ebur128Output : public IAudioOutput
     void stop() override;
 
     private:
-    // because this.stop() might be called concurrently to this.write()
-    mutable recursive_mutex mtx;
+    struct Impl;
+    std::unique_ptr<Impl> d;
 
-    Player *player = nullptr;
-    ebur128_state *handle = nullptr;
-
-    const Song *currentSong = nullptr;
     static void onCurrentSongChanged(void *context, const Song *newSong);
 };

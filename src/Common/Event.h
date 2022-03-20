@@ -27,9 +27,9 @@
  * someEvent -= std::make_pair(nullptr, &someCallbackFunction);
  * ...
  *
- * void someOtherCallbackFunction(void* context, int i, bool b, string s);
- * void SomeOtherClass::someOtherStaticMemberFunction(void* context, int i, bool b, string s);
- * Event<int i, bool b, string s> someOtherEvent;
+ * void someOtherCallbackFunction(void* context, int i, bool b, std::string s);
+ * void SomeOtherClass::someOtherStaticMemberFunction(void* context, int i, bool b, std::string s);
+ * Event<int i, bool b, std::string s> someOtherEvent;
  *
  * someOtherEvent += std::make_pair(this, &SomeOtherClass::someOtherStaticMemberFunction);
  * someOtherEvent += std::make_pair(someObject, &someOtherCallbackFunction);

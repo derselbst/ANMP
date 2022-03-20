@@ -8,14 +8,20 @@
 #include <cstring>
 #include <utility>
 
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/opt.h>
+#include <libswresample/swresample.h>
+}
 
-FFMpegWrapper::FFMpegWrapper(string filename)
+FFMpegWrapper::FFMpegWrapper(std::string filename)
 : StandardWrapper(std::move(filename))
 {
     this->Format.SampleFormat = SampleFormat_t::int16;
 }
 
-FFMpegWrapper::FFMpegWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
+FFMpegWrapper::FFMpegWrapper(std::string filename, Nullable<size_t> offset, Nullable<size_t> len)
 : StandardWrapper(std::move(filename), offset, len)
 {
     this->Format.SampleFormat = SampleFormat_t::int16;
@@ -301,7 +307,7 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo)
 
 void FFMpegWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender)
 {
-    int framesToDo = framesToRender = min(framesToRender, this->getFrames() - this->framesAlreadyRendered);
+    int framesToDo = framesToRender = std::min(framesToRender, this->getFrames() - this->framesAlreadyRendered);
 
     // int16 because we told swr to convert everything to int16
     int16_t *pcm = static_cast<int16_t *>(bufferToFill);

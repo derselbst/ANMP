@@ -6,12 +6,12 @@
 #include <anmp.hpp>
 
 #include <chrono>
-#include <experimental/filesystem>
+#include <filesystem>
 #include <getopt.h>
 #include <thread>
 
 using namespace std;
-using namespace std::experimental::filesystem;
+using namespace std::filesystem;
 
 void onSongChanged(void *pthis, const Song *s)
 {
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
         switch (ch)
         {
             case 'o':
-                StringFormatter::Singleton().SetFormat(string(optarg));
+                StringFormatter::Singleton().SetFormat(std::string(optarg));
                 break;
 
             case 'l':

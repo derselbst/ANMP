@@ -10,11 +10,11 @@
 #include <anmp.hpp>
 
 #include <chrono>
-#include <experimental/filesystem>
+#include <filesystem>
 #include <thread>
 
 using namespace std;
-using namespace std::experimental::filesystem;
+using namespace std::filesystem;
 
 void onSongChanged(void *pthis, const Song *s)
 {
@@ -53,13 +53,13 @@ int main(int argc, char *argv[])
             {
                 if (is_regular_file(dirEntry.status()))
                 {
-                    PlaylistFactory::addSong(tempSongBuf, dirEntry.path());
+                    PlaylistFactory::addSong(tempSongBuf, dirEntry.path().string());
                 }
             }
         }
         else if (is_regular_file(argv[i]))
         {
-            PlaylistFactory::addSong(tempSongBuf, absolute(argv[i]));
+            PlaylistFactory::addSong(tempSongBuf, absolute(argv[i]).string());
         }
     }
 

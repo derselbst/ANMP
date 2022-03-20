@@ -37,7 +37,7 @@ class Config
 
     // indicates the default audio driver to use
     // you have to call Player::initAudio() for changes to take effect
-    AudioDriver_t audioDriver = AudioDriver_t::Alsa;
+    AudioDriver_t audioDriver = AudioDriver_t::Wave;
 
     // in synchronous part of Song::fillBuffer(): prepare as many samples as needed to have enough for
     // PreRenderTime of playing back duration, before asynchronously filling up the rest of PCM buffer
@@ -140,7 +140,7 @@ class Config
 #endif
     // the soundfont to use, if there are no more suitable soundfonts found
     // this should be a GM Midi conform SF2
-    string FluidsynthDefaultSoundfont = FLUIDSYNTH_DEFAULT_SF2;
+    std::string FluidsynthDefaultSoundfont = FLUIDSYNTH_DEFAULT_SF2;
 
     // parameters for fluidsynth's reverb effect
     double FluidsynthRoomSize = 0.8;
@@ -151,7 +151,7 @@ class Config
     double FluidsynthFilterQ = 250;
     int FluidsynthFilterFC = 11525;
 
-    string FluidsynthBankSelect = "mma";
+    std::string FluidsynthBankSelect = "mma";
     bool FluidsynthChannel9IsDrum = false;
     bool FluidsynthRenderNotesWithoutPreset = true;
 

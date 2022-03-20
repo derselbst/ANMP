@@ -17,16 +17,24 @@ if(USE_GUI)
 
     set(GUI_SRCS
         configdialog.cpp
+        configdialog.h
         main.cpp
         mainwindow.cpp
+        mainwindow.h
         mainwindow.slots.cpp
         mainwindow.callback.cpp
-        PlaylistModel.cpp
-        PlaylistView.cpp
         PlayheadSlider.cpp
-        ChannelConfigView.cpp
+        PlayheadSlider.h
+        PlaylistModel.cpp
+        PlaylistModel.h
+        PlaylistView.cpp
+        PlaylistView.h
         ChannelConfigModel.cpp
+        ChannelConfigModel.h
+        ChannelConfigView.cpp
+        ChannelConfigView.h
         songinspector.cpp
+        songinspector.h
     )
     
     qt5_generate_dbus_interface(
@@ -56,19 +64,22 @@ if(USE_GUI)
     
     add_executable(${PROJECT_NAME} ${UI_HEADERS} ${GUI_SRCS} ${ANMP_LAUNCHER_SRC} icons.qrc)
     
-    # should add all necessary compile and link flags
-    qt5_use_modules(${PROJECT_NAME} Core OpenGL)
+    # this will add all necessary compile and link flags
+    target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Widgets Qt5::DBus)
 
     if(USE_VISUALIZER)
         # name of libraries that will be build in the applets subdir
         SET(LIBANAL analyzer)
         add_subdirectory(applets/analyzer)
-        target_link_libraries(${PROJECT_NAME} ${LIBANAL})
+        target_link_libraries(${PROJECT_NAME} ${LIBANAL} Qt5::OpenGL)
     endif(USE_VISUALIZER)
+
+    if(WIN32)
+      set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
+    endif()
 
     target_link_libraries(${PROJECT_NAME}
         anmp
-        ${Qt5DBus_LIBRARIES} ${Qt5Widgets_LIBRARIES}
         ${LD_FLAGS}
     )
     

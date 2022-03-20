@@ -27,11 +27,11 @@ struct SongFormat
     // voice == group of consecutive audio channels
     uint16_t Voices = 0;
 
-    vector<string> VoiceName;
+    std::vector<string> VoiceName;
 
-    mutable vector<bool> VoiceIsMuted;
+    mutable std::vector<bool> VoiceIsMuted;
 
-    mutable vector<uint16_t> VoiceChannels;
+    mutable std::vector<uint16_t> VoiceChannels;
 
     void SetVoices(uint16_t nVoices);
 

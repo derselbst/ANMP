@@ -3,8 +3,7 @@
 
 #include "IAudioOutput.h"
 
-#include <portaudio.h>
-
+#include <memory>
 
 /**
   * class PortAudioOutput
@@ -43,11 +42,8 @@ class PortAudioOutput : public IAudioOutput
     void SetOutputChannels(uint8_t) override;
 
     private:
-    PaStream *handle = nullptr;
-
-    // holds the error returned by Pa_Initialize
-    // this class shall only be usable if no error occurred
-    PaError paInitError = ~PaErrorCode::paNoError;
+    struct Impl;
+    std::unique_ptr<Impl> d;
 
     template<typename T>
     int write(const T *buffer, frame_t frames);

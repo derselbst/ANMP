@@ -33,7 +33,7 @@ int main()
     equal = iEquals("zzz", "ZZZz");
     TEST_ASSERT_EQ(equal, false);
 
-    string s = ::myHomeDir();
+    std::string s = ::myHomeDir();
     TEST_ASSERT(s.size() >= 1);
     
     string test = "/var/tmp/song.midi";

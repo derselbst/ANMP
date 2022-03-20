@@ -11,8 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-
-// #include <filesystem>
+#include <filesystem>
 
 #ifdef _POSIX_SOURCE
 #include <strings.h> // strncasecmp
@@ -28,13 +27,12 @@ extern "C" {
 #include <unistd.h>
 #endif
 
-using namespace std;
 // namespace fs = std::filesystem;
 
 #ifndef _POSIX_SOURCE
-// helper function for case insensitive string compare
+// helper function for case insensitive std::string compare
 // will workon all platforms, but probably slow
-bool iEqualsUgly(string strFirst, string strSecond)
+bool iEqualsUgly(std::string strFirst, std::string strSecond)
 {
     // convert strings to upper case before compare
     transform(strFirst.begin(), strFirst.end(), strFirst.begin(), [](unsigned char c) {
@@ -47,8 +45,8 @@ bool iEqualsUgly(string strFirst, string strSecond)
 }
 #endif
 
-// helper function for case insensitive string compare
-bool iEquals(const string &str1, const string &str2)
+// helper function for case insensitive std::string compare
+bool iEquals(const std::string &str1, const std::string &str2)
 {
 #ifdef _POSIX_SOURCE
     if (str1.size() != str2.size())
@@ -61,14 +59,14 @@ bool iEquals(const string &str1, const string &str2)
 #endif
 }
 
-string getFileExtension(const string &filePath)
+std::string getFileExtension(const std::string &filePath)
 {
     return filePath.substr(filePath.find_last_of('.') + 1);
 }
 
-/** @brief converts a time string to ms
+/** @brief converts a time std::string to ms
  *
- * @param[in] input a string in the format of mm:ss where mm=minutes and ss=seconds
+ * @param[in] input a std::string in the format of mm:ss where mm=minutes and ss=seconds
  * @return an integer in milliseconds
  */
 unsigned long parse_time_crap(const char *input)
@@ -85,7 +83,7 @@ unsigned long parse_time_crap(const char *input)
     }
     if (colon_count > 2)
     {
-        THROW_RUNTIME_ERROR("too many colons in time string");
+        THROW_RUNTIME_ERROR("too many colons in time std::string");
     }
     if (*ptr && *ptr != '.' && *ptr != ',')
     {
@@ -149,20 +147,20 @@ unsigned long parse_time_crap(const char *input)
     return value;
 }
 
-string framesToTimeStr(frame_t frames, const unsigned int &sampleRate)
+std::string framesToTimeStr(frame_t frames, const unsigned int &sampleRate)
 {
     int sec = frames / sampleRate;
     int min = sec / 60;
     sec %= 60;
     int msec100 = frames % sampleRate % 10;
 
-    stringstream ssTime;
-    ssTime << min << ":" << setw(2) << setfill('0') << sec << "." << msec100;
+    std::stringstream ssTime;
+    ssTime << min << ":" << std::setw(2) << std::setfill('0') << sec << "." << msec100;
 
     // stringstream::str() returns a temporary object
-    string temp = ssTime.str();
-    // return a deep copy of that string
-    return string(temp.c_str());
+    std::string temp = ssTime.str();
+    // return a deep copy of that std::string
+    return std::string(temp.c_str());
 }
 
 /**
@@ -189,33 +187,56 @@ size_t framesToMs(const frame_t &frames, const unsigned int &sampleRate)
 
 #ifdef _WIN32
 #include <stdlib.h>
-
-char driveBuf[_MAX_DRIVE];
-char dirBuf[_MAX_DIR];
-char fnameBuf[_MAX_FNAME];
-char extBuf[_MAX_EXT];
 #endif
 
-string mybasename(const string &path)
+std::string removeTrailingSlash(std::string s)
 {
-    string s = string(path.c_str());
+    size_t i;
+    for (i = s.size(); i > 0; i--)
+    {
+        auto &c = s[i - 1];
+        if (c == '/' || c == '\\')
+        {
+            continue;
+        }
+        else
+        {
+            break;
+        }
+    }
+    s.resize(i);
+    return s;
+}
+
+std::string mybasename(const std::string &path)
+{
 
 #if defined(_POSIX_SOURCE)
-    return string(basename(const_cast<char *>(s.c_str())));
+    std::string s = std::string(path.c_str());
+    return std::string(basename(const_cast<char *>(s.c_str())));
 #elif defined(_WIN32)
+    std::string s = removeTrailingSlash(path);
+    if (s == ".")
+    {
+        return ".";
+    }
+    char driveBuf[_MAX_DRIVE];
+    char dirBuf[_MAX_DIR];
+    char fnameBuf[_MAX_FNAME];
+    char extBuf[_MAX_EXT];
     _splitpath(s.c_str(),
                nullptr, // drive
                dirBuf, // dir
                fnameBuf, // filename
                extBuf);
 
-    if (fnameBuf[0] = '\0')
+    if (fnameBuf[0] == '\0')
     {
         throw NotImplementedException();
     }
     else
     {
-        string result = string(fnameBuf);
+        std::string result = std::string(fnameBuf);
         result.append(extBuf);
         return result;
     }
@@ -225,28 +246,34 @@ string mybasename(const string &path)
 #endif
 }
 
-string mydirname(const string &path)
+std::string mydirname(const std::string &path)
 {
-    string s = string(path.c_str());
-    return string(dirname(const_cast<char *>(s.c_str())));
+    std::string s = removeTrailingSlash(path);
+    std::filesystem::path p(s);
+    std::string dir(p.parent_path().string());
+    if (dir.empty())
+    {
+        return std::string(".");
+    }
+    return dir;
 }
 
-string getUniqueFilename(const string &path)
+std::string getUniqueFilename(const std::string &path)
 {
     constexpr int Max = 1000;
-    const string ext = getFileExtension(path);
+    const std::string ext = getFileExtension(path);
     int i = 0;
 
-    string unique = path;
+    std::string unique = path;
     while (myExists(unique) && i < Max)
     {
-        unique = string(path.c_str());
+        unique = std::string(path.c_str());
 
         // remove the extension
         unique.erase(unique.find_last_of('.') + 1);
 
         // add a unique number with leading zeros
-        unique += string(log10(Max) - to_string(i).length(), '0') + to_string(i);
+        unique += std::string(log10(Max) - std::to_string(i).length(), '0') + std::to_string(i);
 
         // readd the extension
         unique += "." + ext;
@@ -256,7 +283,7 @@ string getUniqueFilename(const string &path)
 
     if (i >= Max)
     {
-        throw runtime_error("failed to get unique filename, max try count exceeded");
+        throw std::runtime_error("failed to get unique filename, max try count exceeded");
     }
 
     return unique;
@@ -279,7 +306,7 @@ size_t getFileSize(int fd)
     return stat.st_size;
 }
 
-bool myExists(const string &name)
+bool myExists(const std::string &name)
 {
     if (name.empty())
     {
@@ -303,9 +330,9 @@ bool myExists(const string &name)
     }
 }
 
-string myHomeDir()
+std::string myHomeDir()
 {
-    string home;
+    std::string home;
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 
@@ -317,7 +344,7 @@ string myHomeDir()
         THROW_RUNTIME_ERROR("failed to get home directory")
     }
 
-    home = string(drive) + string(path);
+    home = std::string(drive) + std::string(path);
 
 #elif defined(_POSIX_SOURCE)
 
@@ -334,7 +361,7 @@ string myHomeDir()
         }
     }
 
-    home = string(path);
+    home = std::string(path);
 
 #else
 #error "Dont know how to determine the home directory on your platform"
@@ -343,26 +370,26 @@ string myHomeDir()
     return home;
 }
 
-Nullable<string> findSoundfont(string midFile)
+Nullable<std::string> findSoundfont(std::string midFile)
 {
     static const char *ext[] = {".sf2", ".dls"};
     
     // trim extension
-    midFile = midFile.erase(midFile.find_last_of('.'), string::npos);
+    midFile = midFile.erase(midFile.find_last_of('.'), std::string::npos);
 
     for(const char* e : ext)
     {
-        string soundffile = midFile + e;
+        std::string soundffile = midFile + e;
 
         //     if(fs::exists(midFile + e))
         if (myExists(soundffile))
         {
             // a soundfont named like midi file, but with sf2 extension
-            return Nullable<string>(soundffile);
+            return Nullable<std::string>(soundffile);
         }
 
         // get path to directory this file is in
-        string dir = mydirname(midFile);
+        std::string dir = mydirname(midFile);
 
         soundffile = dir + "/"; // the directory this soundfont might be in
         soundffile += mybasename(dir); // bare name of that soundfont
@@ -371,11 +398,11 @@ Nullable<string> findSoundfont(string midFile)
         //     if(fs::exists(dir + e))
         if (myExists(soundffile))
         {
-            return Nullable<string>(soundffile);
+            return Nullable<std::string>(soundffile);
         }
     }
     
-    return Nullable<string>(nullptr);
+    return Nullable<std::string>(nullptr);
 }
 
 bool PageLockMemory(void* ptr, size_t bytes)

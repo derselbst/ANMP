@@ -8,12 +8,11 @@
 #include <queue>
 #include <random>
 
-using namespace std;
 
 class Playlist : public IPlaylist
 {
     public:
-    typedef deque<Song *> SongQueue_t;
+    typedef std::deque<Song *> SongQueue_t;
 
     Playlist();
     virtual ~Playlist();
@@ -52,7 +51,7 @@ class Playlist : public IPlaylist
     std::mt19937 urbg;
 
     // synchronize concurrent access made by playback thread and qt's gui thread
-    mutable recursive_mutex mtx;
+    mutable std::recursive_mutex mtx;
 };
 
 #endif // PLAYLIST_H

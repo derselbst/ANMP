@@ -16,8 +16,8 @@ namespace openmpt
 class OpenMPTWrapper : public StandardWrapper<float>
 {
     public:
-    OpenMPTWrapper(string filename);
-    OpenMPTWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len);
+    OpenMPTWrapper(std::string filename);
+    OpenMPTWrapper(std::string filename, Nullable<size_t> offset, Nullable<size_t> len);
     void initAttr();
 
     // forbid copying

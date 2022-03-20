@@ -3,8 +3,6 @@
 
 #include <string>
 
-using namespace std;
-
 /**
   * class SongInfo
   *
@@ -13,14 +11,14 @@ using namespace std;
 // IMPLEMENTERS: when adding new members here dont forget to update PlaylistFactory (i.e. parsing metadata from cue sheets and handling of overridingMetadata)
 struct SongInfo
 {
-    string Track = "";
-    string Title = "";
-    string Artist = "";
-    string Album = "";
-    string Composer = "";
-    string Year = "";
-    string Genre = "";
-    string Comment = "";
+    std::string Track = "";
+    std::string Title = "";
+    std::string Artist = "";
+    std::string Album = "";
+    std::string Composer = "";
+    std::string Year = "";
+    std::string Genre = "";
+    std::string Comment = "";
 };
 
 #endif // SONGINFO_H

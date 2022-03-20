@@ -17,7 +17,7 @@ class TestSong : public StandardWrapper<FORMAT>
     const frame_t frames;
 
     public:
-    TestSong(frame_t frames, string filename = "")
+    TestSong(frame_t frames, std::string filename = "")
     : StandardWrapper<FORMAT>(filename), frames(frames)
     {
     }

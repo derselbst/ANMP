@@ -144,10 +144,10 @@ MainWindow::MainWindow(QWidget *parent)
 
 
     // set callbacks for the underlying player
-    this->player->onBufferHealthChanged += make_pair(this, &MainWindow::callbackBufferHealth);
-    this->player->onPlayheadChanged += make_pair(this, &MainWindow::callbackSeek);
-    this->player->onCurrentSongChanged += make_pair(this, &MainWindow::callbackCurrentSongChanged);
-    this->player->onIsPlayingChanged += make_pair(this, &MainWindow::callbackIsPlayingChanged);
+    this->player->onBufferHealthChanged += std::make_pair(this, &MainWindow::callbackBufferHealth);
+    this->player->onPlayheadChanged += std::make_pair(this, &MainWindow::callbackSeek);
+    this->player->onCurrentSongChanged += std::make_pair(this, &MainWindow::callbackCurrentSongChanged);
+    this->player->onIsPlayingChanged += std::make_pair(this, &MainWindow::callbackIsPlayingChanged);
 
     this->createShortcuts();
 
@@ -254,7 +254,15 @@ void MainWindow::createShortcuts()
 
 void MainWindow::buildFileBrowser()
 {
-    QString rootPath = qgetenv("HOME");
+    std::string home;
+    try
+    {
+        home = ::myHomeDir();
+    }
+    catch(const std::runtime_error& e)
+    {
+    }
+    QString rootPath = QString::fromStdString(home);
     this->drivesModel->setFilter(QDir::NoDotAndDotDot | QDir::Dirs);
 
     QTreeView *treeView = this->treeView = new QTreeView(this->ui->dockDir);

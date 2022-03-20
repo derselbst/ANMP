@@ -34,7 +34,7 @@
   */
 #define STANDARDWRAPPER_RENDER(SAMPLEFORMAT, LIB_SPECIFIC_RENDER_FUNCTION)                                                                        \
     {                                                                                                                                             \
-        auto backup = framesToRender = min(framesToRender, this->getFrames() - this->framesAlreadyRendered);                                      \
+        auto backup = framesToRender = std::min(framesToRender, this->getFrames() - this->framesAlreadyRendered);                                      \
         SAMPLEFORMAT *pcm = static_cast<SAMPLEFORMAT *>(bufferToFill);                                                                            \
                                                                                                                                                   \
         while (framesToRender > 0 && !this->stopFillBuffer)                                                                                       \
@@ -60,8 +60,8 @@ template<typename SAMPLEFORMAT>
 class StandardWrapper : public Song
 {
     public:
-    StandardWrapper(string filename);
-    StandardWrapper(string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
+    StandardWrapper(std::string filename);
+    StandardWrapper(std::string filename, Nullable<size_t> fileOffset, Nullable<size_t> fileLen);
 
     // forbid copying
     StandardWrapper(StandardWrapper const &) = delete;
@@ -108,7 +108,7 @@ class StandardWrapper : public Song
     // used for double buffering, whenever we were unable to allocate a buffer big enough to hold the whole song in memory
     pcm_t *preRenderBuf = nullptr;
 
-    future<void> futureFillBuffer;
+    std::future<void> futureFillBuffer;
 
     void init() noexcept;
     SAMPLEFORMAT* allocPcmBuffer(size_t) noexcept;
