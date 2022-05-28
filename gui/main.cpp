@@ -6,6 +6,7 @@
 #include <QMessageBox>
 #include <QtDBus>
 #include <QDBusConnectionInterface>
+#include <QStyleFactory>
 
 using namespace std;
 
@@ -14,6 +15,7 @@ int main(int argc, char *argv[])
     int ret = -1;
 
     QApplication a(argc, argv);
+    a.setStyle(QStyleFactory::create("Fusion"));
     QMessageBox msgBox;
 
     QDBusReply<bool> reply;
