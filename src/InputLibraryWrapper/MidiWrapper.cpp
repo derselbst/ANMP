@@ -37,9 +37,9 @@
 
 string MidiWrapper::SmfEventToString(smf_event_t *event)
 {
-    string ret = "event no.   : " + to_string(event->event_number);
-    ret += "\nin track no.: " + to_string(event->track_number);
-    ret += "\nat tick     : " + to_string(event->time_pulses);
+    string ret = "event no.   : " + std::to_string(event->event_number);
+    ret += "\nin track no.: " + std::to_string(event->track_number);
+    ret += "\nat tick     : " + std::to_string(event->time_pulses);
 
     return ret;
 }

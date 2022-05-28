@@ -438,7 +438,7 @@ void FluidsynthWrapper::ConfigureChannels(SongFormat *f)
         {
             if(this->midiChannelHasNoteOn[j])
             {
-                f->VoiceName[i] = (this->cseqID == -1 ? "Midi Channel " : "Sequence Track ") + to_string(j);
+                f->VoiceName[i] = (this->cseqID == -1 ? "Midi Channel " : "Sequence Track ") + std::to_string(j);
 
                 if(this->midiChannelHasProgram[j])
                 {

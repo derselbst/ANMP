@@ -31,6 +31,7 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <thread>
 
 // TODO: make this nicer
 #define FramesToItems(x) ((x) * this->currentSong->Format.Channels())
