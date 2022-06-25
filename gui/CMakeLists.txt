@@ -37,20 +37,20 @@ if(USE_GUI)
         songinspector.h
     )
     
-    qt5_generate_dbus_interface(
+    qt_generate_dbus_interface(
         mainwindow.h # from that header
         org.anmp.xml # generate the dbus interface to that xml
         OPTIONS -M # exporting public slots only
     )
 
     # from the just generated xml file, generate implementation files for the dbus adaptor
-    qt5_add_dbus_adaptor(GUI_SRCS ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml mainwindow.h MainWindow mainwindow_adaptor MainWindowAdaptor)
+    qt_add_dbus_adaptor(GUI_SRCS ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml mainwindow.h MainWindow mainwindow_adaptor MainWindowAdaptor)
     
     # skip processing those auto generated files
     set_property(SOURCE mainwindow_adaptor.cpp mainwindow_adaptor.h PROPERTY SKIP_AUTOGEN ON)
 
     
-    qt5_wrap_ui(UI_HEADERS
+    qt_wrap_ui(UI_HEADERS
         mainwindow.ui
         configdialog.ui
         songinspector.ui
@@ -59,19 +59,19 @@ if(USE_GUI)
 
     # auto-generate "build/gui/anmp_dbus_interface.h" and "build/gui/anmp_dbus_interface.cpp" but skip
     # AUTOMOC and AUTOUIC for them (Policy CMP0071)
-    qt5_add_dbus_interface(ANMP_LAUNCHER_SRC ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml anmp_dbus_interface)
+    qt_add_dbus_interface(ANMP_LAUNCHER_SRC ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml anmp_dbus_interface)
     set_property(SOURCE ${ANMP_LAUNCHER_SRC} PROPERTY SKIP_AUTOGEN ON)    
     
     add_executable(${PROJECT_NAME} ${UI_HEADERS} ${GUI_SRCS} ${ANMP_LAUNCHER_SRC} icons.qrc)
     
     # this will add all necessary compile and link flags
-    target_link_libraries(${PROJECT_NAME} Qt5::Core Qt5::Widgets Qt5::DBus)
+    target_link_libraries(${PROJECT_NAME} Qt6::Core Qt6::Widgets Qt6::DBus)
 
     if(USE_VISUALIZER)
         # name of libraries that will be build in the applets subdir
         SET(LIBANAL analyzer)
         add_subdirectory(applets/analyzer)
-        target_link_libraries(${PROJECT_NAME} ${LIBANAL} Qt5::OpenGL)
+        target_link_libraries(${PROJECT_NAME} ${LIBANAL})
     endif(USE_VISUALIZER)
 
     if(WIN32)

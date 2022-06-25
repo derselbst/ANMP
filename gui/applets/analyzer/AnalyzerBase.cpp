@@ -33,11 +33,11 @@
 
 
 AnalyzerBase::AnalyzerBase(QWidget *parent)
-: QGLWidget(parent), m_fht(new FHT(log2(gConfig.FramesToRender))), m_fftData(m_fht->size()), m_renderTimer(new QTimer(this))
+: QOpenGLWidget(parent), m_fht(new FHT(log2(gConfig.FramesToRender))), m_fftData(m_fht->size()), m_renderTimer(new QTimer(this))
 {
     setFps(60); // Default unless changed by subclass
 
-    connect(m_renderTimer, &QTimer::timeout, this, &QGLWidget::updateGL);
+    connect(m_renderTimer, &QTimer::timeout, this, &QOpenGLWidget::paintGL);
 
     //initialize openGL context before managing GL calls
     makeCurrent();

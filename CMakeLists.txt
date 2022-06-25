@@ -385,18 +385,11 @@ endif(ENABLE_CUE)
 
 if(ENABLE_GUI)
 
-    find_package(Qt5Widgets)
-    HANDLE_FOUND(Qt5Widgets)
-    
-    find_package(Qt5DBus)
-    HANDLE_FOUND(Qt5DBus)
-   
-    if(${Qt5Widgets_FOUND} AND ${Qt5DBus_FOUND})
+    find_package(Qt6 COMPONENTS Core Widgets Gui DBus Test)
+
+    if(${Qt6Widgets_FOUND} AND ${Qt6DBus_FOUND})
         set(USE_GUI TRUE)
         add_definitions(-DUSE_GUI)
-        
-        # We need add -DQT_WIDGETS_LIB when using QtWidgets in Qt 5.
-        add_definitions(${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS})
         
         MY_PRINT(QT5CORE)
 
@@ -413,17 +406,16 @@ if(ENABLE_VISUALIZER)
      
   else(NOT USE_GUI)
   
-    find_package(Qt5OpenGL)
-    HANDLE_FOUND(Qt5OpenGL)
+    find_package(Qt6 COMPONENTS OpenGLWidgets)
 
     # OpenGL & GLEW library
     find_package(OpenGL)
     HANDLE_FOUND(OPENGL)
     
-    if(Qt5OpenGL_FOUND AND OPENGL_FOUND)
+    if(Qt6OpenGLWidgets_FOUND AND OPENGL_FOUND)
         set(USE_VISUALIZER TRUE)
         add_definitions(-DUSE_VISUALIZER)
-    endif(Qt5OpenGL_FOUND AND OPENGL_FOUND)
+    endif(Qt6OpenGLWidgets_FOUND AND OPENGL_FOUND)
     
   endif(NOT USE_GUI)
   

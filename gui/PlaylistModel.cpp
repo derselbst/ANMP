@@ -110,7 +110,7 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
             switch (index.column())
             {
                 case 0:
-                    return (Qt::AlignLeft + Qt::AlignVCenter);
+                    return int(Qt::AlignLeft | Qt::AlignVCenter);
 
                 default:
                     return Qt::AlignCenter;
