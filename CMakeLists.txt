@@ -385,7 +385,7 @@ endif(ENABLE_CUE)
 
 if(ENABLE_GUI)
 
-    find_package(Qt6 COMPONENTS Core Widgets Gui DBus Test)
+    find_package(Qt6 COMPONENTS Core Widgets Gui DBus Svg Test)
 
     if(${Qt6Widgets_FOUND} AND ${Qt6DBus_FOUND})
         set(USE_GUI TRUE)

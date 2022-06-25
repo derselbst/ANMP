@@ -65,7 +65,7 @@ if(USE_GUI)
     add_executable(${PROJECT_NAME} ${UI_HEADERS} ${GUI_SRCS} ${ANMP_LAUNCHER_SRC} icons.qrc)
     
     # this will add all necessary compile and link flags
-    target_link_libraries(${PROJECT_NAME} Qt6::Core Qt6::Widgets Qt6::DBus)
+    target_link_libraries(${PROJECT_NAME} Qt6::Core Qt6::Widgets Qt6::DBus Qt6::Svg)
 
     if(USE_VISUALIZER)
         # name of libraries that will be build in the applets subdir
