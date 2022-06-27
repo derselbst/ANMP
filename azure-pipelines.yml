@@ -44,7 +44,7 @@ jobs:
         sudo apt-get update
       displayName: 'apt-get update'
     - bash: |
-        sudo apt-get install -y --no-install-suggests --no-install-recommends cmake libcue-dev libgme-dev libfluidsynth-dev libsmf-dev libmad0-dev libid3tag0-dev libsndfile-dev libasound2-dev libjack-dev libsamplerate0-dev libmodplug-dev portaudio19-dev libebur128-dev libqt6opengl6-dev
+        sudo apt-get install -y --no-install-suggests --no-install-recommends cmake libcue-dev libgme-dev libfluidsynth-dev libsmf-dev libmad0-dev libid3tag0-dev libsndfile-dev libasound2-dev libjack-dev libsamplerate0-dev libmodplug-dev portaudio19-dev libebur128-dev
       displayName: 'apt-get install'
     - task: CMake@1
       displayName: 'CMake configure'
