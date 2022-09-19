@@ -174,6 +174,7 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
 
     constexpr int CBFD_FILTERFC_CC = 34;
     constexpr int CBFD_FILTERQ_CC = 33;
+    constexpr int DP_BENDRANGE_CC = 4;
     constexpr int DP_ATTACK_CC = 20;
     constexpr int DP_HOLD_CC = 21;
     constexpr int DP_DECAY_CC = 22;
@@ -186,6 +187,8 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
         fluid_synth_cc(this->synth, i, CBFD_FILTERQ_CC, 0);
         fluid_synth_cc(this->synth, i, CBFD_FILTERFC_CC, 127);
 
+        // CC4 overrides the pitch bend range in Dinosaur Planet and must be initialized to 2 (cf. MIDI spec), otherwise sparse 0x14 will be broken
+        fluid_synth_cc(this->synth, i, DP_BENDRANGE_CC, 2);
         fluid_synth_cc(this->synth, i, DP_ATTACK_CC, 0);
         fluid_synth_cc(this->synth, i, DP_HOLD_CC, 0);
         fluid_synth_cc(this->synth, i, DP_DECAY_CC, 0);
@@ -579,7 +582,6 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
         case 0xB0: // ctrl change
             // just a usual control change
             fluid_event_control_change(fluidEvt, chan, event->midi_buffer[1], event->midi_buffer[2]);
-
             CLOG(LogLevel_t::Debug, "Controller at tick " << event->time_pulses + offset << ", channel " << chan << ", controller " << static_cast<int>(event->midi_buffer[1]) << ", value " << static_cast<int>(event->midi_buffer[2]));
             break;
 
