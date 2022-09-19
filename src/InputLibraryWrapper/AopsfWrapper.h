@@ -48,7 +48,7 @@ class AopsfWrapper : public StandardWrapper<int16_t>
     bool first = true;
 
     public:
-    static void *stdio_fopen(const char *path);
+    static void *stdio_fopen(void *ctx, const char *path);
 
     static size_t stdio_fread(void *p, size_t size, size_t count, void *f);
 

@@ -42,6 +42,7 @@ AopsfWrapper::~AopsfWrapper()
 static psf_file_callbacks stdio_callbacks =
 {
 "\\/:",
+nullptr,
 AopsfWrapper::stdio_fopen,
 AopsfWrapper::stdio_fread,
 AopsfWrapper::stdio_fseek,
@@ -62,7 +63,9 @@ void AopsfWrapper::open()
                                 nullptr,
                                 nullptr,
                                 nullptr,
-                                0);
+                                0,
+                                nullptr,
+                                nullptr);
 
     if (this->psfVersion <= 0)
     {
@@ -95,7 +98,9 @@ void AopsfWrapper::open()
                            this, // context, i.e. pointer to the struct we place the psf file in
                            &AopsfWrapper::psf_info, // callback function to call for info on this psf file
                            this, // info context
-                           1 // yes we want nested info tags
+                           1, // yes we want nested info tags
+                           &AopsfWrapper::console_log,
+                           nullptr
                            );
 
         if (ret != this->psfVersion)
@@ -123,7 +128,9 @@ void AopsfWrapper::open()
                            this->psf2fs, // context
                            &AopsfWrapper::psf_info, // callback function to call for info on this psf file
                            this, // info context
-                           1 // yes we want nested info tag
+                           1, // yes we want nested info tag
+                           &AopsfWrapper::console_log,
+                           nullptr
                            );
 
         if (ret != this->psfVersion)
@@ -203,7 +210,7 @@ void AopsfWrapper::buildMetadata() noexcept
 
 /// ugly C-helper functions
 
-void *AopsfWrapper::stdio_fopen(const char *path)
+void *AopsfWrapper::stdio_fopen(void *ctx, const char *path)
 {
     return fopen(path, "rb");
 }
