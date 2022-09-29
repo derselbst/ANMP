@@ -511,6 +511,13 @@ int FluidsynthWrapper::GetEffectCount()
     return chan;
 }
 
+bool FluidsynthWrapper::GetReverbActive()
+{
+    int b;
+    fluid_settings_getint(this->settings, "synth.reverb.active", &b);
+    return b != 0;
+}
+
 unsigned int FluidsynthWrapper::GetSampleRate()
 {
     return this->cachedSampleRate;

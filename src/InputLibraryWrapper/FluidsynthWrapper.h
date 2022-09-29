@@ -44,6 +44,7 @@ class FluidsynthWrapper
     int GetAudioVoices();
     int GetEffectVoices();
     int GetEffectCount();
+    bool GetReverbActive();
     static constexpr int GetChannelsPerVoice();
     static double GetTempoScale(unsigned int uspqn, unsigned int ppqn);
 

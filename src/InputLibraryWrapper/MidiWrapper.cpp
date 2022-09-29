@@ -324,11 +324,10 @@ void MidiWrapper::close() noexcept
 frame_t MidiWrapper::getFrames() const
 {
     size_t len = this->fileLen.Value;
-    len += 3000;
-    //     if(gConfig.FluidsynthEnableReverb)
-    //     {
-    //         len += (gConfig.FluidsynthRoomSize*10.0 * gConfig.FluidsynthLevel * 1000) / 2;
-    //     }
+    if((this->synth != nullptr && this->synth->GetReverbActive()) || (this->synth == nullptr && gConfig.FluidsynthEnableReverb))
+    {
+        len += 1500u;
+    }
 
     return (this->Format.Voices == 0) ? 0 : msToFrames(len, this->Format.SampleRate);
 }
