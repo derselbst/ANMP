@@ -10,6 +10,7 @@
 #include <chrono>
 #include <thread> // std::this_thread::sleep_for
 #include <algorithm>
+#include <cmath>
 
 
 FluidsynthWrapper::FluidsynthWrapper() : lastRenderNotesWithoutPreset(gConfig.FluidsynthRenderNotesWithoutPreset), midiChannelHasNoteOn(NMidiChannels), midiChannelHasProgram(NMidiChannels)
@@ -194,6 +195,21 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
         fluid_synth_cc(this->synth, i, DP_DECAY_CC, 0);
         fluid_synth_cc(this->synth, i, DP_SUSTAIN_CC, 127);
         fluid_synth_cc(this->synth, i, DP_RELEASE_CC, 0);
+        
+        // CC34 defines the cutoff frequency of the IIR filter in absolute cents. However, N64 defines 6400 cents as  440 Hz, whereas the SoundFont2 spec defines it as 6900 cents.
+        // Therefore we need to add an offset of 500 cents to the value of CC34.
+        // We do this by using SF2's NRPN handling.
+        fluid_synth_cc(this->synth, i, 0x63 /*NRPN_MSB*/, 120);
+        fluid_synth_cc(this->synth, i, 0x62 /*NRPN_LSB*/, GEN_CUSTOM_FILTERFC);
+        
+        // now it's getting a bit ugly: we cannot send 500 cents directly, as GEN_CUSTOM_FILTERQ defines the scale to be 2, i.e. everything is multiplied by 2, which is why we are actually sending 250.
+        constexpr int GEN_CUSTOM_FILTERQ_SCALE = 2;
+        constexpr int OFFSET_TO_SEND = 500 / GEN_CUSTOM_FILTERQ_SCALE + 0x2000;
+        constexpr int valLsb = OFFSET_TO_SEND % 128;
+        constexpr int valMsb = OFFSET_TO_SEND / 128;
+        
+        fluid_synth_cc(this->synth, i, 0x26 /*DATA_ENTRY_LSB*/, valLsb);
+        fluid_synth_cc(this->synth, i, 0x06 /*DATA_ENTRY_MSB*/, valMsb);
 
         if(this->defaultProg == -1)
         {
@@ -211,7 +227,7 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
         fluid_synth_unset_program(this->synth, i);
     }
 
-    fluid_synth_set_custom_filter(this->synth, FLUID_IIR_LOWPASS, FLUID_IIR_Q_ZERO_OFF);
+    fluid_synth_set_custom_filter(this->synth, FLUID_IIR_LOWPASS, FLUID_IIR_Q_ZERO_OFF | FLUID_IIR_NO_GAIN_AMP | FLUID_IIR_Q_LINEAR);
 
     fluid_mod_t *my_mod = new_fluid_mod();
 
@@ -228,20 +244,27 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
     // add a custom default modulator for CBFD's and JFG's IIR lowpass filter.
     {
         fluid_mod_set_source1(my_mod, CBFD_FILTERFC_CC,
-                              FLUID_MOD_CC | FLUID_MOD_SIN | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
+                              FLUID_MOD_CC | FLUID_MOD_LINEAR | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
         fluid_mod_set_source2(my_mod, FLUID_MOD_NONE, 0);
         fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERFC);
-        fluid_mod_set_amount(my_mod, gConfig.FluidsynthFilterFC);
+        fluid_mod_set_amount(my_mod, 12800 /* absolute cents */);
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
 
     // add a custom default modulator Custom CC33 to CBFD's lowpass Filter Q*/
     {
         fluid_mod_set_source1(my_mod, CBFD_FILTERQ_CC,
-                              FLUID_MOD_CC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
+                              FLUID_MOD_CC | FLUID_MOD_CUSTOM | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
         fluid_mod_set_source2(my_mod, FLUID_MOD_NONE, 0);
         fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERQ);
-        fluid_mod_set_amount(my_mod, gConfig.FluidsynthFilterQ);
+        fluid_mod_set_amount(my_mod, 1);
+        fluid_mod_set_custom_mapping(my_mod, [](fluid_mod_t* mod, double val_norm)
+        {
+            short CC33 = val_norm * 128;
+//             CC33++;
+            double q = std::sqrt( CC33 / 10.0 ) * (M_PI / 2.0);
+            return q;
+        });
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
 
