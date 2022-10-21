@@ -261,16 +261,22 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
         fluid_mod_set_custom_mapping(my_mod, [](fluid_mod_t* mod, double val_norm)
         {
             short CC33 = val_norm * 128;
-//             CC33++;
             double q = std::sqrt( CC33 / 10.0 ) * (M_PI / 2.0);
             return q;
         });
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
 
+    // Create a volume curve that fits to most of Rareware's games. Detailed background information by L. Spiro:
+    // "The MIDI standard recommends MIDI players implement volume (cc7) as dB = log10( X/127 ) * 40, which is what most games using the standard SDK use, including GoldenEye 007, Blast Corps, and Killer Instinct Gold.
+    // Later Rare (particularly Graham Smith) customized their synthesis engine internally and changed the curve to fully linear (dB = log10( X/127 ) * 20).  This was used in Diddy Kong Racing, Banjo-Kazooie, Jet Force Gemini, Mickey’s Speedway USA, Banjo-Tooie, Donkey Kong 64, Perfect Dark, and Conker’s Bad Fur Day."
+    // By default, the SF2 standard uses the following equation for volume attenuation: attenuation_in_cB = -(200/960) * log10((x/127)^2) * 960
+    // Translated to dB gain: dB = (200/960) * log10((x/127)^2) * 96
+    // Which is the same as log10( X/127 ) * 40
+    // To get the Graham-Smith-volume-curve, we simply multiply by 0.5
     fluid_mod_set_source2(my_mod, FLUID_MOD_NONE, 0);
     fluid_mod_set_dest(my_mod, GEN_ATTENUATION);
-    fluid_mod_set_amount(my_mod, 960 * 0.4);
+    fluid_mod_set_amount(my_mod, 960 * 0.5);
 
     // override default MIDI Note-On Velocity to Initial Attenuation modulator amount
     {
