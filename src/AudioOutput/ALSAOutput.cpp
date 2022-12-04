@@ -280,7 +280,7 @@ int ALSAOutput::write(const T *buffer, frame_t frames)
     int total = 0;
     while (total < frames)
     {
-        int retval = snd_pcm_writei(this->alsa_dev, profBuf + total * this->currentFormat.Channels(), frames - total);
+        int retval = snd_pcm_writei(this->alsa_dev, profBuf + total * this->GetOutputChannels(), frames - total);
 
         if (retval >= 0)
         {
