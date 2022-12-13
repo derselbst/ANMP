@@ -20,15 +20,6 @@ Source1: %{sffile}
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
-%if 0%{?suse_version}
-%ifarch x86_64
-BuildRequires: clang >= 10
-%else
-BuildRequires: gcc-c++ >= 4.8
-%endif
-%endif
-
-
 %if 0%{?mageia}
 BuildRequires: cmake >= 1:3.1.0
 %else
@@ -56,6 +47,11 @@ BuildRequires: ffmpeg-4-libavformat-devel
 BuildRequires: ffmpeg-4-libavutil-devel
 BuildRequires: ffmpeg-4-libswresample-devel
 
+%ifarch x86_64
+BuildRequires: gcc10 >= 10
+%else
+BuildRequires: gcc-c++ >= 4.8
+%endif
 BuildRequires: libstdc++6-devel-gcc10
 
 BuildRequires: update-desktop-files
@@ -116,8 +112,8 @@ cd %{builddir}
 # but clang is cool, so use it on x86_64, else fallback to gcc
 %if 0%{?suse_version}
 %ifarch x86_64
-        export CC=clang
-        export CXX=clang++
+export CC=gcc-10
+export CXX=g++-10
 %endif
 %endif
 
@@ -171,6 +167,7 @@ export LD_LIBRARY_PATH=%{buildroot}/%{_libdir}/:$LD_LIBRARY_PATH
 %files
 %defattr(-,root,root)
 %{_bindir}/anmp-qt
+%{_libdir}/libanmp.so
 %dir %{_datadir}/%{name}/
 %{_datadir}/%{name}/%{sffile}
 %if 0%{?suse_version}
