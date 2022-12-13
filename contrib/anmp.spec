@@ -4,7 +4,6 @@
 %undefine _missing_build_ids_terminate_build
 %endif
 
-%define soname 0
 %define builddir build
 
 Name: anmp
@@ -21,11 +20,9 @@ Source1: %{sffile}
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
-Requires: libanmp%{soname} = %{version}
-
 %if 0%{?suse_version}
 %ifarch x86_64
-BuildRequires: clang >= 3.5
+BuildRequires: clang >= 10
 %else
 BuildRequires: gcc-c++ >= 4.8
 %endif
@@ -58,6 +55,8 @@ BuildRequires: ffmpeg-4-libavcodec-devel
 BuildRequires: ffmpeg-4-libavformat-devel
 BuildRequires: ffmpeg-4-libavutil-devel
 BuildRequires: ffmpeg-4-libswresample-devel
+
+BuildRequires: libstdc++6-devel-gcc10
 
 BuildRequires: update-desktop-files
 %endif
@@ -97,29 +96,10 @@ The key features are:
   - arbitrary (forward) looping of songs
   - easy attempt to implement new formats
 
-
-
-%package -n libanmp%{soname}
-Summary:        Core lib for %{name}
-Group:          Development/Libraries/C and C++
-
-%description -n libanmp%{soname}
-Library providing basic functionality for %{name}
-
-
-%package        devel
-Summary:        Development files for %{name}
-Group:          Development/Libraries/C and C++
-Requires:       libanmp%{soname} = %{version}
-
-%description    devel
-Development files for %{name}
-
-
 %package        progs
 Summary:        Programs for %{name}
 Group:          Development/Libraries/C and C++
-Requires:       libanmp%{soname} = %{version}
+Requires:       anmp
 
 %description    progs
 Additional useful tools for %{name}
@@ -171,8 +151,6 @@ make %{?_smp_mflags}
 %install
 make VERBOSE=1 DESTDIR=%{buildroot} install/fast -C %{builddir}
 
-ln -s /%{_bindir}/anmp-qt %{buildroot}/%{_bindir}/anmp
-
 mkdir -p %{buildroot}%{_datadir}/%{name}/
 install %{SOURCE1} %{buildroot}%{_datadir}/%{name}/
 
@@ -189,41 +167,15 @@ export LD_LIBRARY_PATH=%{buildroot}/%{_libdir}/:$LD_LIBRARY_PATH
   make check
 %endif
 
-%post -n libanmp%{soname} -p /sbin/ldconfig
-%if 0%{?suse_version}
-%desktop_database_post
-#icon_theme_cache_post
-#icon_theme_cache_post HighContrast
-%mime_database_post
-%endif
-
-%postun -n libanmp%{soname} -p /sbin/ldconfig
-%if 0%{?suse_version}
-%desktop_database_postun
-#icon_theme_cache_postun
-#icon_theme_cache_postun HighContrast
-%mime_database_postun
-%endif
-
 
 %files
 %defattr(-,root,root)
-%{_bindir}/anmp
 %{_bindir}/anmp-qt
 %dir %{_datadir}/%{name}/
 %{_datadir}/%{name}/%{sffile}
 %if 0%{?suse_version}
 %{_datadir}/applications/anmp.desktop
 %endif
-
-%files devel
-%defattr(-,root,root)
-%{_libdir}/libanmp.so
-%{_includedir}/anmp/
-
-%files -n libanmp%{soname}
-%defattr(-,root,root)
-%{_libdir}/libanmp.so.*
 
 %files progs
 %defattr(-,root,root)
