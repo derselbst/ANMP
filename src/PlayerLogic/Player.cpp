@@ -5,6 +5,7 @@
 #include "CommonExceptions.h"
 #include "Config.h"
 #include "tree.h"
+#include "ThreadPriority.h"
 
 #include "IAudioOutput.h"
 #include "Playlist.h"
@@ -537,6 +538,7 @@ void Player::playFrames(frame_t framesToPlay)
 
 void Player::playInternal()
 {
+    ThreadPriority tp(Priority::High);
     Nullable<string> exceptionMsg = Nullable<string>();
     this->onIsPlayingChanged(this->IsPlaying(), exceptionMsg);
 

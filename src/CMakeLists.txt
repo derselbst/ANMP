@@ -28,6 +28,8 @@ SET(ANMP_COMMON_SRC
        Common/StringFormatter.h
        Common/SampleFormat.c
        Common/SampleFormat.h
+       Common/ThreadPriority.cpp
+       Common/ThreadPriority.h
        Common/tree.h
        Common/types.h
 )
