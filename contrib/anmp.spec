@@ -47,12 +47,8 @@ BuildRequires: ffmpeg-4-libavformat-devel
 BuildRequires: ffmpeg-4-libavutil-devel
 BuildRequires: ffmpeg-4-libswresample-devel
 
-%ifarch x86_64
-BuildRequires: gcc10 >= 10
-%else
-BuildRequires: gcc-c++ >= 4.8
-%endif
-BuildRequires: libstdc++6-devel-gcc10
+BuildRequires: gcc10
+BuildRequires: gcc10-c++
 
 BuildRequires: update-desktop-files
 %endif
@@ -108,13 +104,9 @@ Additional useful tools for %{name}
 mkdir -p %{builddir}
 cd %{builddir}
 
-# clang fails linking the stack guard on ppc64 and has problems with std::atomic on i586
-# but clang is cool, so use it on x86_64, else fallback to gcc
 %if 0%{?suse_version}
-%ifarch x86_64
 export CC=gcc-10
 export CXX=g++-10
-%endif
 %endif
 
 cmake .. \

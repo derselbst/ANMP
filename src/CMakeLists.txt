@@ -54,6 +54,7 @@ SET(ANMP_PLAYER_SRC
 )
 
 add_library(anmp-internal OBJECT ${ANMP_AUDIO_SRC} ${ANMP_COMMON_SRC} ${ANMP_INPUT_SRC} ${ANMP_PLAYER_SRC})
+target_link_libraries(anmp-internal PUBLIC stdc++fs)
 if(USE_ALSA)
     target_sources(anmp-internal PRIVATE AudioOutput/ALSAOutput.cpp AudioOutput/ALSAOutput.h)
     target_link_libraries(anmp-internal PUBLIC ALSA::ALSA)
