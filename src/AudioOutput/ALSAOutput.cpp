@@ -345,16 +345,17 @@ void ALSAOutput::start()
 {
     // prepare pcm stream and reset delay to zero, but do not start it yet
     // it will be implictly started when first written to
-    int err = snd_pcm_prepare(this->alsa_dev);
-    if (err < 0)
-    {
-        THROW_RUNTIME_ERROR("cannot snd_pcm_prepare, state: " << snd_pcm_state(this->alsa_dev) << " (" << snd_strerror(err) << ")");
-    }
-    
+    int err;
     err = snd_pcm_reset(this->alsa_dev);
     if (err < 0)
     {
         THROW_RUNTIME_ERROR("unable to reset pcm, state: " << snd_pcm_state(this->alsa_dev) << " (" << snd_strerror(err) << ")");
+    }
+
+    err = snd_pcm_prepare(this->alsa_dev);
+    if (err < 0)
+    {
+        THROW_RUNTIME_ERROR("cannot snd_pcm_prepare, state: " << snd_pcm_state(this->alsa_dev) << " (" << snd_strerror(err) << ")");
     }
 }
 
