@@ -22,7 +22,7 @@ PlaylistView::PlaylistView(QWidget *parent)
     this->setDefaultDropAction(Qt::MoveAction);
     this->setSelectionBehavior(QAbstractItemView::SelectRows);
     this->setShowGrid(false);
-
+    this->setAlternatingRowColors(true);
     
 #if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
     this->contextMenu->addAction(QIcon::fromTheme("help-contents"), "Details", this, &PlaylistView::showInspector);
