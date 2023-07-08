@@ -127,7 +127,6 @@ class IAudioOutput
      * @param in interleaved input pcm buffer, usually Song::data.
      * @param inputFormat Determines the number of audio channels and how they are grouped to voices for @p in.
      * @param out mixed, amplified and interleaved output pcm buffer.
-     * @param outChannels number of audio channels in @p out buffer
      */
     template<typename TIN, typename TOUT = TIN>
     void Mix(const frame_t frames, const TIN *RESTRICT in, const SongFormat &inputFormat, TOUT *RESTRICT out) noexcept;

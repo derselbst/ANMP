@@ -2,7 +2,7 @@ Source: anmp
 Section: kde
 Priority: optional
 Maintainer: Tom Mbrt <tom.mbrt@gmail.com>
-Build-Depends: debhelper (>= 9), gcc (>= 4.8.1), cmake (>= 3.1), libcue-dev, libgme-dev, libfluidsynth-dev, libsmf-dev, libmad0-dev, libid3tag0-dev, libsndfile-dev, libasound2-dev, libjack-dev, libsamplerate0-dev, portaudio19-dev, libebur128-dev, qt5-default, qtbase5-dev, libqt5opengl5-dev
+Build-Depends: debhelper (>= 9), gcc (>= 4.8.1), cmake (>= 3.1), libcue-dev, libgme-dev, libfluidsynth-dev, libsmf-dev, libmad0-dev, libid3tag0-dev, libsndfile-dev, libasound2-dev, libjack-dev, libsamplerate0-dev, portaudio19-dev, libebur128-dev, qtbase5-dev-tools, qtbase5-dev, libqt5opengl5-dev
 
 Package: anmp
 Architecture: any

@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR) # because of CMAKE_CXX_STANDARD
 
+if(POLICY CMP0072)
+  cmake_policy(SET CMP0072 NEW)
+endif()
+
 if(POLICY CMP0075)
   cmake_policy(SET CMP0075 NEW)
 endif()
@@ -96,18 +100,6 @@ include(GNUInstallDirs)
 find_package (Threads REQUIRED)
 set(LD_FLAGS ${LD_FLAGS} ${CMAKE_THREAD_LIBS_INIT})
 
-find_package ( OpenMP QUIET )
-if ( OpenMP_FOUND OR OpenMP_C_FOUND )
-    message(STATUS "Found OpenMP C ${OpenMP_C_SPEC_DATE}")
-    #message(STATUS "Found OpenMP CXX ${OpenMP_CXX_SPEC_DATE}")
-    # require at least OMP 3.0
-    if ( ( NOT OpenMP_C_SPEC_DATE LESS "200805" ) OR NOT ( OpenMP_C_VERSION VERSION_LESS "3.0" ) )
-        set ( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}" )
-        #set ( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}" )
-        set ( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}" )
-        set ( LD_FLAGS "${OpenMP_C_LIBRARIES};${LD_FLAGS}" )
-    endif()
-endif()
 
 ###################################
 ### HANDLE AUDIO OUTPUT SUPPORT ###

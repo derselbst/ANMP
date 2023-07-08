@@ -179,6 +179,10 @@ void StandardWrapper<SAMPLEFORMAT>::fillBuffer()
         {
             auto len = itemsToAlloc * 2;
             SAMPLEFORMAT* tmp = this->allocPcmBuffer(len);
+            if(tmp == nullptr)
+            {
+                throw std::bad_alloc();
+            }
             this->data = tmp;
             this->preRenderBuf = tmp + itemsToAlloc;
             this->count = itemsToAlloc;

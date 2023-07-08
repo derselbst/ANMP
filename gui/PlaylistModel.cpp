@@ -101,9 +101,13 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
         }
         else if (role == Qt::BackgroundRole)
         {
-            int row = index.row();
-            QColor color = this->calculateRowColor(row);
-            return QBrush(color);
+            unsigned int row = index.row();
+            return this->calculateRowColor(row);
+        }
+        else if (role == Qt::ForegroundRole)
+        {
+            unsigned int row = index.row();
+            return this->calculateTextColor(row);
         }
         else if (role == Qt::TextAlignmentRole)
         {
@@ -413,26 +417,32 @@ void PlaylistModel::SlotCurrentSongChanged(const Song *)
     }
 }
 
-QColor PlaylistModel::calculateRowColor(int row) const
+QVariant PlaylistModel::calculateRowColor(unsigned int row) const
 {
     if (this->playlist->getSong(row) == nullptr)
     {
-        return QColor(255, 0, 0, 127);
+        return QBrush(QColor(255, 0, 0, 127));
     }
     else if (this->playlist->getCurrentSongId() == row)
     {
-        return QColor(255, 225, 0);
-    }
-    else if (row > 0 && row % 10 == 0)
-    {
-        return QColor(220, 220, 220);
-    }
-    else if (row % 2 == 0)
-    {
-        return QColor(233, 233, 233);
+        return QBrush(QColor(255, 225, 0));
     }
 
-    return QColor(Qt::white);
+    return QVariant();
+}
+
+QVariant PlaylistModel::calculateTextColor(unsigned int row) const
+{
+    if (this->playlist->getSong(row) == nullptr)
+    {
+        return QBrush(Qt::white);
+    }
+    else if (this->playlist->getCurrentSongId() == row)
+    {
+        return QBrush(Qt::black);
+    }
+
+    return QVariant();
 }
 
 void PlaylistModel::shuffle(size_t start, size_t end)
