@@ -30,7 +30,7 @@ BuildRequires: pkgconfig(fluidsynth) >= 2.2.0
 BuildRequires: pkgconfig(smf)
 BuildRequires: libaopsf-devel
 BuildRequires: libcue-devel
-BuildRequires: libgme-devel
+BuildRequires: libgme-devel >= 0.6.3
 BuildRequires: libmad-devel pkgconfig(id3tag)
 BuildRequires: pkgconfig(sndfile)
 BuildRequires: libmodplug-devel
