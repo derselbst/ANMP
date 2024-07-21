@@ -155,11 +155,6 @@ void MidiWrapper::parseEvents()
     smf_event_t *event;
     while ((event = smf_get_next_event(this->smf)) != nullptr)
     {
-        if (smf_event_is_sysex(event))
-        {
-            continue;
-        }
-
         if (!smf_event_is_valid(event))
         {
             CLOG(LogLevel_t::Warning, "invalid midi event found, ignoring:" << MidiWrapper::SmfEventToString(event));

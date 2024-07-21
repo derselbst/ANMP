@@ -52,6 +52,7 @@ class FluidsynthWrapper
     void AddEvent(fluid_event_t *event, uint32_t tick);
     void ScheduleLoop(MidiLoopInfo *loopInfo);
     void ScheduleTempoChange(double newScale, int atTick, bool absolute);
+    void ScheduleSysEx(smf_event_t*, int atTick, bool absolute);
     void FinishSong(int millisec);
 
     void Render(float *bufferToFill, frame_t framesToRender);
@@ -69,6 +70,8 @@ class FluidsynthWrapper
 
     // event used for triggering note on/offs by calling back ourselfs
     fluid_event_t *callbackNoteEvent = nullptr;
+    
+    fluid_event_t *sysexEvent = nullptr;
 
     // fluidsynth's internal synth
     fluid_seq_id_t synthId;
@@ -81,6 +84,8 @@ class FluidsynthWrapper
 
     // callback ID for N64CSeqWrapper::LoopCallback
     fluid_seq_id_t cseqID = -1;
+
+    fluid_seq_id_t sysexID;
 
     int defaultSf = -1;
     int defaultBank = -1;
@@ -121,4 +126,5 @@ class FluidsynthWrapper
 
     static void FluidSeqLoopCallback(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data);
     static void FluidSeqNoteCallback(unsigned int time, fluid_event_t *e, fluid_sequencer_t *seq, void *data);
+    static void FluidSeqSysExCallback(unsigned int time, fluid_event_t *e, fluid_sequencer_t *seq, void *data);
 };
