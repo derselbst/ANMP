@@ -446,7 +446,7 @@ void FluidsynthWrapper::ConfigureChannels(SongFormat *f)
                 if(this->midiChannelHasProgram[j])
                 {
                     f->VoiceName[i] += " (no program assigned, using default ";
-                    if(gConfig.FluidsynthChannel9IsDrum)
+                    if(gConfig.FluidsynthChannel9IsDrum && j == 9)
                     {
                         f->VoiceName[i] += "percussion bank)";
                     }
