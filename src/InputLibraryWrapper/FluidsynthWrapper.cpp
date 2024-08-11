@@ -572,6 +572,12 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
 
         return;
     }
+    
+    if(event->midi_buffer[0] == 0xFF)
+    {
+        // ignore all other meta events
+        return;
+    }
 
     int key, vel, chan = event->midi_buffer[0] & 0x0F;
     fluid_event_t *fluidEvt = this->synthEvent;
@@ -631,6 +637,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
         }
 
         default:
+            CLOG(LogLevel_t::Warning, "Unrecognized MIDI status byte 0x" << std::hex << static_cast<int>(event->midi_buffer[0]));
             return;
     }
 
