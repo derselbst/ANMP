@@ -357,6 +357,7 @@ void FluidsynthWrapper::setupSettings()
         fluid_settings_setint(this->settings, "synth.dynamic-sample-loading", 0);
         fluid_settings_setint(this->settings, "synth.polyphony", 2048);
         fluid_settings_setint(this->settings, "synth.cpu-cores", 4);
+        fluid_settings_setint(this->settings, "synth.device-id", 127); // handle all SYSEX messages
         // disable high prio threads, you won't have permission anyway
         fluid_settings_setint(this->settings, "audio.realtime-prio", 0);
     }
@@ -772,9 +773,8 @@ void FluidsynthWrapper::FluidSeqSysExCallback(unsigned int /*time*/, fluid_event
 {
     auto pthis = static_cast<FluidsynthWrapper *>(data);
     auto* buf = static_cast<std::vector<unsigned char>*>(fluid_event_get_data(e));
-    if (pthis == nullptr)
+    if (pthis == nullptr || buf == nullptr || fluid_event_get_type(e) != FLUID_SEQ_TIMER)
     {
-        delete buf;
         return;
     }
     
