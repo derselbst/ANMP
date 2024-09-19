@@ -3,6 +3,7 @@
 #include <exception>
 #include <stdexcept>
 #include <string>
+#include <cstdint>
 
 class NotImplementedException : public std::logic_error
 {
