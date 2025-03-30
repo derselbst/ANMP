@@ -147,7 +147,7 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
     }
 
     // set highest resampler quality on all channels
-    fluid_synth_set_interp_method(this->synth, -1, FLUID_INTERP_HIGHEST);
+    fluid_synth_set_interp_method(this->synth, -1, FLUID_INTERP_DEFAULT);
 
     // find a soundfont
     Nullable<string> soundfont;
