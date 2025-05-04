@@ -254,7 +254,7 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
         fluid_synth_unset_program(this->synth, i);
     }
 
-    fluid_synth_set_custom_filter(this->synth, FLUID_IIR_LOWPASS, FLUID_IIR_Q_ZERO_OFF /*| FLUID_IIR_NO_GAIN_AMP*/ | FLUID_IIR_Q_LINEAR);
+    fluid_synth_set_custom_filter(this->synth, FLUID_IIR_LOWPASS, FLUID_IIR_Q_ZERO_OFF | FLUID_IIR_BEANLAND /*| FLUID_IIR_NO_GAIN_AMP*/ | FLUID_IIR_Q_LINEAR);
 
     fluid_mod_t *my_mod = new_fluid_mod();
 
@@ -276,7 +276,7 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
         fluid_mod_set_source2(my_mod, FLUID_MOD_NONE, 0);
         fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERFC);
         fluid_mod_set_amount(my_mod, 12800 /* absolute cents */); // because CC34==64 will be normalized to 0.5 which must result in 6400 cents
-        fluid_mod_set_custom_mapping(my_mod, [](fluid_mod_t* mod, double val_norm, void* data)
+        fluid_mod_set_custom_mapping(my_mod, [](fluid_mod_t* mod, double val_norm, int is_src1, void* data)
         {
             auto* pthis = static_cast<FluidsynthWrapper*>(data);
             short CC34 = std::lrint(val_norm * 128);
@@ -304,15 +304,15 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
             }
             else
             {
-                double fc = val_norm * 12800 /* cents */;
-                double fres = std::pow(2, fc / 1200) * 440
-                constexpr double Nyquist = 22018.0/2;
-                if(fres > Nyquist)
-                {
-                    fres = Nyquist / (fres / Nyquist);
-                    // multiply resulting Q by 4.
-                    return 4;
-                }
+                // double fc = val_norm * 12800 /* cents */;
+                // double fres = std::pow(2, fc / 1200) * 440;
+                // constexpr double Nyquist = 22018.0/2;
+                // if(fres > Nyquist)
+                // {
+                //     fres = Nyquist / (fres / Nyquist);
+                //     // multiply resulting Q by 4.
+                //     return 4;
+                // }
             }
         }, this);
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
