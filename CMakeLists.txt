@@ -391,9 +391,9 @@ if(ENABLE_GUI)
         set(USE_GUI TRUE)
         add_definitions(-DUSE_GUI)
         
-        MY_PRINT(QT5CORE)
+        MY_PRINT(QT6CORE)
 
-    endif(${Qt5Widgets_FOUND} AND ${Qt5DBus_FOUND})
+    endif(${Qt6Widgets_FOUND} AND ${Qt6DBus_FOUND})
     
     summary_add("QT GUI support" USE_GUI)
 endif(ENABLE_GUI)
