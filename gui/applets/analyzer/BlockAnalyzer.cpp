@@ -237,12 +237,12 @@ void BlockAnalyzer::paletteChange(const QPalette &) //virtual
     }
 
     {
-        const QColor bg = palette().color(QPalette::Active, QPalette::Window).dark(112);
+        const QColor bg = palette().color(QPalette::Active, QPalette::Window).darker(112);
 
         //make a complimentary fadebar colour
         //TODO dark is not always correct, dumbo!
         int h, s, v;
-        palette().color(QPalette::Active, QPalette::Window).dark(150).getHsv(&h, &s, &v);
+        palette().color(QPalette::Active, QPalette::Window).darker(150).getHsv(&h, &s, &v);
         const QColor fg = QColor::fromHsv(h + 60, s, v);
 
         const double dr = fg.red() - bg.red();
@@ -274,7 +274,7 @@ void BlockAnalyzer::paletteChange(const QPalette &) //virtual
 void BlockAnalyzer::drawBackground()
 {
     const QColor bg = palette().color(QPalette::Active, QPalette::Window);
-    const QColor bgdark = bg.dark(112);
+    const QColor bgdark = bg.darker(112);
 
     QPixmap background(size());
     background.fill(bg);

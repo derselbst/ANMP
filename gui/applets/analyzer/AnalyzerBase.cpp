@@ -37,7 +37,7 @@ AnalyzerBase::AnalyzerBase(QWidget *parent)
 {
     setFps(60); // Default unless changed by subclass
 
-    connect(m_renderTimer, &QTimer::timeout, this, &QOpenGLWidget::paintGL);
+    connect(m_renderTimer, &QTimer::timeout, this, QOverload<>::of(&QOpenGLWidget::update));
 
     //initialize openGL context before managing GL calls
     makeCurrent();

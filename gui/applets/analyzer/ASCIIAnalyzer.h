@@ -33,11 +33,21 @@ class ASCIIAnalyzer : public AnalyzerBase
 
     GLuint createTexture(const QImage &image)
     {
-        return this->bindTexture(image);
+        GLuint textureId;
+        glGenTextures(1, &textureId);
+        glBindTexture(GL_TEXTURE_2D, textureId);
+        
+        QImage glImage = image.convertToFormat(QImage::Format_RGBA8888);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, glImage.width(), glImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glImage.constBits());
+        
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        
+        return textureId;
     }
     void freeTexture(GLuint id)
     {
-        this->deleteTexture(id);
+        glDeleteTextures(1, &id);
     }
 
     // Signed ints because most of what we compare them against are ints

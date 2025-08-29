@@ -186,14 +186,14 @@ void ASCIIAnalyzer::drawTexture(Texture *texture, int x, int y, int sx, int sy)
 
 void ASCIIAnalyzer::paletteChange(const QPalette &) //virtual
 {
-    const QColor bg = palette().background().color();
+    const QColor bg = palette().color(QPalette::Window);
     const QFont font("Cantarell", 10);
 
     QPixmap topBar(BLOCK_WIDTH, BLOCK_HEIGHT);
     topBar.fill(bg);
     QPainter tbp(&topBar);
     tbp.setPen(Qt::red);
-    tbp.setBackground(palette().background().color());
+    tbp.setBackground(palette().color(QPalette::Window));
     tbp.setFont(font);
     tbp.drawText(topBar.rect(), Qt::AlignCenter, ".");
     m_topBarTexture = QSharedPointer<Texture>(new Texture(this, topBar));
@@ -228,7 +228,7 @@ void ASCIIAnalyzer::paletteChange(const QPalette &) //virtual
 
 void ASCIIAnalyzer::drawBackground()
 {
-    const QColor bg = palette().background().color();
+    const QColor bg = palette().color(QPalette::Window);
     QPixmap background(size());
     background.fill(bg);
 
