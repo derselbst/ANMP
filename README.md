@@ -1,7 +1,9 @@
 # ANMP
 **A**nother **N**ameless **M**usic **P**layer
 
-[![Build Status](https://travis-ci.org/derselbst/ANMP.svg?branch=master)](https://travis-ci.org/derselbst/ANMP/branches) [![Project Stats](https://www.openhub.net/p/ANMP/widgets/project_thin_badge?format=gif)](https://www.openhub.net/p/ANMP) [![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/dashboard?id=derselbst_ANMP)
+[![build result](https://build.opensuse.org/projects/home:derselbst:anmp/packages/anmp/badge.svg?type=percent)](https://build.opensuse.org/package/show/home:derselbst:anmp/anmp) [![Build Status](https://dev.azure.com/tommbrt/tommbrt/_apis/build/status/derselbst.ANMP?branchName=master)](https://dev.azure.com/tommbrt/tommbrt/_build/latest?definitionId=11&branchName=master) [![Project Stats](https://www.openhub.net/p/ANMP/widgets/project_thin_badge?format=gif)](https://www.openhub.net/p/ANMP)
+
+[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/dashboard?id=derselbst_ANMP)
 
 ![ANMP Screenshot](ANMP.png)
 
@@ -92,4 +94,4 @@ Also see [[Wiki] About the buildsystem](https://github.com/derselbst/ANMP/wiki/A
 ANMP is licensed under the terms of the *GNU GENERAL PUBLIC LICENSE Version 2*, see [LICENSE](LICENSE).
 
 
-Copyright (C) 2016-2022 Tom Moebert (derselbst)
+Copyright (C) 2016-2024 Tom Moebert (derselbst)

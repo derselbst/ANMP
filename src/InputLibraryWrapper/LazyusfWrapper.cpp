@@ -42,7 +42,7 @@ LazyusfWrapper::~LazyusfWrapper()
 static psf_file_callbacks stdio_callbacks =
 {
 "\\/:",
-NULL,
+nullptr,
 LazyusfWrapper::stdio_fopen,
 LazyusfWrapper::stdio_fread,
 LazyusfWrapper::stdio_fseek,
@@ -68,7 +68,7 @@ void LazyusfWrapper::open()
                  this, // info context
                  1, // yes we want nested info tags, whatever that means
                  &LazyusfWrapper::print_message,
-                 NULL
+                 nullptr
                  ) <= 0)
     {
         THROW_RUNTIME_ERROR("psf_load failed on file \"" << this->Filename << ")\"");

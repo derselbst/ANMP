@@ -155,11 +155,6 @@ void MidiWrapper::parseEvents()
     smf_event_t *event;
     while ((event = smf_get_next_event(this->smf)) != nullptr)
     {
-        if (smf_event_is_sysex(event))
-        {
-            continue;
-        }
-
         if (!smf_event_is_valid(event))
         {
             CLOG(LogLevel_t::Warning, "invalid midi event found, ignoring:" << MidiWrapper::SmfEventToString(event));
@@ -324,11 +319,10 @@ void MidiWrapper::close() noexcept
 frame_t MidiWrapper::getFrames() const
 {
     size_t len = this->fileLen.Value;
-    len += 3000;
-    //     if(gConfig.FluidsynthEnableReverb)
-    //     {
-    //         len += (gConfig.FluidsynthRoomSize*10.0 * gConfig.FluidsynthLevel * 1000) / 2;
-    //     }
+    if((this->synth != nullptr && this->synth->GetReverbActive()) || (this->synth == nullptr && gConfig.FluidsynthEnableReverb))
+    {
+        len += 1500u;
+    }
 
     return (this->Format.Voices == 0) ? 0 : msToFrames(len, this->Format.SampleRate);
 }

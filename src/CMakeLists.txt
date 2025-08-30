@@ -28,6 +28,8 @@ SET(ANMP_COMMON_SRC
        Common/StringFormatter.h
        Common/SampleFormat.c
        Common/SampleFormat.h
+       Common/ThreadPriority.cpp
+       Common/ThreadPriority.h
        Common/tree.h
        Common/types.h
 )
@@ -52,6 +54,9 @@ SET(ANMP_PLAYER_SRC
 )
 
 add_library(anmp-internal OBJECT ${ANMP_AUDIO_SRC} ${ANMP_COMMON_SRC} ${ANMP_INPUT_SRC} ${ANMP_PLAYER_SRC})
+if(NOT WIN32)
+    target_link_libraries(anmp-internal PUBLIC stdc++fs)
+endif()
 if(USE_ALSA)
     target_sources(anmp-internal PRIVATE AudioOutput/ALSAOutput.cpp AudioOutput/ALSAOutput.h)
     target_link_libraries(anmp-internal PUBLIC ALSA::ALSA)
@@ -132,9 +137,3 @@ add_library(${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME} PUBLIC anmp-internal)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${LD_FLAGS})
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
-
-install(FILES Common/PlaylistFactory.h Common/types.h Common/Event.h Common/Nullable.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
-install(FILES InputLibraryWrapper/SongInfo.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
-install(FILES PlayerLogic/IPlaylist.h PlayerLogic/Playlist.h PlayerLogic/Player.h PlayerLogic/Config.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
-

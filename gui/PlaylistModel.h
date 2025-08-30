@@ -2,7 +2,7 @@
 #define PLAYLISTMODEL_H
 
 #include <QAbstractTableModel>
-#include <QColor>
+#include <QBrush>
 #include <QModelIndex>
 #include <QCoreApplication>
 #include <QDir>
@@ -97,7 +97,8 @@ class PlaylistModel : public QAbstractTableModel
     void workerLoop();
     std::future<void> songAdderWorker;
 
-    QColor calculateRowColor(int row) const;
+    QVariant calculateRowColor(unsigned int row) const;
+    QVariant calculateTextColor(unsigned int row) const;
 
     static QString __toQString(const QFileInfo &fi);
     static QString __toQString(const QString &str);

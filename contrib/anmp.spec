@@ -4,11 +4,10 @@
 %undefine _missing_build_ids_terminate_build
 %endif
 
-%define soname 0
 %define builddir build
 
 Name: anmp
-Version: 9
+Version: 10
 Release: 0
 License: GPL-2.0
 Summary: Another Nameless Music Player
@@ -21,17 +20,6 @@ Source1: %{sffile}
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-build
 
-Requires: libanmp%{soname} = %{version}
-
-%if 0%{?suse_version}
-%ifarch x86_64
-BuildRequires: clang >= 3.5
-%else
-BuildRequires: gcc-c++ >= 4.8
-%endif
-%endif
-
-
 %if 0%{?mageia}
 BuildRequires: cmake >= 1:3.1.0
 %else
@@ -42,7 +30,7 @@ BuildRequires: pkgconfig(fluidsynth) >= 2.2.0
 BuildRequires: pkgconfig(smf)
 BuildRequires: libaopsf-devel
 BuildRequires: libcue-devel
-BuildRequires: libgme-devel
+BuildRequires: libgme-devel >= 0.6.3
 BuildRequires: libmad-devel pkgconfig(id3tag)
 BuildRequires: pkgconfig(sndfile)
 BuildRequires: libmodplug-devel
@@ -58,6 +46,9 @@ BuildRequires: ffmpeg-4-libavcodec-devel
 BuildRequires: ffmpeg-4-libavformat-devel
 BuildRequires: ffmpeg-4-libavutil-devel
 BuildRequires: ffmpeg-4-libswresample-devel
+
+BuildRequires: gcc10
+BuildRequires: gcc10-c++
 
 BuildRequires: update-desktop-files
 %endif
@@ -97,29 +88,10 @@ The key features are:
   - arbitrary (forward) looping of songs
   - easy attempt to implement new formats
 
-
-
-%package -n libanmp%{soname}
-Summary:        Core lib for %{name}
-Group:          Development/Libraries/C and C++
-
-%description -n libanmp%{soname}
-Library providing basic functionality for %{name}
-
-
-%package        devel
-Summary:        Development files for %{name}
-Group:          Development/Libraries/C and C++
-Requires:       libanmp%{soname} = %{version}
-
-%description    devel
-Development files for %{name}
-
-
 %package        progs
 Summary:        Programs for %{name}
 Group:          Development/Libraries/C and C++
-Requires:       libanmp%{soname} = %{version}
+Requires:       anmp
 
 %description    progs
 Additional useful tools for %{name}
@@ -132,13 +104,9 @@ Additional useful tools for %{name}
 mkdir -p %{builddir}
 cd %{builddir}
 
-# clang fails linking the stack guard on ppc64 and has problems with std::atomic on i586
-# but clang is cool, so use it on x86_64, else fallback to gcc
 %if 0%{?suse_version}
-%ifarch x86_64
-        export CC=clang
-        export CXX=clang++
-%endif
+export CC=gcc-10
+export CXX=g++-10
 %endif
 
 cmake .. \
@@ -171,8 +139,6 @@ make %{?_smp_mflags}
 %install
 make VERBOSE=1 DESTDIR=%{buildroot} install/fast -C %{builddir}
 
-ln -s /%{_bindir}/anmp-qt %{buildroot}/%{_bindir}/anmp
-
 mkdir -p %{buildroot}%{_datadir}/%{name}/
 install %{SOURCE1} %{buildroot}%{_datadir}/%{name}/
 
@@ -189,41 +155,16 @@ export LD_LIBRARY_PATH=%{buildroot}/%{_libdir}/:$LD_LIBRARY_PATH
   make check
 %endif
 
-%post -n libanmp%{soname} -p /sbin/ldconfig
-%if 0%{?suse_version}
-%desktop_database_post
-#icon_theme_cache_post
-#icon_theme_cache_post HighContrast
-%mime_database_post
-%endif
-
-%postun -n libanmp%{soname} -p /sbin/ldconfig
-%if 0%{?suse_version}
-%desktop_database_postun
-#icon_theme_cache_postun
-#icon_theme_cache_postun HighContrast
-%mime_database_postun
-%endif
-
 
 %files
 %defattr(-,root,root)
-%{_bindir}/anmp
 %{_bindir}/anmp-qt
+%{_libdir}/libanmp.so
 %dir %{_datadir}/%{name}/
 %{_datadir}/%{name}/%{sffile}
 %if 0%{?suse_version}
 %{_datadir}/applications/anmp.desktop
 %endif
-
-%files devel
-%defattr(-,root,root)
-%{_libdir}/libanmp.so
-%{_includedir}/anmp/
-
-%files -n libanmp%{soname}
-%defattr(-,root,root)
-%{_libdir}/libanmp.so.*
 
 %files progs
 %defattr(-,root,root)
