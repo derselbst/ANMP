@@ -12,6 +12,7 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/opt.h>
+#include <libavutil/channel_layout.h>
 #include <libswresample/swresample.h>
 }
 
@@ -42,14 +43,8 @@ void FFMpegWrapper::open()
         return;
     }
 
-    // This registers all available file formats and codecs with the
-    // library so they will be used automatically when a file with the
-    // corresponding format/codec is opened. Note that you only need to
-    // call av_register_all() once, so it's probably best to do this
-    // somewhere in your startup code. If you like, it's possible to
-    // register only certain individual file formats and codecs, but
-    // there's usually no reason why you would have to do that.
-    av_register_all();
+    // As of FFmpeg 4.0, av_register_all() is no longer needed.
+    // All formats and codecs are automatically registered.
 
     // The last three parameters specify the file format, buffer size and
     // format parameters. By simply specifying nullptr or 0 we ask libavformat
@@ -86,7 +81,7 @@ void FFMpegWrapper::open()
     AVCodecParameters *pCodecPar = audioStream->codecpar;
 
     // Find the decoder for the audio stream
-    AVCodec *decoder = avcodec_find_decoder(pCodecPar->codec_id);
+    const AVCodec *decoder = avcodec_find_decoder(pCodecPar->codec_id);
     if (decoder == nullptr)
     {
         THROW_RUNTIME_ERROR("Codec type " << pCodecPar->codec_id << " not found.")
@@ -118,7 +113,7 @@ void FFMpegWrapper::open()
     }
 
     this->Format.SetVoices(1);
-    this->Format.VoiceChannels[0] = pCodecPar->channels;
+    this->Format.VoiceChannels[0] = pCodecPar->ch_layout.nb_channels;
     this->Format.SampleRate = pCodecPar->sample_rate;
 
     // we now have to retrieve the playduration of this file
@@ -148,9 +143,9 @@ void FFMpegWrapper::open()
         THROW_RUNTIME_ERROR("FFMpeg doesnt specify duration for this file."); // either this, or there is some other weird way of getting the duration, which is not implemented
     }
 
-    if (pCodecPar->channel_layout == 0)
+    if (pCodecPar->ch_layout.nb_channels == 0 || pCodecPar->ch_layout.order == AV_CHANNEL_ORDER_UNSPEC)
     {
-        pCodecPar->channel_layout = av_get_default_channel_layout(pCodecPar->channels);
+        av_channel_layout_default(&pCodecPar->ch_layout, pCodecPar->ch_layout.nb_channels);
     }
 
     // Set up SWR context once you've got codec information
@@ -158,8 +153,8 @@ void FFMpegWrapper::open()
     {
         THROW_RUNTIME_ERROR("Cannot alloc swr.");
     }
-    av_opt_set_int(this->swr, "in_channel_layout", pCodecPar->channel_layout, 0);
-    av_opt_set_int(this->swr, "out_channel_layout", pCodecPar->channel_layout, 0);
+    av_opt_set_chlayout(this->swr, "in_chlayout", &pCodecPar->ch_layout, 0);
+    av_opt_set_chlayout(this->swr, "out_chlayout", &pCodecPar->ch_layout, 0);
     av_opt_set_int(this->swr, "in_sample_rate", pCodecPar->sample_rate, 0);
     av_opt_set_int(this->swr, "out_sample_rate", pCodecPar->sample_rate, 0);
     av_opt_set_sample_fmt(this->swr, "in_sample_fmt", static_cast<AVSampleFormat>(pCodecPar->format), 0);
@@ -269,7 +264,7 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo)
             {
                 size_t oldNoOfItems = this->tmpSwrBuf.size();
                 // not enough space left in the master PCM buffer, render to tmp buffer
-                this->tmpSwrBuf.resize(oldNoOfItems + this->frame->nb_samples * this->frame->channels);
+                this->tmpSwrBuf.resize(oldNoOfItems + this->frame->nb_samples * this->frame->ch_layout.nb_channels);
 
                 auto *inbuf = this->tmpSwrBuf.data() + oldNoOfItems;
                 swr_convert(this->swr, reinterpret_cast<uint8_t **>(&inbuf), this->frame->nb_samples, const_cast<const uint8_t **>(this->frame->extended_data), this->frame->nb_samples);
@@ -277,7 +272,7 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo)
                 // and copy over frames, if there is any space left in the master PCM buffer
                 if (framesToDo > 0)
                 {
-                    frame_t itemsToCopy = framesToDo * this->frame->channels;
+                    frame_t itemsToCopy = framesToDo * this->frame->ch_layout.nb_channels;
 
                     std::memcpy(pcm, this->tmpSwrBuf.data(), itemsToCopy * sizeof(*pcm));
                     this->tmpSwrBuf.erase(this->tmpSwrBuf.begin(), this->tmpSwrBuf.begin() + itemsToCopy);
@@ -290,7 +285,7 @@ int FFMpegWrapper::decode_packet(int16_t *(&pcm), int &framesToDo)
             {
                 swr_convert(this->swr, reinterpret_cast<uint8_t **>(&pcm), this->frame->nb_samples, const_cast<const uint8_t **>(this->frame->extended_data), this->frame->nb_samples);
 
-                pcm += this->frame->nb_samples * this->frame->channels;
+                pcm += this->frame->nb_samples * this->frame->ch_layout.nb_channels;
                 this->framesAlreadyRendered += this->frame->nb_samples;
             }
 
