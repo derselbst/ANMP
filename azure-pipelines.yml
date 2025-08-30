@@ -17,6 +17,8 @@ resources:
   - container: qt6Container-win
     endpoint: 'myDockerHub'
     image: tommoebert332/qt6-build:win-jxl
+    volumes:
+    - C:\vcpkg\:C:\vcpkg\
 
 
 parameters:
