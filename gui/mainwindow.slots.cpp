@@ -496,9 +496,9 @@ void MainWindow::aboutAnmp()
 #endif
 
 #ifdef USE_GUI
-    SUPPORT_YES("Qt5 Gui")
+    SUPPORT_YES("Qt6 Gui")
 #else
-    SUPPORT_NO("Qt5 Gui")
+    SUPPORT_NO("Qt6 Gui")
 #endif
 
 #ifdef USE_VISUALIZER

@@ -337,7 +337,7 @@ void MainWindow::showNoVisualizer()
     QMessageBox msgBox;
     msgBox.setText("Unsupported");
     msgBox.setIcon(QMessageBox::Information);
-    msgBox.setDetailedText("ANMP was built without Qt5OpenGL. No visualizers available.");
+    msgBox.setDetailedText("ANMP was built without Qt6OpenGL. No visualizers available.");
     msgBox.exec();
 }
 #endif

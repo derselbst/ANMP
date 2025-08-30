@@ -58,7 +58,7 @@ endif(${CMAKE_VERSION} VERSION_GREATER "3.6.0")
 ### set compile flags
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -Warray-bounds -Wstack-protector")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3 -O0 -Wextra -fstack-check -fstack-protector-all -fno-inline-functions -fsanitize=address") #  -D_GLIBCXX_DEBUG")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3 -O0 -Wextra -fstack-check -fstack-protector-all -fno-inline-functions") #  -D_GLIBCXX_DEBUG")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     if(USE_LIBCXX)
         set(STDCXX "libc++")
@@ -67,7 +67,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     endif(USE_LIBCXX)
     
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -stdlib=${STDCXX}")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3 -O0 -Wextra -Wdocumentation -fstack-protector-all -fno-inline-functions -fsanitize=address")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3 -O0 -Wextra -Wdocumentation -fstack-protector-all -fno-inline-functions")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g3 -Rpass=loop-vectorize -Rpass-analysis=loop-vectorize")
 endif()
 
@@ -385,16 +385,13 @@ endif(ENABLE_CUE)
 
 if(ENABLE_GUI)
 
-    find_package(Qt6 COMPONENTS Core Widgets Gui DBus Svg Test)
+    find_package(Qt6 COMPONENTS Core Widgets Gui DBus Svg Test REQUIRED)
 
-    if(${Qt6Widgets_FOUND} AND ${Qt6DBus_FOUND})
-        set(USE_GUI TRUE)
-        add_definitions(-DUSE_GUI)
-        
-        MY_PRINT(QT6CORE)
+    set(USE_GUI TRUE)
+    add_definitions(-DUSE_GUI)
 
-    endif(${Qt6Widgets_FOUND} AND ${Qt6DBus_FOUND})
-    
+    MY_PRINT(QT6CORE)
+
     summary_add("QT GUI support" USE_GUI)
 endif(ENABLE_GUI)
 
@@ -406,16 +403,14 @@ if(ENABLE_VISUALIZER)
      
   else(NOT USE_GUI)
   
-    find_package(Qt6 COMPONENTS OpenGLWidgets)
+    find_package(Qt6 COMPONENTS OpenGLWidgets REQUIRED)
 
     # OpenGL & GLEW library
     find_package(OpenGL)
     HANDLE_FOUND(OPENGL)
-    
-    if(Qt6OpenGLWidgets_FOUND AND OPENGL_FOUND)
-        set(USE_VISUALIZER TRUE)
-        add_definitions(-DUSE_VISUALIZER)
-    endif(Qt6OpenGLWidgets_FOUND AND OPENGL_FOUND)
+
+    set(USE_VISUALIZER TRUE)
+    add_definitions(-DUSE_VISUALIZER)
     
   endif(NOT USE_GUI)
   
