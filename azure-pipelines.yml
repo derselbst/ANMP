@@ -18,7 +18,7 @@ resources:
     endpoint: 'myDockerHub'
     image: tommoebert332/qt6-build:win-jxl
     volumes:
-    - C:\vcpkg\:C:\vcpkg\
+    - '"C:\vcpkg\":"C:\vcpkg\"'
 
 
 parameters:
