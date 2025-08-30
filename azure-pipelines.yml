@@ -34,7 +34,7 @@ variables:
 jobs:
   - job: Linux
     pool:
-      vmImage: 'ubuntu-20.04'
+      vmImage: 'ubuntu-24.04'
     container: qt6Container-linux
     steps:
     - checkout: self
