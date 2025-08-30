@@ -81,9 +81,7 @@ jobs:
     - checkout: lazyusf2
 
     - script: |
-        dir
-        .\bootstrap-vcpkg.bat
-        .\vcpkg.exe install sndfile:$(platform)-windows-static libmad:$(platform)-windows-static ffmpeg:$(platform)-windows-static libopenmpt:$(platform)-windows-static portaudio:$(platform)-windows-static libebur128:$(platform)-windows-static fluidsynth:$(platform)-windows
+        vcpkg install sndfile:$(platform)-windows-static libmad:$(platform)-windows-static ffmpeg:$(platform)-windows-static libopenmpt:$(platform)-windows-static portaudio:$(platform)-windows-static libebur128:$(platform)-windows-static fluidsynth:$(platform)-windows
       displayName: 'vcpkg build Dependencies'
       workingDirectory: $(VCPKG_INSTALLATION_ROOT)
     - powershell: |
