@@ -254,7 +254,7 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
         fluid_synth_unset_program(this->synth, i);
     }
 
-    fluid_synth_set_custom_filter(this->synth, FLUID_IIR_LOWPASS, FLUID_IIR_Q_ZERO_OFF | FLUID_IIR_BEANLAND /*| FLUID_IIR_NO_GAIN_AMP*/ | FLUID_IIR_Q_LINEAR);
+    fluid_synth_set_custom_filter(this->synth, FLUID_IIR_LOWPASS, FLUID_IIR_Q_ZERO_OFF | FLUID_IIR_BEANLAND | FLUID_IIR_NO_GAIN_AMP | FLUID_IIR_Q_LINEAR);
 
     fluid_mod_t *my_mod = new_fluid_mod();
 
@@ -276,10 +276,10 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
         fluid_mod_set_source2(my_mod, FLUID_MOD_NONE, 0);
         fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERFC);
         fluid_mod_set_amount(my_mod, 12800 /* absolute cents */); // because CC34==64 will be normalized to 0.5 which must result in 6400 cents
-        fluid_mod_set_custom_mapping(my_mod, [](fluid_mod_t* mod, double val_norm, int is_src1, void* data)
+        fluid_mod_set_custom_mapping(my_mod, [](const fluid_mod_t* mod, int value, int range, int is_src1, void* data)
         {
             auto* pthis = static_cast<FluidsynthWrapper*>(data);
-            short CC34 = std::lrint(val_norm * 128);
+            short CC34 = value;
             double fc = eqpower.at(127 - CC34) / static_cast<double>(std::numeric_limits<int16_t>::max());
             return fc;
         }, this);
@@ -293,12 +293,12 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
         fluid_mod_set_source2(my_mod, FLUID_MOD_NONE, 0);
         fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERQ);
         fluid_mod_set_amount(my_mod, 1);
-        fluid_mod_set_custom_mapping(my_mod, [](fluid_mod_t* mod, double val_norm, int is_src1, void* data)
+        fluid_mod_set_custom_mapping(my_mod, [](const fluid_mod_t* mod, int value, int range, int is_src1, void* data)
         {
             if(is_src1)
             {
                 auto* pthis = static_cast<FluidsynthWrapper*>(data);
-                short CC33 = std::lrint(val_norm * 128);
+                short CC33 = value;
                 double q = std::sqrt( CC33 / 10.0 ) * (M_PI / 2.0);
                 return q;
             }
