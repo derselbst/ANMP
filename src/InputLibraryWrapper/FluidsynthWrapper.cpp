@@ -15,32 +15,6 @@
 #include <cstdint> // For fixed-width integer types like int16_t
 
 
-constexpr std::array<int16_t, 128> eqpower = {{
-    32767,  32764,  32757,  32744,  32727,  32704,
-    32677,  32644,  32607,  32564,  32517,  32464,
-    32407,  32344,  32277,  32205,  32127,  32045,
-    31958,  31866,  31770,  31668,  31561,  31450,
-    31334,  31213,  31087,  30957,  30822,  30682,
-    30537,  30388,  30234,  30075,  29912,  29744,
-    29572,  29395,  29214,  29028,  28838,  28643,
-    28444,  28241,  28033,  27821,  27605,  27385,
-    27160,  26931,  26698,  26461,  26220,  25975,
-    25726,  25473,  25216,  24956,  24691,  24423,
-    24151,  23875,  23596,  23313,  23026,  22736,
-    22442,  22145,  21845,  21541,  21234,  20924,
-    20610,  20294,  19974,  19651,  19325,  18997,
-    18665,  18331,  17993,  17653,  17310,  16965,
-    16617,  16266,  15913,  15558,  15200,  14840,
-    14477,  14113,  13746,  13377,  13006,  12633,
-    12258,  11881,  11503,  11122,  10740,  10357,
-     9971,   9584,   9196,   8806,   8415,   8023,
-     7630,   7235,   6839,   6442,   6044,   5646,
-     5246,   4845,   4444,   4042,   3640,   3237,
-     2833,   2429,   2025,   1620,   1216,    810,
-     405,      0
-}};
-
-
 FluidsynthWrapper::FluidsynthWrapper() : lastRenderNotesWithoutPreset(gConfig.FluidsynthRenderNotesWithoutPreset), midiChannelHasNoteOn(NMidiChannels), midiChannelHasProgram(NMidiChannels)
 {
     if((this->synthEvent = new_fluid_event()) == nullptr ||
@@ -276,13 +250,6 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
         fluid_mod_set_source2(my_mod, FLUID_MOD_NONE, 0);
         fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERFC);
         fluid_mod_set_amount(my_mod, 12800 /* absolute cents */); // because CC34==64 will be normalized to 0.5 which must result in 6400 cents
-        fluid_mod_set_custom_mapping(my_mod, [](const fluid_mod_t* mod, int value, int range, int is_src1, void* data)
-        {
-            auto* pthis = static_cast<FluidsynthWrapper*>(data);
-            short CC34 = value;
-            double fc = eqpower.at(127 - CC34) / static_cast<double>(std::numeric_limits<int16_t>::max());
-            return fc;
-        }, this);
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
 
