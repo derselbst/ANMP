@@ -78,6 +78,8 @@ jobs:
     - powershell: |
         C:\BuildTools\Common7\Tools\VsDevCmd.bat -arch=amd64
         Write-Host "##vso[task.prependpath]%PATH%"
+        Write-Host "##vso[task.setvariable variable=VCToolsInstallDir]%VCToolsInstallDir%"
+        Write-Host "##vso[task.setvariable variable=VS170COMNTOOLS]%VS170COMNTOOLS%"
       displayName: 'Fixup things'
     - task: MSBuild@1
       displayName: 'Compile psflib'
