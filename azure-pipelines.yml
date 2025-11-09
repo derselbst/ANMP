@@ -12,9 +12,7 @@ resources:
   containers:
   - container: qt6Container-win
     endpoint: 'myDockerHub'
-    image: tommoebert332/qt6-build:win-jxl
-    volumes:
-    - 'C:\vcpkg:C:\vcpkg'
+    image: ghcr.io/derselbst/qt6-ps.win:latest
 
 
 parameters:
@@ -76,18 +74,10 @@ jobs:
     - checkout: psflib
     - checkout: lazyusf2
 
-    - script: |
-        vcpkg install libsndfile:$(platform)-windows-static libmad:$(platform)-windows-static ffmpeg:$(platform)-windows-static libopenmpt:$(platform)-windows-static portaudio:$(platform)-windows-static libebur128:$(platform)-windows-static fluidsynth:$(platform)-windows
-      displayName: 'vcpkg build Dependencies'
-      workingDirectory: $(VCPKG_INSTALLATION_ROOT)
     - powershell: |
         cd $(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib\
         Move-Item -Path libopenmpt.lib -Destination openmpt.lib
       displayName: 'Fixup things'
-    - script: |
-        vcpkg install zlib:$(platform)-windows-static
-      displayName: 'vcpkg build zlib'
-      workingDirectory: $(VCPKG_INSTALLATION_ROOT)
     - task: MSBuild@1
       displayName: 'Compile psflib'
       inputs:
