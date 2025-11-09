@@ -75,7 +75,7 @@ jobs:
     - checkout: lazyusf2
 
     - powershell: |
-        C:\BuildTools\Common7\Tools\VsDevCmd.bat
+        C:\BuildTools\Common7\Tools\VsDevCmd.bat -arch=amd64
         Write-Host "##vso[task.prependpath]%PATH%"
       displayName: 'Fixup things'
     - task: MSBuild@1
@@ -84,6 +84,8 @@ jobs:
         solution: 'psflib\psflib.vcxproj'
         msbuildVersion: '17.0'
         msbuildArchitecture: 'x64'
+        msbuildLocation: 'msbuild.exe'
+        msbuildLocationMethod: 'location'
         platform: '$(platform)'
         configuration: '$(configuration)-$(toolset)'
         msbuildArguments: '/p:AdditionalIncludeDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include /p:AdditionalLibraryDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
@@ -107,6 +109,8 @@ jobs:
         solution: 'lazyusf2\prj\msvc\lazyusf2.vcxproj'
         msbuildVersion: '17.0'
         msbuildArchitecture: 'x64'
+        msbuildLocation: 'msbuild.exe'
+        msbuildLocationMethod: 'location'
         platform: '$(platform)'
         configuration: '$(configuration)-$(toolset)'
         msbuildArguments: '/p:AdditionalIncludeDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include /p:AdditionalLibraryDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
