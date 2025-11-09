@@ -59,6 +59,7 @@ jobs:
     strategy:
       matrix:
        Win11:
+         toolset: 'v143'
          poo: 'windows-2022'
     pool:
       vmImage: $(poo)
