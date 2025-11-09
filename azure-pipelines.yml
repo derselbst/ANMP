@@ -75,9 +75,8 @@ jobs:
     - checkout: lazyusf2
 
     - powershell: |
-        cd $(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib\
-        dir
-#        Move-Item -Path libopenmpt.lib -Destination openmpt.lib
+        C:\BuildTools\Common7\Tools\VsDevCmd.bat
+        Write-Host "##vso[task.prependpath]%PATH%"
       displayName: 'Fixup things'
     - task: MSBuild@1
       displayName: 'Compile psflib'
