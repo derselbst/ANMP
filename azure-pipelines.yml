@@ -76,7 +76,8 @@ jobs:
 
     - powershell: |
         cd $(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib\
-        Move-Item -Path libopenmpt.lib -Destination openmpt.lib
+        dir
+#        Move-Item -Path libopenmpt.lib -Destination openmpt.lib
       displayName: 'Fixup things'
     - task: MSBuild@1
       displayName: 'Compile psflib'
