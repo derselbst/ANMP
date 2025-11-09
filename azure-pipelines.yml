@@ -83,7 +83,7 @@ jobs:
       displayName: 'Fixup things'
       enabled: false
 
-    - cmd: |
+    - shell: |
         C:\BuildTools\Common7\Tools\VsDevCmd.bat -arch=amd64
         "MSBuild.exe" "psflib\psflib.vcxproj" /nologo /nr:false /p:AdditionalIncludeDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include /p:AdditionalLibraryDirectories=$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib /p:platform="$(platform)" /p:configuration="$(configuration)-$(toolset)" /m
       displayName: 'compile psflib'
