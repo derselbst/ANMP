@@ -83,11 +83,13 @@ jobs:
       displayName: 'compile psflib'
       
     - script: |
+        @ECHO ON
+        set
         %comspec% /k "C:\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
         echo %PATH%
-        Write-Host "##vso[task.prependpath]%PATH%"
-        Write-Host "##vso[task.setvariable variable=VCToolsInstallDir]%VCToolsInstallDir%"
-        Write-Host "##vso[task.setvariable variable=VS170COMNTOOLS]%VS170COMNTOOLS%"
+        echo "##vso[task.prependpath]%PATH%"
+        echo "##vso[task.setvariable variable=VCToolsInstallDir]%VCToolsInstallDir%"
+        echo "##vso[task.setvariable variable=VS170COMNTOOLS]%VS170COMNTOOLS%"
       displayName: 'Fixup things'
 
     - task: MSBuild@1
