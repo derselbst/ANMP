@@ -12,7 +12,7 @@ resources:
   containers:
   - container: qt6Container-win
     endpoint: 'myDockerHub'
-    image: ghcr.io/derselbst/qt6-ps.win:dockerwin-3e3dcd9
+    image: ghcr.io/derselbst/qt6-ps.win:latest
 
 
 parameters:
