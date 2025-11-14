@@ -86,7 +86,8 @@ jobs:
     - script: |
         @ECHO ON
         set
-        %comspec% /k "C:\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+        "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+        set
         echo %PATH%
         echo "##vso[task.prependpath]%PATH%"
         echo "##vso[task.setvariable variable=VCToolsInstallDir]%VCToolsInstallDir%"
@@ -145,12 +146,12 @@ jobs:
         SourceFolder: 'lazyusf2\prj\msvc\$(platform)\$(configuration)-$(toolset)'
         Contents: 'lazyusf2.lib'
         TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
+
     - script: |
-        @ECHO ON
+        "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
         dir
         mkdir build
         cd build
-        "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
         cmake -Werror=dev -G Ninja -DCMAKE_MAKE_PROGRAM=C:/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows-static -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows-static -DBUILD_SHARED_LIBS=0 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 -DENABLE_VGMSTREAM=0 -DENABLE_FFMPEG=0 -DENABLE_EBUR128=0 ..
       displayName: 'Compile static ANMP'
       workingDirectory: 'ANMP'
