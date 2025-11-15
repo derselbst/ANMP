@@ -73,7 +73,7 @@ jobs:
       WindowsSDKDir: 'C:\Program Files (x86)\Windows Kits\10\Include\$(WindowsSDKVersion)'
       WindowsSDKDirBin: 'C:\Program Files (x86)\Windows Kits\10\bin\$(WindowsSDKVersion)'
       WindowsSDKDirLib: 'C:\Program Files (x86)\Windows Kits\10\Lib\$(WindowsSDKVersion)'
-      msbuildArguments: '/p:WindowsSDKDir="$(WindowsSDKDir)" /p:AdditionalIncludeDirectories="$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include;$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib"'
+      msbuildArguments: '/p:WindowsSDKDir="$(WindowsSDKDir)" /p:AdditionalIncludeDirectories="$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include;$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib;$(WindowsSDKDir)\ucrt;$(WindowsSDKDir)\um;$(WindowsSDKDir)\shared;$(WindowsSDKDir)\winrt"'
     steps:
     - checkout: self
       submodules: true
