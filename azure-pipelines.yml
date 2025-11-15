@@ -70,7 +70,7 @@ jobs:
       VCPKG_INSTALLATION_ROOT: 'C:/vcpkg/'
       PKG_CONFIG_PATH: '$(VCPKG_INSTALLATION_ROOT)/installed/$(platform)-windows-static/lib/pkgconfig'
       WindowsSDKDir: 'C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0'
-      msbuildArguments: '/p:WindowsSDKDir="$(WindowsSDKDir)" /p:AdditionalIncludeDirectories="$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include;$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib;$(WindowsSDKDir)\ucrt;$(WindowsSDKDir)\um;$(WindowsSDKDir)\shared;$(WindowsSDKDir)\winrt"'
+      msbuildArguments: '/p:WindowsSDKDir="$(WindowsSDKDir)" /p:AdditionalIncludeDirectories="$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include;$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib' # $(WindowsSDKDir)\ucrt;$(WindowsSDKDir)\um;$(WindowsSDKDir)\shared;$(WindowsSDKDir)\winrt"'
     steps:
     - checkout: self
       submodules: true
@@ -78,15 +78,16 @@ jobs:
     - checkout: lazyusf2
 
     - script: |
-        "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+        call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
         echo %PATH%
         "MSBuild.exe" "psflib\psflib.vcxproj" /nologo /nr:false /p:WindowsSDKDir="%WindowsSDKDir%" /p:AdditionalIncludeDirectories="%VCPKG_INSTALLATION_ROOT%\installed\%platform%-windows-static\include;%VCPKG_INSTALLATION_ROOT%\installed\%platform%-windows-static\lib;%WindowsSDKDir%\ucrt" /p:platform="%platform%" /p:configuration="%configuration%-%toolset%"
       displayName: 'compile psflib'
+      enabled: false
       
     - script: |
         @ECHO ON
         set
-        "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+        call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
         set
         echo %PATH%
         echo "##vso[task.prependpath]%PATH%"
@@ -148,7 +149,7 @@ jobs:
         TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
 
     - script: |
-        "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+        call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
         dir
         mkdir build
         cd build
