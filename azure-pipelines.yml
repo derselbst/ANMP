@@ -70,7 +70,7 @@ jobs:
       VCPKG_INSTALLATION_ROOT: 'C:/vcpkg/'
       PKG_CONFIG_PATH: '$(VCPKG_INSTALLATION_ROOT)/installed/$(platform)-windows-static/lib/pkgconfig'
       WindowsSDKDir: 'C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0'
-      msbuildArguments: '/p:AdditionalIncludeDirectories="$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include;$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib' # $(WindowsSDKDir)\ucrt;$(WindowsSDKDir)\um;$(WindowsSDKDir)\shared;$(WindowsSDKDir)\winrt" /p:WindowsSDKDir="$(WindowsSDKDir)"'
+      msbuildArguments: '/p:WindowsSDKDir="$(WindowsSDKDir)" /p:AdditionalIncludeDirectories="$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include;$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib;$(WindowsSDKDir)\ucrt;$(WindowsSDKDir)\um;$(WindowsSDKDir)\shared;$(WindowsSDKDir)\winrt"'
     steps:
     - checkout: self
       submodules: true
@@ -154,18 +154,16 @@ jobs:
         mkdir build
         cd build
         cmake -Werror=dev -G Ninja -DCMAKE_MAKE_PROGRAM=C:/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows-static -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$VCPKG_INSTALLATION_ROOT/installed/$(platform)-windows-static -DBUILD_SHARED_LIBS=0 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 -DENABLE_VGMSTREAM=0 -DENABLE_FFMPEG=0 -DENABLE_EBUR128=0 ..
+        cmake --build . --config $(configuration) --parallel 3 --target anmp-qt
       displayName: 'Compile static ANMP'
       workingDirectory: 'ANMP'
-    - task: CMake@1
-      displayName: 'CMake Build'
-      inputs:
-        cmakeArgs: --build . --config $(configuration) --parallel 3 --target anmp-qt
-        workingDirectory: 'ANMP/build'
-    - task: CMake@1
-      displayName: 'CMake Check'
-      inputs:
-        cmakeArgs: --build . --config $(configuration) --target check --parallel
-        workingDirectory: 'ANMP/build'
+
+    - script: |
+        call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+        cmake --build . --config $(configuration) --target check --parallel 3
+      displayName: 'Run Unittests'
+      workingDirectory: 'ANMP/build'
+
     - task: CopyFiles@2
       continueOnError: true
       inputs:
