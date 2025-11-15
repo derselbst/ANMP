@@ -72,6 +72,7 @@ jobs:
       WindowsSDKVersion: '10.0.22621.0'
       WindowsSDKDir: 'C:\Program Files (x86)\Windows Kits\10\Include\$(WindowsSDKVersion)'
       WindowsSDKDirBin: 'C:\Program Files (x86)\Windows Kits\10\bin\$(WindowsSDKVersion)'
+      WindowsSDKDirLib: 'C:\Program Files (x86)\Windows Kits\10\Lib\$(WindowsSDKVersion)'
       msbuildArguments: '/p:WindowsSDKDir="$(WindowsSDKDir)" /p:AdditionalIncludeDirectories="$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include;$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib;$(WindowsSDKDir)\ucrt;$(WindowsSDKDir)\um;$(WindowsSDKDir)\shared;$(WindowsSDKDir)\winrt"'
     steps:
     - checkout: self
@@ -92,12 +93,12 @@ jobs:
         call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" $(platform)
         set
         echo %PATH%
-        echo ##vso[task.prependpath]%PATH%;$(WindowsSDKDirBin)\$(platform)
+        echo ##vso[task.prependpath]%PATH%;$(WindowsSDKDirBin)\$(platform);$(WindowsSDKDirLib)\um\$(platform);$(WindowsSDKDirLib)\ucrt\$(platform)
         echo ##vso[task.setvariable variable=VCToolsInstallDir]%VCToolsInstallDir%
         echo ##vso[task.setvariable variable=VS170COMNTOOLS]%VS170COMNTOOLS%
         echo ##vso[task.setvariable variable=INCLUDE]%INCLUDE%
         echo ##vso[task.setvariable variable=LIB]%LIB%
-        echo ##vso[task.setvariable variable=LIBPATH]%LIBPATH%
+        echo ##vso[task.setvariable variable=LIBPATH]%LIBPATH%;$(WindowsSDKDirLib)\um\$(platform);$(WindowsSDKDirLib)\ucrt\$(platform)
       displayName: 'Fixup things'
 
     - task: MSBuild@1
