@@ -78,7 +78,7 @@ jobs:
     - checkout: lazyusf2
 
     - script: |
-        call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+        call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" $(platform)
         echo %PATH%
         "MSBuild.exe" "psflib\psflib.vcxproj" /nologo /nr:false /p:WindowsSDKDir="%WindowsSDKDir%" /p:AdditionalIncludeDirectories="%VCPKG_INSTALLATION_ROOT%\installed\%platform%-windows-static\include;%VCPKG_INSTALLATION_ROOT%\installed\%platform%-windows-static\lib;%WindowsSDKDir%\ucrt" /p:platform="%platform%" /p:configuration="%configuration%-%toolset%"
       displayName: 'compile psflib'
@@ -87,10 +87,10 @@ jobs:
     - script: |
         @ECHO ON
         set
-        call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+        call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" $(platform)
         set
         echo %PATH%
-        echo "##vso[task.prependpath]%PATH%"
+        echo "##vso[task.prependpath]%PATH%;%WindowsSDKDir%\$(platform)"
         echo "##vso[task.setvariable variable=VCToolsInstallDir]%VCToolsInstallDir%"
         echo "##vso[task.setvariable variable=VS170COMNTOOLS]%VS170COMNTOOLS%"
         echo "##vso[task.setvariable variable=INCLUDE]%INCLUDE%"
@@ -103,7 +103,7 @@ jobs:
       inputs:
         solution: 'psflib\psflib.vcxproj'
         msbuildVersion: '17.0'
-        msbuildArchitecture: 'x64'
+        msbuildArchitecture: '$(platform)'
         msbuildLocation: 'C:\BuildTools\MSBuild\Current\Bin\amd64\MSBuild.exe'
         msbuildLocationMethod: 'location'
         platform: '$(platform)'
@@ -128,7 +128,7 @@ jobs:
       inputs:
         solution: 'lazyusf2\prj\msvc\lazyusf2.vcxproj'
         msbuildVersion: '17.0'
-        msbuildArchitecture: 'x64'
+        msbuildArchitecture: '$(platform)'
         msbuildLocation: 'C:\BuildTools\MSBuild\Current\Bin\amd64\MSBuild.exe'
         msbuildLocationMethod: 'location'
         platform: '$(platform)'
