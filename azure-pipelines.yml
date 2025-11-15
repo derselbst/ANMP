@@ -150,7 +150,7 @@ jobs:
 
     - script: |
         @ECHO ON
-        call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
+        set
         dir
         mkdir build
         cd build
@@ -160,7 +160,6 @@ jobs:
       workingDirectory: 'ANMP'
 
     - script: |
-        call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
         cmake --build . --config $(configuration) --target check --parallel 3
       displayName: 'Run Unittests'
       workingDirectory: 'ANMP/build'
