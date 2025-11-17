@@ -11,6 +11,7 @@
 #include <thread> // std::this_thread::sleep_for
 #include <algorithm>
 
+#include <smf.h>
 
 FluidsynthWrapper::FluidsynthWrapper() : lastRenderNotesWithoutPreset(gConfig.FluidsynthRenderNotesWithoutPreset), midiChannelHasNoteOn(NMidiChannels), midiChannelHasProgram(NMidiChannels)
 {
