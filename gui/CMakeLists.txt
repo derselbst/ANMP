@@ -1,8 +1,5 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR) # due to CMAKE_AUTOUIC and CMAKE_AUTORCC
 
 project(anmp-qt)
-
-
 
 # Tell CMake to run moc when necessary:
 set(CMAKE_AUTOMOC ON)
