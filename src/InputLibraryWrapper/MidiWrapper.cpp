@@ -15,6 +15,8 @@
 #include <fstream>
 #include <bitset>
 
+#include <smf.h>
+
 #define IsControlChange(e) ((e->midi_buffer[0] & 0xF0) == 0xB0)
 #define IsLoopStart(e) (IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopStart))
 #define IsLoopStop(e) (IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopStop))
