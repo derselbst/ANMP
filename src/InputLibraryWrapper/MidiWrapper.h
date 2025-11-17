@@ -4,7 +4,7 @@
 #include "StandardWrapper.h"
 
 struct smf_event_struct;
-typedef struct smf_event_struct smf_event_t
+typedef struct smf_event_struct smf_event_t;
 struct smf_struct;
 typedef struct smf_struct smf_t;
 
