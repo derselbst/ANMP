@@ -99,7 +99,7 @@ jobs:
         echo ##vso[task.setvariable variable=INCLUDE]%INCLUDE%;$(WindowsSDKDir)\ucrt;$(WindowsSDKDir)\um;$(WindowsSDKDir)\shared;$(WindowsSDKDir)\winrt
         echo ##vso[task.setvariable variable=LIB]%LIB%;$(WindowsSDKDirLib)\um\$(platform);$(WindowsSDKDirLib)\ucrt\$(platform)
         echo ##vso[task.setvariable variable=LIBPATH]%LIBPATH%;$(WindowsSDKDirLib)\um\$(platform);$(WindowsSDKDirLib)\ucrt\$(platform)
-      displayName: 'Fixup things'
+      displayName: 'Setup environment'
 
     - task: MSBuild@1
       displayName: 'Compile psflib'
@@ -157,7 +157,7 @@ jobs:
         dir
         mkdir build
         cd build
-        cmake -Werror=dev -G Ninja -DCMAKE_MAKE_PROGRAM=C:/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_INSTALLATION_ROOT)/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$(VCPKG_INSTALLATION_ROOT)/installed/$(platform)-windows -DBUILD_SHARED_LIBS=0 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 -DENABLE_VGMSTREAM=0 -DENABLE_FFMPEG=0 -DENABLE_EBUR128=0 ..
+        cmake -Werror=dev -G Ninja -DENABLE_VISUALIZER=0 -DCMAKE_MAKE_PROGRAM=C:/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_INSTALLATION_ROOT)/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$(VCPKG_INSTALLATION_ROOT)/installed/$(platform)-windows -DBUILD_SHARED_LIBS=0 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 -DENABLE_VGMSTREAM=0 -DENABLE_FFMPEG=0 -DENABLE_EBUR128=0 ..
         cmake --build . --config $(configuration) --parallel 3 --target anmp-qt
       displayName: 'Compile static ANMP'
       workingDirectory: 'ANMP'
