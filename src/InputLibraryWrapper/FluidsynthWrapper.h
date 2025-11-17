@@ -5,8 +5,6 @@
 
 #include <fluidsynth.h>
 
-// libsmf - helper lib for reading midi files
-#include <smf.h>
 #include <vector>
 #include <memory>
 #include <queue>
