@@ -14,7 +14,6 @@ resources:
     endpoint: 'myDockerHub'
     image: ghcr.io/derselbst/qt6-ps.win:qt6-49864c3
 
-
 parameters:
 - name: UseCache
   displayName: Use Dependency Cache
