@@ -12,7 +12,7 @@ resources:
   containers:
   - container: qt6Container-win
     endpoint: 'myDockerHub'
-    image: ghcr.io/derselbst/qt6-ps.win:qt6-4ff6918
+    image: ghcr.io/derselbst/qt6-ps.win:qt6-49864c3
 
 
 parameters:
@@ -80,13 +80,6 @@ jobs:
     - checkout: psflib
     - checkout: lazyusf2
 
-    - script: |
-        call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" $(platform)
-        echo %PATH%
-        "MSBuild.exe" "psflib\psflib.vcxproj" /nologo /nr:false /p:WindowsSDKDir="%WindowsSDKDir%" /p:AdditionalIncludeDirectories="%VCPKG_INSTALLATION_ROOT%\installed\%platform%-windows\include;%VCPKG_INSTALLATION_ROOT%\installed\%platform%-windows\lib;%WindowsSDKDir%\ucrt" /p:platform="%platform%" /p:configuration="%configuration%-%toolset%"
-      displayName: 'compile psflib'
-      enabled: false
-      
     - script: |
         @ECHO ON
         set
@@ -157,7 +150,7 @@ jobs:
         dir
         mkdir build
         cd build
-        cmake -Werror=dev -G Ninja -DENABLE_VISUALIZER=0 -DCMAKE_MAKE_PROGRAM=C:/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_INSTALLATION_ROOT)/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$(VCPKG_INSTALLATION_ROOT)/installed/$(platform)-windows -DBUILD_SHARED_LIBS=0 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 -DENABLE_VGMSTREAM=0 -DENABLE_FFMPEG=0 -DENABLE_EBUR128=0 ..
+        cmake -Werror=dev -G Ninja -DCMAKE_MAKE_PROGRAM=C:/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_INSTALLATION_ROOT)/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$(VCPKG_INSTALLATION_ROOT)/installed/$(platform)-windows -DBUILD_SHARED_LIBS=0 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 -DENABLE_VGMSTREAM=0 -DENABLE_FFMPEG=0 -DENABLE_EBUR128=0 ..
         cmake --build . --config $(configuration) --parallel 3 --target anmp-qt
       displayName: 'Compile static ANMP'
       workingDirectory: 'ANMP'
