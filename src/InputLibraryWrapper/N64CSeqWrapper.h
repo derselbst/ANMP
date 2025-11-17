@@ -5,6 +5,7 @@
 #include "StandardWrapper.h"
 
 #include <stack>
+#include <array>
 
 enum MidiEvt
 {
