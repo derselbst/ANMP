@@ -15,7 +15,7 @@
 #include <utility>
 
 #define _BSD_SOURCE
-#include <endian.h>
+#include "PortableEndian.h"
 
 // Why implementing this? Isn't Subdrags' N64MidiTool enough?
 //
