@@ -338,14 +338,20 @@ std::string myHomeDir()
 
     char *drive = getenv("HOMEDRIVE");
     char *path = getenv("HOMEPATH");
+    char *userprofile = getenv("USERPROFILE");
 
     if (drive == nullptr || *drive == '\0' || path == nullptr || *path == '\0')
     {
-        THROW_RUNTIME_ERROR("failed to get home directory")
+        if(userprofile == nullptr)
+        {
+            THROW_RUNTIME_ERROR("failed to get home directory")
+        }
+        home = std::string(userprofile);
     }
-
-    home = std::string(drive) + std::string(path);
-
+    else
+    {
+        home = std::string(drive) + std::string(path);
+    }
 #elif defined(_POSIX_SOURCE)
 
     const char *path = getenv("HOME");
