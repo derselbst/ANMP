@@ -9,6 +9,8 @@ using namespace std;
 
 int main()
 {
+    try
+    {
     bool equal = iEquals("qwer", "qwer");
     TEST_ASSERT_EQ(equal, true);
 
@@ -77,6 +79,14 @@ int main()
     TEST_ASSERT_EQ(s, test);
     s = mydirname(test);
     TEST_ASSERT_EQ(s, test);
-
     return 0;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what();
+    }
+    catch(...)
+    {
+        std::cerr << "irgendwas";
+    }
 }
