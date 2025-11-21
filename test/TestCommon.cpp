@@ -89,4 +89,5 @@ int main()
     {
         std::cerr << "irgendwas";
     }
+    return -1;
 }
