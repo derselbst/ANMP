@@ -76,6 +76,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 endif()
 
 add_compile_definitions(_USE_MATH_DEFINES)
+add_compile_definitions(NOMINMAX)
 
 ### setup project include dirs
 set(PROJECT_LOCAL_INCLUDE_DIRS
