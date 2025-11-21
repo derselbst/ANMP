@@ -795,7 +795,7 @@ void FluidsynthWrapper::FluidSeqSysExCallback(unsigned int /*time*/, fluid_event
     }
     
     int handled;
-    fluid_synth_sysex(pthis->synth, reinterpret_cast<char*>(buf->data()), buf->size(), nullptr, nullptr, &handled, FALSE);
+    fluid_synth_sysex(pthis->synth, reinterpret_cast<char*>(buf->data()), buf->size(), nullptr, nullptr, &handled, false);
     delete buf;
 }
 
