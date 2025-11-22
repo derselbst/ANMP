@@ -25,14 +25,14 @@
 
 #include "fht.h" //stack allocated
 
-#include <QGLWidget>
+#include <QOpenGLWidget>
 
 #include "types.h"
 
 class Song;
 
 
-class AnalyzerBase : public QGLWidget
+class AnalyzerBase : public QOpenGLWidget
 {
     Q_OBJECT
     public:

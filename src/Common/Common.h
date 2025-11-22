@@ -20,7 +20,7 @@
 #ifndef _POSIX_VERSION
 // helper function for case insensitive std::string compare
 // will work on all platforms, but probably slow
-bool iEqualsUgly(std::string strFirst, std::string strSecond);
+bool iEqualsUgly(const std::string& a, const std::string& b);
 #endif
 
 // helper function for case insensitive std::string compare

@@ -32,16 +32,16 @@ extern "C" {
 #ifndef _POSIX_SOURCE
 // helper function for case insensitive std::string compare
 // will workon all platforms, but probably slow
-bool iEqualsUgly(std::string strFirst, std::string strSecond)
+bool iEqualsUgly(const std::string& a, const std::string& b)
 {
-    // convert strings to upper case before compare
-    transform(strFirst.begin(), strFirst.end(), strFirst.begin(), [](unsigned char c) {
-        return std::toupper(c);
-    });
-    transform(strSecond.begin(), strSecond.end(), strSecond.begin(), [](unsigned char c) {
-        return std::toupper(c);
-    });
-    return strFirst == strSecond;
+    auto ichar_equals = [](char a, char b)
+    {
+        return std::tolower(static_cast<unsigned char>(a)) ==
+            std::tolower(static_cast<unsigned char>(b));
+    };
+
+    return a.size() == b.size() &&
+           std::equal(a.begin(), a.end(), b.begin(), ichar_equals);
 }
 #endif
 
@@ -338,14 +338,20 @@ std::string myHomeDir()
 
     char *drive = getenv("HOMEDRIVE");
     char *path = getenv("HOMEPATH");
+    char *userprofile = getenv("USERPROFILE");
 
     if (drive == nullptr || *drive == '\0' || path == nullptr || *path == '\0')
     {
-        THROW_RUNTIME_ERROR("failed to get home directory")
+        if(userprofile == nullptr)
+        {
+            THROW_RUNTIME_ERROR("failed to get home directory")
+        }
+        home = std::string(userprofile);
     }
-
-    home = std::string(drive) + std::string(path);
-
+    else
+    {
+        home = std::string(drive) + std::string(path);
+    }
 #elif defined(_POSIX_SOURCE)
 
     const char *path = getenv("HOME");

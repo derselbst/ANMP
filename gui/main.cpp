@@ -1,12 +1,16 @@
 #include "anmp.hpp"
-#include "anmp_dbus_interface.h"
 #include "mainwindow.h"
 
 #include <QApplication>
 #include <QMessageBox>
+#include <QStyleFactory>
+#include <QFileInfo>
+
+#ifdef USE_DBUS
+#include "anmp_dbus_interface.h"
 #include <QtDBus>
 #include <QDBusConnectionInterface>
-#include <QStyleFactory>
+#endif
 
 using namespace std;
 
@@ -18,6 +22,7 @@ int main(int argc, char *argv[])
     a.setStyle(QStyleFactory::create("Fusion"));
     QMessageBox msgBox;
 
+#ifdef USE_DBUS
     QDBusReply<bool> reply;
     QDBusConnection dbus = QDBusConnection::sessionBus();
     if (!dbus.isConnected())
@@ -40,6 +45,7 @@ int main(int argc, char *argv[])
         true ||
 #endif
         (reply.isValid() && !reply.value()))
+#endif
     {
         CLOG(LogLevel_t::Debug, "ANMP not started yet");
         
@@ -105,6 +111,7 @@ int main(int argc, char *argv[])
             msgBox.exec();
         }
     }
+#ifdef USE_DBUS
     else // anmp already started, feed songs via dbus
     {
         constexpr char Path[] = "/MainWindow";
@@ -119,6 +126,7 @@ int main(int argc, char *argv[])
 
         interface->AddSongs(fileList);
     }
+#endif
 
     return ret;
 }

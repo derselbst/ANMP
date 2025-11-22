@@ -23,8 +23,9 @@ set(analyzer_SRCS
     fht.h
 )
 
-qt5_wrap_ui(UI_ANAL_HEADER
+qt_wrap_ui(UI_ANAL_HEADER
     AnalyzerApplet.ui
 )
 
 ADD_LIBRARY(${LIBANAL} STATIC ${UI_ANAL_HEADER} ${analyzer_SRCS})
+target_link_libraries(${LIBANAL} PRIVATE Qt6::Widgets Qt6::OpenGLWidgets)

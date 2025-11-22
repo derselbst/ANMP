@@ -2,6 +2,7 @@ ANMP
 main
 build/
 bin/
+.vs/
 src/test.cpp
 
 CMakeCache.txt

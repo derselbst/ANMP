@@ -11,6 +11,9 @@
 #include <thread> // std::this_thread::sleep_for
 #include <algorithm>
 
+#ifdef USE_SMF
+#include <smf.h>
+#endif
 
 FluidsynthWrapper::FluidsynthWrapper() : lastRenderNotesWithoutPreset(gConfig.FluidsynthRenderNotesWithoutPreset), midiChannelHasNoteOn(NMidiChannels), midiChannelHasProgram(NMidiChannels)
 {
@@ -542,6 +545,7 @@ double FluidsynthWrapper::GetTempoScale(unsigned int uspqn, unsigned int ppqn)
 
 void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
 {
+#ifdef USE_SMF
     int ret;
 
     if (smf_event_is_sysex(event))
@@ -644,6 +648,7 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
     ret = fluid_sequencer_send_at(this->sequencer, fluidEvt, static_cast<unsigned int>(event->time_pulses + offset), false);
 
     if (ret != FLUID_OK)
+#endif
     {
         CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
     }
@@ -706,6 +711,7 @@ void FluidsynthWrapper::ScheduleTempoChange(double newScale, int atTick, bool ab
 
 void FluidsynthWrapper::ScheduleSysEx(smf_event_t* event, int atTick, bool absolute)
 {
+#ifdef USE_SMF
     CLOG(LogLevel_t::Debug, "SYSEX, atTick " << atTick);
     
     auto* buffer = new std::vector<unsigned char>(event->midi_buffer + 1 , event->midi_buffer + 1 + (event->midi_buffer_length - 1));
@@ -713,8 +719,9 @@ void FluidsynthWrapper::ScheduleSysEx(smf_event_t* event, int atTick, bool absol
 
     int ret = fluid_sequencer_send_at(this->sequencer, this->sysexEvent, atTick, absolute);
     if (ret != FLUID_OK)
+#endif
     {
-        CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
+        CLOG(LogLevel_t::Error, "fluidsynth was unable to queue SysEx event");
         return;
     }
 }
@@ -735,6 +742,7 @@ void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo *loopInfo)
 
 void FluidsynthWrapper::FluidSeqLoopCallback(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data)
 {
+#ifdef USE_SMF
     (void)seq;
 
     FluidsynthWrapper* pthis = static_cast<FluidsynthWrapper*>(data);
@@ -763,6 +771,7 @@ void FluidsynthWrapper::FluidSeqLoopCallback(unsigned int time, fluid_event_t* e
     {
         pthis->ScheduleLoop(loopInfo);
     }
+#endif
 }
 
 void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_t *e, fluid_sequencer_t * /*seq*/, void *data)
@@ -786,7 +795,7 @@ void FluidsynthWrapper::FluidSeqSysExCallback(unsigned int /*time*/, fluid_event
     }
     
     int handled;
-    fluid_synth_sysex(pthis->synth, reinterpret_cast<char*>(buf->data()), buf->size(), nullptr, nullptr, &handled, FALSE);
+    fluid_synth_sysex(pthis->synth, reinterpret_cast<char*>(buf->data()), buf->size(), nullptr, nullptr, &handled, false);
     delete buf;
 }
 
