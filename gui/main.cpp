@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QMessageBox>
 #include <QStyleFactory>
+#include <QFileInfo>
 
 #ifdef USE_DBUS
 #include "anmp_dbus_interface.h"
