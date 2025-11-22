@@ -14,12 +14,16 @@
 #include <array>
 #include <cstdint> // For fixed-width integer types like int16_t
 
+#ifdef USE_SMF
+#include <smf.h>
+#endif
 
 FluidsynthWrapper::FluidsynthWrapper() : lastRenderNotesWithoutPreset(gConfig.FluidsynthRenderNotesWithoutPreset), midiChannelHasNoteOn(NMidiChannels), midiChannelHasProgram(NMidiChannels)
 {
     if((this->synthEvent = new_fluid_event()) == nullptr ||
        (this->callbackEvent = new_fluid_event()) == nullptr ||
-       (this->callbackNoteEvent = new_fluid_event()) == nullptr)
+       (this->callbackNoteEvent = new_fluid_event()) == nullptr ||
+       (this->sysexEvent = new_fluid_event()) == nullptr)
     {
         this->deleteEvents();
         throw std::bad_alloc();
@@ -28,6 +32,7 @@ FluidsynthWrapper::FluidsynthWrapper() : lastRenderNotesWithoutPreset(gConfig.Fl
     fluid_event_set_source(this->synthEvent, -1);
     fluid_event_set_source(this->callbackEvent, -1);
     fluid_event_set_source(this->callbackNoteEvent, -1);
+    fluid_event_set_source(this->sysexEvent, -1);
 }
 
 void FluidsynthWrapper::Init(const Nullable<string>& suggestedSf2, N64CSeqWrapper* cseq)
@@ -61,6 +66,9 @@ void FluidsynthWrapper::deleteEvents()
 
     delete_fluid_event(this->callbackNoteEvent);
     this->callbackNoteEvent = nullptr;
+
+    delete_fluid_event(this->sysexEvent);
+    this->sysexEvent = nullptr;
 
     delete_fluid_event(this->synthEvent);
     this->synthEvent = nullptr;
@@ -97,6 +105,9 @@ void FluidsynthWrapper::setupSeq(N64CSeqWrapper* cseq)
     // register myself as second destination
     this->myselfID = fluid_sequencer_register_client(this->sequencer, "schedule_note_callback", &FluidsynthWrapper::FluidSeqNoteCallback, this);
     fluid_event_set_dest(this->callbackNoteEvent, this->myselfID);
+    
+    this->sysexID = fluid_sequencer_register_client(this->sequencer, "schedule_sysex_callback", &FluidsynthWrapper::FluidSeqSysExCallback, this);
+    fluid_event_set_dest(this->sysexEvent, this->sysexID);
 
     // remove all events from the sequencer's queue
     fluid_sequencer_remove_events(this->sequencer, -1, -1, -1);
@@ -115,6 +126,7 @@ void FluidsynthWrapper::deleteSeq()
         // explictly unregister all clients before deleting the seq
         fluid_sequencer_unregister_client(this->sequencer, this->myselfID);
         fluid_sequencer_unregister_client(this->sequencer, this->midiwrapperID);
+        fluid_sequencer_unregister_client(this->sequencer, this->sysexID);
         if(this->cseqID != -1)
         {
             fluid_sequencer_unregister_client(this->sequencer, this->cseqID);
@@ -395,6 +407,7 @@ void FluidsynthWrapper::setupSettings()
         fluid_settings_setint(this->settings, "synth.dynamic-sample-loading", 0);
         fluid_settings_setint(this->settings, "synth.polyphony", 2048);
         fluid_settings_setint(this->settings, "synth.cpu-cores", 4);
+        fluid_settings_setint(this->settings, "synth.device-id", 127); // handle all SYSEX messages
         // disable high prio threads, you won't have permission anyway
         fluid_settings_setint(this->settings, "audio.realtime-prio", 0);
     }
@@ -493,7 +506,7 @@ void FluidsynthWrapper::ConfigureChannels(SongFormat *f)
                 if(this->midiChannelHasProgram[j])
                 {
                     f->VoiceName[i] += " (no program assigned, using default ";
-                    if(gConfig.FluidsynthChannel9IsDrum)
+                    if(gConfig.FluidsynthChannel9IsDrum && j == 9)
                     {
                         f->VoiceName[i] += "percussion bank)";
                     }
@@ -579,7 +592,14 @@ double FluidsynthWrapper::GetTempoScale(unsigned int uspqn, unsigned int ppqn)
 
 void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
 {
+#ifdef USE_SMF
     int ret;
+
+    if (smf_event_is_sysex(event))
+    {
+        this->ScheduleSysEx(event, event->time_pulses + offset, false);
+        return;
+    }
 
     if(event->midi_buffer[0] == 0xFF && event->midi_buffer[1] == 0x51)
     {
@@ -601,6 +621,12 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
 
         this->ScheduleTempoChange(scale, event->time_pulses + offset, false);
 
+        return;
+    }
+    
+    if(event->midi_buffer[0] == 0xFF)
+    {
+        // ignore all other meta events
         return;
     }
 
@@ -662,12 +688,14 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
         }
 
         default:
+            CLOG(LogLevel_t::Warning, "Unrecognized MIDI status byte 0x" << std::hex << static_cast<int>(event->midi_buffer[0]));
             return;
     }
 
     ret = fluid_sequencer_send_at(this->sequencer, fluidEvt, static_cast<unsigned int>(event->time_pulses + offset), false);
 
     if (ret != FLUID_OK)
+#endif
     {
         CLOG(LogLevel_t::Error, "fluidsynth was unable to queue midi event");
     }
@@ -728,6 +756,23 @@ void FluidsynthWrapper::ScheduleTempoChange(double newScale, int atTick, bool ab
     }
 }
 
+void FluidsynthWrapper::ScheduleSysEx(smf_event_t* event, int atTick, bool absolute)
+{
+#ifdef USE_SMF
+    CLOG(LogLevel_t::Debug, "SYSEX, atTick " << atTick);
+    
+    auto* buffer = new std::vector<unsigned char>(event->midi_buffer + 1 , event->midi_buffer + 1 + (event->midi_buffer_length - 1));
+    fluid_event_timer(this->sysexEvent, buffer);
+
+    int ret = fluid_sequencer_send_at(this->sequencer, this->sysexEvent, atTick, absolute);
+    if (ret != FLUID_OK)
+#endif
+    {
+        CLOG(LogLevel_t::Error, "fluidsynth was unable to queue SysEx event");
+        return;
+    }
+}
+
 // in case MidiWrapper experiences a loop event, schedule an event that calls MidiWrapper back at the end of that loop, so it can feed all the midi events with that loop back to fluidsynth again
 void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo *loopInfo)
 {
@@ -744,6 +789,7 @@ void FluidsynthWrapper::ScheduleLoop(MidiLoopInfo *loopInfo)
 
 void FluidsynthWrapper::FluidSeqLoopCallback(unsigned int time, fluid_event_t* e, fluid_sequencer_t* seq, void* data)
 {
+#ifdef USE_SMF
     (void)seq;
 
     FluidsynthWrapper* pthis = static_cast<FluidsynthWrapper*>(data);
@@ -772,6 +818,7 @@ void FluidsynthWrapper::FluidSeqLoopCallback(unsigned int time, fluid_event_t* e
     {
         pthis->ScheduleLoop(loopInfo);
     }
+#endif
 }
 
 void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_t *e, fluid_sequencer_t * /*seq*/, void *data)
@@ -783,6 +830,20 @@ void FluidsynthWrapper::FluidSeqNoteCallback(unsigned int /*time*/, fluid_event_
     }
 
     pthis->NoteOnOff(e);
+}
+
+void FluidsynthWrapper::FluidSeqSysExCallback(unsigned int /*time*/, fluid_event_t *e, fluid_sequencer_t * /*seq*/, void *data)
+{
+    auto pthis = static_cast<FluidsynthWrapper *>(data);
+    auto* buf = static_cast<std::vector<unsigned char>*>(fluid_event_get_data(e));
+    if (pthis == nullptr || buf == nullptr || fluid_event_get_type(e) != FLUID_SEQ_TIMER)
+    {
+        return;
+    }
+    
+    int handled;
+    fluid_synth_sysex(pthis->synth, reinterpret_cast<char*>(buf->data()), buf->size(), nullptr, nullptr, &handled, false);
+    delete buf;
 }
 
 static unsigned int computeVoiceId(int chan, int key, int slot)

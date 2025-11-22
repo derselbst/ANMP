@@ -3,8 +3,10 @@
 
 #include "StandardWrapper.h"
 
-// libsmf - helper lib for reading midi files
-#include <smf.h>
+struct smf_event_struct;
+typedef struct smf_event_struct smf_event_t;
+struct smf_struct;
+typedef struct smf_struct smf_t;
 
 typedef struct _fluid_event_t fluid_event_t;
 typedef struct _fluid_sequencer_t fluid_sequencer_t;

@@ -54,7 +54,10 @@ SET(ANMP_PLAYER_SRC
 )
 
 add_library(anmp-internal OBJECT ${ANMP_AUDIO_SRC} ${ANMP_COMMON_SRC} ${ANMP_INPUT_SRC} ${ANMP_PLAYER_SRC})
-if(NOT WIN32)
+if(WIN32)
+    # because of ntohl()
+    target_link_libraries(anmp-internal PUBLIC "Ws2_32")
+else()
     target_link_libraries(anmp-internal PUBLIC stdc++fs)
 endif()
 if(USE_ALSA)

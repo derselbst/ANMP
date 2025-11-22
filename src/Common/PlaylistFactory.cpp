@@ -215,10 +215,12 @@ bool PlaylistFactory::addSong(std::vector<Song*> &playlist, const std::string& f
     }
 
 #ifdef USE_FLUIDSYNTH
+#ifdef USE_SMF
     else if (iEquals(ext, "mid") || iEquals(ext, "midi"))
     {
         PlaylistFactory::tryWith<MidiWrapper>(pcm, filePath, offset, len);
     }
+#endif
     else if (iEquals(ext, "cmf") || iEquals(ext, "btmf"))
     {
         PlaylistFactory::tryWith<N64CSeqWrapper>(pcm, filePath, offset, len);

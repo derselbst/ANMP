@@ -15,6 +15,8 @@
 #include <fstream>
 #include <bitset>
 
+#include <smf.h>
+
 #define IsControlChange(e) ((e->midi_buffer[0] & 0xF0) == 0xB0)
 #define IsLoopStart(e) (IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopStart))
 #define IsLoopStop(e) (IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopStop))
@@ -155,11 +157,6 @@ void MidiWrapper::parseEvents()
     smf_event_t *event;
     while ((event = smf_get_next_event(this->smf)) != nullptr)
     {
-        if (smf_event_is_sysex(event))
-        {
-            continue;
-        }
-
         if (!smf_event_is_valid(event))
         {
             CLOG(LogLevel_t::Warning, "invalid midi event found, ignoring:" << MidiWrapper::SmfEventToString(event));

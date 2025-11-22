@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR) # because of CMAKE_CXX_STANDARD
+cmake_minimum_required(VERSION 3.5.0 FATAL_ERROR)
 
 if(POLICY CMP0072)
   cmake_policy(SET CMP0072 NEW)
@@ -62,7 +62,7 @@ endif(${CMAKE_VERSION} VERSION_GREATER "3.6.0")
 ### set compile flags
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -Warray-bounds -Wstack-protector")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3 -O0 -Wextra -fstack-check -fstack-protector-all -fno-inline-functions -fsanitize=address") #  -D_GLIBCXX_DEBUG")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3 -O0 -Wextra -fstack-check -fstack-protector-all -fno-inline-functions") #  -D_GLIBCXX_DEBUG")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     if(USE_LIBCXX)
         set(STDCXX "libc++")
@@ -71,11 +71,12 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     endif(USE_LIBCXX)
     
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -stdlib=${STDCXX}")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3 -O0 -Wextra -Wdocumentation -fstack-protector-all -fno-inline-functions -fsanitize=address")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g3 -O0 -Wextra -Wdocumentation -fstack-protector-all -fno-inline-functions")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g3 -Rpass=loop-vectorize -Rpass-analysis=loop-vectorize")
 endif()
 
 add_compile_definitions(_USE_MATH_DEFINES)
+add_compile_definitions(NOMINMAX)
 
 ### setup project include dirs
 set(PROJECT_LOCAL_INCLUDE_DIRS
@@ -378,23 +379,21 @@ endif(ENABLE_CUE)
 
 if(ENABLE_GUI)
 
-    find_package(Qt5Widgets)
-    HANDLE_FOUND(Qt5Widgets)
-    
-    find_package(Qt5DBus)
-    HANDLE_FOUND(Qt5DBus)
-   
-    if(${Qt5Widgets_FOUND} AND ${Qt5DBus_FOUND})
-        set(USE_GUI TRUE)
-        add_definitions(-DUSE_GUI)
-        
-        # We need add -DQT_WIDGETS_LIB when using QtWidgets in Qt 5.
-        add_definitions(${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS})
-        
-        MY_PRINT(QT5CORE)
+    find_package(Qt6 COMPONENTS Core Widgets Gui Svg Test REQUIRED)
 
-    endif(${Qt5Widgets_FOUND} AND ${Qt5DBus_FOUND})
-    
+    set(USE_GUI TRUE)
+    add_definitions(-DUSE_GUI)
+
+    find_package(Qt6 COMPONENTS DBus)
+
+    if(TARGET Qt6::DBus)
+        set(USE_DBUS TRUE)
+        add_definitions(-DUSE_DBUS)
+    endif()
+
+    MY_PRINT(Qt6Core)
+    MY_PRINT(Qt6DBus)
+
     summary_add("QT GUI support" USE_GUI)
 endif(ENABLE_GUI)
 
@@ -406,17 +405,14 @@ if(ENABLE_VISUALIZER)
      
   else(NOT USE_GUI)
   
-    find_package(Qt5OpenGL)
-    HANDLE_FOUND(Qt5OpenGL)
+    find_package(Qt6 COMPONENTS OpenGLWidgets REQUIRED)
 
     # OpenGL & GLEW library
     find_package(OpenGL)
     HANDLE_FOUND(OPENGL)
-    
-    if(Qt5OpenGL_FOUND AND OPENGL_FOUND)
-        set(USE_VISUALIZER TRUE)
-        add_definitions(-DUSE_VISUALIZER)
-    endif(Qt5OpenGL_FOUND AND OPENGL_FOUND)
+
+    set(USE_VISUALIZER TRUE)
+    add_definitions(-DUSE_VISUALIZER)
     
   endif(NOT USE_GUI)
   
