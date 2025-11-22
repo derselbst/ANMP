@@ -54,21 +54,18 @@ if(USE_GUI)
         songinspector.ui
         playcontrol.ui
     )
-    
+
     if(USE_DBUS)
         # auto-generate "build/gui/anmp_dbus_interface.h" and "build/gui/anmp_dbus_interface.cpp" but skip
         # AUTOMOC and AUTOUIC for them (Policy CMP0071)
         qt_add_dbus_interface(ANMP_LAUNCHER_SRC ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml anmp_dbus_interface)
         set_property(SOURCE ${ANMP_LAUNCHER_SRC} PROPERTY SKIP_AUTOGEN ON)
-
-        add_executable(${PROJECT_NAME} ${UI_HEADERS} ${GUI_SRCS} ${ANMP_LAUNCHER_SRC} icons.qrc)
-
-        # this will add all necessary compile and link flags
-        target_link_libraries(${PROJECT_NAME} Qt6::DBus)
     endif()
 
+    add_executable(${PROJECT_NAME} ${UI_HEADERS} ${GUI_SRCS} ${ANMP_LAUNCHER_SRC} icons.qrc)
+
     # this will add all necessary compile and link flags
-    target_link_libraries(${PROJECT_NAME} Qt6::Core Qt6::Widgets Qt6::Svg)
+    target_link_libraries(${PROJECT_NAME} Qt6::Core Qt6::Widgets Qt6::Svg $<$<BOOL:${USE_DBUS}>:Qt6::DBus>)
 
     if(USE_VISUALIZER)
         # name of libraries that will be build in the applets subdir

@@ -391,8 +391,8 @@ if(ENABLE_GUI)
         add_definitions(-DUSE_DBUS)
     endif()
 
-    MY_PRINT(QT6_CORE)
-    MY_PRINT(QT6_DBUS)
+    MY_PRINT(Qt6Core)
+    MY_PRINT(Qt6DBus)
 
     summary_add("QT GUI support" USE_GUI)
 endif(ENABLE_GUI)
