@@ -153,7 +153,6 @@ install %{SOURCE1} %{buildroot}%{_datadir}/%{name}/
 %check
 cd %{builddir}
 export CTEST_OUTPUT_ON_FAILURE=1
-export LD_LIBRARY_PATH=%{buildroot}/%{_libdir}/:$LD_LIBRARY_PATH
 %if !%{defined fedora}
   make check
 %endif
@@ -162,7 +161,7 @@ export LD_LIBRARY_PATH=%{buildroot}/%{_libdir}/:$LD_LIBRARY_PATH
 %files
 %defattr(-,root,root)
 %{_bindir}/anmp-qt
-%{_libdir}/libanmp.so
+%exclude %{_libdir}/libanmp.a
 %dir %{_datadir}/%{name}/
 %{_datadir}/%{name}/%{sffile}
 %if 0%{?suse_version}

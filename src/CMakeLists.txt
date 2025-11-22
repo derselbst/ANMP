@@ -136,7 +136,12 @@ if(USE_OPENMPT)
 endif(USE_OPENMPT)
 
 
-add_library(${PROJECT_NAME})
+add_library(${PROJECT_NAME} STATIC)
 target_link_libraries(${PROJECT_NAME} PUBLIC anmp-internal)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${LD_FLAGS})
+set_target_properties(
+  ${PROJECT_NAME} PROPERTIES
+    # SOVERSION 0 # omitted, no API / ABI stability
+    VERSION 0.0.1
+)
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
