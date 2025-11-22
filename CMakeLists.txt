@@ -379,12 +379,20 @@ endif(ENABLE_CUE)
 
 if(ENABLE_GUI)
 
-    find_package(Qt6 COMPONENTS Core Widgets Gui DBus Svg Test REQUIRED)
+    find_package(Qt6 COMPONENTS Core Widgets Gui Svg Test REQUIRED)
 
     set(USE_GUI TRUE)
     add_definitions(-DUSE_GUI)
 
-    MY_PRINT(QT6CORE)
+    find_package(Qt6 COMPONENTS DBus)
+
+    if(TARGET Qt6::DBus)
+        set(USE_DBUS TRUE)
+        add_definitions(-DUSE_DBUS)
+    endif()
+
+    MY_PRINT(QT6_CORE)
+    MY_PRINT(QT6_DBUS)
 
     summary_add("QT GUI support" USE_GUI)
 endif(ENABLE_GUI)

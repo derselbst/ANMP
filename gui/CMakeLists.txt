@@ -34,18 +34,19 @@ if(USE_GUI)
         songinspector.h
     )
     
-    qt_generate_dbus_interface(
-        mainwindow.h # from that header
-        org.anmp.xml # generate the dbus interface to that xml
-        OPTIONS -M # exporting public slots only
-    )
+    if(USE_DBUS)
+        qt_generate_dbus_interface(
+            mainwindow.h # from that header
+            org.anmp.xml # generate the dbus interface to that xml
+            OPTIONS -M # exporting public slots only
+        )
 
-    # from the just generated xml file, generate implementation files for the dbus adaptor
-    qt_add_dbus_adaptor(GUI_SRCS ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml mainwindow.h MainWindow mainwindow_adaptor MainWindowAdaptor)
+        # from the just generated xml file, generate implementation files for the dbus adaptor
+        qt_add_dbus_adaptor(GUI_SRCS ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml mainwindow.h MainWindow mainwindow_adaptor MainWindowAdaptor)
     
-    # skip processing those auto generated files
-    set_property(SOURCE mainwindow_adaptor.cpp mainwindow_adaptor.h PROPERTY SKIP_AUTOGEN ON)
-
+        # skip processing those auto generated files
+        set_property(SOURCE mainwindow_adaptor.cpp mainwindow_adaptor.h PROPERTY SKIP_AUTOGEN ON)
+    endif()
     
     qt_wrap_ui(UI_HEADERS
         mainwindow.ui
@@ -76,7 +77,7 @@ if(USE_GUI)
     endif()
 
     target_link_libraries(${PROJECT_NAME}
-        anmp
+        anmp-internal
         ${LD_FLAGS}
     )
     

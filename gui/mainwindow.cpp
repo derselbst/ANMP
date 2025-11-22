@@ -9,7 +9,9 @@
 #include "PlaylistModel.h"
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
+#ifdef USE_DBUS
 #include "mainwindow_adaptor.h"
+#endif
 #include "ui_mainwindow.h"
 #include "ui_playcontrol.h"
 
@@ -54,12 +56,12 @@ MainWindow::MainWindow(QWidget *parent)
     //connect(iface, SIGNAL(message(QString,QString)), this, SLOT(messageSlot(QString,QString)));
     QDBusConnection::sessionBus().connect(QString("org.anmp"), QString(), "org.anmp", "TooglePlayPause", this, SLOT(tooglePlayPause()));
 //     connect(iface, &org::anmp::TooglePlayPause, this, &MainWindow::TogglePlayPause);*/
-
+#ifdef USE_DBUS
     new MainWindowAdaptor(this);
     QDBusConnection dbus = QDBusConnection::sessionBus();
     dbus.registerObject("/MainWindow", this);
     dbus.registerService("org.anmp");
-
+#endif
     // init UI
     this->ui->setupUi(this);
 
