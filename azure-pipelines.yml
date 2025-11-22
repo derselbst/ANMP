@@ -67,12 +67,12 @@ jobs:
       configuration: 'Release'
       platform: 'x64'
       VCPKG_INSTALLATION_ROOT: 'C:/vcpkg/'
-      PKG_CONFIG_PATH: '$(VCPKG_INSTALLATION_ROOT)/installed/$(platform)-windows/lib/pkgconfig'
+      PKG_CONFIG_PATH: '$(VCPKG_INSTALLATION_ROOT)/installed/$(platform)-windows-static/lib/pkgconfig'
       WindowsSDKVersion: '10.0.22621.0'
       WindowsSDKDir: 'C:\Program Files (x86)\Windows Kits\10\Include\$(WindowsSDKVersion)'
       WindowsSDKDirBin: 'C:\Program Files (x86)\Windows Kits\10\bin\$(WindowsSDKVersion)'
       WindowsSDKDirLib: 'C:\Program Files (x86)\Windows Kits\10\Lib\$(WindowsSDKVersion)'
-      msbuildArguments: '/p:WindowsSDKDir="$(WindowsSDKDir)" /p:AdditionalIncludeDirectories="$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows\include;$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows\lib;$(WindowsSDKDir)\ucrt;$(WindowsSDKDir)\um;$(WindowsSDKDir)\shared;$(WindowsSDKDir)\winrt"'
+      msbuildArguments: '/p:WindowsSDKDir="$(WindowsSDKDir)" /p:AdditionalIncludeDirectories="$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include;$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib;$(WindowsSDKDir)\ucrt;$(WindowsSDKDir)\um;$(WindowsSDKDir)\shared;$(WindowsSDKDir)\winrt"'
     steps:
     - checkout: self
       submodules: true
@@ -110,13 +110,13 @@ jobs:
       inputs:
         SourceFolder: 'psflib'
         Contents: 'psflib.h'
-        TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows\include'
+        TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include'
     - task: CopyFiles@2
       displayName: 'Install psflib lib'
       inputs:
         SourceFolder: 'psflib\$(platform)\$(configuration)-$(toolset)'
         Contents: 'psflib.lib'
-        TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows\lib'
+        TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
     - task: MSBuild@1
       displayName: 'Compile lazyusf2'
       continueOnError: true
@@ -135,13 +135,13 @@ jobs:
       inputs:
         SourceFolder: 'lazyusf2\usf'
         Contents: 'usf.h'
-        TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows\include'
+        TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\include'
     - task: CopyFiles@2
       displayName: 'Install lazyusf2 lib'
       inputs:
         SourceFolder: 'lazyusf2\prj\msvc\$(platform)\$(configuration)-$(toolset)'
         Contents: 'lazyusf2.lib'
-        TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows\lib'
+        TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
 
     - script: |
         @ECHO ON
@@ -149,7 +149,7 @@ jobs:
         dir
         mkdir build
         cd build
-        cmake -Werror=dev -G Ninja -DCMAKE_MAKE_PROGRAM=C:/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_INSTALLATION_ROOT)/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$(VCPKG_INSTALLATION_ROOT)/installed/$(platform)-windows -DBUILD_SHARED_LIBS=0 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL -DCMAKE_VERBOSE_MAKEFILE=1 -DENABLE_VGMSTREAM=0 -DENABLE_FFMPEG=0 -DENABLE_EBUR128=0 ..
+        cmake -Werror=dev -G Ninja -DCMAKE_MAKE_PROGRAM=C:/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows-static -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_INSTALLATION_ROOT)/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$(VCPKG_INSTALLATION_ROOT)/installed/$(platform)-windows-static -DBUILD_SHARED_LIBS=0 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 -DENABLE_VGMSTREAM=0 -DENABLE_FFMPEG=0 -DENABLE_EBUR128=0 ..
         cmake --build . --config $(configuration) --parallel 3 --target anmp-qt
       displayName: 'Compile static ANMP'
       workingDirectory: 'ANMP'
