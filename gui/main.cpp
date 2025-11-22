@@ -3,12 +3,12 @@
 
 #include <QApplication>
 #include <QMessageBox>
-#include <QDBusConnectionInterface>
 #include <QStyleFactory>
 
 #ifdef USE_DBUS
 #include "anmp_dbus_interface.h"
 #include <QtDBus>
+#include <QDBusConnectionInterface>
 #endif
 
 using namespace std;
