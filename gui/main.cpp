@@ -1,14 +1,15 @@
 #include "anmp.hpp"
-#ifdef USE_DBUS
-#include "anmp_dbus_interface.h"
-#endif
 #include "mainwindow.h"
 
 #include <QApplication>
 #include <QMessageBox>
-#include <QtDBus>
 #include <QDBusConnectionInterface>
 #include <QStyleFactory>
+
+#ifdef USE_DBUS
+#include "anmp_dbus_interface.h"
+#include <QtDBus>
+#endif
 
 using namespace std;
 
