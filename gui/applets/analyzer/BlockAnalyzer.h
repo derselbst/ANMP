@@ -74,7 +74,7 @@ class BlockAnalyzer : public AnalyzerBase
     {
         Texture(BlockAnalyzer* analyzer, const QPixmap &pixmap)
         : analyzer(analyzer),
-          id(analyzer->createTexture(pixmap.toImage().flipped(Qt::Vertical))), // Flip texture vertically for OpenGL bottom-left coordinate system
+          id(analyzer->createTexture(pixmap.toImage().mirrored())), // Flip texture vertically for OpenGL bottom-left coordinate system
           size(pixmap.size())
         {
         }
