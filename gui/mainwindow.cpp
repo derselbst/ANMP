@@ -9,7 +9,9 @@
 #include "PlaylistModel.h"
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
+#ifdef USE_DBUS
 #include "mainwindow_adaptor.h"
+#endif
 #include "ui_mainwindow.h"
 #include "ui_playcontrol.h"
 
@@ -54,12 +56,12 @@ MainWindow::MainWindow(QWidget *parent)
     //connect(iface, SIGNAL(message(QString,QString)), this, SLOT(messageSlot(QString,QString)));
     QDBusConnection::sessionBus().connect(QString("org.anmp"), QString(), "org.anmp", "TooglePlayPause", this, SLOT(tooglePlayPause()));
 //     connect(iface, &org::anmp::TooglePlayPause, this, &MainWindow::TogglePlayPause);*/
-
+#ifdef USE_DBUS
     new MainWindowAdaptor(this);
     QDBusConnection dbus = QDBusConnection::sessionBus();
     dbus.registerObject("/MainWindow", this);
     dbus.registerService("org.anmp");
-
+#endif
     // init UI
     this->ui->setupUi(this);
 
@@ -192,10 +194,10 @@ void MainWindow::createShortcuts()
     connect(playShortcut, &QShortcut::activated, this, &MainWindow::TogglePlayPause);
     this->playctrl->playButton->setToolTip(this->playctrl->playButton->toolTip() + " [F4]");
 
-    QShortcut *pauseFadeShortcut = new SHORTCUT(QKeySequence(Qt::SHIFT + Qt::Key_F4));
+    QShortcut *pauseFadeShortcut = new SHORTCUT(QKeySequence(Qt::SHIFT | Qt::Key_F4));
     connect(pauseFadeShortcut, &QShortcut::activated, this, &MainWindow::TogglePlayPauseFade);
 
-    QShortcut *stopFadeShortcut = new SHORTCUT(QKeySequence(Qt::SHIFT + Qt::Key_F5));
+    QShortcut *stopFadeShortcut = new SHORTCUT(QKeySequence(Qt::SHIFT | Qt::Key_F5));
     connect(stopFadeShortcut, &QShortcut::activated, this, &MainWindow::StopFade);
 
     QShortcut *stopShortcut = new SHORTCUT(QKeySequence(Qt::Key_F5));
@@ -232,14 +234,14 @@ void MainWindow::createShortcuts()
     connect(seekBackward, &QShortcut::activated, this, &MainWindow::SeekBackward);
     this->playctrl->backwardButton->setToolTip(this->playctrl->backwardButton->toolTip() + " [F3]");
 
-    QShortcut *fastSeekForward = new SHORTCUT(QKeySequence(Qt::ALT + Qt::Key_Right));
+    QShortcut *fastSeekForward = new SHORTCUT(QKeySequence(Qt::ALT | Qt::Key_Right));
     connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::FastSeekForward);
 
     fastSeekForward = new SHORTCUT(QKeySequence(Qt::Key_F7));
     connect(fastSeekForward, &QShortcut::activated, this, &MainWindow::FastSeekForward);
     this->playctrl->fforwardButton->setToolTip(this->playctrl->fforwardButton->toolTip() + " [F7]");
 
-    QShortcut *fastSeekBackward = new SHORTCUT(QKeySequence(Qt::ALT + Qt::Key_Left));
+    QShortcut *fastSeekBackward = new SHORTCUT(QKeySequence(Qt::ALT | Qt::Key_Left));
     connect(fastSeekBackward, &QShortcut::activated, this, &MainWindow::FastSeekBackward);
 
     fastSeekBackward = new SHORTCUT(QKeySequence(Qt::Key_F2));
@@ -337,7 +339,7 @@ void MainWindow::showNoVisualizer()
     QMessageBox msgBox;
     msgBox.setText("Unsupported");
     msgBox.setIcon(QMessageBox::Information);
-    msgBox.setDetailedText("ANMP was built without Qt5OpenGL. No visualizers available.");
+    msgBox.setDetailedText("ANMP was built without Qt6OpenGL. No visualizers available.");
     msgBox.exec();
 }
 #endif
