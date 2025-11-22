@@ -25,11 +25,11 @@ int PlayheadSlider::getFrameFromMouseEvt(const QMouseEvent *event)
 
     if (this->orientation() == Qt::Vertical)
     {
-        return static_cast<int>(min + ((max - min) * 1.0 * (height - event->y())) / height);
+        return static_cast<int>(min + ((max - min) * 1.0 * (height - event->position().y())) / height);
     }
     else
     {
-        return static_cast<int>(min + ((max - min) * 1.0 * event->x()) / width);
+        return static_cast<int>(min + ((max - min) * 1.0 * event->position().x()) / width);
     }
 }
 
@@ -55,7 +55,7 @@ void PlayheadSlider::mouseMoveEvent(QMouseEvent *event)
         const QRect rect(pos.x(), pos.y(), 1, this->height());
         int frameOnSlider = getFrameFromMouseEvt(event);
         
-        QToolTip::showText(event->globalPos(),
+        QToolTip::showText(event->globalPosition().toPoint(),
                            QString::fromStdString(framesToTimeStr(frameOnSlider, this->currentSampleRate)),
                            this,
                            rect);
