@@ -203,7 +203,7 @@ class Config
         switch (version)
         {
             case 7:
-                archive(CEREAL_NVP(this->FluidsynthFilterFC));
+                // archive(CEREAL_NVP(this->FluidsynthFilterFC));
                 archive(CEREAL_NVP(this->FluidsynthGain));
                 [[fallthrough]];
             case 6:
@@ -211,7 +211,7 @@ class Config
                 archive(CEREAL_NVP(this->useMadvFree));
                 [[fallthrough]];
             case 5:
-                archive(CEREAL_NVP(this->FluidsynthFilterQ));
+                // archive(CEREAL_NVP(this->FluidsynthFilterQ));
                 [[fallthrough]];
             case 4:
                 archive(CEREAL_NVP(this->MadPermissive));

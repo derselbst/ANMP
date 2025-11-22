@@ -63,8 +63,6 @@ void ConfigDialog::fillProperties()
     this->ui->checkChorus->setChecked(this->newConfig.FluidsynthEnableChorus);
     this->ui->checkChan9Drum->setChecked(this->newConfig.FluidsynthChannel9IsDrum);
     this->ui->comboBankSelMode->setCurrentText(QString::fromStdString(this->newConfig.FluidsynthBankSelect));
-    this->ui->spinFilterQ->setValue(this->newConfig.FluidsynthFilterQ);
-    this->ui->spinFilterFC->setValue(this->newConfig.FluidsynthFilterFC);
     this->ui->spinGain->setValue(this->newConfig.FluidsynthGain);
     this->ui->checkRenderNoPresetAssigned->setChecked(this->newConfig.FluidsynthRenderNotesWithoutPreset);
 
@@ -234,8 +232,6 @@ void ConfigDialog::buttonBoxClicked(QAbstractButton *btn)
         this->newConfig.FluidsynthEnableChorus = this->ui->checkChorus->isChecked();
         this->newConfig.FluidsynthChannel9IsDrum = this->ui->checkChan9Drum->isChecked();
         this->newConfig.FluidsynthBankSelect = this->ui->comboBankSelMode->currentText().toStdString();
-        this->newConfig.FluidsynthFilterQ = this->ui->spinFilterQ->value();
-        this->newConfig.FluidsynthFilterFC = this->ui->spinFilterFC->value();
         this->newConfig.FluidsynthGain = this->ui->spinGain->value();
         this->newConfig.FluidsynthRenderNotesWithoutPreset = this->ui->checkRenderNoPresetAssigned->isChecked();
 
