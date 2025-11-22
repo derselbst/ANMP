@@ -26,7 +26,7 @@ BuildRequires: cmake >= 1:3.1.0
 BuildRequires: cmake >= 3.1.0
 %endif
 
-BuildRequires: pkgconfig(fluidsynth) >= 2.2.0
+BuildRequires: pkgconfig(fluidsynth) >= 2.5.0
 BuildRequires: pkgconfig(smf)
 BuildRequires: libaopsf-devel
 BuildRequires: libcue-devel
@@ -74,9 +74,12 @@ BuildRequires: pkgconfig(jack) pkgconfig(samplerate)
 BuildRequires: pkgconfig(portaudio-2.0)
 BuildRequires: libebur128-devel
 
-BuildRequires: pkgconfig(Qt5Widgets)
-BuildRequires: pkgconfig(Qt5DBus)
-BuildRequires: pkgconfig(Qt5OpenGL)
+BuildRequires: pkgconfig(Qt6Widgets)
+BuildRequires: pkgconfig(Qt6DBus)
+BuildRequires: pkgconfig(Qt6OpenGLWidgets)
+BuildRequires: pkgconfig(Qt6Svg)
+BuildRequires: pkgconfig(Qt6Test)
+BuildRequires: pkgconfig(Qt6Core)
 
 
 %description
