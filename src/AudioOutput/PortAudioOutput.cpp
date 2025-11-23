@@ -239,6 +239,7 @@ int PortAudioOutput::write(const T *buffer, frame_t frames)
     {
         this->doResampling(procBuf, frames);
         err = Pa_WriteStream(d->handle, d->resampledBuffer.data(), d->srcData.output_frames_gen);
+        d->srcData.output_frames_gen = 0;
         frames = d->srcData.input_frames_used;
     }
 
