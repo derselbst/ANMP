@@ -259,17 +259,22 @@ void MainWindow::buildFileBrowser()
     std::string home;
     try
     {
-        home = ::myHomeDir();
+#ifdef Q_OS_WIN
+        home = "";
+#else
+        home = ::myHomeDir() + "/../";
+#endif
     }
     catch(const std::runtime_error& e)
     {
     }
     QString rootPath = QString::fromStdString(home);
-    this->drivesModel->setFilter(QDir::NoDotAndDotDot | QDir::Dirs);
+    this->drivesModel->setFilter(QDir::Drives | QDir::Dirs | QDir::NoDotAndDotDot);
+    this->drivesModel->setReadOnly(true);
 
     QTreeView *treeView = this->treeView = new QTreeView(this->ui->dockDir);
     treeView->setModel(this->drivesModel);
-    treeView->setRootIndex(this->drivesModel->setRootPath(rootPath + "/../"));
+    treeView->setRootIndex(this->drivesModel->setRootPath(rootPath));
     treeView->hideColumn(1);
     treeView->hideColumn(2);
     treeView->hideColumn(3);
@@ -279,6 +284,8 @@ void MainWindow::buildFileBrowser()
     this->ui->dockDir->setWidget(treeView);
 
     this->filesModel->setFilter(QDir::NoDotAndDotDot | QDir::Files);
+    this->filesModel->setReadOnly(true);
+
     QListView *listView = this->listView = new QListView(this->ui->dockFile);
     listView->setModel(this->filesModel);
     listView->setRootIndex(this->filesModel->setRootPath(rootPath));
