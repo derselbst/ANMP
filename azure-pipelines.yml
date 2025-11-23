@@ -12,7 +12,7 @@ resources:
   containers:
   - container: qt6Container-win
     endpoint: 'myDockerHub'
-    image: ghcr.io/derselbst/qt6-ps.win:qt6-49864c3
+    image: ghcr.io/derselbst/qt6-ps.win:master-986fe9d
 
 parameters:
 - name: UseCache
