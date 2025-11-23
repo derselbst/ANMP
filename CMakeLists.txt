@@ -184,7 +184,7 @@ option(ENABLE_MODPLUG "Use libmodplug to support multiple tracker formats." OFF)
 option(ENABLE_OPENMPT "A better libmodplug to support multiple tracker formats." ON)
 
 if(ENABLE_LIBGME)
-    MY_FIND_LIB(LIBGME gme)
+    PKG_CHECK_MODULES(LIBGME libgme IMPORTED_TARGET)
     
     if(LIBGME_FOUND)
       add_definitions(-DUSE_LIBGME)

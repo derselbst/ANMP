@@ -84,9 +84,10 @@ if(USE_CUE)
   target_link_libraries(anmp-internal PUBLIC PkgConfig::LIBCUE)
 endif()
 
-if(LIBGME_FOUND)
+if(USE_LIBGME)
     target_sources(anmp-internal PRIVATE InputLibraryWrapper/LibGMEWrapper.cpp InputLibraryWrapper/LibGMEWrapper.h)
-endif(LIBGME_FOUND)
+    target_link_libraries(anmp-internal PUBLIC PkgConfig::LIBGME)
+endif(USE_LIBGME)
 
 if(USE_MAD)
     target_sources(anmp-internal PRIVATE InputLibraryWrapper/LibMadWrapper.cpp InputLibraryWrapper/LibMadWrapper.h)
