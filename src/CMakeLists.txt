@@ -72,7 +72,7 @@ endif(USE_JACK)
 
 if(USE_PORTAUDIO)
     target_sources(anmp-internal PRIVATE AudioOutput/PortAudioOutput.cpp AudioOutput/PortAudioOutput.h)
-    target_link_libraries(anmp-internal PUBLIC PkgConfig::PORTAUDIO)
+    target_link_libraries(anmp-internal PUBLIC PkgConfig::PORTAUDIO PkgConfig::SAMPLERATE)
 endif(USE_PORTAUDIO)
 
 if(EBUR128_FOUND)

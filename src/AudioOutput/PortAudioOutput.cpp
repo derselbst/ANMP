@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <portaudio.h>
+#include <samplerate.h>
 
 
 struct PortAudioOutput::Impl
@@ -15,6 +16,12 @@ struct PortAudioOutput::Impl
     PaStream *handle = nullptr;
     PaDeviceIndex deviceIndex;
     const PaDeviceInfo *deviceInfo;
+
+    SRC_STATE* srcState;
+    SRC_DATA srcData;
+
+    // mixed, converted to float and resampled buffer used in this->write()
+    std::vector<float> resampledBuffer;
 };
 
 PortAudioOutput::PortAudioOutput() : d(std::make_unique<Impl>())
@@ -70,6 +77,7 @@ void PortAudioOutput::open()
 {
     if (d->handle == nullptr)
     {
+        this->SetOutputChannels(this->GetOutputChannels());
     }
 }
 
@@ -77,6 +85,24 @@ void PortAudioOutput::open()
 void PortAudioOutput::SetOutputChannels(uint8_t chan)
 {
     this->IAudioOutput::SetOutputChannels(chan);
+
+    // we have to delete the resampler in order to refresh channel count
+    if (d->srcState != nullptr)
+    {
+        d->srcState = src_delete(d->srcState);
+    }
+    int error;
+    // SRC_SINC_BEST_QUALITY is too slow, causing jack process thread to discard samples, resulting in hearable artifacts
+    // SRC_LINEAR has high frequency audible garbage
+    // SRC_ZERO_ORDER_HOLD is even worse than LINEAR
+    // SRC_SINC_MEDIUM_QUALITY might still be too slow when using jack with very low latency having a bit of CPU load
+    d->srcState = src_new(SRC_LINEAR, chan, &error);
+    if (d->srcState == nullptr)
+    {
+        THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) << ")");
+    }
+
+    this->d->resampledBuffer.reserve(gConfig.FramesToRender * chan);
 
     // force reinit
     if (this->currentFormat.IsValid())
@@ -110,15 +136,12 @@ void PortAudioOutput::_init(SongFormat &format, bool)
     switch (format.SampleFormat)
     {
         case SampleFormat_t::float32:
-            paSampleFmt = paFloat32;
             this->processedBuffer.reserve(gConfig.FramesToRender * channels * sizeof(float));
             break;
         case SampleFormat_t::int16:
-            paSampleFmt = paInt16;
             this->processedBuffer.reserve(gConfig.FramesToRender * channels * sizeof(int16_t));
             break;
         case SampleFormat_t::int32:
-            paSampleFmt = paInt32;
             this->processedBuffer.reserve(gConfig.FramesToRender * channels * sizeof(int32_t));
             break;
         case SampleFormat_t::unknown:
@@ -132,11 +155,14 @@ void PortAudioOutput::_init(SongFormat &format, bool)
     this->drop();
     this->close();
 
+    // zero out any buffer in resampler, to avoid hearable cracks, when switching from one song to another
+    src_reset(d->srcState);
+
     // Standard stream parameters
     PaStreamParameters outputParams;
     outputParams.device = d->deviceIndex;
     outputParams.channelCount = channels;
-    outputParams.sampleFormat = paSampleFmt;
+    outputParams.sampleFormat = paFloat32;
     outputParams.suggestedLatency = d->deviceInfo->defaultLowOutputLatency;
     outputParams.hostApiSpecificStreamInfo = nullptr; // Will point to WASAPI struct.
 
@@ -155,6 +181,8 @@ void PortAudioOutput::_init(SongFormat &format, bool)
     {
         THROW_RUNTIME_ERROR("Pa_OpenStream failed (" << Pa_GetErrorText(err) << ")");
     }
+
+    this->start();
 }
 
 void PortAudioOutput::drain()
@@ -199,27 +227,73 @@ int PortAudioOutput::write(const T *buffer, frame_t frames)
         THROW_RUNTIME_ERROR("unable to write pcm since PortAudioOutput::init() has not been called yet or init failed");
     }
     
-    auto* procBuf = reinterpret_cast<T*>(processedBuffer.data());
-    this->Mix<T, T>(frames, buffer, this->currentFormat, procBuf);
+    auto* procBuf = reinterpret_cast<float*>(processedBuffer.data());
+    this->Mix<T, float>(frames, buffer, this->currentFormat, procBuf);
+    
+    auto framesUsedNow = this->doResampling(procBuf, frames);
 
-    PaError err = Pa_WriteStream(d->handle, procBuf, frames);
+    PaError err = Pa_WriteStream(d->handle, d->resampledBuffer.data(), framesUsedNow);
     switch (err)
     {
         case PaErrorCode::paUnanticipatedHostError:
             return 0;
         case PaErrorCode::paInputOverflowed:
+            CLOG(LogLevel_t::Info, "overflow");
             [[fallthrough]];
         case PaErrorCode::paOutputUnderflowed:
+            CLOG(LogLevel_t::Info, "underflow");
             [[fallthrough]];
         case PaErrorCode::paNoError:
-            return frames;
+            return framesUsedNow;
         default:
             THROW_RUNTIME_ERROR("unable to write pcm (" << Pa_GetErrorText(err) << ")");
     }
 }
 
+int PortAudioOutput::doResampling(const float *inBuf, const size_t Frames)
+{
+    d->srcData.data_in = inBuf;
+    d->srcData.input_frames = Frames;
+
+    d->srcData.data_out = d->resampledBuffer.data();
+
+    d->srcData.output_frames = gConfig.FramesToRender - d->srcData.output_frames_gen;
+
+    // remember the count of frames the already have been resampled
+    int old = d->srcData.output_frames_gen;
+
+    // output_sample_rate / input_sample_rate
+    d->srcData.src_ratio = (double)d->deviceInfo->defaultSampleRate / this->currentFormat.SampleRate;
+
+    int err = src_process(d->srcState, &d->srcData);
+    if (err != 0)
+    {
+        CLOG(LogLevel_t::Error, "libsamplerate failed processing (" << src_strerror(err) << ")");
+    }
+    else
+    {
+        if (d->srcData.output_frames_gen < d->srcData.output_frames)
+        {
+            CLOG(LogLevel_t::Info, "resample buffer has not been filled completely" << std::endl
+                                << "input_frames: " << d->srcData.input_frames << "\toutput_frames: " << d->srcData.output_frames << std::endl
+                                << "input_frames_used: " << d->srcData.input_frames_used << "\toutput_frames_gen: " << d->srcData.output_frames_gen);
+
+            // needed next time to advance data_out
+            d->srcData.output_frames_gen += old;
+        }
+        else
+        {
+            d->srcData.output_frames_gen = 0;
+        }
+    }
+    return d->srcData.input_frames_used;
+}
+
 void PortAudioOutput::start()
 {
+    // zero out any buffer in resampler, to avoid hearable cracks, when pausing and restarting playback
+    src_reset(d->srcState);
+
     if (d->handle != nullptr)
     {
         PaError err = Pa_StartStream(d->handle);
