@@ -158,7 +158,7 @@ jobs:
         cmake --build . --config $(configuration) --parallel 3
         cmake --build . --config $(configuration) --target install
       displayName: 'Compile & Install libgme'
-      workingDirectory: 'libgme'
+      workingDirectory: 'game-music-emu'
 
     - script: |
         @ECHO ON
