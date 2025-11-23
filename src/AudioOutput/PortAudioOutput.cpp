@@ -25,7 +25,7 @@ PortAudioOutput::PortAudioOutput() : d(std::make_unique<Impl>())
         THROW_RUNTIME_ERROR("unable to initialize portaudio (" << Pa_GetErrorText(paInitError) << ")");
     }
 #ifdef _WIN32
-    // Find WASAPI host API index
+    // Find WASAPI host API index, the default MME backend is broken somehow, it randomly fails when switching between songs
     int wasapiIndex = -1;
     int hostApiCount = Pa_GetHostApiCount();
     for (int i = 0; i < hostApiCount; ++i)

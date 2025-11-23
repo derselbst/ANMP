@@ -26,12 +26,39 @@
 #include <QTableView>
 #include <QTreeView>
 #include <QFontDatabase>
+#include <QAbstractFileIconProvider>
 
 #include <chrono>
 #include <cmath>
 #include <thread> // std::this_thread::sleep_for
 #include <utility> // std::pair
 
+
+class MyDisabledFileIconProvider : public QAbstractFileIconProvider
+{
+    public:
+    MyDisabledFileIconProvider() = default;
+    ~MyDisabledFileIconProvider() override = default;
+
+    // The default implementation of this function is so horribly slow. It spams the UI thread with a bunch of useless events.
+    // Disable this, to make it use the icon(QAbstractFileIconProvider::IconType type) overload.
+    QIcon icon(const QFileInfo &) const override
+    {
+        return QIcon();
+    }
+
+    QString type(const QFileInfo &info) const override
+    {
+        if (info.isFile())
+        {
+            // The base implementation would try to determine the mime type in this case, which means, that it has to open the file,
+            // which in turn is incredibly slow when performed on Windows on a network share.
+            return QGuiApplication::translate("QAbstractFileIconProvider", "File");
+        }
+
+        return this->QAbstractFileIconProvider::type(info);
+    }
+};
 
 MainWindow::MainWindow(QWidget *parent)
 : QMainWindow(parent),
@@ -71,6 +98,7 @@ MainWindow::MainWindow(QWidget *parent)
     this->playctrl->labelTimePast->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
     this->ui->dockControl->setWidget(dockwid);
 
+    this->noIconProvider.reset(new MyDisabledFileIconProvider());
 
     this->buildFileBrowser();
     this->buildPlaylistView();
@@ -269,6 +297,7 @@ void MainWindow::buildFileBrowser()
     {
     }
     QString rootPath = QString::fromStdString(home);
+    this->drivesModel->setIconProvider(this->noIconProvider.get());
     this->drivesModel->setFilter(QDir::Drives | QDir::Dirs | QDir::NoDotAndDotDot);
     this->drivesModel->setReadOnly(true);
 
@@ -283,6 +312,7 @@ void MainWindow::buildFileBrowser()
     treeView->setDragDropMode(QAbstractItemView::DragOnly);
     this->ui->dockDir->setWidget(treeView);
 
+    this->filesModel->setIconProvider(this->noIconProvider.get());
     this->filesModel->setFilter(QDir::NoDotAndDotDot | QDir::Files);
     this->filesModel->setReadOnly(true);
 
