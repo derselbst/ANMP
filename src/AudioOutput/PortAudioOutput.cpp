@@ -96,7 +96,7 @@ void PortAudioOutput::SetOutputChannels(uint8_t chan)
     // SRC_LINEAR has high frequency audible garbage
     // SRC_ZERO_ORDER_HOLD is even worse than LINEAR
     // SRC_SINC_MEDIUM_QUALITY might still be too slow when using jack with very low latency having a bit of CPU load
-    d->srcState = src_new(SRC_LINEAR, chan, &error);
+    d->srcState = src_new(SRC_SINC_FASTEST, chan, &error);
     if (d->srcState == nullptr)
     {
         THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) << ")");
@@ -230,9 +230,9 @@ int PortAudioOutput::write(const T *buffer, frame_t frames)
     auto* procBuf = reinterpret_cast<float*>(processedBuffer.data());
     this->Mix<T, float>(frames, buffer, this->currentFormat, procBuf);
     
-    auto framesUsedNow = this->doResampling(procBuf, frames);
+    this->doResampling(procBuf, frames);
 
-    PaError err = Pa_WriteStream(d->handle, d->resampledBuffer.data(), framesUsedNow);
+    PaError err = Pa_WriteStream(d->handle, d->resampledBuffer.data(), d->srcData.output_frames_gen);
     switch (err)
     {
         case PaErrorCode::paUnanticipatedHostError:
@@ -244,18 +244,19 @@ int PortAudioOutput::write(const T *buffer, frame_t frames)
             CLOG(LogLevel_t::Info, "underflow");
             [[fallthrough]];
         case PaErrorCode::paNoError:
-            return framesUsedNow;
+            return d->srcData.input_frames_used;
         default:
             THROW_RUNTIME_ERROR("unable to write pcm (" << Pa_GetErrorText(err) << ")");
     }
 }
 
-int PortAudioOutput::doResampling(const float *inBuf, const size_t Frames)
+void PortAudioOutput::doResampling(const float *inBuf, const size_t Frames)
 {
     d->srcData.data_in = inBuf;
     d->srcData.input_frames = Frames;
 
     d->srcData.data_out = d->resampledBuffer.data();
+    d->srcData.data_out += d->srcData.output_frames_gen * this->GetOutputChannels();
 
     d->srcData.output_frames = gConfig.FramesToRender - d->srcData.output_frames_gen;
 
@@ -281,12 +282,7 @@ int PortAudioOutput::doResampling(const float *inBuf, const size_t Frames)
             // needed next time to advance data_out
             d->srcData.output_frames_gen += old;
         }
-        else
-        {
-            d->srcData.output_frames_gen = 0;
-        }
     }
-    return d->srcData.input_frames_used;
 }
 
 void PortAudioOutput::start()
