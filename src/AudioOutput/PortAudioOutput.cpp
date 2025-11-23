@@ -13,24 +13,54 @@
 struct PortAudioOutput::Impl
 {    
     PaStream *handle = nullptr;
-
-    // holds the error returned by Pa_Initialize
-    // this class shall only be usable if no error occurred
-    PaError paInitError = ~PaErrorCode::paNoError;
+    PaDeviceIndex deviceIndex;
+    const PaDeviceInfo *deviceInfo;
 };
 
 PortAudioOutput::PortAudioOutput() : d(std::make_unique<Impl>())
 {
+    auto paInitError = Pa_Initialize();
+    if (paInitError != PaErrorCode::paNoError)
+    {
+        THROW_RUNTIME_ERROR("unable to initialize portaudio (" << Pa_GetErrorText(paInitError) << ")");
+    }
+#ifdef _WIN32
+    // Find WASAPI host API index
+    int wasapiIndex = -1;
+    int hostApiCount = Pa_GetHostApiCount();
+    for (int i = 0; i < hostApiCount; ++i)
+    {
+        const PaHostApiInfo *hai = Pa_GetHostApiInfo(i);
+        if (hai && hai->type == paWASAPI)
+        {
+            wasapiIndex = i;
+            break;
+        }
+    }
+    if (wasapiIndex < 0)
+    {
+        THROW_RUNTIME_ERROR("WASAPI host API not found");
+    }
+
+    const PaHostApiInfo *wasapiInfo = Pa_GetHostApiInfo(wasapiIndex);
+    d->deviceIndex = wasapiInfo->defaultOutputDevice;
+#else
+    d->deviceIndex = Pa_GetDefaultOutputDevice();
+#endif
+    d->deviceInfo = Pa_GetDeviceInfo(d->deviceIndex);
+    if (!d->deviceInfo || d->deviceIndex == paNoDevice)
+    {
+        THROW_RUNTIME_ERROR("Failed to get default WASAPI output device info.");
+    }
+
+    CLOG(LogLevel_t::Info, "Using device: " << d->deviceInfo->name);
+    CLOG(LogLevel_t::Info, "Max output channels: " << d->deviceInfo->maxOutputChannels);
 }
 
 PortAudioOutput::~PortAudioOutput()
 {
     this->close();
-
-    if (d->paInitError == PaErrorCode::paNoError)
-    {
-        Pa_Terminate();
-    }
+    Pa_Terminate();
 }
 
 //
@@ -40,11 +70,6 @@ void PortAudioOutput::open()
 {
     if (d->handle == nullptr)
     {
-        d->paInitError = Pa_Initialize();
-        if (d->paInitError != PaErrorCode::paNoError)
-        {
-            THROW_RUNTIME_ERROR("unable to initialize portaudio (" << Pa_GetErrorText(d->paInitError) << ")");
-        }
     }
 }
 
@@ -80,25 +105,21 @@ void PortAudioOutput::init(SongFormat &format, bool realtime)
 
 void PortAudioOutput::_init(SongFormat &format, bool)
 {
-    if (d->paInitError != PaErrorCode::paNoError)
-    {
-        THROW_RUNTIME_ERROR("portaudio not initialized! (" << Pa_GetErrorText(d->paInitError) << ")");
-    }
-
+    int channels = this->GetOutputChannels();
     PaSampleFormat paSampleFmt;
     switch (format.SampleFormat)
     {
         case SampleFormat_t::float32:
             paSampleFmt = paFloat32;
-            this->processedBuffer.reserve(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(float));
+            this->processedBuffer.reserve(gConfig.FramesToRender * channels * sizeof(float));
             break;
         case SampleFormat_t::int16:
             paSampleFmt = paInt16;
-            this->processedBuffer.reserve(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(int16_t));
+            this->processedBuffer.reserve(gConfig.FramesToRender * channels * sizeof(int16_t));
             break;
         case SampleFormat_t::int32:
             paSampleFmt = paInt32;
-            this->processedBuffer.reserve(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(int32_t));
+            this->processedBuffer.reserve(gConfig.FramesToRender * channels * sizeof(int32_t));
             break;
         case SampleFormat_t::unknown:
             THROW_RUNTIME_ERROR("Sample Format not set");
@@ -111,24 +132,29 @@ void PortAudioOutput::_init(SongFormat &format, bool)
     this->drop();
     this->close();
 
+    // Standard stream parameters
+    PaStreamParameters outputParams;
+    outputParams.device = d->deviceIndex;
+    outputParams.channelCount = channels;
+    outputParams.sampleFormat = paSampleFmt;
+    outputParams.suggestedLatency = d->deviceInfo->defaultLowOutputLatency;
+    outputParams.hostApiSpecificStreamInfo = nullptr; // Will point to WASAPI struct.
+
+    PaStream *stream = nullptr;
+
     PaError err;
-
-    /* Open an audio I/O stream. */
-    err = Pa_OpenDefaultStream(&d->handle,
-                               0, /* no input channels */
-                               this->GetOutputChannels(), /* no. of output channels */
-                               paSampleFmt, /* 32 bit floating point output */
-                               format.SampleRate,
-                               gConfig.FramesToRender, /* frames per buffer, i.e. the number of sample frames that PortAudio will request from the callback.*/
-                               nullptr, /* this is my callback function */
-                               this); /* This is a pointer that will be passed to my callback */
-
+    err = Pa_OpenStream(&d->handle,
+                        nullptr, // no input
+                        &outputParams,
+                        d->deviceInfo->defaultSampleRate,
+                        gConfig.FramesToRender,
+                        paNoFlag,
+                        nullptr,
+                        nullptr);
     if (err != PaErrorCode::paNoError)
     {
-        THROW_RUNTIME_ERROR("unable to open pcm (" << Pa_GetErrorText(err) << ")");
+        THROW_RUNTIME_ERROR("Pa_OpenStream failed (" << Pa_GetErrorText(err) << ")");
     }
-
-    this->start();
 }
 
 void PortAudioOutput::drain()
