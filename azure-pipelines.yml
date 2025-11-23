@@ -9,6 +9,10 @@ resources:
     type: github
     name: derselbst/psflib
     endpoint: 'derselbst'
+  - repository: libgme
+    type: github
+    name: libgme/game-music-emu
+    endpoint: 'derselbst'
   containers:
   - container: qt6Container-win
     endpoint: 'myDockerHub'
@@ -78,6 +82,7 @@ jobs:
       submodules: true
     - checkout: psflib
     - checkout: lazyusf2
+    - checkout: libgme
 
     - script: |
         @ECHO ON
@@ -142,6 +147,16 @@ jobs:
         SourceFolder: 'lazyusf2\prj\msvc\$(platform)\$(configuration)-$(toolset)'
         Contents: 'lazyusf2.lib'
         TargetFolder: '$(VCPKG_INSTALLATION_ROOT)\installed\$(platform)-windows-static\lib'
+
+    - script: |
+        @ECHO ON
+        mkdir build
+        cd build
+        cmake -Werror=dev -G Ninja -DCMAKE_MAKE_PROGRAM=C:/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows-static -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_INSTALLATION_ROOT)/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$(VCPKG_INSTALLATION_ROOT)/installed/$(platform)-windows-static -DBUILD_SHARED_LIBS=0 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 ..
+        cmake --build . --config $(configuration) --parallel 3
+        cmake --build . --config $(configuration) --target install
+      displayName: 'Compile & Install libgme'
+      workingDirectory: 'libgme'
 
     - script: |
         @ECHO ON
