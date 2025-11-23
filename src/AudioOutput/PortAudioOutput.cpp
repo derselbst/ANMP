@@ -230,9 +230,18 @@ int PortAudioOutput::write(const T *buffer, frame_t frames)
     auto* procBuf = reinterpret_cast<float*>(processedBuffer.data());
     this->Mix<T, float>(frames, buffer, this->currentFormat, procBuf);
     
-    this->doResampling(procBuf, frames);
+    PaError err;
+    if (d->deviceInfo->defaultSampleRate == this->currentFormat.SampleRate)
+    {
+         err = Pa_WriteStream(d->handle, procBuf, frames);
+    }
+    else
+    {
+        this->doResampling(procBuf, frames);
+        err = Pa_WriteStream(d->handle, d->resampledBuffer.data(), d->srcData.output_frames_gen);
+        frames = d->srcData.input_frames_used;
+    }
 
-    PaError err = Pa_WriteStream(d->handle, d->resampledBuffer.data(), d->srcData.output_frames_gen);
     switch (err)
     {
         case PaErrorCode::paUnanticipatedHostError:
@@ -244,7 +253,7 @@ int PortAudioOutput::write(const T *buffer, frame_t frames)
             CLOG(LogLevel_t::Info, "underflow");
             [[fallthrough]];
         case PaErrorCode::paNoError:
-            return d->srcData.input_frames_used;
+            return frames;
         default:
             THROW_RUNTIME_ERROR("unable to write pcm (" << Pa_GetErrorText(err) << ")");
     }
