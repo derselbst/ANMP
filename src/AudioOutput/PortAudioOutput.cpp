@@ -122,6 +122,10 @@ void PortAudioOutput::init(SongFormat &format, bool realtime)
         else
         {
             this->_init(format, realtime);
+
+            // zero out any buffer in resampler, to avoid hearable cracks, when switching from one song to another
+            src_reset(d->srcState);
+            src_set_ratio(d->srcState, (double)d->deviceInfo->defaultSampleRate / this->currentFormat.SampleRate);
         }
     }
 
@@ -154,9 +158,6 @@ void PortAudioOutput::_init(SongFormat &format, bool)
 
     this->drop();
     this->close();
-
-    // zero out any buffer in resampler, to avoid hearable cracks, when switching from one song to another
-    src_reset(d->srcState);
 
     // Standard stream parameters
     PaStreamParameters outputParams;
