@@ -101,6 +101,7 @@ endif(LIBSND_FOUND)
 
 if(USE_LAZYUSF)
     target_sources(anmp-internal PRIVATE InputLibraryWrapper/LazyusfWrapper.cpp InputLibraryWrapper/LazyusfWrapper.h)
+    target_link_libraries(anmp-internal PUBLIC PkgConfig::ZLIB)
 endif(USE_LAZYUSF)
 
 if(USE_AOPSF)
