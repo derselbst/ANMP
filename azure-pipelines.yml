@@ -18,12 +18,6 @@ resources:
     endpoint: 'myDockerHub'
     image: ghcr.io/derselbst/qt6-ps.win:master-7a47b97
 
-parameters:
-- name: UseCache
-  displayName: Use Dependency Cache
-  type: boolean
-  default: true
-
 variables:
   DEBIAN_FRONTEND: 'noninteractive'
 
