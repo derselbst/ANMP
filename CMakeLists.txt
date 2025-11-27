@@ -142,13 +142,14 @@ endif(ENABLE_JACK)
 
 if(ENABLE_PORTAUDIO)
   PKG_CHECK_MODULES(PORTAUDIO portaudio-2.0 IMPORTED_TARGET)
+  PKG_CHECK_MODULES(SAMPLERATE samplerate IMPORTED_TARGET)
   
-  if(PORTAUDIO_FOUND)
+  if(PORTAUDIO_FOUND AND SAMPLERATE_FOUND)
         add_definitions(-DUSE_PORTAUDIO)
         set(USE_PORTAUDIO TRUE)
 
         MY_PRINT(PORTAUDIO)
-  endif(PORTAUDIO_FOUND)
+  endif(PORTAUDIO_FOUND AND SAMPLERATE_FOUND)
         
     summary_add("PortAudio support" USE_PORTAUDIO)
 endif(ENABLE_PORTAUDIO)
@@ -183,7 +184,7 @@ option(ENABLE_MODPLUG "Use libmodplug to support multiple tracker formats." OFF)
 option(ENABLE_OPENMPT "A better libmodplug to support multiple tracker formats." ON)
 
 if(ENABLE_LIBGME)
-    MY_FIND_LIB(LIBGME gme)
+    PKG_CHECK_MODULES(LIBGME libgme IMPORTED_TARGET)
     
     if(LIBGME_FOUND)
       add_definitions(-DUSE_LIBGME)
@@ -227,14 +228,14 @@ endif(ENABLE_LIBSND)
 
 
 if(ENABLE_LAZYUSF)
-    MY_FIND_LIB(LAZYUSF lazyusf)
+    MY_FIND_LIB(LAZYUSF lazyusf2)
     MY_FIND_LIB(PSFLIB psflib)
-    MY_FIND_PKG(ZLIB ZLIB)
+    PKG_CHECK_MODULES(ZLIB zlib IMPORTED_TARGET)
     
     # TODO: this is very ugly, any easier way??
-    if(${PSFLIB_FOUND})
-        if(${ZLIB_FOUND})
-            if(${LAZYUSF_FOUND})
+    if(PSFLIB_FOUND)
+        if(ZLIB_FOUND)
+            if(LAZYUSF_FOUND)
                 set(USE_LAZYUSF TRUE)
                 add_definitions(-DUSE_LAZYUSF)
             else()

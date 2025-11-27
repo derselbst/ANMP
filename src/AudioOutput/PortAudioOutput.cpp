@@ -8,29 +8,66 @@
 #include <iostream>
 #include <string>
 #include <portaudio.h>
+#include <samplerate.h>
 
 
 struct PortAudioOutput::Impl
 {    
     PaStream *handle = nullptr;
+    PaDeviceIndex deviceIndex;
+    const PaDeviceInfo *deviceInfo;
 
-    // holds the error returned by Pa_Initialize
-    // this class shall only be usable if no error occurred
-    PaError paInitError = ~PaErrorCode::paNoError;
+    SRC_STATE* srcState;
+    SRC_DATA srcData;
+
+    // mixed, converted to float and resampled buffer used in this->write()
+    std::vector<float> resampledBuffer;
 };
 
 PortAudioOutput::PortAudioOutput() : d(std::make_unique<Impl>())
 {
+    auto paInitError = Pa_Initialize();
+    if (paInitError != PaErrorCode::paNoError)
+    {
+        THROW_RUNTIME_ERROR("unable to initialize portaudio (" << Pa_GetErrorText(paInitError) << ")");
+    }
+#ifdef _WIN32
+    // Find WASAPI host API index, the default MME backend is broken somehow, it randomly fails when switching between songs
+    int wasapiIndex = -1;
+    int hostApiCount = Pa_GetHostApiCount();
+    for (int i = 0; i < hostApiCount; ++i)
+    {
+        const PaHostApiInfo *hai = Pa_GetHostApiInfo(i);
+        if (hai && hai->type == paWASAPI)
+        {
+            wasapiIndex = i;
+            break;
+        }
+    }
+    if (wasapiIndex < 0)
+    {
+        THROW_RUNTIME_ERROR("WASAPI host API not found");
+    }
+
+    const PaHostApiInfo *wasapiInfo = Pa_GetHostApiInfo(wasapiIndex);
+    d->deviceIndex = wasapiInfo->defaultOutputDevice;
+#else
+    d->deviceIndex = Pa_GetDefaultOutputDevice();
+#endif
+    d->deviceInfo = Pa_GetDeviceInfo(d->deviceIndex);
+    if (!d->deviceInfo || d->deviceIndex == paNoDevice)
+    {
+        THROW_RUNTIME_ERROR("Failed to get default WASAPI output device info.");
+    }
+
+    CLOG(LogLevel_t::Info, "Using device: " << d->deviceInfo->name);
+    CLOG(LogLevel_t::Info, "Max output channels: " << d->deviceInfo->maxOutputChannels);
 }
 
 PortAudioOutput::~PortAudioOutput()
 {
     this->close();
-
-    if (d->paInitError == PaErrorCode::paNoError)
-    {
-        Pa_Terminate();
-    }
+    Pa_Terminate();
 }
 
 //
@@ -40,11 +77,7 @@ void PortAudioOutput::open()
 {
     if (d->handle == nullptr)
     {
-        d->paInitError = Pa_Initialize();
-        if (d->paInitError != PaErrorCode::paNoError)
-        {
-            THROW_RUNTIME_ERROR("unable to initialize portaudio (" << Pa_GetErrorText(d->paInitError) << ")");
-        }
+        this->SetOutputChannels(this->GetOutputChannels());
     }
 }
 
@@ -52,6 +85,24 @@ void PortAudioOutput::open()
 void PortAudioOutput::SetOutputChannels(uint8_t chan)
 {
     this->IAudioOutput::SetOutputChannels(chan);
+
+    // we have to delete the resampler in order to refresh channel count
+    if (d->srcState != nullptr)
+    {
+        d->srcState = src_delete(d->srcState);
+    }
+    int error;
+    // SRC_SINC_BEST_QUALITY is too slow, causing jack process thread to discard samples, resulting in hearable artifacts
+    // SRC_LINEAR has high frequency audible garbage
+    // SRC_ZERO_ORDER_HOLD is even worse than LINEAR
+    // SRC_SINC_MEDIUM_QUALITY might still be too slow when using jack with very low latency having a bit of CPU load
+    d->srcState = src_new(SRC_SINC_FASTEST, chan, &error);
+    if (d->srcState == nullptr)
+    {
+        THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) << ")");
+    }
+
+    this->d->resampledBuffer.reserve(gConfig.FramesToRender * chan);
 
     // force reinit
     if (this->currentFormat.IsValid())
@@ -71,6 +122,10 @@ void PortAudioOutput::init(SongFormat &format, bool realtime)
         else
         {
             this->_init(format, realtime);
+
+            // zero out any buffer in resampler, to avoid hearable cracks, when switching from one song to another
+            src_reset(d->srcState);
+            src_set_ratio(d->srcState, (double)d->deviceInfo->defaultSampleRate / this->currentFormat.SampleRate);
         }
     }
 
@@ -80,25 +135,18 @@ void PortAudioOutput::init(SongFormat &format, bool realtime)
 
 void PortAudioOutput::_init(SongFormat &format, bool)
 {
-    if (d->paInitError != PaErrorCode::paNoError)
-    {
-        THROW_RUNTIME_ERROR("portaudio not initialized! (" << Pa_GetErrorText(d->paInitError) << ")");
-    }
-
+    int channels = this->GetOutputChannels();
     PaSampleFormat paSampleFmt;
     switch (format.SampleFormat)
     {
         case SampleFormat_t::float32:
-            paSampleFmt = paFloat32;
-            this->processedBuffer.reserve(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(float));
+            this->processedBuffer.reserve(gConfig.FramesToRender * channels * sizeof(float));
             break;
         case SampleFormat_t::int16:
-            paSampleFmt = paInt16;
-            this->processedBuffer.reserve(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(int16_t));
+            this->processedBuffer.reserve(gConfig.FramesToRender * channels * sizeof(int16_t));
             break;
         case SampleFormat_t::int32:
-            paSampleFmt = paInt32;
-            this->processedBuffer.reserve(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(int32_t));
+            this->processedBuffer.reserve(gConfig.FramesToRender * channels * sizeof(int32_t));
             break;
         case SampleFormat_t::unknown:
             THROW_RUNTIME_ERROR("Sample Format not set");
@@ -111,21 +159,28 @@ void PortAudioOutput::_init(SongFormat &format, bool)
     this->drop();
     this->close();
 
+    // Standard stream parameters
+    PaStreamParameters outputParams;
+    outputParams.device = d->deviceIndex;
+    outputParams.channelCount = channels;
+    outputParams.sampleFormat = paFloat32;
+    outputParams.suggestedLatency = d->deviceInfo->defaultLowOutputLatency;
+    outputParams.hostApiSpecificStreamInfo = nullptr; // Will point to WASAPI struct.
+
+    PaStream *stream = nullptr;
+
     PaError err;
-
-    /* Open an audio I/O stream. */
-    err = Pa_OpenDefaultStream(&d->handle,
-                               0, /* no input channels */
-                               this->GetOutputChannels(), /* no. of output channels */
-                               paSampleFmt, /* 32 bit floating point output */
-                               format.SampleRate,
-                               gConfig.FramesToRender, /* frames per buffer, i.e. the number of sample frames that PortAudio will request from the callback.*/
-                               nullptr, /* this is my callback function */
-                               this); /* This is a pointer that will be passed to my callback */
-
+    err = Pa_OpenStream(&d->handle,
+                        nullptr, // no input
+                        &outputParams,
+                        d->deviceInfo->defaultSampleRate,
+                        gConfig.FramesToRender,
+                        paNoFlag,
+                        nullptr,
+                        nullptr);
     if (err != PaErrorCode::paNoError)
     {
-        THROW_RUNTIME_ERROR("unable to open pcm (" << Pa_GetErrorText(err) << ")");
+        THROW_RUNTIME_ERROR("Pa_OpenStream failed (" << Pa_GetErrorText(err) << ")");
     }
 
     this->start();
@@ -173,17 +228,31 @@ int PortAudioOutput::write(const T *buffer, frame_t frames)
         THROW_RUNTIME_ERROR("unable to write pcm since PortAudioOutput::init() has not been called yet or init failed");
     }
     
-    auto* procBuf = reinterpret_cast<T*>(processedBuffer.data());
-    this->Mix<T, T>(frames, buffer, this->currentFormat, procBuf);
+    auto* procBuf = reinterpret_cast<float*>(processedBuffer.data());
+    this->Mix<T, float>(frames, buffer, this->currentFormat, procBuf);
+    
+    PaError err;
+    if (d->deviceInfo->defaultSampleRate == this->currentFormat.SampleRate)
+    {
+         err = Pa_WriteStream(d->handle, procBuf, frames);
+    }
+    else
+    {
+        this->doResampling(procBuf, frames);
+        err = Pa_WriteStream(d->handle, d->resampledBuffer.data(), d->srcData.output_frames_gen);
+        d->srcData.output_frames_gen = 0;
+        frames = d->srcData.input_frames_used;
+    }
 
-    PaError err = Pa_WriteStream(d->handle, procBuf, frames);
     switch (err)
     {
         case PaErrorCode::paUnanticipatedHostError:
             return 0;
         case PaErrorCode::paInputOverflowed:
+            CLOG(LogLevel_t::Info, "overflow");
             [[fallthrough]];
         case PaErrorCode::paOutputUnderflowed:
+            CLOG(LogLevel_t::Info, "underflow");
             [[fallthrough]];
         case PaErrorCode::paNoError:
             return frames;
@@ -192,8 +261,46 @@ int PortAudioOutput::write(const T *buffer, frame_t frames)
     }
 }
 
+void PortAudioOutput::doResampling(const float *inBuf, const size_t Frames)
+{
+    d->srcData.data_in = inBuf;
+    d->srcData.input_frames = Frames;
+
+    d->srcData.data_out = d->resampledBuffer.data();
+    d->srcData.data_out += d->srcData.output_frames_gen * this->GetOutputChannels();
+
+    d->srcData.output_frames = gConfig.FramesToRender - d->srcData.output_frames_gen;
+
+    // remember the count of frames the already have been resampled
+    int old = d->srcData.output_frames_gen;
+
+    // output_sample_rate / input_sample_rate
+    d->srcData.src_ratio = (double)d->deviceInfo->defaultSampleRate / this->currentFormat.SampleRate;
+
+    int err = src_process(d->srcState, &d->srcData);
+    if (err != 0)
+    {
+        CLOG(LogLevel_t::Error, "libsamplerate failed processing (" << src_strerror(err) << ")");
+    }
+    else
+    {
+        if (d->srcData.output_frames_gen < d->srcData.output_frames)
+        {
+            CLOG(LogLevel_t::Info, "resample buffer has not been filled completely" << std::endl
+                                << "input_frames: " << d->srcData.input_frames << "\toutput_frames: " << d->srcData.output_frames << std::endl
+                                << "input_frames_used: " << d->srcData.input_frames_used << "\toutput_frames_gen: " << d->srcData.output_frames_gen);
+
+            // needed next time to advance data_out
+            d->srcData.output_frames_gen += old;
+        }
+    }
+}
+
 void PortAudioOutput::start()
 {
+    // zero out any buffer in resampler, to avoid hearable cracks, when pausing and restarting playback
+    src_reset(d->srcState);
+
     if (d->handle != nullptr)
     {
         PaError err = Pa_StartStream(d->handle);

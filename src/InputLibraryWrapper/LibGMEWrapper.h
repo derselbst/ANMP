@@ -4,7 +4,7 @@
 #include "StandardWrapper.h"
 
 #include <future>
-#include <gme.h>
+#include <gme/gme.h>
 
 /**
   * class LibGMEWrapper

@@ -28,6 +28,7 @@ class Playlist;
 class Player;
 class Song;
 struct SongFormat;
+class MyDisabledFileIconProvider;
 
 class MainWindow : public QMainWindow
 {
@@ -58,6 +59,9 @@ class MainWindow : public QMainWindow
 
     QFileSystemModel *drivesModel = nullptr;
     QFileSystemModel *filesModel = nullptr;
+
+    QScopedPointer<MyDisabledFileIconProvider> noIconProvider;
+
     Playlist *playlist = nullptr;
     PlaylistModel *playlistModel = nullptr;
     Player *player = nullptr;
