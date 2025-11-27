@@ -10,6 +10,9 @@
 #include <chrono>
 #include <thread> // std::this_thread::sleep_for
 #include <algorithm>
+#include <cmath>
+#include <array>
+#include <cstdint> // For fixed-width integer types like int16_t
 
 #ifdef USE_SMF
 #include <smf.h>
@@ -158,7 +161,7 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
     }
 
     // set highest resampler quality on all channels
-    fluid_synth_set_interp_method(this->synth, -1, FLUID_INTERP_HIGHEST);
+    fluid_synth_set_interp_method(this->synth, -1, FLUID_INTERP_DEFAULT);
 
     // find a soundfont
     Nullable<string> soundfont;
@@ -206,7 +209,21 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
         fluid_synth_cc(this->synth, i, DP_DECAY_CC, 0);
         fluid_synth_cc(this->synth, i, DP_SUSTAIN_CC, 127);
         fluid_synth_cc(this->synth, i, DP_RELEASE_CC, 0);
+        
+        // CC34 defines the cutoff frequency of the IIR filter in absolute cents. However, N64 defines 6400 cents as 440 Hz (because they use CC34==64 as 440Hz), whereas the SoundFont2 spec defines it as 6900 cents.
+        // Therefore we need to add an offset of 500 cents to the value of CC34.
+        // We do this by using SF2's NRPN handling.
+        fluid_synth_cc(this->synth, i, 0x63 /*NRPN_MSB*/, 120);
+        fluid_synth_cc(this->synth, i, 0x62 /*NRPN_LSB*/, GEN_CUSTOM_FILTERFC);
 
+        // now it's getting a bit ugly: we cannot send 500 cents directly, as GEN_CUSTOM_FILTERQ defines the scale to be 2, i.e. everything is multiplied by 2, which is why we are actually sending 250.
+        constexpr int GEN_CUSTOM_FILTERQ_SCALE = 2;
+        constexpr int OFFSET_TO_SEND = 0x2000 + 500 / GEN_CUSTOM_FILTERQ_SCALE;
+        constexpr int valLsb = OFFSET_TO_SEND % 128;
+        constexpr int valMsb = OFFSET_TO_SEND / 128;
+
+        fluid_synth_cc(this->synth, i, 0x26 /*DATA_ENTRY_LSB*/, valLsb);
+        fluid_synth_cc(this->synth, i, 0x06 /*DATA_ENTRY_MSB*/, valMsb);
         if(this->defaultProg == -1)
         {
             int dummy;
@@ -223,7 +240,7 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
         fluid_synth_unset_program(this->synth, i);
     }
 
-    fluid_synth_set_custom_filter(this->synth, FLUID_IIR_LOWPASS, FLUID_IIR_Q_ZERO_OFF);
+    fluid_synth_set_custom_filter(this->synth, FLUID_IIR_LOWPASS, FLUID_IIR_Q_ZERO_OFF | FLUID_IIR_BEANLAND | FLUID_IIR_NO_GAIN_AMP | FLUID_IIR_Q_LINEAR);
 
     fluid_mod_t *my_mod = new_fluid_mod();
 
@@ -239,27 +256,57 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
 
     // add a custom default modulator for CBFD's and JFG's IIR lowpass filter.
     {
+        // CC34 defines the cutoff frequency of the IIR filter in absolute cents / 100.
         fluid_mod_set_source1(my_mod, CBFD_FILTERFC_CC,
-                              FLUID_MOD_CC | FLUID_MOD_SIN | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
+                              FLUID_MOD_CC | FLUID_MOD_LINEAR | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
         fluid_mod_set_source2(my_mod, FLUID_MOD_NONE, 0);
         fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERFC);
-        fluid_mod_set_amount(my_mod, gConfig.FluidsynthFilterFC);
+        fluid_mod_set_amount(my_mod, 12800 /* absolute cents */); // because CC34==64 will be normalized to 0.5 which must result in 6400 cents
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
 
     // add a custom default modulator Custom CC33 to CBFD's lowpass Filter Q*/
     {
         fluid_mod_set_source1(my_mod, CBFD_FILTERQ_CC,
-                              FLUID_MOD_CC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
+                              FLUID_MOD_CC | FLUID_MOD_CUSTOM | FLUID_MOD_UNIPOLAR | FLUID_MOD_POSITIVE);
         fluid_mod_set_source2(my_mod, FLUID_MOD_NONE, 0);
         fluid_mod_set_dest(my_mod, GEN_CUSTOM_FILTERQ);
-        fluid_mod_set_amount(my_mod, gConfig.FluidsynthFilterQ);
+        fluid_mod_set_amount(my_mod, 1);
+        fluid_mod_set_custom_mapping(my_mod, [](const fluid_mod_t* mod, int value, int range, int is_src1, void* data)
+        {
+            if(is_src1)
+            {
+                auto* pthis = static_cast<FluidsynthWrapper*>(data);
+                short CC33 = value;
+                double q = std::sqrt( CC33 / 10.0 ) * (M_PI / 2.0);
+                return q;
+            }
+            else
+            {
+                // double fc = val_norm * 12800 /* cents */;
+                // double fres = std::pow(2, fc / 1200) * 440;
+                // constexpr double Nyquist = 22018.0/2;
+                // if(fres > Nyquist)
+                // {
+                //     fres = Nyquist / (fres / Nyquist);
+                //     // multiply resulting Q by 4.
+                //     return 4;
+                // }
+            }
+        }, this);
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
 
+    // Create a volume curve that fits to most of Rareware's games. Detailed background information by L. Spiro:
+    // "The MIDI standard recommends MIDI players implement volume (cc7) as dB = log10( X/127 ) * 40, which is what most games using the standard SDK use, including GoldenEye 007, Blast Corps, and Killer Instinct Gold.
+    // Later Rare (particularly Graham Smith) customized their synthesis engine internally and changed the curve to fully linear (dB = log10( X/127 ) * 20).  This was used in Diddy Kong Racing, Banjo-Kazooie, Jet Force Gemini, Mickey’s Speedway USA, Banjo-Tooie, Donkey Kong 64, Perfect Dark, and Conker’s Bad Fur Day."
+    // By default, the SF2 standard uses the following equation for volume attenuation: attenuation_in_cB = -(200/960) * log10((x/127)^2) * 960
+    // Translated to dB gain: dB = (200/960) * log10((x/127)^2) * 96
+    // Which is the same as log10( X/127 ) * 40
+    // To get the Graham-Smith-volume-curve, we simply multiply by 0.5
     fluid_mod_set_source2(my_mod, FLUID_MOD_NONE, 0);
     fluid_mod_set_dest(my_mod, GEN_ATTENUATION);
-    fluid_mod_set_amount(my_mod, 960 * 0.4);
+    fluid_mod_set_amount(my_mod, 960 * 0.5);
 
     // override default MIDI Note-On Velocity to Initial Attenuation modulator amount
     {

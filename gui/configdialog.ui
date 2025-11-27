@@ -42,8 +42,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>553</width>
-              <height>603</height>
+              <width>547</width>
+              <height>604</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -82,23 +82,6 @@
                  </property>
                 </widget>
                </item>
-               <item row="1" column="0">
-                <widget class="QLabel" name="label_2">
-                 <property name="whatsThis">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Render the whole Song at once?&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Yes: Needs a lot of memory. But makes seeking possible.&lt;/p&gt;&lt;p&gt;No: Block wise rendering, little memory, no seeking though.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;Note:&lt;/span&gt; This option is a suggestion. If there is not enough memory available, block wise rendering will be used.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                 <property name="text">
-                  <string>RenderWholeSong</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QCheckBox" name="checkRenderWhole">
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
                <item row="3" column="0">
                 <widget class="QLabel" name="label_3">
                  <property name="whatsThis">
@@ -133,6 +116,23 @@
                  </property>
                 </widget>
                </item>
+               <item row="1" column="1">
+                <widget class="QCheckBox" name="checkRenderWhole">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_2">
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Render the whole Song at once?&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Yes: Needs a lot of memory. But makes seeking possible.&lt;/p&gt;&lt;p&gt;No: Block wise rendering, little memory, no seeking though.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;Note:&lt;/span&gt; This option is a suggestion. If there is not enough memory available, block wise rendering will be used.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string>RenderWholeSong</string>
+                 </property>
+                </widget>
+               </item>
               </layout>
              </item>
             </layout>
@@ -156,8 +156,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>553</width>
-              <height>603</height>
+              <width>238</width>
+              <height>137</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_9">
@@ -248,8 +248,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>553</width>
-              <height>603</height>
+              <width>109</width>
+              <height>38</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -295,8 +295,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>553</width>
-              <height>603</height>
+              <width>547</width>
+              <height>604</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_13">
@@ -416,8 +416,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>553</width>
-              <height>603</height>
+              <width>235</width>
+              <height>341</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -635,8 +635,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>553</width>
-              <height>603</height>
+              <width>547</width>
+              <height>604</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_14">
@@ -683,6 +683,23 @@
                </item>
                <item row="2" column="1">
                 <widget class="QCheckBox" name="checkMultiChannel">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_40">
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The N64 software synth does not play NoteOn events when the corresponding sequence has no instrument assigned. This is esp. notable in Jet Force Gemini's SoundTrack. If you want to listen to N64 MIDI files, you should disable this option. If you want to listen to General MIDI Piano music tunes, you should enable it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="text">
+                  <string>Render channels without presets</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QCheckBox" name="checkRenderNoPresetAssigned">
                  <property name="text">
                   <string/>
                  </property>
@@ -739,6 +756,26 @@
                  </property>
                  <property name="value">
                   <number>48000</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="6" column="0">
+                <widget class="QLabel" name="label_42">
+                 <property name="text">
+                  <string>Gain</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="6" column="1">
+                <widget class="QDoubleSpinBox" name="spinGain">
+                 <property name="decimals">
+                  <number>2</number>
+                 </property>
+                 <property name="maximum">
+                  <double>100.000000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.100000000000000</double>
                  </property>
                 </widget>
                </item>
@@ -869,74 +906,6 @@
                 <widget class="QCheckBox" name="checkChorus">
                  <property name="text">
                   <string/>
-                 </property>
-                </widget>
-               </item>
-               <item row="17" column="0">
-                <widget class="QLabel" name="label_38">
-                 <property name="text">
-                  <string>CBFD IIR Filter Q</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="17" column="1">
-                <widget class="QDoubleSpinBox" name="spinFilterQ">
-                 <property name="maximum">
-                  <double>1000.000000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="0">
-                <widget class="QLabel" name="label_40">
-                 <property name="whatsThis">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The N64 software synth does not play NoteOn events when the corresponding sequence has no instrument assigned. This is esp. notable in Jet Force Gemini's SoundTrack. If you want to listen to N64 MIDI files, you should disable this option. If you want to listen to General MIDI Piano music tunes, you should enable it.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                 <property name="text">
-                  <string>Render channels without presets</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="3" column="1">
-                <widget class="QCheckBox" name="checkRenderNoPresetAssigned">
-                 <property name="text">
-                  <string/>
-                 </property>
-                </widget>
-               </item>
-               <item row="18" column="0">
-                <widget class="QLabel" name="label_41">
-                 <property name="text">
-                  <string>CBFD IIR Filter Freq Cutoff</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="18" column="1">
-                <widget class="QSpinBox" name="spinFilterFC">
-                 <property name="maximum">
-                  <number>48000</number>
-                 </property>
-                 <property name="singleStep">
-                  <number>100</number>
-                 </property>
-                </widget>
-               </item>
-               <item row="6" column="0">
-                <widget class="QLabel" name="label_42">
-                 <property name="text">
-                  <string>Gain</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="6" column="1">
-                <widget class="QDoubleSpinBox" name="spinGain">
-                 <property name="decimals">
-                  <number>2</number>
-                 </property>
-                 <property name="maximum">
-                  <double>100.000000000000000</double>
-                 </property>
-                 <property name="singleStep">
-                  <double>0.100000000000000</double>
                  </property>
                 </widget>
                </item>
