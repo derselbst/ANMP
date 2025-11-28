@@ -72,7 +72,7 @@ endif(USE_JACK)
 
 if(USE_PORTAUDIO)
     target_sources(anmp-internal PRIVATE AudioOutput/PortAudioOutput.cpp AudioOutput/PortAudioOutput.h)
-    target_link_libraries(anmp-internal PUBLIC PkgConfig::PORTAUDIO)
+    target_link_libraries(anmp-internal PUBLIC PkgConfig::PORTAUDIO PkgConfig::SAMPLERATE)
 endif(USE_PORTAUDIO)
 
 if(EBUR128_FOUND)
@@ -84,9 +84,10 @@ if(USE_CUE)
   target_link_libraries(anmp-internal PUBLIC PkgConfig::LIBCUE)
 endif()
 
-if(LIBGME_FOUND)
+if(USE_LIBGME)
     target_sources(anmp-internal PRIVATE InputLibraryWrapper/LibGMEWrapper.cpp InputLibraryWrapper/LibGMEWrapper.h)
-endif(LIBGME_FOUND)
+    target_link_libraries(anmp-internal PUBLIC PkgConfig::LIBGME)
+endif(USE_LIBGME)
 
 if(USE_MAD)
     target_sources(anmp-internal PRIVATE InputLibraryWrapper/LibMadWrapper.cpp InputLibraryWrapper/LibMadWrapper.h)
@@ -100,6 +101,7 @@ endif(LIBSND_FOUND)
 
 if(USE_LAZYUSF)
     target_sources(anmp-internal PRIVATE InputLibraryWrapper/LazyusfWrapper.cpp InputLibraryWrapper/LazyusfWrapper.h)
+    target_link_libraries(anmp-internal PUBLIC PkgConfig::ZLIB)
 endif(USE_LAZYUSF)
 
 if(USE_AOPSF)
@@ -136,7 +138,12 @@ if(USE_OPENMPT)
 endif(USE_OPENMPT)
 
 
-add_library(${PROJECT_NAME})
+add_library(${PROJECT_NAME} STATIC)
 target_link_libraries(${PROJECT_NAME} PUBLIC anmp-internal)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${LD_FLAGS})
+set_target_properties(
+  ${PROJECT_NAME} PROPERTIES
+    # SOVERSION 0 # omitted, no API / ABI stability
+    VERSION 0.0.1
+)
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_LIBDIR})
