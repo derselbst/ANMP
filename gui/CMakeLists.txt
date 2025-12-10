@@ -20,6 +20,8 @@ if(USE_GUI)
         mainwindow.h
         mainwindow.slots.cpp
         mainwindow.callback.cpp
+        mpris2.cpp
+        mpris2.h
         PlayheadSlider.cpp
         PlayheadSlider.h
         PlaylistModel.cpp
@@ -33,20 +35,7 @@ if(USE_GUI)
         songinspector.cpp
         songinspector.h
     )
-    
-    if(USE_DBUS)
-        qt_generate_dbus_interface(
-            mainwindow.h # from that header
-            org.anmp.xml # generate the dbus interface to that xml
-            OPTIONS -M # exporting public slots only
-        )
-
-        # from the just generated xml file, generate implementation files for the dbus adaptor
-        qt_add_dbus_adaptor(GUI_SRCS ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml mainwindow.h MainWindow mainwindow_adaptor MainWindowAdaptor)
-    
-        # skip processing those auto generated files
-        set_property(SOURCE mainwindow_adaptor.cpp mainwindow_adaptor.h PROPERTY SKIP_AUTOGEN ON)
-    endif()
+    set(ANMP_LAUNCHER_SRC "")
     
     qt_wrap_ui(UI_HEADERS
         mainwindow.ui
@@ -54,13 +43,6 @@ if(USE_GUI)
         songinspector.ui
         playcontrol.ui
     )
-
-    if(USE_DBUS)
-        # auto-generate "build/gui/anmp_dbus_interface.h" and "build/gui/anmp_dbus_interface.cpp" but skip
-        # AUTOMOC and AUTOUIC for them (Policy CMP0071)
-        qt_add_dbus_interface(ANMP_LAUNCHER_SRC ${CMAKE_CURRENT_BINARY_DIR}/org.anmp.xml anmp_dbus_interface)
-        set_property(SOURCE ${ANMP_LAUNCHER_SRC} PROPERTY SKIP_AUTOGEN ON)
-    endif()
 
     add_executable(${PROJECT_NAME} ${UI_HEADERS} ${GUI_SRCS} ${ANMP_LAUNCHER_SRC} icons.qrc)
 

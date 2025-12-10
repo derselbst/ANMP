@@ -5,9 +5,9 @@
 #include <QMessageBox>
 #include <QStyleFactory>
 #include <QFileInfo>
+#include <QUrl>
 
 #ifdef USE_DBUS
-#include "anmp_dbus_interface.h"
 #include <QtDBus>
 #include <QDBusConnectionInterface>
 #endif
@@ -17,6 +17,12 @@ using namespace std;
 int main(int argc, char *argv[])
 {
     int ret = -1;
+
+#ifdef USE_DBUS
+    constexpr char kMprisServiceName[] = "org.mpris.MediaPlayer2.anmp";
+    constexpr char kMprisObjectPath[] = "/org/mpris/MediaPlayer2";
+    constexpr char kMprisTrackListIface[] = "org.mpris.MediaPlayer2.TrackList";
+#endif
 
     QApplication a(argc, argv);
     a.setStyle(QStyleFactory::create("Fusion"));
@@ -37,7 +43,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        reply = dbus.interface()->isServiceRegistered(org::anmp::staticInterfaceName());
+        reply = dbus.interface()->isServiceRegistered(QString::fromUtf8(kMprisServiceName));
     }
     
     if (
@@ -114,8 +120,7 @@ int main(int argc, char *argv[])
 #ifdef USE_DBUS
     else // anmp already started, feed songs via dbus
     {
-        constexpr char Path[] = "/MainWindow";
-        org::anmp *interface = new org::anmp(org::anmp::staticInterfaceName(), Path, dbus, &a);
+        QDBusInterface interface(QString::fromUtf8(kMprisServiceName), QString::fromUtf8(kMprisObjectPath), QString::fromUtf8(kMprisTrackListIface), dbus, &a);
 
         QStringList fileList;
         for (int i = 1; i < argc; i++)
@@ -124,7 +129,10 @@ int main(int argc, char *argv[])
             fileList.append(info.absoluteFilePath());
         }
 
-        interface->AddSongs(fileList);
+        for (const QString &file : fileList)
+        {
+            interface.call(QStringLiteral("AddTrack"), QUrl::fromLocalFile(file).toString(), QDBusObjectPath(QStringLiteral("/")), false);
+        }
     }
 #endif
 

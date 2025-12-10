@@ -29,11 +29,11 @@ class Player;
 class Song;
 struct SongFormat;
 class MyDisabledFileIconProvider;
+class Mpris2;
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.anmp")
 
     public:
     explicit MainWindow(QWidget *parent = 0);
@@ -75,6 +75,10 @@ class MainWindow : public QMainWindow
     QListView *listView = nullptr;
     QTreeView *treeView = nullptr;
 
+#ifdef USE_DBUS
+    Mpris2 *mpris = nullptr;
+#endif
+
     void buildPlaylistView();
     void buildChannelConfig();
     void buildFileBrowser();
@@ -87,13 +91,12 @@ class MainWindow : public QMainWindow
 #ifndef USE_VISUALIZER
     void showNoVisualizer();
 #endif
+    void setWindowTitleCustom(QString);
 
     void showError(const QString &detail, const QString &general = "An Error occurred");
 
     // must be private because qdbuscpp2xml only generates garbage for it
     void DoChannelMuting(bool (*pred)(bool voiceIsMuted, bool voiceIsSelected));
-
-    void setWindowTitleCustom(QString);
 
     public slots:
     void Play();
@@ -134,6 +137,10 @@ class MainWindow : public QMainWindow
     void slotSongAdded(const QString& file, int, int);
 
     void settingsDialogAccepted();
+
+#ifdef Q_OS_WIN
+    bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override;
+#endif
 };
 
 #endif // MAINWINDOW_H

@@ -10,7 +10,7 @@
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
 #ifdef USE_DBUS
-#include "mainwindow_adaptor.h"
+#include "mpris2.h"
 #endif
 #include "ui_mainwindow.h"
 #include "ui_playcontrol.h"
@@ -27,6 +27,9 @@
 #include <QTreeView>
 #include <QFontDatabase>
 #include <QAbstractFileIconProvider>
+#ifdef Q_OS_WIN
+#include <qt_windows.h>
+#endif
 
 #include <chrono>
 #include <cmath>
@@ -83,12 +86,6 @@ MainWindow::MainWindow(QWidget *parent)
     //connect(iface, SIGNAL(message(QString,QString)), this, SLOT(messageSlot(QString,QString)));
     QDBusConnection::sessionBus().connect(QString("org.anmp"), QString(), "org.anmp", "TooglePlayPause", this, SLOT(tooglePlayPause()));
 //     connect(iface, &org::anmp::TooglePlayPause, this, &MainWindow::TogglePlayPause);*/
-#ifdef USE_DBUS
-    new MainWindowAdaptor(this);
-    QDBusConnection dbus = QDBusConnection::sessionBus();
-    dbus.registerObject("/MainWindow", this);
-    dbus.registerService("org.anmp");
-#endif
     // init UI
     this->ui->setupUi(this);
 
@@ -178,6 +175,10 @@ MainWindow::MainWindow(QWidget *parent)
     this->player->onPlayheadChanged += std::make_pair(this, &MainWindow::callbackSeek);
     this->player->onCurrentSongChanged += std::make_pair(this, &MainWindow::callbackCurrentSongChanged);
     this->player->onIsPlayingChanged += std::make_pair(this, &MainWindow::callbackIsPlayingChanged);
+
+#ifdef USE_DBUS
+    this->mpris = new Mpris2(this, this->player, this->playlist, this->playlistModel, this);
+#endif
 
     this->createShortcuts();
 
@@ -281,6 +282,46 @@ void MainWindow::createShortcuts()
 
 #undef SHORTCUT
 }
+
+#ifdef Q_OS_WIN
+bool MainWindow::nativeEvent(const QByteArray &eventType, void *message, qintptr *result)
+{
+    if (eventType == "windows_generic_MSG" || eventType == "windows_dispatcher_MSG")
+    {
+        MSG *msg = static_cast<MSG *>(message);
+        if (msg != nullptr && msg->message == WM_APPCOMMAND)
+        {
+            const int cmd = GET_APPCOMMAND_LPARAM(msg->lParam);
+            switch (cmd)
+            {
+                case APPCOMMAND_MEDIA_PLAY_PAUSE:
+                    this->TogglePlayPause();
+                    break;
+                case APPCOMMAND_MEDIA_PLAY:
+                    this->Play();
+                    break;
+                case APPCOMMAND_MEDIA_PAUSE:
+                    this->Pause();
+                    break;
+                case APPCOMMAND_MEDIA_NEXTTRACK:
+                    this->Next();
+                    break;
+                case APPCOMMAND_MEDIA_PREVIOUSTRACK:
+                    this->Previous();
+                    break;
+                default:
+                    break;
+            }
+            if (result)
+            {
+                *result = 1;
+            }
+            return true;
+        }
+    }
+    return QMainWindow::nativeEvent(eventType, message, result);
+}
+#endif
 
 void MainWindow::buildFileBrowser()
 {
