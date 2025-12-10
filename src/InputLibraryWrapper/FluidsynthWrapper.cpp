@@ -274,14 +274,14 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
         fluid_mod_set_amount(my_mod, 1);
         fluid_mod_set_custom_mapping(my_mod, [](const fluid_mod_t* mod, int value, int range, int is_src1, void* data)
         {
-            if(is_src1)
+            //if(is_src1)
             {
                 auto* pthis = static_cast<FluidsynthWrapper*>(data);
                 short CC33 = value;
                 double q = std::sqrt( CC33 / 10.0 ) * (M_PI / 2.0);
                 return q;
             }
-            else
+            //else
             {
                 // double fc = val_norm * 12800 /* cents */;
                 // double fres = std::pow(2, fc / 1200) * 440;
