@@ -45,4 +45,4 @@ install_manifest.txt
 *.pro.user*
 
 # Audio Test Files
-*.wav_codeql_detected_source_root
+*.wav
