@@ -30,7 +30,7 @@ Mpris2::Mpris2(MainWindow *window, Player *player, Playlist *playlist, PlaylistM
     qRegisterMetaType<QList<QDBusObjectPath>>("QList<QDBusObjectPath>");
     qDBusRegisterMetaType<QList<QDBusObjectPath>>();
 
-    this->currentMetadata = this->metadataForIndex(static_cast<int>(this->playlist->getCurrentSongId()));
+    this->currentMetadata = this->metadataForIndex(this->playlist->getCurrentSongId());
 
     this->rootAdaptor = new MprisRootAdaptor(this);
     this->playerAdaptor = new MprisPlayerAdaptor(this);
@@ -104,7 +104,7 @@ void Mpris2::updateCurrentSong(const Song *song)
     Q_UNUSED(song);
     const Song *cur = this->playlist->getCurrentSong();
     this->currentSampleRate = (cur != nullptr) ? cur->Format.SampleRate : 0;
-    this->currentMetadata = this->metadataForIndex(static_cast<int>(this->playlist->getCurrentSongId()));
+    this->currentMetadata = this->metadataForIndex(this->playlist->getCurrentSongId());
     this->positionUsec = 0;
 
     QVariantMap changed;
@@ -321,7 +321,7 @@ QList<QDBusObjectPath> Mpris2::trackIds() const
     ids.reserve(static_cast<int>(sz));
     for (size_t i = 0; i < sz; ++i)
     {
-        ids.append(QDBusObjectPath(QStringLiteral("/org/mpris/MediaPlayer2/TrackList/%1").arg(i)));
+        ids.append(QDBusObjectPath(QStringLiteral("/org/mpris/MediaPlayer2/TrackList/%1").arg(static_cast<qulonglong>(i))));
     }
     return ids;
 }
@@ -332,7 +332,8 @@ QDBusObjectPath Mpris2::currentTrackId() const
     {
         return QDBusObjectPath(QStringLiteral("/org/mpris/MediaPlayer2/TrackList/0"));
     }
-    return QDBusObjectPath(QStringLiteral("/org/mpris/MediaPlayer2/TrackList/%1").arg(this->playlist->getCurrentSongId()));
+    const qulonglong idx = static_cast<qulonglong>(this->playlist->getCurrentSongId());
+    return QDBusObjectPath(QStringLiteral("/org/mpris/MediaPlayer2/TrackList/%1").arg(idx));
 }
 
 int Mpris2::indexForTrackId(const QDBusObjectPath &trackId) const
@@ -352,16 +353,16 @@ int Mpris2::indexForTrackId(const QDBusObjectPath &trackId) const
     return idx;
 }
 
-QVariantMap Mpris2::metadataForIndex(int index) const
+QVariantMap Mpris2::metadataForIndex(size_t index) const
 {
     QVariantMap map;
-    if (!this->playlist)
+    if (!this->playlist || index >= this->playlist->size())
     {
         return map;
     }
 
     Song *s = this->playlist->getSong(index);
-    QDBusObjectPath id(QStringLiteral("/org/mpris/MediaPlayer2/TrackList/%1").arg(index));
+    QDBusObjectPath id(QStringLiteral("/org/mpris/MediaPlayer2/TrackList/%1").arg(static_cast<qulonglong>(index)));
     map.insert(QStringLiteral("mpris:trackid"), QVariant::fromValue(id));
     if (s == nullptr)
     {
@@ -522,13 +523,33 @@ QVariantList Mpris2::getTracksMetadata(const QList<QDBusObjectPath> &tracks) con
     QVariantList lst;
     for (const QDBusObjectPath &id : tracks)
     {
-        lst << this->metadataForIndex(this->indexForTrackId(id));
+        const int idx = this->indexForTrackId(id);
+        if (idx < 0)
+        {
+            lst << QVariantMap();
+        }
+        else
+        {
+            lst << this->metadataForIndex(static_cast<size_t>(idx));
+        }
     }
     return lst;
 }
 
-void Mpris2::addTrack(const QString &uri, const QDBusObjectPath & /*afterTrack*/, bool setAsCurrent)
+void Mpris2::addTrack(const QString &uri, const QDBusObjectPath &afterTrack, bool setAsCurrent)
 {
+    if (this->playlistModel == nullptr)
+    {
+        return;
+    }
+    int insertPos = -1;
+    const int afterIdx = this->indexForTrackId(afterTrack);
+    if (afterIdx >= 0)
+    {
+        insertPos = afterIdx + 1;
+    }
+    this->pendingInsertPos = insertPos;
+
     QUrl url(uri);
     QString file = url.isLocalFile() ? url.toLocalFile() : uri;
     if (file.isEmpty())
@@ -548,7 +569,11 @@ void Mpris2::addTrack(const QString &uri, const QDBusObjectPath & /*afterTrack*/
 void Mpris2::removeTrack(const QDBusObjectPath &trackId)
 {
     int idx = this->indexForTrackId(trackId);
-    if (idx < 0)
+    if (idx < 0 || this->playlist == nullptr)
+    {
+        return;
+    }
+    if (static_cast<size_t>(idx) >= this->playlist->size())
     {
         return;
     }
@@ -561,7 +586,12 @@ void Mpris2::removeTrack(const QDBusObjectPath &trackId)
 void Mpris2::goTo(const QDBusObjectPath &trackId)
 {
     int idx = this->indexForTrackId(trackId);
-    if (idx < 0)
+    if (idx < 0 || this->playlist == nullptr)
+    {
+        return;
+    }
+    const size_t target = static_cast<size_t>(idx);
+    if (target >= this->playlist->size())
     {
         return;
     }
@@ -571,7 +601,7 @@ void Mpris2::goTo(const QDBusObjectPath &trackId)
     {
         this->window->Stop();
     }
-    this->player->setCurrentSong(this->playlist->setCurrentSong(static_cast<size_t>(idx)));
+    this->player->setCurrentSong(this->playlist->setCurrentSong(target));
     this->updateCurrentSong(this->playlist->getCurrentSong());
     if (wasPlaying)
     {
@@ -579,13 +609,38 @@ void Mpris2::goTo(const QDBusObjectPath &trackId)
     }
 }
 
-void Mpris2::onSongAdded(const QString &file, int, int)
+void Mpris2::onSongAdded(const QString &file, int current, int total)
 {
-    this->refreshTrackList();
-    if (this->playlist && this->playlist->size() > 0)
+    Q_UNUSED(current);
+    Q_UNUSED(total);
+    int destRowRequest = this->pendingInsertPos;
+    this->pendingInsertPos = -1;
+    int newRow = -1;
+    if (this->playlistModel)
     {
-        emit this->trackAdaptor->TrackAdded(this->metadataForIndex(static_cast<int>(this->playlist->size() - 1)),
-                                            QDBusObjectPath(QStringLiteral("/")));
+        const int rowCount = this->playlistModel->rowCount(QModelIndex());
+        if (rowCount > 0)
+        {
+            newRow = rowCount - 1;
+            int destRow = destRowRequest;
+            if (destRow >= 0 && destRow < rowCount && destRow != newRow)
+            {
+                // destinationRow is interpreted after removal only if destRow > sourceRow; here sourceRow is the last row
+                this->playlistModel->moveRows(QModelIndex(), newRow, 1, QModelIndex(), destRow);
+                newRow = destRow;
+            }
+        }
+    }
+
+    this->refreshTrackList();
+    if (this->playlist && this->playlist->size() > 0 && newRow >= 0)
+    {
+        QDBusObjectPath afterPath(QStringLiteral("/"));
+        if (newRow > 0)
+        {
+            afterPath = QDBusObjectPath(QStringLiteral("/org/mpris/MediaPlayer2/TrackList/%1").arg(static_cast<qulonglong>(newRow - 1)));
+        }
+        emit this->trackAdaptor->TrackAdded(this->metadataForIndex(static_cast<size_t>(newRow)), afterPath);
     }
     if (this->pendingSetCurrentPath.isEmpty())
     {
@@ -595,10 +650,14 @@ void Mpris2::onSongAdded(const QString &file, int, int)
     QFileInfo added(file);
     if (added.absoluteFilePath() == this->pendingSetCurrentPath)
     {
-        this->playlist->setCurrentSong(this->playlist->size() > 0 ? this->playlist->size() - 1 : 0);
-        this->player->setCurrentSong(this->playlist->getCurrentSong());
-        this->pendingSetCurrentPath.clear();
-        this->updateCurrentSong(this->playlist->getCurrentSong());
+        if (this->playlist && this->playlist->size() > 0)
+        {
+            const size_t newIdx = newRow >= 0 ? static_cast<size_t>(newRow) : (this->playlist->size() - 1);
+            this->playlist->setCurrentSong(newIdx);
+            this->player->setCurrentSong(this->playlist->getCurrentSong());
+            this->pendingSetCurrentPath.clear();
+            this->updateCurrentSong(this->playlist->getCurrentSong());
+        }
     }
 }
 

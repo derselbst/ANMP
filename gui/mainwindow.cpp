@@ -76,16 +76,6 @@ MainWindow::MainWindow(QWidget *parent)
   settingsView(new ConfigDialog(this))
 {
     qRegisterMetaType<const Song *>("const Song*");
-    /*    
-    // add our D-Bus interface and connect to D-Bus
-    new AnmpAdaptor(this);
-    QDBusConnection::sessionBus().registerObject("/ANMP", this);
-
-    org::anmp *iface;
-    iface = new org::anmp(QString("org.anmp"), QString(), QDBusConnection::sessionBus(), this);
-    //connect(iface, SIGNAL(message(QString,QString)), this, SLOT(messageSlot(QString,QString)));
-    QDBusConnection::sessionBus().connect(QString("org.anmp"), QString(), "org.anmp", "TooglePlayPause", this, SLOT(tooglePlayPause()));
-//     connect(iface, &org::anmp::TooglePlayPause, this, &MainWindow::TogglePlayPause);*/
     // init UI
     this->ui->setupUi(this);
 
@@ -286,7 +276,9 @@ void MainWindow::createShortcuts()
 #ifdef Q_OS_WIN
 bool MainWindow::nativeEvent(const QByteArray &eventType, void *message, qintptr *result)
 {
-    if (eventType == "windows_generic_MSG" || eventType == "windows_dispatcher_MSG")
+    static const QByteArray kWinGeneric = QByteArrayLiteral("windows_generic_MSG");
+    static const QByteArray kWinDispatcher = QByteArrayLiteral("windows_dispatcher_MSG");
+    if (eventType == kWinGeneric || eventType == kWinDispatcher)
     {
         MSG *msg = static_cast<MSG *>(message);
         if (msg != nullptr && msg->message == WM_APPCOMMAND)

@@ -70,7 +70,7 @@ class Mpris2 : public QObject
     QList<QDBusObjectPath> trackIds() const;
     QDBusObjectPath currentTrackId() const;
     int indexForTrackId(const QDBusObjectPath &trackId) const;
-    QVariantMap metadataForIndex(int index) const;
+    QVariantMap metadataForIndex(size_t index) const;
 
     void raiseMainwindow();
     void quitApplication();
@@ -118,6 +118,7 @@ class Mpris2 : public QObject
     uint32_t currentSampleRate = 0;
     QVariantMap currentMetadata;
     QString pendingSetCurrentPath;
+    int pendingInsertPos = -1;
 };
 
 class MprisRootAdaptor : public QDBusAbstractAdaptor

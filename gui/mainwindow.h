@@ -29,7 +29,9 @@ class Player;
 class Song;
 struct SongFormat;
 class MyDisabledFileIconProvider;
+#ifdef USE_DBUS
 class Mpris2;
+#endif
 
 class MainWindow : public QMainWindow
 {
@@ -91,12 +93,12 @@ class MainWindow : public QMainWindow
 #ifndef USE_VISUALIZER
     void showNoVisualizer();
 #endif
-    void setWindowTitleCustom(QString);
-
     void showError(const QString &detail, const QString &general = "An Error occurred");
 
     // must be private because qdbuscpp2xml only generates garbage for it
     void DoChannelMuting(bool (*pred)(bool voiceIsMuted, bool voiceIsSelected));
+
+    void setWindowTitleCustom(QString);
 
     public slots:
     void Play();
