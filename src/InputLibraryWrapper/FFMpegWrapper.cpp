@@ -143,7 +143,7 @@ void FFMpegWrapper::open()
         THROW_RUNTIME_ERROR("FFMpeg doesnt specify duration for this file."); // either this, or there is some other weird way of getting the duration, which is not implemented
     }
 
-    if (pCodecPar->ch_layout.nb_channels == 0 || pCodecPar->ch_layout.order == AV_CHANNEL_ORDER_UNSPEC)
+    if (pCodecPar->ch_layout.order == AV_CHANNEL_ORDER_UNSPEC)
     {
         av_channel_layout_default(&pCodecPar->ch_layout, pCodecPar->ch_layout.nb_channels);
     }
