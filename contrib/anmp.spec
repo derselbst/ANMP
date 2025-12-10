@@ -47,8 +47,8 @@ BuildRequires: ffmpeg-4-libavformat-devel
 BuildRequires: ffmpeg-4-libavutil-devel
 BuildRequires: ffmpeg-4-libswresample-devel
 
-BuildRequires: gcc10
-BuildRequires: gcc10-c++
+BuildRequires: gcc >= 10
+BuildRequires: gcc-c++ >= 10
 
 BuildRequires: update-desktop-files
 %endif
@@ -105,12 +105,6 @@ Additional useful tools for %{name}
 
 %build
 mkdir -p %{builddir}
-cd %{builddir}
-
-%if 0%{?suse_version}
-export CC=gcc-10
-export CXX=g++-10
-%endif
 
 cmake .. \
         -DFLUIDSYNTH_DEFAULT_SF2=%{_datadir}/%{name}/%{sffile} \
@@ -135,8 +129,10 @@ cmake .. \
         -DBUILD_STATIC_LIBS:BOOL=OFF \
         -DCMAKE_COLOR_MAKEFILE:BOOL=OFF \
         -DCMAKE_INSTALL_DO_STRIP:BOOL=OFF \
-        -DCMAKE_MODULES_INSTALL_DIR=%{_datadir}/cmake/Modules
+        -DCMAKE_MODULES_INSTALL_DIR=%{_datadir}/cmake/Modules \
+        -B %{builddir} -S .
 
+cd %{builddir}
 make %{?_smp_mflags}
 
 %install
