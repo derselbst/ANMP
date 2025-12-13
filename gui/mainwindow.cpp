@@ -32,6 +32,7 @@
 #include <windows.foundation.h>
 #include <windows.media.h>
 #include <windows.media.playback.h>
+#include <systemmediatransportcontrolsinterop.h>
 #include <roapi.h>
 #include <wrl.h>
 #include <wrl/wrappers/corewrappers.h>
@@ -300,11 +301,12 @@ void MainWindow::initSMTC()
     using ABI::Windows::Media::IMusicDisplayProperties;
     using ABI::Windows::Media::ISystemMediaTransportControls;
     using ABI::Windows::Media::ISystemMediaTransportControlsDisplayUpdater;
+    using ABI::Windows::Media::ISystemMediaTransportControlsButtonPressedEventArgs;
     using ABI::Windows::Media::MediaPlaybackType;
     using ABI::Windows::Media::SystemMediaTransportControls;
     using ABI::Windows::Media::SystemMediaTransportControlsButton;
     using ABI::Windows::Media::SystemMediaTransportControlsButtonPressedEventArgs;
-    using ABI::Windows::Media::ISystemMediaTransportControlsInterop;
+    using ::ISystemMediaTransportControlsInterop;
 
     HRESULT hr = RoInitialize(RO_INIT_SINGLETHREADED);
     if (FAILED(hr) && hr != S_FALSE)
@@ -314,7 +316,7 @@ void MainWindow::initSMTC()
 
     HWND hwnd = reinterpret_cast<HWND>(this->winId());
 
-    ComPtr<ABI::Windows::Media::ISystemMediaTransportControlsInterop> interop;
+    ComPtr<ISystemMediaTransportControlsInterop> interop;
     hr = RoGetActivationFactory(HStringReference(RuntimeClass_Windows_Media_SystemMediaTransportControls).Get(), IID_PPV_ARGS(&interop));
     if (FAILED(hr) || !interop)
     {
