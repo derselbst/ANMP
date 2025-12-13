@@ -40,7 +40,7 @@ void VGMStreamWrapper::open()
     }
 
     libvgmstream_config_t cfg = {0};
-    cfg.ignore_loop = true;
+    cfg.ignore_loop = false;
     cfg.auto_downmix_channels = false;
     libvgmstream_setup(this->handle, &cfg);
 
