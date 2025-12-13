@@ -37,8 +37,11 @@ Mpris2::Mpris2(MainWindow *window, Player *player, Playlist *playlist, PlaylistM
     this->trackAdaptor = new MprisTrackListAdaptor(this);
 
     QDBusConnection bus = QDBusConnection::sessionBus();
-    bus.registerObject(QString::fromUtf8(ObjectPath), this);
-    bus.registerService(QString::fromUtf8(ServiceName));
+    if (bus.isConnected())
+    {
+        bus.registerObject(QString::fromUtf8(ObjectPath), this);
+        bus.registerService(QString::fromUtf8(ServiceName));
+    }
 
     this->refreshTrackList();
 
@@ -51,8 +54,11 @@ Mpris2::Mpris2(MainWindow *window, Player *player, Playlist *playlist, PlaylistM
 Mpris2::~Mpris2()
 {
     QDBusConnection bus = QDBusConnection::sessionBus();
-    bus.unregisterObject(QString::fromUtf8(ObjectPath));
-    bus.unregisterService(QString::fromUtf8(ServiceName));
+    if (bus.isConnected())
+    {
+        bus.unregisterObject(QString::fromUtf8(ObjectPath));
+        bus.unregisterService(QString::fromUtf8(ServiceName));
+    }
 }
 
 void Mpris2::emitPropertiesChanged(const QString &iface, const QVariantMap &changed, const QStringList &invalidated)
