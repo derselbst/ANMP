@@ -64,6 +64,9 @@ if(USE_GUI)
         anmp-internal
         ${LD_FLAGS}
     )
+    if(WIN32)
+        target_link_libraries(${PROJECT_NAME} runtimeobject)
+    endif()
     
     install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
     

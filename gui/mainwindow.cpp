@@ -29,6 +29,10 @@
 #include <QAbstractFileIconProvider>
 #ifdef Q_OS_WIN
 #include <qt_windows.h>
+#include <windows.foundation.h>
+#include <windows.media.h>
+#include <windows.media.playback.h>
+#include <roapi.h>
 #endif
 
 #include <chrono>
@@ -169,6 +173,9 @@ MainWindow::MainWindow(QWidget *parent)
 #ifdef USE_DBUS
     this->mpris = new Mpris2(this, this->player, this->playlist, this->playlistModel, this);
 #endif
+#ifdef Q_OS_WIN
+    this->initSMTC();
+#endif
 
     this->createShortcuts();
 
@@ -183,6 +190,12 @@ MainWindow::~MainWindow()
     this->player->onPlayheadChanged -= this;
     this->player->onCurrentSongChanged -= this;
     this->player->onIsPlayingChanged -= this;
+#ifdef Q_OS_WIN
+    if (this->smtc && this->smtcToken.value)
+    {
+        this->smtc->remove_ButtonPressed(this->smtcToken);
+    }
+#endif
 
     delete this->ui;
 
@@ -312,6 +325,117 @@ bool MainWindow::nativeEvent(const QByteArray &eventType, void *message, qintptr
         }
     }
     return QMainWindow::nativeEvent(eventType, message, result);
+}
+#endif
+
+#ifdef Q_OS_WIN
+void MainWindow::initSMTC()
+{
+    using Microsoft::WRL::ComPtr;
+    using Microsoft::WRL::Wrappers::HStringReference;
+
+    HRESULT hr = RoInitialize(RO_INIT_SINGLETHREADED);
+    if (FAILED(hr) && hr != S_FALSE)
+    {
+        return;
+    }
+
+    ComPtr<IInspectable> insp;
+    hr = RoActivateInstance(HStringReference(RuntimeClass_Windows_Media_SystemMediaTransportControls).Get(), &insp);
+    if (FAILED(hr))
+    {
+        return;
+    }
+
+    hr = insp.As(&this->smtc);
+    if (FAILED(hr) || !this->smtc)
+    {
+        return;
+    }
+
+    this->smtc->put_IsEnabled(TRUE);
+    this->smtc->put_IsPlayEnabled(TRUE);
+    this->smtc->put_IsPauseEnabled(TRUE);
+    this->smtc->put_IsNextEnabled(TRUE);
+    this->smtc->put_IsPreviousEnabled(TRUE);
+
+    auto handler = Microsoft::WRL::Callback<ISystemMediaTransportControlsButtonPressedEventHandler>(
+        [this](ISystemMediaTransportControls *, ISystemMediaTransportControlsButtonPressedEventArgs *args) -> HRESULT {
+            if (!args)
+            {
+                return S_OK;
+            }
+            SystemMediaTransportControlsButton btn;
+            if (FAILED(args->get_Button(&btn)))
+            {
+                return S_OK;
+            }
+            switch (btn)
+            {
+                case SystemMediaTransportControlsButton_Play:
+                    this->Play();
+                    break;
+                case SystemMediaTransportControlsButton_Pause:
+                    this->Pause();
+                    break;
+                case SystemMediaTransportControlsButton_PlayPause:
+                    this->TogglePlayPause();
+                    break;
+                case SystemMediaTransportControlsButton_Next:
+                    this->Next();
+                    break;
+                case SystemMediaTransportControlsButton_Previous:
+                    this->Previous();
+                    break;
+                default:
+                    break;
+            }
+            return S_OK;
+        });
+
+    this->smtc->add_ButtonPressed(handler.Get(), &this->smtcToken);
+    this->updateSMTCPlayback(false);
+}
+
+void MainWindow::updateSMTCPlayback(bool isPlaying)
+{
+    if (!this->smtc)
+    {
+        return;
+    }
+    this->smtc->put_PlaybackStatus(isPlaying ? SystemMediaTransportControlsPlaybackStatus_Playing
+                                             : SystemMediaTransportControlsPlaybackStatus_Paused);
+}
+
+void MainWindow::updateSMTCMetadata(const Song *s)
+{
+    if (!this->smtc)
+    {
+        return;
+    }
+
+    Microsoft::WRL::ComPtr<ISystemMediaTransportControlsDisplayUpdater> updater;
+    if (FAILED(this->smtc->get_DisplayUpdater(&updater)) || !updater)
+    {
+        return;
+    }
+    updater->put_Type(MediaPlaybackType_Music);
+
+    Microsoft::WRL::ComPtr<IMusicDisplayProperties> music;
+    updater->get_MusicProperties(&music);
+    if (music)
+    {
+        music->put_Title(Microsoft::WRL::Wrappers::HStringReference(
+                             s && !s->Metadata.Title.empty() ? QString::fromStdString(s->Metadata.Title).toStdWString().c_str()
+                                                             : L"")
+                             .Get());
+        music->put_Artist(Microsoft::WRL::Wrappers::HStringReference(
+                              s && !s->Metadata.Artist.empty() ? QString::fromStdString(s->Metadata.Artist).toStdWString().c_str()
+                                                               : L"")
+                              .Get());
+    }
+
+    updater->Update();
 }
 #endif
 

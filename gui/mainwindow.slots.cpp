@@ -16,6 +16,9 @@
 #ifdef USE_DBUS
 #include "mpris2.h"
 #endif
+#ifdef Q_OS_WIN
+#include <windows.media.h>
+#endif
 
 #include <anmp.hpp>
 
@@ -46,6 +49,9 @@ void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, const QString
     {
         this->mpris->updatePlaybackStatus(isPlaying);
     }
+#endif
+#ifdef Q_OS_WIN
+    this->updateSMTCPlayback(isPlaying);
 #endif
 
     if (hasMsg)
@@ -136,6 +142,9 @@ void MainWindow::slotCurrentSongChanged(const Song* s)
     {
         this->mpris->updateCurrentSong(s);
     }
+#endif
+#ifdef Q_OS_WIN
+    this->updateSMTCMetadata(s);
 #endif
 }
 

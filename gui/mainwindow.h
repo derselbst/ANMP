@@ -8,6 +8,12 @@
 #include <memory>
 #include <vector>
 
+#ifdef Q_OS_WIN
+#include <wrl.h>
+#include <wrl/wrappers/corewrappers.h>
+#include <windows.media.h>
+#endif
+
 namespace Ui
 {
     class MainWindow;
@@ -79,6 +85,13 @@ class MainWindow : public QMainWindow
 
 #ifdef USE_DBUS
     Mpris2 *mpris = nullptr;
+#endif
+#ifdef Q_OS_WIN
+    Microsoft::WRL::ComPtr<ABI::Windows::Media::ISystemMediaTransportControls> smtc;
+    EventRegistrationToken smtcToken{};
+    void initSMTC();
+    void updateSMTCPlayback(bool isPlaying);
+    void updateSMTCMetadata(const Song *s);
 #endif
 
     void buildPlaylistView();
