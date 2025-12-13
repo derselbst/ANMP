@@ -35,6 +35,8 @@
 #include <roapi.h>
 #include <wrl.h>
 #include <wrl/wrappers/corewrappers.h>
+#include <wrl/event.h>
+#include <inspectable.h>
 #endif
 
 #include <chrono>
@@ -129,14 +131,15 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this->ui->actionAdd_Songs, &QAction::triggered, this, [this] { this->playlistModel->asyncAdd(QFileDialog::getOpenFileNames(this, "Open Audio Files", QString(), "")); });
     connect(this->ui->actionAdd_Playback_Stop, &QAction::triggered, this,
             [this] {
-                long idxTarget = this->playlist->getCurrentSongId();
-                long idxAt = this->playlist->add(nullptr);
-                this->playlist->move(idxAt, 0, idxTarget - idxAt + 1);
-                this->playlistModel->insertRows(idxTarget, 1);
+                size_t idxTarget = this->playlist->getCurrentSongId();
+                size_t idxAt = this->playlist->add(nullptr);
+                int steps = static_cast<int>(idxTarget - idxAt + 1);
+                this->playlist->move(idxAt, 0, steps);
+                this->playlistModel->insertRows(static_cast<int>(idxTarget), 1);
             });
     connect(this->ui->actionAdd_Playback_Stop_At_End, &QAction::triggered, this,
             [this] {
-                this->playlistModel->insertRows(this->playlist->add(nullptr), 1);
+                this->playlistModel->insertRows(static_cast<int>(this->playlist->add(nullptr)), 1);
             });
     connect(this->ui->actionShuffle_Playst, &QAction::triggered, this, &MainWindow::shufflePlaylist);
     connect(this->ui->actionClear_Playlist, &QAction::triggered, this, &MainWindow::clearPlaylist);
@@ -293,14 +296,14 @@ void MainWindow::initSMTC()
 {
     using Microsoft::WRL::ComPtr;
     using Microsoft::WRL::Wrappers::HStringReference;
-    using ABI::Windows::Foundation::IInspectable;
+    using ABI::Windows::Foundation::ITypedEventHandler;
     using ABI::Windows::Media::IMusicDisplayProperties;
     using ABI::Windows::Media::ISystemMediaTransportControls;
-    using ABI::Windows::Media::ISystemMediaTransportControlsButtonPressedEventArgs;
-    using ABI::Windows::Media::ISystemMediaTransportControlsButtonPressedEventHandler;
     using ABI::Windows::Media::ISystemMediaTransportControlsDisplayUpdater;
     using ABI::Windows::Media::MediaPlaybackType;
+    using ABI::Windows::Media::SystemMediaTransportControls;
     using ABI::Windows::Media::SystemMediaTransportControlsButton;
+    using ABI::Windows::Media::SystemMediaTransportControlsButtonPressedEventArgs;
     using ABI::Windows::Media::SystemMediaTransportControlsPlaybackStatus;
 
     HRESULT hr = RoInitialize(RO_INIT_SINGLETHREADED);
@@ -328,8 +331,8 @@ void MainWindow::initSMTC()
     this->smtc->put_IsNextEnabled(true);
     this->smtc->put_IsPreviousEnabled(true);
 
-    auto handler = Microsoft::WRL::Callback<ISystemMediaTransportControlsButtonPressedEventHandler>(
-        [this](ISystemMediaTransportControls *, ISystemMediaTransportControlsButtonPressedEventArgs *args) -> HRESULT {
+    auto handler = Microsoft::WRL::Callback<ITypedEventHandler<SystemMediaTransportControls *, SystemMediaTransportControlsButtonPressedEventArgs *>>(
+        [this](SystemMediaTransportControls *, SystemMediaTransportControlsButtonPressedEventArgs *args) -> HRESULT {
             if (!args)
             {
                 return S_OK;
@@ -372,8 +375,8 @@ void MainWindow::updateSMTCPlayback(bool isPlaying)
     {
         return;
     }
-    this->smtc->put_PlaybackStatus(isPlaying ? SystemMediaTransportControlsPlaybackStatus_Playing
-                                             : SystemMediaTransportControlsPlaybackStatus_Paused);
+    this->smtc->put_PlaybackStatus(isPlaying ? ABI::Windows::Media::SystemMediaTransportControlsPlaybackStatus_Playing
+                                             : ABI::Windows::Media::SystemMediaTransportControlsPlaybackStatus_Paused);
 }
 
 void MainWindow::updateSMTCMetadata(const Song *s)
