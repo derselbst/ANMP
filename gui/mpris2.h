@@ -124,7 +124,7 @@ class Mpris2 : public QObject
 class MprisRootAdaptor : public QDBusAbstractAdaptor
 {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", Mpris2::RootInterface)
+    Q_CLASSINFO("D-Bus Interface", "org.mpris.MediaPlayer2")
     Q_PROPERTY(bool CanQuit READ canQuit)
     Q_PROPERTY(bool CanRaise READ canRaise)
     Q_PROPERTY(bool HasTrackList READ hasTrackList)
@@ -160,7 +160,7 @@ class MprisRootAdaptor : public QDBusAbstractAdaptor
 class MprisPlayerAdaptor : public QDBusAbstractAdaptor
 {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", Mpris2::PlayerInterface)
+    Q_CLASSINFO("D-Bus Interface", "org.mpris.MediaPlayer2.Player")
     Q_PROPERTY(QString PlaybackStatus READ playbackStatus)
     Q_PROPERTY(QString LoopStatus READ loopStatus WRITE setLoopStatus)
     Q_PROPERTY(double Rate READ rate WRITE setRate)
@@ -221,7 +221,7 @@ class MprisPlayerAdaptor : public QDBusAbstractAdaptor
 class MprisTrackListAdaptor : public QDBusAbstractAdaptor
 {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", Mpris2::TrackListInterface)
+    Q_CLASSINFO("D-Bus Interface", "org.mpris.MediaPlayer2.TrackList")
     Q_PROPERTY(QList<QDBusObjectPath> Tracks READ tracks)
     Q_PROPERTY(bool CanEditTracks READ canEditTracks)
 
