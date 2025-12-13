@@ -304,7 +304,6 @@ void MainWindow::initSMTC()
     using ABI::Windows::Media::SystemMediaTransportControls;
     using ABI::Windows::Media::SystemMediaTransportControlsButton;
     using ABI::Windows::Media::SystemMediaTransportControlsButtonPressedEventArgs;
-    using ABI::Windows::Media::SystemMediaTransportControlsPlaybackStatus;
 
     HRESULT hr = RoInitialize(RO_INIT_SINGLETHREADED);
     if (FAILED(hr) && hr != S_FALSE)
@@ -344,19 +343,16 @@ void MainWindow::initSMTC()
             }
             switch (btn)
             {
-                case SystemMediaTransportControlsButton_Play:
+                case SystemMediaTransportControlsButton::SystemMediaTransportControlsButton_Play:
                     this->Play();
                     break;
-                case SystemMediaTransportControlsButton_Pause:
+                case SystemMediaTransportControlsButton::SystemMediaTransportControlsButton_Pause:
                     this->Pause();
                     break;
-                case SystemMediaTransportControlsButton_PlayPause:
-                    this->TogglePlayPause();
-                    break;
-                case SystemMediaTransportControlsButton_Next:
+                case SystemMediaTransportControlsButton::SystemMediaTransportControlsButton_Next:
                     this->Next();
                     break;
-                case SystemMediaTransportControlsButton_Previous:
+                case SystemMediaTransportControlsButton::SystemMediaTransportControlsButton_Previous:
                     this->Previous();
                     break;
                 default:
@@ -371,12 +367,13 @@ void MainWindow::initSMTC()
 
 void MainWindow::updateSMTCPlayback(bool isPlaying)
 {
+    using ABI::Windows::Media::MediaPlaybackStatus;
+
     if (!this->smtc)
     {
         return;
     }
-    this->smtc->put_PlaybackStatus(isPlaying ? ABI::Windows::Media::SystemMediaTransportControlsPlaybackStatus_Playing
-                                             : ABI::Windows::Media::SystemMediaTransportControlsPlaybackStatus_Paused);
+    this->smtc->put_PlaybackStatus(isPlaying ? MediaPlaybackStatus::MediaPlaybackStatus_Playing : MediaPlaybackStatus::MediaPlaybackStatus_Paused);
 }
 
 void MainWindow::updateSMTCMetadata(const Song *s)
@@ -396,7 +393,7 @@ void MainWindow::updateSMTCMetadata(const Song *s)
     {
         return;
     }
-    updater->put_Type(MediaPlaybackType_Music);
+    updater->put_Type(MediaPlaybackType::MediaPlaybackType_Music);
 
     Microsoft::WRL::ComPtr<IMusicDisplayProperties> music;
     updater->get_MusicProperties(&music);
