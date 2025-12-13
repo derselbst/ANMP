@@ -141,10 +141,9 @@ frame_t VGMStreamWrapper::getFrames() const
 void VGMStreamWrapper::buildMetadata() noexcept
 {
     char title[128];
-    libvgmstream_title_t cfg = {
-        .filename = this->Filename.c_str(),
-        .remove_extension = true,
-    };
+    libvgmstream_title_t cfg = {0};
+    cfg.remove_extension = true;
+    cfg.filename = this->Filename.c_str();
     libvgmstream_get_title(this->handle, &cfg, title, sizeof(title));
 
     char describe[1024];
