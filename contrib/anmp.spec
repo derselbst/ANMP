@@ -42,10 +42,10 @@ BuildRequires: lazyusf2-devel
 # SuSE specific:
 # everything newer openSUSE Leap 15.0 or openSUSE Tumbleweed
 %if 0%{?sle_version} >= 150000 || 0%{?suse_version} > 1500
-BuildRequires: ffmpeg-4-libavcodec-devel
-BuildRequires: ffmpeg-4-libavformat-devel
-BuildRequires: ffmpeg-4-libavutil-devel
-BuildRequires: ffmpeg-4-libswresample-devel
+BuildRequires: pkgconfig(libavcodec) >= 6.0
+BuildRequires: pkgconfig(libavformat) >= 6.0
+BuildRequires: pkgconfig(libavutil) >= 6.0
+BuildRequires: pkgconfig(libswresample) >= 6.0
 
 BuildRequires: gcc >= 10
 BuildRequires: gcc-c++ >= 10
