@@ -4,10 +4,10 @@
 #include "Common.h"
 #include "Config.h"
 
-extern "C" {
-#include <util.h>
-
 #include <utility>
+
+extern "C" {
+#include <libvgmstream.h>
 }
 // Constructors/Destructors
 //
@@ -15,18 +15,11 @@ extern "C" {
 VGMStreamWrapper::VGMStreamWrapper(string filename)
 : StandardWrapper(std::move(filename))
 {
-    this->initAttr();
 }
 
 VGMStreamWrapper::VGMStreamWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len)
 : StandardWrapper(std::move(filename), offset, len)
 {
-    this->initAttr();
-}
-
-void VGMStreamWrapper::initAttr()
-{
-    this->Format.SampleFormat = SampleFormat_t::int16;
 }
 
 VGMStreamWrapper::~VGMStreamWrapper()
@@ -37,49 +30,94 @@ VGMStreamWrapper::~VGMStreamWrapper()
 
 void VGMStreamWrapper::open()
 {
+    int err;
     if (this->handle != nullptr)
     {
         return;
     }
 
-    this->handle = init_vgmstream(this->Filename.c_str());
-
+    this->handle = libvgmstream_init();
     if (handle == nullptr)
+    {
+        THROW_RUNTIME_ERROR("libvgmstream out of memory?");
+    }
+
+    libvgmstream_config_t cfg = {0};
+    cfg.ignore_loop = true;
+    cfg.auto_downmix_channels = false;
+    libvgmstream_setup(this->handle, &cfg);
+
+    libstreamfile_t* sf = libstreamfile_open_from_stdio(this->Filename.c_str());
+    err = libvgmstream_open_stream(this->handle, sf, 0);
+    libstreamfile_close(sf);
+
+    if(err < 0)
     {
         THROW_RUNTIME_ERROR("failed opening \"" << this->Filename << "\"");
     }
 
-    this->Format.SampleRate = this->handle->sample_rate;
+    this->Format.SampleRate = this->handle->format->sample_rate;
     // group all available channels to individual stereo voices
-    this->Format.ConfigureVoices(this->handle->channels, 2);
+    this->Format.ConfigureVoices(this->handle->format->channels, 2);
+    auto sfm = this->handle->format->sample_format;
+    switch(sfm)
+    {
+        case LIBVGMSTREAM_SFMT_PCM16:
+            this->Format.SampleFormat = SampleFormat_t::int16;
+            break;
+        case LIBVGMSTREAM_SFMT_PCM32:
+            this->Format.SampleFormat = SampleFormat_t::int32;
+            break;
+        case LIBVGMSTREAM_SFMT_FLOAT:
+            this->Format.SampleFormat = SampleFormat_t::float32;
+            break;
+        case LIBVGMSTREAM_SFMT_PCM24:
+        default:
+            THROW_RUNTIME_ERROR("THIS SHOULD NEVER HAPPEN: SampleFormat " << (int)sfm << " unknown");
+    }
 
     // hold a copy
-    this->fileLen = (this->handle->num_samples * 1000.0) / this->Format.SampleRate;
+    this->fileLen = (this->handle->format->stream_samples * 1000.0) / this->Format.SampleRate;
 }
 
 void VGMStreamWrapper::close() noexcept
 {
     if (this->handle != nullptr)
     {
-        close_vgmstream(this->handle);
+        libvgmstream_free(this->handle);
         this->handle = nullptr;
     }
 }
 
 void VGMStreamWrapper::render(pcm_t *const bufferToFill, const uint32_t Channels, frame_t framesToRender)
 {
-    STANDARDWRAPPER_RENDER(int16_t, render_vgmstream(pcm, framesToDoNow, this->handle))
+    auto sfm = this->handle->format->sample_format;
+    switch(sfm)
+    {
+        case LIBVGMSTREAM_SFMT_PCM16:
+            STANDARDWRAPPER_RENDER(int16_t, if(0 > libvgmstream_render(this->handle)){THROW_RUNTIME_ERROR("libvgmstream_render failed")};if(0 > libvgmstream_fill(this->handle, pcm, framesToDoNow)){THROW_RUNTIME_ERROR("libvgmstream_fill failed")})
+            break;
+        case LIBVGMSTREAM_SFMT_PCM32:
+            STANDARDWRAPPER_RENDER(int32_t, if(0 > libvgmstream_render(this->handle)){THROW_RUNTIME_ERROR("libvgmstream_render failed")};if(0 > libvgmstream_fill(this->handle, pcm, framesToDoNow)){THROW_RUNTIME_ERROR("libvgmstream_fill failed")})
+            break;
+        case LIBVGMSTREAM_SFMT_FLOAT:
+            STANDARDWRAPPER_RENDER(float, if(0 > libvgmstream_render(this->handle)){THROW_RUNTIME_ERROR("libvgmstream_render failed")};if(0 > libvgmstream_fill(this->handle, pcm, framesToDoNow)){THROW_RUNTIME_ERROR("libvgmstream_fill failed")})
+            break;
+        case LIBVGMSTREAM_SFMT_PCM24:
+        default:
+            THROW_RUNTIME_ERROR("THIS SHOULD NEVER HAPPEN: SampleFormat " << (int)sfm << " unknown");
+    }
 }
 
 vector<loop_t> VGMStreamWrapper::getLoopArray() const noexcept
 {
     vector<loop_t> res;
 
-    if (this->handle != nullptr && this->handle->loop_flag) // does stream contain loop information?
+    if (this->handle != nullptr && this->handle->format->loop_flag) // does stream contain loop information?
     {
         loop_t l;
-        l.start = handle->loop_start_sample;
-        l.stop = handle->loop_end_sample;
+        l.start = handle->format->loop_start;
+        l.stop = handle->format->loop_end;
 
         // sanity check, for some reason many super smash bros brawl audio files (e.g. B02.brstm) may specify
         // end of loop past the actual song. in such a case use the last frame as loop.stop in hope that no
@@ -105,5 +143,15 @@ frame_t VGMStreamWrapper::getFrames() const
 
 void VGMStreamWrapper::buildMetadata() noexcept
 {
-    // as of 07-04-2016 vgmstream doesnt seem to provide any useable metadata, so we cant do anything here
+    char title[128];
+    libvgmstream_title_t cfg = {
+        .filename = this->Filename.c_str(),
+        .remove_extension = true,
+    };
+    libvgmstream_get_title(this->handle, &cfg, title, sizeof(title));
+
+    char describe[1024];
+    libvgmstream_format_describe(this->handle, describe, sizeof(describe));
+    this->Metadata.Title = title;
+    this->Metadata.Comment = describe;
 }

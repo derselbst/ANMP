@@ -3,9 +3,7 @@
 
 #include "StandardWrapper.h"
 
-extern "C" {
-#include <vgmstream.h>
-}
+typedef struct libvgmstream_t;
 
 /**
   * class VGMStreamWrapper
@@ -18,7 +16,6 @@ class VGMStreamWrapper : public StandardWrapper<int16_t>
     public:
     VGMStreamWrapper(string filename);
     VGMStreamWrapper(string filename, Nullable<size_t> offset, Nullable<size_t> len);
-    void initAttr();
 
     // forbid copying
     VGMStreamWrapper(VGMStreamWrapper const &) = delete;
@@ -42,7 +39,7 @@ class VGMStreamWrapper : public StandardWrapper<int16_t>
     void buildMetadata() noexcept override;
 
     private:
-    VGMSTREAM *handle = nullptr;
+    libvgmstream_t *handle = nullptr;
 };
 
 #endif // VGMSTREAMWRAPPER_H
