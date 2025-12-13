@@ -42,13 +42,13 @@ BuildRequires: lazyusf2-devel
 # SuSE specific:
 # everything newer openSUSE Leap 15.0 or openSUSE Tumbleweed
 %if 0%{?sle_version} >= 150000 || 0%{?suse_version} > 1500
-BuildRequires: ffmpeg-4-libavcodec-devel
-BuildRequires: ffmpeg-4-libavformat-devel
-BuildRequires: ffmpeg-4-libavutil-devel
-BuildRequires: ffmpeg-4-libswresample-devel
+BuildRequires: pkgconfig(libavcodec) >= 6.0
+BuildRequires: pkgconfig(libavformat) >= 6.0
+BuildRequires: pkgconfig(libavutil) >= 6.0
+BuildRequires: pkgconfig(libswresample) >= 6.0
 
-BuildRequires: gcc10
-BuildRequires: gcc10-c++
+BuildRequires: gcc >= 10
+BuildRequires: gcc-c++ >= 10
 
 BuildRequires: update-desktop-files
 %endif
@@ -105,12 +105,6 @@ Additional useful tools for %{name}
 
 %build
 mkdir -p %{builddir}
-cd %{builddir}
-
-%if 0%{?suse_version}
-export CC=gcc-10
-export CXX=g++-10
-%endif
 
 cmake .. \
         -DFLUIDSYNTH_DEFAULT_SF2=%{_datadir}/%{name}/%{sffile} \
@@ -135,8 +129,10 @@ cmake .. \
         -DBUILD_STATIC_LIBS:BOOL=OFF \
         -DCMAKE_COLOR_MAKEFILE:BOOL=OFF \
         -DCMAKE_INSTALL_DO_STRIP:BOOL=OFF \
-        -DCMAKE_MODULES_INSTALL_DIR=%{_datadir}/cmake/Modules
+        -DCMAKE_MODULES_INSTALL_DIR=%{_datadir}/cmake/Modules \
+        -B %{builddir} -S .
 
+cd %{builddir}
 make %{?_smp_mflags}
 
 %install
