@@ -289,48 +289,6 @@ void MainWindow::createShortcuts()
 }
 
 #ifdef Q_OS_WIN
-bool MainWindow::nativeEvent(const QByteArray &eventType, void *message, qintptr *result)
-{
-    static const QByteArray kWinGeneric = QByteArrayLiteral("windows_generic_MSG");
-    static const QByteArray kWinDispatcher = QByteArrayLiteral("windows_dispatcher_MSG");
-    if (eventType == kWinGeneric || eventType == kWinDispatcher)
-    {
-        MSG *msg = static_cast<MSG *>(message);
-        if (msg != nullptr && msg->message == WM_APPCOMMAND)
-        {
-            const int cmd = GET_APPCOMMAND_LPARAM(msg->lParam);
-            switch (cmd)
-            {
-                case APPCOMMAND_MEDIA_PLAY_PAUSE:
-                    this->TogglePlayPause();
-                    break;
-                case APPCOMMAND_MEDIA_PLAY:
-                    this->Play();
-                    break;
-                case APPCOMMAND_MEDIA_PAUSE:
-                    this->Pause();
-                    break;
-                case APPCOMMAND_MEDIA_NEXTTRACK:
-                    this->Next();
-                    break;
-                case APPCOMMAND_MEDIA_PREVIOUSTRACK:
-                    this->Previous();
-                    break;
-                default:
-                    break;
-            }
-            if (result)
-            {
-                *result = 1;
-            }
-            return true;
-        }
-    }
-    return QMainWindow::nativeEvent(eventType, message, result);
-}
-#endif
-
-#ifdef Q_OS_WIN
 void MainWindow::initSMTC()
 {
     using Microsoft::WRL::ComPtr;
@@ -364,11 +322,11 @@ void MainWindow::initSMTC()
         return;
     }
 
-    this->smtc->put_IsEnabled(TRUE);
-    this->smtc->put_IsPlayEnabled(TRUE);
-    this->smtc->put_IsPauseEnabled(TRUE);
-    this->smtc->put_IsNextEnabled(TRUE);
-    this->smtc->put_IsPreviousEnabled(TRUE);
+    this->smtc->put_IsEnabled(true);
+    this->smtc->put_IsPlayEnabled(true);
+    this->smtc->put_IsPauseEnabled(true);
+    this->smtc->put_IsNextEnabled(true);
+    this->smtc->put_IsPreviousEnabled(true);
 
     auto handler = Microsoft::WRL::Callback<ISystemMediaTransportControlsButtonPressedEventHandler>(
         [this](ISystemMediaTransportControls *, ISystemMediaTransportControlsButtonPressedEventArgs *args) -> HRESULT {

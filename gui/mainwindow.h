@@ -153,10 +153,6 @@ class MainWindow : public QMainWindow
     void slotSongAdded(const QString& file, int, int);
 
     void settingsDialogAccepted();
-
-#ifdef Q_OS_WIN
-    bool nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override;
-#endif
 };
 
 #endif // MAINWINDOW_H
