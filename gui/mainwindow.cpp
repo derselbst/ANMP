@@ -334,6 +334,13 @@ void MainWindow::initSMTC()
     this->smtc->put_IsNextEnabled(true);
     this->smtc->put_IsPreviousEnabled(true);
 
+    Microsoft::WRL::ComPtr<ISystemMediaTransportControlsDisplayUpdater> initUpdater;
+    if (SUCCEEDED(this->smtc->get_DisplayUpdater(&initUpdater)) && initUpdater)
+    {
+        initUpdater->put_AppMediaId(HStringReference(L"ANMP").Get());
+        initUpdater->Update();
+    }
+
     auto handler = Microsoft::WRL::Callback<ITypedEventHandler<SystemMediaTransportControls *, SystemMediaTransportControlsButtonPressedEventArgs *>>(
       [this](ISystemMediaTransportControls *, ISystemMediaTransportControlsButtonPressedEventArgs *args) -> HRESULT {
             if (!args)
@@ -403,8 +410,13 @@ void MainWindow::updateSMTCMetadata(const Song *s)
     updater->get_MusicProperties(&music);
     if (music)
     {
-        auto title = s && !s->Metadata.Title.empty() ? QString::fromStdString(s->Metadata.Title).toStdWString() : std::wstring();
-        auto artist = s && !s->Metadata.Artist.empty() ? QString::fromStdString(s->Metadata.Artist).toStdWString() : std::wstring();
+        std::wstring fallbackTitle;
+        if (s && !s->Filename.empty())
+        {
+            fallbackTitle = QString::fromStdString(mybasename(s->Filename)).toStdWString();
+        }
+        auto title = s && !s->Metadata.Title.empty() ? QString::fromStdString(s->Metadata.Title).toStdWString() : fallbackTitle;
+        auto artist = s && !s->Metadata.Artist.empty() ? QString::fromStdString(s->Metadata.Artist).toStdWString() : std::wstring(L"ANMP");
         music->put_Title(HStringReference(title.c_str()).Get());
         music->put_Artist(HStringReference(artist.c_str()).Get());
     }
