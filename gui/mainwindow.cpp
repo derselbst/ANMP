@@ -200,7 +200,9 @@ MainWindow::~MainWindow()
     if (this->smtc && this->smtcToken.value)
     {
         this->smtc->remove_ButtonPressed(this->smtcToken);
+        this->smtc.Reset();
     }
+    RoUninitialize();
 #endif
 
     delete this->ui;
