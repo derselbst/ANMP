@@ -300,11 +300,11 @@ void MainWindow::initSMTC()
     using ABI::Windows::Media::IMusicDisplayProperties;
     using ABI::Windows::Media::ISystemMediaTransportControls;
     using ABI::Windows::Media::ISystemMediaTransportControlsDisplayUpdater;
-    using ABI::Windows::Media::ISystemMediaTransportControlsButtonPressedEventArgs;
     using ABI::Windows::Media::MediaPlaybackType;
     using ABI::Windows::Media::SystemMediaTransportControls;
     using ABI::Windows::Media::SystemMediaTransportControlsButton;
     using ABI::Windows::Media::SystemMediaTransportControlsButtonPressedEventArgs;
+    using ABI::Windows::Media::ISystemMediaTransportControlsInterop;
 
     HRESULT hr = RoInitialize(RO_INIT_SINGLETHREADED);
     if (FAILED(hr) && hr != S_FALSE)
@@ -312,14 +312,15 @@ void MainWindow::initSMTC()
         return;
     }
 
-    ComPtr<IInspectable> insp;
-    hr = RoActivateInstance(HStringReference(RuntimeClass_Windows_Media_SystemMediaTransportControls).Get(), &insp);
-    if (FAILED(hr))
+    HWND hwnd = reinterpret_cast<HWND>(this->winId());
+
+    ComPtr<ABI::Windows::Media::ISystemMediaTransportControlsInterop> interop;
+    hr = RoGetActivationFactory(HStringReference(RuntimeClass_Windows_Media_SystemMediaTransportControls).Get(), IID_PPV_ARGS(&interop));
+    if (FAILED(hr) || !interop)
     {
         return;
     }
-
-    hr = insp.As(&this->smtc);
+    hr = interop->GetForWindow(hwnd, IID_PPV_ARGS(&this->smtc));
     if (FAILED(hr) || !this->smtc)
     {
         return;
