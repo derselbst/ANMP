@@ -300,6 +300,7 @@ void MainWindow::initSMTC()
     using ABI::Windows::Media::IMusicDisplayProperties;
     using ABI::Windows::Media::ISystemMediaTransportControls;
     using ABI::Windows::Media::ISystemMediaTransportControlsDisplayUpdater;
+    using ABI::Windows::Media::ISystemMediaTransportControlsButtonPressedEventArgs;
     using ABI::Windows::Media::MediaPlaybackType;
     using ABI::Windows::Media::SystemMediaTransportControls;
     using ABI::Windows::Media::SystemMediaTransportControlsButton;
@@ -331,7 +332,7 @@ void MainWindow::initSMTC()
     this->smtc->put_IsPreviousEnabled(true);
 
     auto handler = Microsoft::WRL::Callback<ITypedEventHandler<SystemMediaTransportControls *, SystemMediaTransportControlsButtonPressedEventArgs *>>(
-        [this](SystemMediaTransportControls *, SystemMediaTransportControlsButtonPressedEventArgs *args) -> HRESULT {
+      [this](ISystemMediaTransportControls *, ISystemMediaTransportControlsButtonPressedEventArgs *args) -> HRESULT {
             if (!args)
             {
                 return S_OK;
