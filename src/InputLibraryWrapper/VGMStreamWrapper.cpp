@@ -6,9 +6,6 @@
 
 #include <utility>
 
-extern "C" {
-#include <libvgmstream.h>
-}
 // Constructors/Destructors
 //
 

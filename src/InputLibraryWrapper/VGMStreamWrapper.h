@@ -3,7 +3,9 @@
 
 #include "StandardWrapper.h"
 
-typedef struct libvgmstream_t;
+extern "C" {
+#include <libvgmstream.h>
+}
 
 /**
   * class VGMStreamWrapper

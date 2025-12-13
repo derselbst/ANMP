@@ -34,7 +34,6 @@
 
 #ifdef USE_VGMSTREAM
 #include "VGMStreamWrapper.h"
-#include <libvgmstream.h>
 #endif
 
 #ifdef USE_FLUIDSYNTH
@@ -322,10 +321,10 @@ bool PlaylistFactory::addSong(std::vector<Song*> &playlist, const std::string& f
 
 #ifdef USE_VGMSTREAM
         {
-            size_t len;
+            int len;
             const char **extList = libvgmstream_get_extensions(&len);
 
-            for (size_t i = 0; i < len && pcm == nullptr; i++)
+            for (int i = 0; i < len && pcm == nullptr; i++)
             {
                 if (iEquals(ext, extList[i]))
                 {
