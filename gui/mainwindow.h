@@ -11,6 +11,7 @@
 #ifdef Q_OS_WIN
 #include <wrl.h>
 #include <wrl/wrappers/corewrappers.h>
+#include <windows.foundation.h>
 #include <windows.media.h>
 #endif
 

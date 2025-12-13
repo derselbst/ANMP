@@ -33,6 +33,8 @@
 #include <windows.media.h>
 #include <windows.media.playback.h>
 #include <roapi.h>
+#include <wrl.h>
+#include <wrl/wrappers/corewrappers.h>
 #endif
 
 #include <chrono>
@@ -333,6 +335,15 @@ void MainWindow::initSMTC()
 {
     using Microsoft::WRL::ComPtr;
     using Microsoft::WRL::Wrappers::HStringReference;
+    using ABI::Windows::Foundation::IInspectable;
+    using ABI::Windows::Media::IMusicDisplayProperties;
+    using ABI::Windows::Media::ISystemMediaTransportControls;
+    using ABI::Windows::Media::ISystemMediaTransportControlsButtonPressedEventArgs;
+    using ABI::Windows::Media::ISystemMediaTransportControlsButtonPressedEventHandler;
+    using ABI::Windows::Media::ISystemMediaTransportControlsDisplayUpdater;
+    using ABI::Windows::Media::MediaPlaybackType;
+    using ABI::Windows::Media::SystemMediaTransportControlsButton;
+    using ABI::Windows::Media::SystemMediaTransportControlsPlaybackStatus;
 
     HRESULT hr = RoInitialize(RO_INIT_SINGLETHREADED);
     if (FAILED(hr) && hr != S_FALSE)
@@ -409,6 +420,11 @@ void MainWindow::updateSMTCPlayback(bool isPlaying)
 
 void MainWindow::updateSMTCMetadata(const Song *s)
 {
+    using Microsoft::WRL::Wrappers::HStringReference;
+    using ABI::Windows::Media::IMusicDisplayProperties;
+    using ABI::Windows::Media::ISystemMediaTransportControlsDisplayUpdater;
+    using ABI::Windows::Media::MediaPlaybackType;
+
     if (!this->smtc)
     {
         return;
@@ -425,14 +441,10 @@ void MainWindow::updateSMTCMetadata(const Song *s)
     updater->get_MusicProperties(&music);
     if (music)
     {
-        music->put_Title(Microsoft::WRL::Wrappers::HStringReference(
-                             s && !s->Metadata.Title.empty() ? QString::fromStdString(s->Metadata.Title).toStdWString().c_str()
-                                                             : L"")
-                             .Get());
-        music->put_Artist(Microsoft::WRL::Wrappers::HStringReference(
-                              s && !s->Metadata.Artist.empty() ? QString::fromStdString(s->Metadata.Artist).toStdWString().c_str()
-                                                               : L"")
-                              .Get());
+        auto title = s && !s->Metadata.Title.empty() ? QString::fromStdString(s->Metadata.Title).toStdWString() : std::wstring();
+        auto artist = s && !s->Metadata.Artist.empty() ? QString::fromStdString(s->Metadata.Artist).toStdWString() : std::wstring();
+        music->put_Title(HStringReference(title.c_str()).Get());
+        music->put_Artist(HStringReference(artist.c_str()).Get());
     }
 
     updater->Update();
