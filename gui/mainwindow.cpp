@@ -10,7 +10,7 @@
 #include "applets/analyzer/AnalyzerApplet.h"
 #include "configdialog.h"
 #ifdef USE_DBUS
-#include "mainwindow_adaptor.h"
+#include "mpris2.h"
 #endif
 #include "ui_mainwindow.h"
 #include "ui_playcontrol.h"
@@ -27,6 +27,18 @@
 #include <QTreeView>
 #include <QFontDatabase>
 #include <QAbstractFileIconProvider>
+#ifdef Q_OS_WIN
+#include <qt_windows.h>
+#include <windows.foundation.h>
+#include <windows.media.h>
+#include <windows.media.playback.h>
+#include <systemmediatransportcontrolsinterop.h>
+#include <roapi.h>
+#include <wrl.h>
+#include <wrl/wrappers/corewrappers.h>
+#include <wrl/event.h>
+#include <inspectable.h>
+#endif
 
 #include <chrono>
 #include <cmath>
@@ -73,22 +85,6 @@ MainWindow::MainWindow(QWidget *parent)
   settingsView(new ConfigDialog(this))
 {
     qRegisterMetaType<const Song *>("const Song*");
-    /*    
-    // add our D-Bus interface and connect to D-Bus
-    new AnmpAdaptor(this);
-    QDBusConnection::sessionBus().registerObject("/ANMP", this);
-
-    org::anmp *iface;
-    iface = new org::anmp(QString("org.anmp"), QString(), QDBusConnection::sessionBus(), this);
-    //connect(iface, SIGNAL(message(QString,QString)), this, SLOT(messageSlot(QString,QString)));
-    QDBusConnection::sessionBus().connect(QString("org.anmp"), QString(), "org.anmp", "TooglePlayPause", this, SLOT(tooglePlayPause()));
-//     connect(iface, &org::anmp::TooglePlayPause, this, &MainWindow::TogglePlayPause);*/
-#ifdef USE_DBUS
-    new MainWindowAdaptor(this);
-    QDBusConnection dbus = QDBusConnection::sessionBus();
-    dbus.registerObject("/MainWindow", this);
-    dbus.registerService("org.anmp");
-#endif
     // init UI
     this->ui->setupUi(this);
 
@@ -136,14 +132,15 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this->ui->actionAdd_Songs, &QAction::triggered, this, [this] { this->playlistModel->asyncAdd(QFileDialog::getOpenFileNames(this, "Open Audio Files", QString(), "")); });
     connect(this->ui->actionAdd_Playback_Stop, &QAction::triggered, this,
             [this] {
-                long idxTarget = this->playlist->getCurrentSongId();
-                long idxAt = this->playlist->add(nullptr);
-                this->playlist->move(idxAt, 0, idxTarget - idxAt + 1);
-                this->playlistModel->insertRows(idxTarget, 1);
+                size_t idxTarget = this->playlist->getCurrentSongId();
+                size_t idxAt = this->playlist->add(nullptr);
+                int steps = static_cast<int>(idxTarget - idxAt + 1);
+                this->playlist->move(idxAt, 0, steps);
+                this->playlistModel->insertRows(static_cast<int>(idxTarget), 1);
             });
     connect(this->ui->actionAdd_Playback_Stop_At_End, &QAction::triggered, this,
             [this] {
-                this->playlistModel->insertRows(this->playlist->add(nullptr), 1);
+                this->playlistModel->insertRows(static_cast<int>(this->playlist->add(nullptr)), 1);
             });
     connect(this->ui->actionShuffle_Playst, &QAction::triggered, this, &MainWindow::shufflePlaylist);
     connect(this->ui->actionClear_Playlist, &QAction::triggered, this, &MainWindow::clearPlaylist);
@@ -179,6 +176,13 @@ MainWindow::MainWindow(QWidget *parent)
     this->player->onCurrentSongChanged += std::make_pair(this, &MainWindow::callbackCurrentSongChanged);
     this->player->onIsPlayingChanged += std::make_pair(this, &MainWindow::callbackIsPlayingChanged);
 
+#ifdef USE_DBUS
+    this->mpris = new Mpris2(this, this->player, this->playlist, this->playlistModel, this);
+#endif
+#ifdef Q_OS_WIN
+    this->initSMTC();
+#endif
+
     this->createShortcuts();
 
     this->setWindowTitleCustom("");
@@ -192,6 +196,14 @@ MainWindow::~MainWindow()
     this->player->onPlayheadChanged -= this;
     this->player->onCurrentSongChanged -= this;
     this->player->onIsPlayingChanged -= this;
+#ifdef Q_OS_WIN
+    if (this->smtc && this->smtcToken.value)
+    {
+        this->smtc->remove_ButtonPressed(this->smtcToken);
+        this->smtc.Reset();
+    }
+    RoUninitialize();
+#endif
 
     delete this->ui;
 
@@ -281,6 +293,132 @@ void MainWindow::createShortcuts()
 
 #undef SHORTCUT
 }
+
+#ifdef Q_OS_WIN
+void MainWindow::initSMTC()
+{
+    using Microsoft::WRL::ComPtr;
+    using Microsoft::WRL::Wrappers::HStringReference;
+    using ABI::Windows::Foundation::ITypedEventHandler;
+    using ABI::Windows::Media::IMusicDisplayProperties;
+    using ABI::Windows::Media::ISystemMediaTransportControls;
+    using ABI::Windows::Media::ISystemMediaTransportControlsDisplayUpdater;
+    using ABI::Windows::Media::ISystemMediaTransportControlsButtonPressedEventArgs;
+    using ABI::Windows::Media::MediaPlaybackType;
+    using ABI::Windows::Media::SystemMediaTransportControls;
+    using ABI::Windows::Media::SystemMediaTransportControlsButton;
+    using ABI::Windows::Media::SystemMediaTransportControlsButtonPressedEventArgs;
+    using ::ISystemMediaTransportControlsInterop;
+
+    HRESULT hr = RoInitialize(RO_INIT_SINGLETHREADED);
+    if (FAILED(hr) && hr != S_FALSE)
+    {
+        return;
+    }
+
+    HWND hwnd = reinterpret_cast<HWND>(this->winId());
+
+    ComPtr<ISystemMediaTransportControlsInterop> interop;
+    hr = RoGetActivationFactory(HStringReference(RuntimeClass_Windows_Media_SystemMediaTransportControls).Get(), IID_PPV_ARGS(&interop));
+    if (FAILED(hr) || !interop)
+    {
+        return;
+    }
+    hr = interop->GetForWindow(hwnd, IID_PPV_ARGS(&this->smtc));
+    if (FAILED(hr) || !this->smtc)
+    {
+        return;
+    }
+
+    this->smtc->put_IsEnabled(true);
+    this->smtc->put_IsPlayEnabled(true);
+    this->smtc->put_IsPauseEnabled(true);
+    this->smtc->put_IsNextEnabled(true);
+    this->smtc->put_IsPreviousEnabled(true);
+
+    auto handler = Microsoft::WRL::Callback<ITypedEventHandler<SystemMediaTransportControls *, SystemMediaTransportControlsButtonPressedEventArgs *>>(
+      [this](ISystemMediaTransportControls *, ISystemMediaTransportControlsButtonPressedEventArgs *args) -> HRESULT {
+            if (!args)
+            {
+                return S_OK;
+            }
+            SystemMediaTransportControlsButton btn;
+            if (FAILED(args->get_Button(&btn)))
+            {
+                return S_OK;
+            }
+            switch (btn)
+            {
+                case SystemMediaTransportControlsButton::SystemMediaTransportControlsButton_Play:
+                    this->Play();
+                    break;
+                case SystemMediaTransportControlsButton::SystemMediaTransportControlsButton_Pause:
+                    this->Pause();
+                    break;
+                case SystemMediaTransportControlsButton::SystemMediaTransportControlsButton_Next:
+                    this->Next();
+                    break;
+                case SystemMediaTransportControlsButton::SystemMediaTransportControlsButton_Previous:
+                    this->Previous();
+                    break;
+                default:
+                    break;
+            }
+            return S_OK;
+        });
+
+    this->smtc->add_ButtonPressed(handler.Get(), &this->smtcToken);
+    this->updateSMTCPlayback(false);
+}
+
+void MainWindow::updateSMTCPlayback(bool isPlaying)
+{
+    using ABI::Windows::Media::MediaPlaybackStatus;
+
+    if (!this->smtc)
+    {
+        return;
+    }
+    this->smtc->put_PlaybackStatus(isPlaying ? MediaPlaybackStatus::MediaPlaybackStatus_Playing : MediaPlaybackStatus::MediaPlaybackStatus_Paused);
+}
+
+void MainWindow::updateSMTCMetadata(const Song *s)
+{
+    using Microsoft::WRL::Wrappers::HStringReference;
+    using ABI::Windows::Media::IMusicDisplayProperties;
+    using ABI::Windows::Media::ISystemMediaTransportControlsDisplayUpdater;
+    using ABI::Windows::Media::MediaPlaybackType;
+
+    if (!this->smtc)
+    {
+        return;
+    }
+
+    Microsoft::WRL::ComPtr<ISystemMediaTransportControlsDisplayUpdater> updater;
+    if (FAILED(this->smtc->get_DisplayUpdater(&updater)) || !updater)
+    {
+        return;
+    }
+    updater->put_Type(MediaPlaybackType::MediaPlaybackType_Music);
+
+    Microsoft::WRL::ComPtr<IMusicDisplayProperties> music;
+    updater->get_MusicProperties(&music);
+    if (music)
+    {
+        std::wstring fallbackTitle;
+        if (s && !s->Filename.empty())
+        {
+            fallbackTitle = QString::fromStdString(mybasename(s->Filename)).toStdWString();
+        }
+        auto title = s && !s->Metadata.Title.empty() ? QString::fromStdString(s->Metadata.Title).toStdWString() : fallbackTitle;
+        auto artist = s && !s->Metadata.Artist.empty() ? QString::fromStdString(s->Metadata.Artist).toStdWString() : std::wstring();
+        music->put_Title(HStringReference(title.c_str()).Get());
+        music->put_Artist(HStringReference(artist.c_str()).Get());
+    }
+
+    updater->Update();
+}
+#endif
 
 void MainWindow::buildFileBrowser()
 {

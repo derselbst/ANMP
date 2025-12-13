@@ -8,6 +8,13 @@
 #include <memory>
 #include <vector>
 
+#ifdef Q_OS_WIN
+#include <wrl.h>
+#include <wrl/wrappers/corewrappers.h>
+#include <windows.foundation.h>
+#include <windows.media.h>
+#endif
+
 namespace Ui
 {
     class MainWindow;
@@ -29,11 +36,13 @@ class Player;
 class Song;
 struct SongFormat;
 class MyDisabledFileIconProvider;
+#ifdef USE_DBUS
+class Mpris2;
+#endif
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.anmp")
 
     public:
     explicit MainWindow(QWidget *parent = 0);
@@ -75,6 +84,17 @@ class MainWindow : public QMainWindow
     QListView *listView = nullptr;
     QTreeView *treeView = nullptr;
 
+#ifdef USE_DBUS
+    Mpris2 *mpris = nullptr;
+#endif
+#ifdef Q_OS_WIN
+    Microsoft::WRL::ComPtr<ABI::Windows::Media::ISystemMediaTransportControls> smtc;
+    EventRegistrationToken smtcToken{};
+    void initSMTC();
+    void updateSMTCPlayback(bool isPlaying);
+    void updateSMTCMetadata(const Song *s);
+#endif
+
     void buildPlaylistView();
     void buildChannelConfig();
     void buildFileBrowser();
@@ -87,7 +107,6 @@ class MainWindow : public QMainWindow
 #ifndef USE_VISUALIZER
     void showNoVisualizer();
 #endif
-
     void showError(const QString &detail, const QString &general = "An Error occurred");
 
     // must be private because qdbuscpp2xml only generates garbage for it

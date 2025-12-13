@@ -13,6 +13,12 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "ui_playcontrol.h"
+#ifdef USE_DBUS
+#include "mpris2.h"
+#endif
+#ifdef Q_OS_WIN
+#include <windows.media.h>
+#endif
 
 #include <anmp.hpp>
 
@@ -37,6 +43,16 @@ void MainWindow::slotIsPlayingChanged(bool isPlaying, bool hasMsg, const QString
     }
 
     playbtn->blockSignals(oldState);
+
+#ifdef USE_DBUS
+    if (this->mpris)
+    {
+        this->mpris->updatePlaybackStatus(isPlaying);
+    }
+#endif
+#ifdef Q_OS_WIN
+    this->updateSMTCPlayback(isPlaying);
+#endif
 
     if (hasMsg)
     {
@@ -82,6 +98,13 @@ void MainWindow::slotSeek(long long pos)
         QString strTimeLeft = QString("-") + QString::fromStdString(temp);
         this->playctrl->labelTimeLeft->setText(strTimeLeft);
     }
+
+#ifdef USE_DBUS
+    if (this->mpris)
+    {
+        this->mpris->updatePosition(pos);
+    }
+#endif
 }
 
 void MainWindow::slotCurrentSongChanged(const Song* s)
@@ -114,6 +137,15 @@ void MainWindow::slotCurrentSongChanged(const Song* s)
     
     this->playctrl->seekBar->SlotCurrentSongChanged(s);
     this->playlistModel->SlotCurrentSongChanged(s);
+#ifdef USE_DBUS
+    if (this->mpris)
+    {
+        this->mpris->updateCurrentSong(s);
+    }
+#endif
+#ifdef Q_OS_WIN
+    this->updateSMTCMetadata(s);
+#endif
 }
 
 void MainWindow::treeViewClicked(const QModelIndex &index)
