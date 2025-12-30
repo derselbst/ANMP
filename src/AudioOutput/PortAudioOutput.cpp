@@ -11,7 +11,7 @@
 #include <samplerate.h>
 #include <mutex>
 #include <condition_variable>
-
+#include <cstring>
 
 struct PortAudioOutput::Impl
 {    
@@ -46,7 +46,7 @@ struct PortAudioOutput::Impl
     {
         /* Cast data passed through stream to our structure. */
         PortAudioOutput *self = static_cast <PortAudioOutput*>(userData);
-        float *out = (float *)outputBuffer;
+        float *out = (float *)outputBuffer, *from;
         (void)inputBuffer; /* Prevent unused variable warning. */
 
         unsigned char outChan = self->GetOutputChannels();
@@ -73,7 +73,12 @@ struct PortAudioOutput::Impl
             goto fail;
         }
 
-        float *from = reinterpret_cast<float *>(self->d->interleavedProcessedBuffer.data());
+        if (framesPerBuffer != gConfig.FramesToRender)
+        {
+            CLOG(LogLevel_t::Warning, "unexpected frame length");
+        }
+
+        from = reinterpret_cast<float *>(self->d->interleavedProcessedBuffer.data());
         std::memcpy(out, from, framesPerBuffer * outChan * sizeof(float));
 
         self->d->ready = false;
