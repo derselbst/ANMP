@@ -21,7 +21,6 @@ class PortAudioOutput : public IAudioOutput
 
     virtual ~PortAudioOutput();
 
-
     // interface methods declaration
 
     void open() override;
@@ -48,7 +47,7 @@ class PortAudioOutput : public IAudioOutput
     template<typename T>
     int write(const T *buffer, frame_t frames);
     void _init(SongFormat &format, bool realtime = false);
-    void doResampling(const float *inBuf, const size_t Frames);
+    int doResampling(const float *inBuf, const size_t Frames);
     void drain();
     void drop();
 };

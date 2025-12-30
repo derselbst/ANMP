@@ -9,6 +9,8 @@
 #include <string>
 #include <portaudio.h>
 #include <samplerate.h>
+#include <mutex>
+#include <condition_variable>
 
 
 struct PortAudioOutput::Impl
@@ -20,8 +22,73 @@ struct PortAudioOutput::Impl
     SRC_STATE* srcState;
     SRC_DATA srcData;
 
-    // mixed, converted to float and resampled buffer used in this->write()
-    std::vector<float> resampledBuffer;
+    std::condition_variable cv;
+    mutable std::mutex mtx;
+    //*** Begin: mutex-protected vars ***//
+    // mixed, converted to float and resampled buffer consumed by callback
+    std::vector<unsigned char> interleavedProcessedBuffer;
+    // false: buffer has been consumed by jack and needs to be refilled
+    // true: buffer is filled
+    bool ready = false;
+    // true on this->start(), false on this->stop()
+    bool isRunning = false;
+    //*** End: mutex-protected vars ***//
+
+
+    /* This routine will be called by the PortAudio engine when audio is needed.
+     * It may called at interrupt level on some machines so don't do anything
+     * that could mess up the system like calling malloc() or free().
+     */
+    static int audioCallback(const void *inputBuffer, void *outputBuffer, unsigned long framesPerBuffer, const PaStreamCallbackTimeInfo *timeInfo, PaStreamCallbackFlags statusFlags, void *userData)
+    {
+        /* Cast data passed through stream to our structure. */
+        PortAudioOutput *self = static_cast <PortAudioOutput*>(userData);
+        float *out = (float *)outputBuffer;
+        (void)inputBuffer; /* Prevent unused variable warning. */
+
+        unsigned char outChan = self->GetOutputChannels();
+
+        std::unique_lock<std::mutex> lck(self->d->mtx, std::defer_lock);
+        if (!lck.try_lock())
+        {
+            CLOG(LogLevel_t::Warning, "acquiring lock failed, discarding");
+            //         ret = -1;
+            goto fail;
+        }
+
+        if (!self->d->isRunning)
+        {
+            //         ret = 0; // no error
+            goto fail;
+        }
+
+        if (!self->d->ready)
+        {
+            CLOG(LogLevel_t::Warning, "buffer was not ready for pa, discarding");
+
+            //         ret = -1;
+            goto fail;
+        }
+        
+        float *from = reinterpret_cast<float*>(self->d->interleavedProcessedBuffer.data());
+        for (unsigned long i = 0; i < framesPerBuffer; i++)
+        {
+            for (unsigned char c = 0; c < outChan; c++)
+            {
+                *out++ = from[i * outChan + c];
+            }
+        }
+
+        self->d->ready = false;
+        lck.unlock();
+        self->d->cv.notify_all();
+
+        return paContinue;
+
+    fail:
+        std::memset(out, 0, framesPerBuffer * outChan * sizeof(float));
+        return paContinue;
+    }
 };
 
 PortAudioOutput::PortAudioOutput() : d(std::make_unique<Impl>())
@@ -86,6 +153,8 @@ void PortAudioOutput::SetOutputChannels(uint8_t chan)
 {
     this->IAudioOutput::SetOutputChannels(chan);
 
+    std::unique_lock<std::mutex> lck(d->mtx);
+
     // we have to delete the resampler in order to refresh channel count
     if (d->srcState != nullptr)
     {
@@ -102,7 +171,7 @@ void PortAudioOutput::SetOutputChannels(uint8_t chan)
         THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) << ")");
     }
 
-    this->d->resampledBuffer.reserve(gConfig.FramesToRender * chan);
+    this->d->interleavedProcessedBuffer.resize(gConfig.FramesToRender * chan * sizeof(float));
 
     // force reinit
     if (this->currentFormat.IsValid())
@@ -136,25 +205,9 @@ void PortAudioOutput::init(SongFormat &format, bool realtime)
 void PortAudioOutput::_init(SongFormat &format, bool)
 {
     int channels = this->GetOutputChannels();
-    PaSampleFormat paSampleFmt;
-    switch (format.SampleFormat)
-    {
-        case SampleFormat_t::float32:
-            this->processedBuffer.reserve(gConfig.FramesToRender * channels * sizeof(float));
-            break;
-        case SampleFormat_t::int16:
-            this->processedBuffer.reserve(gConfig.FramesToRender * channels * sizeof(int16_t));
-            break;
-        case SampleFormat_t::int32:
-            this->processedBuffer.reserve(gConfig.FramesToRender * channels * sizeof(int32_t));
-            break;
-        case SampleFormat_t::unknown:
-            THROW_RUNTIME_ERROR("Sample Format not set");
 
-        default:
-            throw NotImplementedException();
-            break;
-    }
+    this->processedBuffer.clear();
+    this->processedBuffer.resize(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(float));
 
     this->drop();
     this->close();
@@ -176,8 +229,8 @@ void PortAudioOutput::_init(SongFormat &format, bool)
                         d->deviceInfo->defaultSampleRate,
                         gConfig.FramesToRender,
                         paNoFlag,
-                        nullptr,
-                        nullptr);
+                        PortAudioOutput::Impl::audioCallback,
+                        this);
     if (err != PaErrorCode::paNoError)
     {
         THROW_RUNTIME_ERROR("Pa_OpenStream failed (" << Pa_GetErrorText(err) << ")");
@@ -230,43 +283,64 @@ int PortAudioOutput::write(const T *buffer, frame_t frames)
     
     auto* procBuf = reinterpret_cast<float*>(processedBuffer.data());
     this->Mix<T, float>(frames, buffer, this->currentFormat, procBuf);
-    
-    PaError err;
+
+    std::unique_lock<std::mutex> lck(d->mtx);
+
+    // wait until portaudio buffer has been consumed
+    d->cv.wait(lck, [this] { return !d->ready || !d->isRunning; });
+
     if (d->deviceInfo->defaultSampleRate == this->currentFormat.SampleRate)
     {
-         err = Pa_WriteStream(d->handle, procBuf, frames);
-    }
-    else
-    {
-        this->doResampling(procBuf, frames);
-        err = Pa_WriteStream(d->handle, d->resampledBuffer.data(), d->srcData.output_frames_gen);
-        d->srcData.output_frames_gen = 0;
-        frames = d->srcData.input_frames_used;
+        d->interleavedProcessedBuffer.swap(this->processedBuffer);
+        d->ready = true;
+        lck.unlock();
+        // notify jacks process thread. in fact doesnt do anything, because jacks process thread doesnt this->cv.wait()
+        d->cv.notify_one();
+        return frames;
     }
 
-    switch (err)
+    PaError err;
+    int framesUsed = 0;
+    int framesUsedNow;
+    do
     {
-        case PaErrorCode::paUnanticipatedHostError:
-            return 0;
-        case PaErrorCode::paInputOverflowed:
-            CLOG(LogLevel_t::Info, "overflow");
-            [[fallthrough]];
-        case PaErrorCode::paOutputUnderflowed:
-            CLOG(LogLevel_t::Info, "underflow");
-            [[fallthrough]];
-        case PaErrorCode::paNoError:
-            return frames;
-        default:
-            THROW_RUNTIME_ERROR("unable to write pcm (" << Pa_GetErrorText(err) << ")");
-    }
+        framesUsedNow = this->doResampling(procBuf + framesUsed * this->GetOutputChannels(), frames);
+        frames -= framesUsedNow;
+        framesUsed += framesUsedNow;
+        
+        if (d->srcData.output_frames_gen == d->srcData.output_frames)
+        {
+            d->srcData.output_frames_gen = 0;
+            d->ready = true;
+            lck.unlock();
+            // notify jacks process thread. in fact doesnt do anything, because jacks process thread doesnt this->cv.wait()
+            d->cv.notify_one();
+            std::this_thread::yield();
+            if (frames != 0)
+            {
+                lck.lock();
+            }
+        }
+    } while (frames > 0 && d->isRunning);
+
+    return framesUsed;
 }
 
-void PortAudioOutput::doResampling(const float *inBuf, const size_t Frames)
+int PortAudioOutput::doResampling(const float *inBuf, const size_t Frames)
 {
+    if (!d->isRunning)
+    {
+        return 0;
+    }
+    if (!this->currentFormat.IsValid())
+    {
+        THROW_RUNTIME_ERROR("SongFormat not valid")
+    }
+
     d->srcData.data_in = inBuf;
     d->srcData.input_frames = Frames;
 
-    d->srcData.data_out = d->resampledBuffer.data();
+    d->srcData.data_out = reinterpret_cast<float*>(d->interleavedProcessedBuffer.data());
     d->srcData.data_out += d->srcData.output_frames_gen * this->GetOutputChannels();
 
     d->srcData.output_frames = gConfig.FramesToRender - d->srcData.output_frames_gen;
@@ -284,6 +358,13 @@ void PortAudioOutput::doResampling(const float *inBuf, const size_t Frames)
     }
     else
     {
+        if (d->srcData.input_frames_used < Frames)
+        {
+            CLOG(LogLevel_t::Info, "Not all input frames used!"
+                                   << "input_frames: " << d->srcData.input_frames << "\toutput_frames: " << d->srcData.output_frames << std::endl
+                                   << "input_frames_used: " << d->srcData.input_frames_used << "\toutput_frames_gen: " << d->srcData.output_frames_gen);
+        }
+
         if (d->srcData.output_frames_gen < d->srcData.output_frames)
         {
             CLOG(LogLevel_t::Info, "resample buffer has not been filled completely" << std::endl
@@ -294,10 +375,14 @@ void PortAudioOutput::doResampling(const float *inBuf, const size_t Frames)
             d->srcData.output_frames_gen += old;
         }
     }
+
+    return d->srcData.input_frames_used;
 }
 
 void PortAudioOutput::start()
 {
+    std::unique_lock<std::mutex> lck(d->mtx);
+
     // zero out any buffer in resampler, to avoid hearable cracks, when pausing and restarting playback
     src_reset(d->srcState);
 
@@ -319,10 +404,17 @@ void PortAudioOutput::start()
     {
         THROW_RUNTIME_ERROR("unable to start pcm since PortAudioOutput::init() has not been called yet or init failed");
     }
+
+    d->isRunning = true;
+    lck.unlock();
+    d->cv.notify_all();
 }
 
 void PortAudioOutput::stop()
 {
+    std::unique_lock<std::mutex> lck(d->mtx);
+
+    d->isRunning = false;
     if (d->handle != nullptr)
     {
         // dont call Pa_StopStream() here since it causes draining the pcm, which takes time and may cause deadlocks
@@ -330,7 +422,9 @@ void PortAudioOutput::stop()
         PaError err = Pa_AbortStream(d->handle);
         if (err != PaErrorCode::paNoError && err != PaErrorCode::paStreamIsStopped)
         {
-            THROW_RUNTIME_ERROR("unable to stop pcm (" << Pa_GetErrorText(err) << ")");
+            CLOG(LogLevel_t::Error, "unable to stop pcm (" << Pa_GetErrorText(err) << ")");
         }
     }
+    lck.unlock();
+    d->cv.notify_all();
 }
