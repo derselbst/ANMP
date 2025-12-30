@@ -47,7 +47,7 @@ class PortAudioOutput : public IAudioOutput
     template<typename T>
     int write(const T *buffer, frame_t frames);
     void _init(SongFormat &format, bool realtime = false);
-    int doResampling(const float *inBuf, const size_t Frames);
+    int doResampling(const float *inBuf, const frame_t Frames);
     void drain();
     void drop();
 };

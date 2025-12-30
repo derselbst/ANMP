@@ -22,6 +22,9 @@ struct PortAudioOutput::Impl
     SRC_STATE* srcState;
     SRC_DATA srcData;
 
+    // the interleavedProcessed buffer might be partially filled between write() calls, we need to keep track of the fill state
+    int framesProduced;
+
     std::condition_variable cv;
     mutable std::mutex mtx;
     //*** Begin: mutex-protected vars ***//
@@ -69,15 +72,9 @@ struct PortAudioOutput::Impl
             //         ret = -1;
             goto fail;
         }
-        
-        float *from = reinterpret_cast<float*>(self->d->interleavedProcessedBuffer.data());
-        for (unsigned long i = 0; i < framesPerBuffer; i++)
-        {
-            for (unsigned char c = 0; c < outChan; c++)
-            {
-                *out++ = from[i * outChan + c];
-            }
-        }
+
+        float *from = reinterpret_cast<float *>(self->d->interleavedProcessedBuffer.data());
+        std::memcpy(out, from, framesPerBuffer * outChan * sizeof(float));
 
         self->d->ready = false;
         lck.unlock();
@@ -300,33 +297,34 @@ int PortAudioOutput::write(const T *buffer, frame_t frames)
     }
 
     PaError err;
-    int framesUsed = 0;
-    int framesUsedNow;
+    int framesConsumed = 0, &framesProduced = d->framesProduced;
     do
     {
-        framesUsedNow = this->doResampling(procBuf + framesUsed * this->GetOutputChannels(), frames);
-        frames -= framesUsedNow;
-        framesUsed += framesUsedNow;
-        
-        if (d->srcData.output_frames_gen == d->srcData.output_frames)
+        int framesConsumedNow = this->doResampling(procBuf + framesConsumed * this->GetOutputChannels(), frames);
+        frames -= framesConsumedNow;
+        framesConsumed += framesConsumedNow;
+
+        if (d->framesProduced == gConfig.FramesToRender)
         {
-            d->srcData.output_frames_gen = 0;
             d->ready = true;
             lck.unlock();
             // notify jacks process thread. in fact doesnt do anything, because jacks process thread doesnt this->cv.wait()
             d->cv.notify_one();
             std::this_thread::yield();
-            if (frames != 0)
+
+            d->srcData.output_frames_gen = 0;
+            d->framesProduced = 0;
+            if (frames != 0) // any frames left to consume? if not, no need to aquire the lock again.
             {
                 lck.lock();
             }
         }
     } while (frames > 0 && d->isRunning);
 
-    return framesUsed;
+    return framesConsumed;
 }
 
-int PortAudioOutput::doResampling(const float *inBuf, const size_t Frames)
+int PortAudioOutput::doResampling(const float *inBuf, const frame_t Frames)
 {
     if (!d->isRunning)
     {
@@ -341,12 +339,9 @@ int PortAudioOutput::doResampling(const float *inBuf, const size_t Frames)
     d->srcData.input_frames = Frames;
 
     d->srcData.data_out = reinterpret_cast<float*>(d->interleavedProcessedBuffer.data());
-    d->srcData.data_out += d->srcData.output_frames_gen * this->GetOutputChannels();
+    d->srcData.data_out += d->framesProduced * this->GetOutputChannels();
 
-    d->srcData.output_frames = gConfig.FramesToRender - d->srcData.output_frames_gen;
-
-    // remember the count of frames the already have been resampled
-    int old = d->srcData.output_frames_gen;
+    d->srcData.output_frames = gConfig.FramesToRender - d->framesProduced;
 
     // output_sample_rate / input_sample_rate
     d->srcData.src_ratio = (double)d->deviceInfo->defaultSampleRate / this->currentFormat.SampleRate;
@@ -354,7 +349,7 @@ int PortAudioOutput::doResampling(const float *inBuf, const size_t Frames)
     int err = src_process(d->srcState, &d->srcData);
     if (err != 0)
     {
-        CLOG(LogLevel_t::Error, "libsamplerate failed processing (" << src_strerror(err) << ")");
+        THROW_RUNTIME_ERROR("libsamplerate failed processing (" << src_strerror(err) << ")");
     }
     else
     {
@@ -370,11 +365,10 @@ int PortAudioOutput::doResampling(const float *inBuf, const size_t Frames)
             CLOG(LogLevel_t::Info, "resample buffer has not been filled completely" << std::endl
                                 << "input_frames: " << d->srcData.input_frames << "\toutput_frames: " << d->srcData.output_frames << std::endl
                                 << "input_frames_used: " << d->srcData.input_frames_used << "\toutput_frames_gen: " << d->srcData.output_frames_gen);
-
-            // needed next time to advance data_out
-            d->srcData.output_frames_gen += old;
         }
     }
+
+    d->framesProduced += d->srcData.output_frames_gen;
 
     return d->srcData.input_frames_used;
 }
@@ -385,6 +379,8 @@ void PortAudioOutput::start()
 
     // zero out any buffer in resampler, to avoid hearable cracks, when pausing and restarting playback
     src_reset(d->srcState);
+
+    d->framesProduced = 0;
 
     if (d->handle != nullptr)
     {
@@ -406,6 +402,7 @@ void PortAudioOutput::start()
     }
 
     d->isRunning = true;
+    d->ready = false;
     lck.unlock();
     d->cv.notify_all();
 }
