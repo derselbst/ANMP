@@ -12,6 +12,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <cstring>
+#include <thread>
 
 struct PortAudioOutput::Impl
 {    
