@@ -14,6 +14,7 @@
 #include <mmreg.h>
 #include <algorithm>
 #include <cstring>
+#include <iostream>
 #include <wrl/client.h>
 
 using Microsoft::WRL::ComPtr;
@@ -21,11 +22,12 @@ using Microsoft::WRL::ComPtr;
 WASAPIOutput::WASAPIOutput()
 {
     HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    if (SUCCEEDED(hr) || hr == RPC_E_CHANGED_MODE)
+    const bool comReady = SUCCEEDED(hr) || hr == RPC_E_CHANGED_MODE;
+    this->comInitialized = SUCCEEDED(hr);
+    if (!comReady)
     {
-        this->comInitialized = SUCCEEDED(hr);
+        THROW_RUNTIME_ERROR("CoInitializeEx failed (" << std::hex << hr << ")");
     }
-    this->processedBuffer.resize(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(float));
 }
 
 WASAPIOutput::~WASAPIOutput()
@@ -138,7 +140,12 @@ void WASAPIOutput::init(SongFormat &format, bool)
         finalFormat = mixFormat;
     }
 
-    this->IAudioOutput::SetOutputChannels(finalFormat->nChannels);
+    if (finalFormat->nChannels != this->GetOutputChannels())
+    {
+        std::cerr << "Requested " << static_cast<int>(this->GetOutputChannels()) << " channels, using "
+                  << finalFormat->nChannels << " as provided by WASAPI." << std::endl;
+        this->IAudioOutput::SetOutputChannels(finalFormat->nChannels);
+    }
 
     REFERENCE_TIME bufferDuration = static_cast<REFERENCE_TIME>(gConfig.PreRenderTime) * 10000;
     hr = this->client->Initialize(AUDCLNT_SHAREMODE_SHARED,
@@ -186,7 +193,11 @@ void WASAPIOutput::init(SongFormat &format, bool)
     }
     CoTaskMemFree(mixFormat);
 
-    this->processedBuffer.resize(gConfig.FramesToRender * this->GetOutputChannels() * sizeof(float));
+    const size_t requiredSize = gConfig.FramesToRender * this->GetOutputChannels() * sizeof(float);
+    if (this->processedBuffer.size() != requiredSize)
+    {
+        this->processedBuffer.resize(requiredSize);
+    }
     this->currentFormat = format;
 }
 
@@ -278,7 +289,6 @@ void WASAPIOutput::start()
         this->started = false;
         THROW_RUNTIME_ERROR("unable to start pcm (" << std::hex << hr << ")");
     }
-    this->started = true;
 }
 
 void WASAPIOutput::stop()
@@ -318,15 +328,22 @@ bool WASAPIOutput::recoverDevice()
     bool wasStarted = this->started;
     try
     {
-        this->init(this->currentFormat);
+        SongFormat formatCopy = this->currentFormat;
+        this->init(formatCopy);
         if (wasStarted)
         {
             this->start();
         }
         return true;
     }
+    catch (const std::exception &e)
+    {
+        std::cerr << "Failed to recover WASAPI device: " << e.what() << std::endl;
+        return false;
+    }
     catch (...)
     {
+        std::cerr << "Failed to recover WASAPI device due to unknown error." << std::endl;
         return false;
     }
 }
