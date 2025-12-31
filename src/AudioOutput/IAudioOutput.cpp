@@ -19,7 +19,7 @@ void IAudioOutput::setVolume(float vol)
     this->volume = vol;
 }
 
-uint8_t IAudioOutput::GetOutputChannels()
+uint8_t IAudioOutput::GetOutputChannels() const
 {
     return this->outputChannels;
 }

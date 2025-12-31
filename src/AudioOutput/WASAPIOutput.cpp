@@ -5,6 +5,8 @@
 
 #include "CommonExceptions.h"
 #include "Config.h"
+#include "AtomicWrite.h"
+#include "types.h"
 
 #include <audioclient.h>
 #include <combaseapi.h>
@@ -125,7 +127,7 @@ void WASAPIOutput::init(SongFormat &format, bool)
     hr = this->client->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED,
                                          reinterpret_cast<WAVEFORMATEX *>(&desired),
                                          &closest);
-
+    DWORD flags;
     WAVEFORMATEX *finalFormat = nullptr;
     if (hr == S_OK)
     {
@@ -133,7 +135,29 @@ void WASAPIOutput::init(SongFormat &format, bool)
     }
     else if (hr == S_FALSE && closest != nullptr)
     {
-        finalFormat = closest;
+        CLOG(LogLevel_t::Info, "wasapi: requested mode cannot be fully satisfied.");
+
+        if (closest->nSamplesPerSec != desired.Format.nSamplesPerSec) // needs resampling
+        {
+            flags = AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM;
+            OSVERSIONINFOEXW vi = {sizeof(vi), 6, 0, 0, 0, {0}, 0, 0, 0, 0, 0};
+            vi.dwMinorVersion = 1;
+
+            if (VerifyVersionInfoW(&vi, VER_MAJORVERSION | VER_MINORVERSION | VER_SERVICEPACKMAJOR,
+                                   VerSetConditionMask(VerSetConditionMask(VerSetConditionMask(0,
+                                                                                               VER_MAJORVERSION, VER_GREATER_EQUAL),
+                                                                           VER_MINORVERSION, VER_GREATER_EQUAL),
+                                                       VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL)))
+            // IAudioClient::Initialize in Vista fails with E_INVALIDARG if this flag is set
+            {
+                flags |= AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY;
+                finalFormat = &desired.Format;
+            }
+        }
+        if (finalFormat == nullptr)
+        {
+            finalFormat = closest;
+        }
     }
     else
     {
@@ -149,7 +173,7 @@ void WASAPIOutput::init(SongFormat &format, bool)
 
     REFERENCE_TIME bufferDuration = static_cast<REFERENCE_TIME>(gConfig.PreRenderTime) * 10000;
     hr = this->client->Initialize(AUDCLNT_SHAREMODE_SHARED,
-                                  AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM | AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY,
+                                  flags,
                                   bufferDuration,
                                   0,
                                   finalFormat,
