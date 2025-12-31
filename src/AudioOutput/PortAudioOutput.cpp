@@ -108,7 +108,7 @@ PortAudioOutput::PortAudioOutput() : d(std::make_unique<Impl>())
     for (int i = 0; i < hostApiCount; ++i)
     {
         const PaHostApiInfo *hai = Pa_GetHostApiInfo(i);
-        if (hai && hai->type == paWASAPI)
+        if (hai && hai->type == paMME)
         {
             wasapiIndex = i;
             break;
