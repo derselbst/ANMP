@@ -4,6 +4,11 @@
 #include "Song.h"
 #include "SongInfo.h"
 
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN 1
+#include <Windows.h>
+#endif
+
 StringFormatter::StringFormatter()
 {
 }
@@ -14,6 +19,36 @@ StringFormatter &StringFormatter::Singleton()
     static StringFormatter instance;
 
     return instance;
+}
+
+std::string StringFormatter::GetLastWinError()
+{
+#ifdef WIN32
+    constexpr size_t MaxErrorLen = 2048;
+#ifdef _UNICODE
+    TCHAR err[MaxErrorLen];
+    static char ascii_err[MaxErrorLen];
+#else
+    static TCHAR err[MaxErrorLen];
+#endif
+
+        FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                      NULL,
+                      GetLastError(),
+                      MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+                      err,
+                      sizeof(err) / sizeof(err[0]),
+                      NULL);
+
+#ifdef _UNICODE
+        WideCharToMultiByte(CP_UTF8, 0, err, -1, ascii_err, sizeof(ascii_err) / sizeof(ascii_err[0]), 0, 0);
+        return ascii_err;
+#else
+        return err;
+#endif
+#else
+    return "";
+#endif
 }
 
 void StringFormatter::UpdateReplacements(const SongInfo &info)

@@ -36,6 +36,8 @@ class StringFormatter
 
     static StringFormatter &Singleton();
 
+    static std::string GetLastWinError();
+
     /**
      * based on the pattern set by SetFormat(), returns a unique filename suitable for exporting the given Song to
      * 
