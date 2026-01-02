@@ -1,10 +1,16 @@
 #include "ThreadPriority.h"
 #include "AtomicWrite.h"
+#include "StringFormatter.h"
 #include <thread>
 #include <cstring>
 
 #ifdef _POSIX_C_SOURCE
 #include <pthread.h>
+#endif
+
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN 1
+#include <windows.h>
 #endif
 
 struct ThreadPriority::Impl
@@ -39,6 +45,11 @@ ThreadPriority::ThreadPriority(Priority p) : d(std::make_unique<Impl>())
         default:
             break;
     }
+#elif defined(WIN32)
+    if (!SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS))
+    {
+        CLOG(LogLevel_t::Info, "Unable to set process prio to high: " << StringFormatter::GetLastWinError());
+    }
 #endif
 }
 
@@ -49,5 +60,7 @@ ThreadPriority::~ThreadPriority()
     {
         CLOG(LogLevel_t::Error, "Failed to restore original Thread Priority: " << std::strerror(errno));
     }
+#elif defined(WIN32)
+    SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
 #endif
 }

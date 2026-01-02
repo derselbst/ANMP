@@ -90,6 +90,13 @@ void LibSNDWrapper::open()
         case SF_FORMAT_FLOAT:
             [[fallthrough]];
         case SF_FORMAT_DOUBLE:
+            [[fallthrough]];
+        case SF_FORMAT_MPEG_LAYER_I:
+            [[fallthrough]];
+        case SF_FORMAT_MPEG_LAYER_II:
+            [[fallthrough]];
+        case SF_FORMAT_MPEG_LAYER_III:
+            [[fallthrough]];
             this->Format.SampleFormat = SampleFormat_t::float32;
             break;
         default:
