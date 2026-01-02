@@ -297,8 +297,8 @@ void WASAPIOutput::init(SongFormat &format, bool)
 
         REFERENCE_TIME bufferDuration = static_cast<REFERENCE_TIME>(gConfig.FramesToRender * 4.0 / format.SampleRate * 1000 * 10 + 0.5);
         hr = d->client->Initialize(AUDCLNT_SHAREMODE_SHARED,
-                                   AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
                                    0,
+                                   bufferDuration,
                                    0,
                                    finalFormat,
                                    &GUID_ANMP_SESSION);
@@ -312,11 +312,11 @@ void WASAPIOutput::init(SongFormat &format, bool)
             THROW_RUNTIME_ERROR("unable to initialize WASAPI client (" << std::hex << hr << ")");
         }
 
-        hr = d->client->SetEventHandle(d->needDataEvent);
-        if (FAILED(hr))
-        {
-            THROW_RUNTIME_ERROR("failed to set event handle (" << std::hex << hr << ")");
-        }
+        //hr = d->client->SetEventHandle(d->needDataEvent);
+        //if (FAILED(hr))
+        //{
+        //    THROW_RUNTIME_ERROR("failed to set event handle (" << std::hex << hr << ")");
+        //}
 
         hr = d->client->GetBufferSize(&d->bufferFrameCount);
         if (FAILED(hr))
@@ -378,11 +378,11 @@ int WASAPIOutput::writeInternal(const T *buffer, frame_t frames)
 
     do
     {
-        auto ret = WaitForSingleObject(d->needDataEvent, 2000);
-        if (ret != WAIT_OBJECT_0)
-        {
-            THROW_RUNTIME_ERROR("Waiting for event timed out!");
-        }
+        //auto ret = WaitForSingleObject(d->needDataEvent, 2000);
+        //if (ret != WAIT_OBJECT_0)
+        //{
+        //    THROW_RUNTIME_ERROR("Waiting for event timed out!");
+        //}
 
         UINT32 padding = 0;
         HRESULT hr = d->client->GetCurrentPadding(&padding);
