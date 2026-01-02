@@ -137,6 +137,10 @@ PortAudioOutput::PortAudioOutput() : d(std::make_unique<Impl>())
 PortAudioOutput::~PortAudioOutput()
 {
     this->close();
+    if (d->srcState != nullptr)
+    {
+        d->srcState = src_delete(d->srcState);
+    }
     Pa_Terminate();
 }
 
