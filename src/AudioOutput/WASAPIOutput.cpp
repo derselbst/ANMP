@@ -7,6 +7,7 @@
 #include "Config.h"
 #include "AtomicWrite.h"
 #include "types.h"
+#include "ringbuffer.hpp"
 
 #include <audioclient.h>
 #include <combaseapi.h>
@@ -30,6 +31,8 @@ using Microsoft::WRL::ComPtr;
 struct WASAPIOutput::Impl
 {
     WASAPIOutput *q;
+    HANDLE needDataEvent = nullptr;
+
     ComPtr<IMMDeviceEnumerator> enumerator;
     ComPtr<IMMDevice> device;
     ComPtr<IAudioClient> client;
@@ -39,8 +42,12 @@ struct WASAPIOutput::Impl
     bool comInitialized = false;
     bool started = false;
 
-    SRC_STATE *srcState;
+    float deviceSampleRate = 0;
+
+    SRC_STATE *srcState = nullptr;
     SRC_DATA srcData;
+
+    jnk0le::Ringbuffer<float, gConfig.FramesToRender * 2, false, 64, uint16_t> interleavedProcessedBuffer;
 
     Impl(WASAPIOutput *parent)
     : q(parent)
@@ -81,12 +88,12 @@ struct WASAPIOutput::Impl
         }
         catch (const std::exception &e)
         {
-            std::cerr << "Failed to recover WASAPI device: " << e.what() << std::endl;
+            CLOG(LogLevel_t::Error, "Failed to recover WASAPI device: " << e.what());
             return false;
         }
         catch (...)
         {
-            std::cerr << "Failed to recover WASAPI device due to unknown error." << std::endl;
+            CLOG(LogLevel_t::Error, "Failed to recover WASAPI device due to unknown error.");
             return false;
         }
     }
@@ -119,6 +126,53 @@ struct WASAPIOutput::Impl
 
         return wfx;
     }
+
+    void doResampling(const float *inBuf, const frame_t Frames, float *outBuf, int framesAvailable)
+    {
+        if (!this->started)
+        {
+            THROW_RUNTIME_ERROR("Stream is stopped")
+        }
+        if (!q->currentFormat.IsValid())
+        {
+            THROW_RUNTIME_ERROR("SongFormat not valid")
+        }
+
+        this->srcData.data_in = inBuf;
+        this->srcData.input_frames = Frames;
+
+        this->srcData.data_out = outBuf;
+        this->srcData.output_frames = framesAvailable;
+
+        this->srcData.end_of_input = false;
+
+        // output_sample_rate / input_sample_rate
+        this->srcData.src_ratio = this->deviceSampleRate/ q->currentFormat.SampleRate;
+
+        int err = src_process(this->srcState, &this->srcData);
+        if (err != 0)
+        {
+            THROW_RUNTIME_ERROR("libsamplerate failed processing (" << src_strerror(err) << ")");
+        }
+        else
+        {
+            #if 0
+            if (this->srcData.input_frames_used < Frames)
+            {
+                CLOG(LogLevel_t::Info, "Not all input frames used!"
+                                       << "input_frames: " << this->srcData.input_frames << "\toutput_frames: " << this->srcData.output_frames << std::endl
+                                       << "input_frames_used: " << this->srcData.input_frames_used << "\toutput_frames_gen: " << this->srcData.output_frames_gen);
+            }
+
+            if (this->srcData.output_frames_gen < this->srcData.output_frames)
+            {
+                CLOG(LogLevel_t::Info, "resample buffer has not been filled completely" << std::endl
+                                                                                        << "input_frames: " << this->srcData.input_frames << "\toutput_frames: " << this->srcData.output_frames << std::endl
+                                                                                        << "input_frames_used: " << this->srcData.input_frames_used << "\toutput_frames_gen: " << this->srcData.output_frames_gen);
+            }
+            #endif
+        }
+    }
 };
 
 WASAPIOutput::WASAPIOutput() : d(std::make_unique<Impl>(this))
@@ -130,11 +184,21 @@ WASAPIOutput::WASAPIOutput() : d(std::make_unique<Impl>(this))
     {
         THROW_RUNTIME_ERROR("CoInitializeEx failed (" << std::hex << hr << ")");
     }
+
+    d->needDataEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    if (d->needDataEvent == nullptr)
+    {
+        THROW_RUNTIME_ERROR("Failed to create event");
+    }
 }
 
 WASAPIOutput::~WASAPIOutput()
 {
     this->close();
+    if (d->needDataEvent != nullptr)
+    {
+        CloseHandle(d->needDataEvent);
+    }
     if (d->comInitialized)
     {
         CoUninitialize();
@@ -144,11 +208,31 @@ WASAPIOutput::~WASAPIOutput()
 void WASAPIOutput::open()
 {
     d->ensureEnumerator();
+    if (d->client == nullptr)
+    {
+        this->SetOutputChannels(this->GetOutputChannels());
+    }
 }
 
 void WASAPIOutput::SetOutputChannels(uint8_t chan)
 {
     this->IAudioOutput::SetOutputChannels(chan);
+    // we have to delete the resampler in order to refresh channel count
+    if (d->srcState != nullptr)
+    {
+        d->srcState = src_delete(d->srcState);
+    }
+    int error;
+    // SRC_SINC_BEST_QUALITY is too slow, causing jack process thread to discard samples, resulting in hearable artifacts
+    // SRC_LINEAR has high frequency audible garbage
+    // SRC_ZERO_ORDER_HOLD is even worse than LINEAR
+    // SRC_SINC_MEDIUM_QUALITY might still be too slow when using jack with very low latency having a bit of CPU load
+    d->srcState = src_new(SRC_SINC_FASTEST, chan, &error);
+    if (d->srcState == nullptr)
+    {
+        THROW_RUNTIME_ERROR("unable to init libsamplerate (" << src_strerror(error) << ")");
+    }
+
     if (this->currentFormat.IsValid())
     {
         this->init(this->currentFormat);
@@ -185,13 +269,13 @@ void WASAPIOutput::init(SongFormat &format, bool)
         WAVEFORMATEXTENSIBLE desired = d->buildWaveFormat(format, this->GetOutputChannels());
         WAVEFORMATEX *closest = nullptr;
         hr = d->client->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED,
-                                          reinterpret_cast<WAVEFORMATEX *>(&desired),
+                                          &desired.Format,
                                           &closest);
         DWORD flags;
         WAVEFORMATEX *finalFormat = nullptr;
         if (hr == S_OK)
         {
-            finalFormat = reinterpret_cast<WAVEFORMATEX *>(&desired);
+            finalFormat = &desired.Format;
         }
         else if (hr == S_FALSE && closest != nullptr)
         {
@@ -206,25 +290,32 @@ void WASAPIOutput::init(SongFormat &format, bool)
 
         if (finalFormat->nChannels != this->GetOutputChannels())
         {
-            std::cerr << "Requested " << static_cast<int>(this->GetOutputChannels()) << " channels, using "
-                      << finalFormat->nChannels << " as provided by WASAPI." << std::endl;
+            CLOG(LogLevel_t::Error, "Requested " << static_cast<int>(this->GetOutputChannels()) << " channels, using "
+                      << finalFormat->nChannels << " as provided by WASAPI.");
             this->IAudioOutput::SetOutputChannels(finalFormat->nChannels);
         }
 
-        REFERENCE_TIME bufferDuration = static_cast<REFERENCE_TIME>(gConfig.FramesToRender / format.SampleRate) * 1000 * 10;
+        REFERENCE_TIME bufferDuration = static_cast<REFERENCE_TIME>(gConfig.FramesToRender * 4.0 / format.SampleRate * 1000 * 10 + 0.5);
         hr = d->client->Initialize(AUDCLNT_SHAREMODE_SHARED,
-                                   AUDCLNT_STREAMFLAGS_RATEADJUST,
-                                   bufferDuration,
+                                   AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
+                                   0,
                                    0,
                                    finalFormat,
                                    &GUID_ANMP_SESSION);
 
+        d->deviceSampleRate = finalFormat->nSamplesPerSec;
         CoTaskMemFree(closest);
         CoTaskMemFree(mixFormat);
 
         if (FAILED(hr))
         {
             THROW_RUNTIME_ERROR("unable to initialize WASAPI client (" << std::hex << hr << ")");
+        }
+
+        hr = d->client->SetEventHandle(d->needDataEvent);
+        if (FAILED(hr))
+        {
+            THROW_RUNTIME_ERROR("failed to set event handle (" << std::hex << hr << ")");
         }
 
         hr = d->client->GetBufferSize(&d->bufferFrameCount);
@@ -243,23 +334,18 @@ void WASAPIOutput::init(SongFormat &format, bool)
         this->processedBuffer.resize(requiredSize);
     }
 
-    if (clientWasNull || format.SampleRate != this->currentFormat.SampleRate)
-    {
-        ComPtr<IAudioClockAdjustment> clockAdj = nullptr;
-        hr = d->client->GetService(IID_PPV_ARGS(&clockAdj));
-        if (FAILED(hr))
-        {
-            THROW_RUNTIME_ERROR("unable adjust the streams samplerate");
-        }
-
-        hr = clockAdj->SetSampleRate(format.SampleRate);
-        if (FAILED(hr))
-        {
-            CLOG(LogLevel_t::Error, "Failed to set requested samplerate " << format.SampleRate << " Hz; perhaps it's out of range?");
-        }
-    }
-
     this->currentFormat = format;
+    auto& srate = this->currentFormat.SampleRate;
+
+    if (srate == 0)
+    {
+        src_set_ratio(d->srcState, 1);
+        srate = d->deviceSampleRate;
+    }
+    else
+    {
+        src_set_ratio(d->srcState, d->deviceSampleRate / srate);
+    }
 }
 
 int WASAPIOutput::write(const float *buffer, frame_t frames)
@@ -288,48 +374,65 @@ int WASAPIOutput::writeInternal(const T *buffer, frame_t frames)
     auto *procBuf = reinterpret_cast<float *>(processedBuffer.data());
     this->Mix<T, float>(frames, buffer, this->currentFormat, procBuf);
 
-    UINT32 padding = 0;
-    HRESULT hr = d->client->GetCurrentPadding(&padding);
-    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && d->recoverDevice())
-    {
-        return 0;
-    }
-    if (FAILED(hr))
-    {
-        THROW_RUNTIME_ERROR("GetCurrentPadding failed (" << std::hex << hr << ")");
-    }
+    int framesConsumed = 0;
 
-    UINT32 available = d->bufferFrameCount - padding;
-    if (available == 0)
+    do
     {
-        return 0;
-    }
+        auto ret = WaitForSingleObject(d->needDataEvent, 2000);
+        if (ret != WAIT_OBJECT_0)
+        {
+            THROW_RUNTIME_ERROR("Waiting for event timed out!");
+        }
 
-    UINT32 framesToWrite = std::min<UINT32>(frames, available);
-    BYTE *data = nullptr;
-    hr = d->renderClient->GetBuffer(framesToWrite, &data);
-    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && d->recoverDevice())
-    {
-        return 0;
-    }
-    if (FAILED(hr))
-    {
-        THROW_RUNTIME_ERROR("GetBuffer failed (" << std::hex << hr << ")");
-    }
+        UINT32 padding = 0;
+        HRESULT hr = d->client->GetCurrentPadding(&padding);
+        if (hr == AUDCLNT_E_DEVICE_INVALIDATED && d->recoverDevice())
+        {
+            return 0;
+        }
+        if (FAILED(hr))
+        {
+            THROW_RUNTIME_ERROR("GetCurrentPadding failed (" << std::hex << hr << ")");
+        }
 
-    std::memcpy(data, procBuf, framesToWrite * this->GetOutputChannels() * sizeof(float));
+        UINT32 available = d->bufferFrameCount - padding;
+        if (available == 0)
+        {
+            return framesConsumed;
+        }
 
-    hr = d->renderClient->ReleaseBuffer(framesToWrite, 0);
-    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && d->recoverDevice())
-    {
-        return 0;
-    }
-    if (FAILED(hr))
-    {
-        THROW_RUNTIME_ERROR("ReleaseBuffer failed (" << std::hex << hr << ")");
-    }
+        UINT32 framesToWrite = std::min<UINT32>(frames, available);
+        BYTE *data = nullptr;
+        hr = d->renderClient->GetBuffer(framesToWrite, &data);
+        if (hr == AUDCLNT_E_DEVICE_INVALIDATED && d->recoverDevice())
+        {
+            return 0;
+        }
+        if (FAILED(hr))
+        {
+            THROW_RUNTIME_ERROR("GetBuffer failed (" << std::hex << hr << ")");
+        }
 
-    return static_cast<int>(framesToWrite);
+        int framesConsumedNow;
+
+        d->doResampling(procBuf + framesConsumed * this->GetOutputChannels(), frames, reinterpret_cast<float*>(data), framesToWrite);
+        //std::memcpy(data, procBuf + framesConsumed * this->GetOutputChannels(), framesToWrite * sizeof(float) * this->GetOutputChannels());
+        framesConsumedNow = d->srcData.input_frames_used;
+        frames -= framesConsumedNow;
+        framesConsumed += framesConsumedNow;
+
+        hr = d->renderClient->ReleaseBuffer(d->srcData.output_frames_gen, 0);
+        if (hr == AUDCLNT_E_DEVICE_INVALIDATED && d->recoverDevice())
+        {
+            return 0;
+        }
+        if (FAILED(hr))
+        {
+            THROW_RUNTIME_ERROR("ReleaseBuffer failed (" << std::hex << hr << ")");
+        }
+    } while (frames > 0 && d->started);
+
+    return framesConsumed;
 }
 
 void WASAPIOutput::start()
@@ -345,6 +448,10 @@ void WASAPIOutput::start()
     BYTE *data = nullptr;
 
     UINT32 framesToWrite = d->bufferFrameCount;
+
+    // zero out any buffer in resampler, to avoid hearable cracks, when pausing and restarting playback
+    src_reset(d->srcState);
+
     d->client->Reset();
     auto hr = d->renderClient->GetBuffer(framesToWrite, &data);
     if (hr == AUDCLNT_E_DEVICE_INVALIDATED && !d->recoverDevice())
@@ -356,9 +463,7 @@ void WASAPIOutput::start()
         THROW_RUNTIME_ERROR("GetBuffer failed (" << std::hex << hr << ")");
     }
 
-    std::memset(data, 0, framesToWrite * this->GetOutputChannels() * sizeof(float));
-
-    hr = d->renderClient->ReleaseBuffer(framesToWrite, 0);
+    hr = d->renderClient->ReleaseBuffer(framesToWrite, AUDCLNT_BUFFERFLAGS_SILENT);
     if (hr == AUDCLNT_E_DEVICE_INVALIDATED && !d->recoverDevice())
     {
         // ignore
@@ -383,12 +488,12 @@ void WASAPIOutput::start()
 
 void WASAPIOutput::stop()
 {
+    d->started = false;
     if (d->client)
     {
         HRESULT hr = d->client->Stop();
         if (hr == AUDCLNT_E_DEVICE_INVALIDATED && d->recoverDevice())
         {
-            d->started = false;
             return;
         }
         if (FAILED(hr) && hr != AUDCLNT_E_NOT_INITIALIZED)
@@ -396,7 +501,6 @@ void WASAPIOutput::stop()
             THROW_RUNTIME_ERROR("unable to stop pcm (" << std::hex << hr << ")");
         }
     }
-    d->started = false;
 }
 
 void WASAPIOutput::close()
