@@ -18,6 +18,12 @@
 #include <cstring>
 #include <iostream>
 #include <wrl/client.h>
+#include <samplerate.h>
+
+#include <guiddef.h>
+
+// {12c8e646-7548-4f13-8a5c-cfa64db5c468}
+inline constexpr GUID GUID_ANMP_SESSION = {0x12c8e646, 0x7548, 0x4f13, {0x8a, 0x5c, 0xcf, 0xa6, 0x4d, 0xb5, 0xc4, 0x68}};
 
 using Microsoft::WRL::ComPtr;
 
@@ -32,6 +38,9 @@ struct WASAPIOutput::Impl
     UINT32 bufferFrameCount = 0;
     bool comInitialized = false;
     bool started = false;
+
+    SRC_STATE *srcState;
+    SRC_DATA srcData;
 
     Impl(WASAPIOutput *parent)
     : q(parent)
@@ -148,137 +157,109 @@ void WASAPIOutput::SetOutputChannels(uint8_t chan)
 
 void WASAPIOutput::init(SongFormat &format, bool)
 {
-    this->close();
-
     d->ensureEnumerator();
-
-    bool wasStarted = d->started;
-
-    HRESULT hr = d->enumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, &d->device);
-    if (FAILED(hr))
+    
+    HRESULT hr;
+    bool clientWasNull;
+    if (clientWasNull = (d->client == nullptr))
     {
-        THROW_RUNTIME_ERROR("cannot get default audio endpoint (" << std::hex << hr << ")");
-    }
-
-    hr = d->device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr, &d->client);
-    if (FAILED(hr))
-    {
-        THROW_RUNTIME_ERROR("cannot activate audio client (" << std::hex << hr << ")");
-    }
-
-    WAVEFORMATEX *mixFormat = nullptr;
-    hr = d->client->GetMixFormat(&mixFormat);
-    if (FAILED(hr) || mixFormat == nullptr)
-    {
-        THROW_RUNTIME_ERROR("cannot get mix format (" << std::hex << hr << ")");
-    }
-
-    WAVEFORMATEXTENSIBLE desired = d->buildWaveFormat(format, this->GetOutputChannels());
-    WAVEFORMATEX *closest = nullptr;
-    hr = d->client->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED,
-                                         reinterpret_cast<WAVEFORMATEX *>(&desired),
-                                         &closest);
-    DWORD flags;
-    WAVEFORMATEX *finalFormat = nullptr;
-    if (hr == S_OK)
-    {
-        finalFormat = reinterpret_cast<WAVEFORMATEX *>(&desired);
-    }
-    else if (hr == S_FALSE && closest != nullptr)
-    {
-        CLOG(LogLevel_t::Info, "wasapi: requested mode cannot be fully satisfied.");
-
-        if (closest->nSamplesPerSec != desired.Format.nSamplesPerSec) // needs resampling
+        hr = d->enumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, &d->device);
+        if (FAILED(hr))
         {
-            flags = AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM;
-            OSVERSIONINFOEXW vi = {sizeof(vi), 6, 0, 0, 0, {0}, 0, 0, 0, 0, 0};
-            vi.dwMinorVersion = 1;
-
-            if (VerifyVersionInfoW(&vi, VER_MAJORVERSION | VER_MINORVERSION | VER_SERVICEPACKMAJOR,
-                                   VerSetConditionMask(VerSetConditionMask(VerSetConditionMask(0,
-                                                                                               VER_MAJORVERSION, VER_GREATER_EQUAL),
-                                                                           VER_MINORVERSION, VER_GREATER_EQUAL),
-                                                       VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL)))
-            // IAudioClient::Initialize in Vista fails with E_INVALIDARG if this flag is set
-            {
-                flags |= AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY;
-                finalFormat = &desired.Format;
-            }
+            THROW_RUNTIME_ERROR("cannot get default audio endpoint (" << std::hex << hr << ")");
         }
-        if (finalFormat == nullptr)
+
+        hr = d->device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr, &d->client);
+        if (FAILED(hr))
         {
+            THROW_RUNTIME_ERROR("cannot activate audio client (" << std::hex << hr << ")");
+        }
+
+        WAVEFORMATEX *mixFormat = nullptr;
+        hr = d->client->GetMixFormat(&mixFormat);
+        if (FAILED(hr) || mixFormat == nullptr)
+        {
+            THROW_RUNTIME_ERROR("cannot get mix format (" << std::hex << hr << ")");
+        }
+
+        WAVEFORMATEXTENSIBLE desired = d->buildWaveFormat(format, this->GetOutputChannels());
+        WAVEFORMATEX *closest = nullptr;
+        hr = d->client->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED,
+                                          reinterpret_cast<WAVEFORMATEX *>(&desired),
+                                          &closest);
+        DWORD flags;
+        WAVEFORMATEX *finalFormat = nullptr;
+        if (hr == S_OK)
+        {
+            finalFormat = reinterpret_cast<WAVEFORMATEX *>(&desired);
+        }
+        else if (hr == S_FALSE && closest != nullptr)
+        {
+            CLOG(LogLevel_t::Info, "wasapi: requested mode cannot be fully satisfied.");
+
             finalFormat = closest;
         }
-    }
-    else
-    {
-        finalFormat = mixFormat;
-    }
-
-    if (finalFormat->nChannels != this->GetOutputChannels())
-    {
-        std::cerr << "Requested " << static_cast<int>(this->GetOutputChannels()) << " channels, using "
-                  << finalFormat->nChannels << " as provided by WASAPI." << std::endl;
-        this->IAudioOutput::SetOutputChannels(finalFormat->nChannels);
-    }
-
-    REFERENCE_TIME bufferDuration = static_cast<REFERENCE_TIME>(gConfig.PreRenderTime) * 10000;
-    hr = d->client->Initialize(AUDCLNT_SHAREMODE_SHARED,
-                                  flags,
-                                  bufferDuration,
-                                  0,
-                                  finalFormat,
-                                  nullptr);
-
-    if (FAILED(hr))
-    {
-        if (closest != nullptr)
+        else
         {
-            CoTaskMemFree(closest);
+            finalFormat = mixFormat;
         }
-        CoTaskMemFree(mixFormat);
-        THROW_RUNTIME_ERROR("unable to initialize WASAPI client (" << std::hex << hr << ")");
-    }
 
-    hr = d->client->GetBufferSize(&d->bufferFrameCount);
-    if (FAILED(hr))
-    {
-        if (closest != nullptr)
+        if (finalFormat->nChannels != this->GetOutputChannels())
         {
-            CoTaskMemFree(closest);
+            std::cerr << "Requested " << static_cast<int>(this->GetOutputChannels()) << " channels, using "
+                      << finalFormat->nChannels << " as provided by WASAPI." << std::endl;
+            this->IAudioOutput::SetOutputChannels(finalFormat->nChannels);
         }
-        CoTaskMemFree(mixFormat);
-        THROW_RUNTIME_ERROR("unable to get WASAPI buffer size (" << std::hex << hr << ")");
-    }
 
-    hr = d->client->GetService(IID_PPV_ARGS(&d->renderClient));
-    if (FAILED(hr))
-    {
-        if (closest != nullptr)
-        {
-            CoTaskMemFree(closest);
-        }
-        CoTaskMemFree(mixFormat);
-        THROW_RUNTIME_ERROR("unable to get render client (" << std::hex << hr << ")");
-    }
+        REFERENCE_TIME bufferDuration = static_cast<REFERENCE_TIME>(gConfig.FramesToRender / format.SampleRate) * 1000 * 10;
+        hr = d->client->Initialize(AUDCLNT_SHAREMODE_SHARED,
+                                   AUDCLNT_STREAMFLAGS_RATEADJUST,
+                                   bufferDuration,
+                                   0,
+                                   finalFormat,
+                                   &GUID_ANMP_SESSION);
 
-    if (closest != nullptr)
-    {
         CoTaskMemFree(closest);
-    }
-    CoTaskMemFree(mixFormat);
+        CoTaskMemFree(mixFormat);
 
-    const size_t requiredSize = gConfig.FramesToRender * this->GetOutputChannels() * sizeof(float);
-    if (this->processedBuffer.size() != requiredSize)
-    {
+        if (FAILED(hr))
+        {
+            THROW_RUNTIME_ERROR("unable to initialize WASAPI client (" << std::hex << hr << ")");
+        }
+
+        hr = d->client->GetBufferSize(&d->bufferFrameCount);
+        if (FAILED(hr))
+        {
+            THROW_RUNTIME_ERROR("unable to get WASAPI buffer size (" << std::hex << hr << ")");
+        }
+
+        hr = d->client->GetService(IID_PPV_ARGS(&d->renderClient));
+        if (FAILED(hr))
+        {
+            THROW_RUNTIME_ERROR("unable to get render client (" << std::hex << hr << ")");
+        }
+
+        const size_t requiredSize = gConfig.FramesToRender * this->GetOutputChannels() * sizeof(float);
         this->processedBuffer.resize(requiredSize);
     }
-    this->currentFormat = format;
 
-    if (wasStarted)
+    if (clientWasNull || format.SampleRate != this->currentFormat.SampleRate)
     {
-        this->start();
+        ComPtr<IAudioClockAdjustment> clockAdj = nullptr;
+        hr = d->client->GetService(IID_PPV_ARGS(&clockAdj));
+        if (FAILED(hr))
+        {
+            THROW_RUNTIME_ERROR("unable adjust the streams samplerate");
+        }
+
+        hr = clockAdj->SetSampleRate(format.SampleRate);
+        if (FAILED(hr))
+        {
+            CLOG(LogLevel_t::Error, "Failed to set requested samplerate " << format.SampleRate << " Hz; perhaps it's out of range?");
+        }
     }
+
+    this->currentFormat = format;
 }
 
 int WASAPIOutput::write(const float *buffer, frame_t frames)
