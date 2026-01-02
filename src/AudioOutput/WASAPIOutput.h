@@ -4,9 +4,7 @@
 
 #include "IAudioOutput.h"
 
-#include <audioclient.h>
-#include <mmdeviceapi.h>
-#include <wrl/client.h>
+#include <memory>
 
 class WASAPIOutput : public IAudioOutput
 {
@@ -33,18 +31,8 @@ class WASAPIOutput : public IAudioOutput
     template<typename T>
     int writeInternal(const T *buffer, frame_t frames);
 
-    void ensureEnumerator();
-    bool recoverDevice();
-    WAVEFORMATEXTENSIBLE buildWaveFormat(const SongFormat &format) const;
-
-    Microsoft::WRL::ComPtr<IMMDeviceEnumerator> enumerator;
-    Microsoft::WRL::ComPtr<IMMDevice> device;
-    Microsoft::WRL::ComPtr<IAudioClient> client;
-    Microsoft::WRL::ComPtr<IAudioRenderClient> renderClient;
-
-    UINT32 bufferFrameCount = 0;
-    bool comInitialized = false;
-    bool started = false;
+    struct Impl;
+    std::unique_ptr<Impl> d;
 };
 
 #endif // _WIN32

@@ -21,11 +21,102 @@
 
 using Microsoft::WRL::ComPtr;
 
-WASAPIOutput::WASAPIOutput()
+struct WASAPIOutput::Impl
+{
+    WASAPIOutput *q;
+    ComPtr<IMMDeviceEnumerator> enumerator;
+    ComPtr<IMMDevice> device;
+    ComPtr<IAudioClient> client;
+    ComPtr<IAudioRenderClient> renderClient;
+
+    UINT32 bufferFrameCount = 0;
+    bool comInitialized = false;
+    bool started = false;
+
+    Impl(WASAPIOutput *parent)
+    : q(parent)
+    {
+    }
+
+    void ensureEnumerator()
+    {
+        if (this->enumerator)
+        {
+            return;
+        }
+
+        HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&this->enumerator));
+        if (FAILED(hr))
+        {
+            THROW_RUNTIME_ERROR("cannot create MMDeviceEnumerator (" << std::hex << hr << ")");
+        }
+    }
+
+    bool recoverDevice()
+    {
+        if (!q->currentFormat.IsValid())
+        {
+            return false;
+        }
+
+        bool wasStarted = this->started;
+        try
+        {
+            SongFormat formatCopy = q->currentFormat;
+            q->init(formatCopy);
+            if (wasStarted)
+            {
+                q->start();
+            }
+            return true;
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << "Failed to recover WASAPI device: " << e.what() << std::endl;
+            return false;
+        }
+        catch (...)
+        {
+            std::cerr << "Failed to recover WASAPI device due to unknown error." << std::endl;
+            return false;
+        }
+    }
+
+
+    WAVEFORMATEXTENSIBLE buildWaveFormat(const SongFormat &format, int outputChannels) const
+    {
+        WAVEFORMATEXTENSIBLE wfx = {};
+        wfx.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+        wfx.Format.nChannels = outputChannels;
+        wfx.Format.nSamplesPerSec = format.SampleRate;
+        wfx.Format.wBitsPerSample = 32;
+        wfx.Format.nBlockAlign = (wfx.Format.nChannels * wfx.Format.wBitsPerSample) / 8;
+        wfx.Format.nAvgBytesPerSec = wfx.Format.nSamplesPerSec * wfx.Format.nBlockAlign;
+        wfx.Format.cbSize = sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX);
+        wfx.Samples.wValidBitsPerSample = 32;
+        wfx.SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
+        switch (wfx.Format.nChannels)
+        {
+            case 1:
+                wfx.dwChannelMask = SPEAKER_FRONT_CENTER;
+                break;
+            case 2:
+                wfx.dwChannelMask = SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT;
+                break;
+            default:
+                wfx.dwChannelMask = 0;
+                break;
+        }
+
+        return wfx;
+    }
+};
+
+WASAPIOutput::WASAPIOutput() : d(std::make_unique<Impl>(this))
 {
     HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     const bool comReady = SUCCEEDED(hr) || hr == RPC_E_CHANGED_MODE;
-    this->comInitialized = SUCCEEDED(hr);
+    d->comInitialized = SUCCEEDED(hr);
     if (!comReady)
     {
         THROW_RUNTIME_ERROR("CoInitializeEx failed (" << std::hex << hr << ")");
@@ -35,29 +126,15 @@ WASAPIOutput::WASAPIOutput()
 WASAPIOutput::~WASAPIOutput()
 {
     this->close();
-    if (this->comInitialized)
+    if (d->comInitialized)
     {
         CoUninitialize();
     }
 }
 
-void WASAPIOutput::ensureEnumerator()
-{
-    if (this->enumerator)
-    {
-        return;
-    }
-
-    HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&this->enumerator));
-    if (FAILED(hr))
-    {
-        THROW_RUNTIME_ERROR("cannot create MMDeviceEnumerator (" << std::hex << hr << ")");
-    }
-}
-
 void WASAPIOutput::open()
 {
-    this->ensureEnumerator();
+    d->ensureEnumerator();
 }
 
 void WASAPIOutput::SetOutputChannels(uint8_t chan)
@@ -69,64 +146,36 @@ void WASAPIOutput::SetOutputChannels(uint8_t chan)
     }
 }
 
-WAVEFORMATEXTENSIBLE WASAPIOutput::buildWaveFormat(const SongFormat &format) const
-{
-    WAVEFORMATEXTENSIBLE wfx = {};
-    wfx.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-    wfx.Format.nChannels = this->GetOutputChannels();
-    wfx.Format.nSamplesPerSec = format.SampleRate;
-    wfx.Format.wBitsPerSample = 32;
-    wfx.Format.nBlockAlign = (wfx.Format.nChannels * wfx.Format.wBitsPerSample) / 8;
-    wfx.Format.nAvgBytesPerSec = wfx.Format.nSamplesPerSec * wfx.Format.nBlockAlign;
-    wfx.Format.cbSize = sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX);
-    wfx.Samples.wValidBitsPerSample = 32;
-    wfx.SubFormat = KSDATAFORMAT_SUBTYPE_IEEE_FLOAT;
-    switch (wfx.Format.nChannels)
-    {
-        case 1:
-            wfx.dwChannelMask = SPEAKER_FRONT_CENTER;
-            break;
-        case 2:
-            wfx.dwChannelMask = SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT;
-            break;
-        default:
-            wfx.dwChannelMask = 0;
-            break;
-    }
-
-    return wfx;
-}
-
 void WASAPIOutput::init(SongFormat &format, bool)
 {
-    this->ensureEnumerator();
-
-    bool wasStarted = this->started;
-
     this->close();
 
-    HRESULT hr = this->enumerator->GetDefaultAudioEndpoint(eRender, eConsole, &this->device);
+    d->ensureEnumerator();
+
+    bool wasStarted = d->started;
+
+    HRESULT hr = d->enumerator->GetDefaultAudioEndpoint(eRender, eMultimedia, &d->device);
     if (FAILED(hr))
     {
         THROW_RUNTIME_ERROR("cannot get default audio endpoint (" << std::hex << hr << ")");
     }
 
-    hr = this->device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr, &this->client);
+    hr = d->device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr, &d->client);
     if (FAILED(hr))
     {
         THROW_RUNTIME_ERROR("cannot activate audio client (" << std::hex << hr << ")");
     }
 
     WAVEFORMATEX *mixFormat = nullptr;
-    hr = this->client->GetMixFormat(&mixFormat);
+    hr = d->client->GetMixFormat(&mixFormat);
     if (FAILED(hr) || mixFormat == nullptr)
     {
         THROW_RUNTIME_ERROR("cannot get mix format (" << std::hex << hr << ")");
     }
 
-    WAVEFORMATEXTENSIBLE desired = this->buildWaveFormat(format);
+    WAVEFORMATEXTENSIBLE desired = d->buildWaveFormat(format, this->GetOutputChannels());
     WAVEFORMATEX *closest = nullptr;
-    hr = this->client->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED,
+    hr = d->client->IsFormatSupported(AUDCLNT_SHAREMODE_SHARED,
                                          reinterpret_cast<WAVEFORMATEX *>(&desired),
                                          &closest);
     DWORD flags;
@@ -174,7 +223,7 @@ void WASAPIOutput::init(SongFormat &format, bool)
     }
 
     REFERENCE_TIME bufferDuration = static_cast<REFERENCE_TIME>(gConfig.PreRenderTime) * 10000;
-    hr = this->client->Initialize(AUDCLNT_SHAREMODE_SHARED,
+    hr = d->client->Initialize(AUDCLNT_SHAREMODE_SHARED,
                                   flags,
                                   bufferDuration,
                                   0,
@@ -191,7 +240,7 @@ void WASAPIOutput::init(SongFormat &format, bool)
         THROW_RUNTIME_ERROR("unable to initialize WASAPI client (" << std::hex << hr << ")");
     }
 
-    hr = this->client->GetBufferSize(&this->bufferFrameCount);
+    hr = d->client->GetBufferSize(&d->bufferFrameCount);
     if (FAILED(hr))
     {
         if (closest != nullptr)
@@ -202,7 +251,7 @@ void WASAPIOutput::init(SongFormat &format, bool)
         THROW_RUNTIME_ERROR("unable to get WASAPI buffer size (" << std::hex << hr << ")");
     }
 
-    hr = this->client->GetService(IID_PPV_ARGS(&this->renderClient));
+    hr = d->client->GetService(IID_PPV_ARGS(&d->renderClient));
     if (FAILED(hr))
     {
         if (closest != nullptr)
@@ -250,7 +299,7 @@ int WASAPIOutput::write(const int32_t *buffer, frame_t frames)
 template<typename T>
 int WASAPIOutput::writeInternal(const T *buffer, frame_t frames)
 {
-    if (!this->client || !this->renderClient)
+    if (!d->client || !d->renderClient)
     {
         THROW_RUNTIME_ERROR("unable to write pcm since WASAPIOutput::init() has not been called yet or init failed");
     }
@@ -259,8 +308,8 @@ int WASAPIOutput::writeInternal(const T *buffer, frame_t frames)
     this->Mix<T, float>(frames, buffer, this->currentFormat, procBuf);
 
     UINT32 padding = 0;
-    HRESULT hr = this->client->GetCurrentPadding(&padding);
-    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && this->recoverDevice())
+    HRESULT hr = d->client->GetCurrentPadding(&padding);
+    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && d->recoverDevice())
     {
         return 0;
     }
@@ -269,7 +318,7 @@ int WASAPIOutput::writeInternal(const T *buffer, frame_t frames)
         THROW_RUNTIME_ERROR("GetCurrentPadding failed (" << std::hex << hr << ")");
     }
 
-    UINT32 available = this->bufferFrameCount - padding;
+    UINT32 available = d->bufferFrameCount - padding;
     if (available == 0)
     {
         return 0;
@@ -277,8 +326,8 @@ int WASAPIOutput::writeInternal(const T *buffer, frame_t frames)
 
     UINT32 framesToWrite = std::min<UINT32>(frames, available);
     BYTE *data = nullptr;
-    hr = this->renderClient->GetBuffer(framesToWrite, &data);
-    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && this->recoverDevice())
+    hr = d->renderClient->GetBuffer(framesToWrite, &data);
+    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && d->recoverDevice())
     {
         return 0;
     }
@@ -289,8 +338,8 @@ int WASAPIOutput::writeInternal(const T *buffer, frame_t frames)
 
     std::memcpy(data, procBuf, framesToWrite * this->GetOutputChannels() * sizeof(float));
 
-    hr = this->renderClient->ReleaseBuffer(framesToWrite, 0);
-    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && this->recoverDevice())
+    hr = d->renderClient->ReleaseBuffer(framesToWrite, 0);
+    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && d->recoverDevice())
     {
         return 0;
     }
@@ -304,7 +353,7 @@ int WASAPIOutput::writeInternal(const T *buffer, frame_t frames)
 
 void WASAPIOutput::start()
 {
-    if (!this->client)
+    if (!d->client)
     {
         THROW_RUNTIME_ERROR("unable to start pcm since WASAPIOutput::init() has not been called yet or init failed");
     }
@@ -314,10 +363,10 @@ void WASAPIOutput::start()
     // IAudioRenderClient::GetBuffer and IAudioRenderClient::ReleaseBuffer methods on the rendering interface.
     BYTE *data = nullptr;
 
-    UINT32 framesToWrite = this->bufferFrameCount;
-    this->client->Reset();
-    auto hr = this->renderClient->GetBuffer(framesToWrite, &data);
-    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && !this->recoverDevice())
+    UINT32 framesToWrite = d->bufferFrameCount;
+    d->client->Reset();
+    auto hr = d->renderClient->GetBuffer(framesToWrite, &data);
+    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && !d->recoverDevice())
     {
         THROW_RUNTIME_ERROR("unable to start pcm AUDCLNT_E_DEVICE_INVALIDATED and failed to recover device");
     }
@@ -328,8 +377,8 @@ void WASAPIOutput::start()
 
     std::memset(data, 0, framesToWrite * this->GetOutputChannels() * sizeof(float));
 
-    hr = this->renderClient->ReleaseBuffer(framesToWrite, 0);
-    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && !this->recoverDevice())
+    hr = d->renderClient->ReleaseBuffer(framesToWrite, 0);
+    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && !d->recoverDevice())
     {
         // ignore
     }
@@ -338,27 +387,27 @@ void WASAPIOutput::start()
         THROW_RUNTIME_ERROR("ReleaseBuffer failed (" << std::hex << hr << ")");
     }
 
-    this->started = true;
-    hr = this->client->Start();
-    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && this->recoverDevice())
+    d->started = true;
+    hr = d->client->Start();
+    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && d->recoverDevice())
     {
         return;
     }
     if (FAILED(hr) && hr != AUDCLNT_E_NOT_INITIALIZED)
     {
-        this->started = false;
+        d->started = false;
         THROW_RUNTIME_ERROR("unable to start pcm (" << std::hex << hr << ")");
     }
 }
 
 void WASAPIOutput::stop()
 {
-    if (this->client)
+    if (d->client)
     {
-        HRESULT hr = this->client->Stop();
-        if (hr == AUDCLNT_E_DEVICE_INVALIDATED && this->recoverDevice())
+        HRESULT hr = d->client->Stop();
+        if (hr == AUDCLNT_E_DEVICE_INVALIDATED && d->recoverDevice())
         {
-            this->started = false;
+            d->started = false;
             return;
         }
         if (FAILED(hr) && hr != AUDCLNT_E_NOT_INITIALIZED)
@@ -366,46 +415,21 @@ void WASAPIOutput::stop()
             THROW_RUNTIME_ERROR("unable to stop pcm (" << std::hex << hr << ")");
         }
     }
-    this->started = false;
+    d->started = false;
 }
 
 void WASAPIOutput::close()
 {
-    this->renderClient.Reset();
-    this->client.Reset();
-    this->device.Reset();
-    this->bufferFrameCount = 0;
-    this->started = false;
+    d->renderClient.Reset();
+    d->renderClient = nullptr;
+    d->client.Reset();
+    d->client = nullptr;
+    d->device.Reset();
+    d->device = nullptr;
+    d->enumerator = nullptr;
+    d->bufferFrameCount = 0;
+    d->started = false;
 }
 
-bool WASAPIOutput::recoverDevice()
-{
-    if (!this->currentFormat.IsValid())
-    {
-        return false;
-    }
-
-    bool wasStarted = this->started;
-    try
-    {
-        SongFormat formatCopy = this->currentFormat;
-        this->init(formatCopy);
-        if (wasStarted)
-        {
-            this->start();
-        }
-        return true;
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << "Failed to recover WASAPI device: " << e.what() << std::endl;
-        return false;
-    }
-    catch (...)
-    {
-        std::cerr << "Failed to recover WASAPI device due to unknown error." << std::endl;
-        return false;
-    }
-}
 
 #endif // _WIN32
