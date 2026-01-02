@@ -101,6 +101,8 @@ void WASAPIOutput::init(SongFormat &format, bool)
 {
     this->ensureEnumerator();
 
+    bool wasStarted = this->started;
+
     this->close();
 
     HRESULT hr = this->enumerator->GetDefaultAudioEndpoint(eRender, eConsole, &this->device);
@@ -223,6 +225,11 @@ void WASAPIOutput::init(SongFormat &format, bool)
         this->processedBuffer.resize(requiredSize);
     }
     this->currentFormat = format;
+
+    if (wasStarted)
+    {
+        this->start();
+    }
 }
 
 int WASAPIOutput::write(const float *buffer, frame_t frames)
@@ -301,9 +308,38 @@ void WASAPIOutput::start()
     {
         THROW_RUNTIME_ERROR("unable to start pcm since WASAPIOutput::init() has not been called yet or init failed");
     }
+    
+    // https://learn.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-iaudioclient-start
+    // To avoid start-up glitches with rendering streams, clients should not call Start until the audio engine has been initially loaded with data by calling the
+    // IAudioRenderClient::GetBuffer and IAudioRenderClient::ReleaseBuffer methods on the rendering interface.
+    BYTE *data = nullptr;
+
+    UINT32 framesToWrite = this->bufferFrameCount;
+    this->client->Reset();
+    auto hr = this->renderClient->GetBuffer(framesToWrite, &data);
+    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && !this->recoverDevice())
+    {
+        THROW_RUNTIME_ERROR("unable to start pcm AUDCLNT_E_DEVICE_INVALIDATED and failed to recover device");
+    }
+    if (FAILED(hr))
+    {
+        THROW_RUNTIME_ERROR("GetBuffer failed (" << std::hex << hr << ")");
+    }
+
+    std::memset(data, 0, framesToWrite * this->GetOutputChannels() * sizeof(float));
+
+    hr = this->renderClient->ReleaseBuffer(framesToWrite, 0);
+    if (hr == AUDCLNT_E_DEVICE_INVALIDATED && !this->recoverDevice())
+    {
+        // ignore
+    }
+    if (FAILED(hr))
+    {
+        THROW_RUNTIME_ERROR("ReleaseBuffer failed (" << std::hex << hr << ")");
+    }
 
     this->started = true;
-    HRESULT hr = this->client->Start();
+    hr = this->client->Start();
     if (hr == AUDCLNT_E_DEVICE_INVALIDATED && this->recoverDevice())
     {
         return;
