@@ -51,7 +51,7 @@ void IAudioOutput::Mix(const frame_t frames, const TIN *RESTRICT in, const SongF
             // amplify volume
             item *= this->volume;
 
-            if (std::is_floating_point<TOUT>())
+            if constexpr(std::is_floating_point<TOUT>())
             {
                 // normalize
                 if (!std::is_floating_point<TIN>())
