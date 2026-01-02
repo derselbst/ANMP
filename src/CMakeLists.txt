@@ -19,9 +19,13 @@ SET(ANMP_COMMON_SRC
        Common/Event.h
        Common/LoudnessFile.cpp
        Common/LoudnessFile.h
+       Common/MemoryMapped.cpp
+       Common/MemoryMapped.h
        Common/Nullable.h
        Common/PlaylistFactory.cpp
        Common/PlaylistFactory.h
+       Common/PortableEndian.h
+       Common/ringbuffer.hpp
        Common/SongFormat.cpp
        Common/SongFormat.h
        Common/StringFormatter.cpp
