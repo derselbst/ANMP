@@ -20,8 +20,8 @@
 #include <iostream>
 #include <wrl/client.h>
 #include <samplerate.h>
-
 #include <guiddef.h>
+#include <mutex>
 
 // {12c8e646-7548-4f13-8a5c-cfa64db5c468}
 inline constexpr GUID GUID_ANMP_SESSION = {0x12c8e646, 0x7548, 0x4f13, {0x8a, 0x5c, 0xcf, 0xa6, 0x4d, 0xb5, 0xc4, 0x68}};
@@ -40,6 +40,8 @@ struct WASAPIOutput::Impl
 
     UINT32 bufferFrameCount = 0;
     bool comInitialized = false;
+
+    std::mutex mtxBufferOperationInProgress;
     bool started = false;
 
     float deviceSampleRate = 0;
@@ -125,6 +127,23 @@ struct WASAPIOutput::Impl
         }
 
         return wfx;
+    }
+
+    UINT32 GetAvailableFrames()
+    {
+        UINT32 padding = 0;
+        HRESULT hr = this->client->GetCurrentPadding(&padding);
+        if (hr == AUDCLNT_E_DEVICE_INVALIDATED && this->recoverDevice())
+        {
+            return 0;
+        }
+        if (FAILED(hr))
+        {
+            THROW_RUNTIME_ERROR("GetCurrentPadding failed (" << std::hex << hr << ")");
+        }
+
+        UINT32 available = this->bufferFrameCount - padding;
+        return available;
     }
 
     void doResampling(const float *inBuf, const frame_t Frames, float *outBuf, int framesAvailable)
@@ -295,7 +314,7 @@ void WASAPIOutput::init(SongFormat &format, bool)
             this->IAudioOutput::SetOutputChannels(finalFormat->nChannels);
         }
 
-        REFERENCE_TIME bufferDuration = static_cast<REFERENCE_TIME>(gConfig.FramesToRender * 4.0 / format.SampleRate * 1000 * 10 + 0.5);
+        REFERENCE_TIME bufferDuration = static_cast<REFERENCE_TIME>(gConfig.FramesToRender * 4.0 / format.SampleRate * 1000 * 1000 * 10 + 0.5);
         hr = d->client->Initialize(AUDCLNT_SHAREMODE_SHARED,
                                    0,
                                    bufferDuration,
@@ -376,6 +395,7 @@ int WASAPIOutput::writeInternal(const T *buffer, frame_t frames)
 
     int framesConsumed = 0;
 
+    std::unique_lock m(d->mtxBufferOperationInProgress, std::defer_lock);
     do
     {
         //auto ret = WaitForSingleObject(d->needDataEvent, 2000);
@@ -383,30 +403,33 @@ int WASAPIOutput::writeInternal(const T *buffer, frame_t frames)
         //{
         //    THROW_RUNTIME_ERROR("Waiting for event timed out!");
         //}
-
-        UINT32 padding = 0;
-        HRESULT hr = d->client->GetCurrentPadding(&padding);
-        if (hr == AUDCLNT_E_DEVICE_INVALIDATED && d->recoverDevice())
-        {
-            return 0;
-        }
-        if (FAILED(hr))
-        {
-            THROW_RUNTIME_ERROR("GetCurrentPadding failed (" << std::hex << hr << ")");
-        }
-
-        UINT32 available = d->bufferFrameCount - padding;
+        auto available = d->GetAvailableFrames();
         if (available == 0)
         {
-            return framesConsumed;
+            //CLOG(LogLevel_t::Info, "No space available in buffer, sleeping");
+            std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>((d->bufferFrameCount / d->deviceSampleRate) * (1000 / 2))));
+
+            available = d->GetAvailableFrames();
+            if (available == 0)
+            {
+                CLOG(LogLevel_t::Warning, "Despite waiting still no space available in audio buffer!!");
+                return framesConsumed;
+            }
         }
 
         UINT32 framesToWrite = std::min<UINT32>(frames, available);
         BYTE *data = nullptr;
-        hr = d->renderClient->GetBuffer(framesToWrite, &data);
+
+        m.lock();
+        if (!d->started)
+        {
+            return framesConsumed;
+        }
+
+        auto hr = d->renderClient->GetBuffer(framesToWrite, &data);
         if (hr == AUDCLNT_E_DEVICE_INVALIDATED && d->recoverDevice())
         {
-            return 0;
+            return framesConsumed;
         }
         if (FAILED(hr))
         {
@@ -424,13 +447,15 @@ int WASAPIOutput::writeInternal(const T *buffer, frame_t frames)
         hr = d->renderClient->ReleaseBuffer(d->srcData.output_frames_gen, 0);
         if (hr == AUDCLNT_E_DEVICE_INVALIDATED && d->recoverDevice())
         {
-            return 0;
+            return framesConsumed;
         }
         if (FAILED(hr))
         {
             THROW_RUNTIME_ERROR("ReleaseBuffer failed (" << std::hex << hr << ")");
         }
-    } while (frames > 0 && d->started);
+
+        m.unlock();
+    } while (frames > 0);
 
     return framesConsumed;
 }
@@ -441,6 +466,8 @@ void WASAPIOutput::start()
     {
         THROW_RUNTIME_ERROR("unable to start pcm since WASAPIOutput::init() has not been called yet or init failed");
     }
+
+    std::lock_guard m(d->mtxBufferOperationInProgress);
     
     // https://learn.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-iaudioclient-start
     // To avoid start-up glitches with rendering streams, clients should not call Start until the audio engine has been initially loaded with data by calling the
@@ -488,6 +515,8 @@ void WASAPIOutput::start()
 
 void WASAPIOutput::stop()
 {
+    std::lock_guard m(d->mtxBufferOperationInProgress);
+
     d->started = false;
     if (d->client)
     {
