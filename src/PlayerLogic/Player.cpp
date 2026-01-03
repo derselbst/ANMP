@@ -521,7 +521,7 @@ void Player::playFrames(frame_t framesToPlay)
         // ensure PCM buffer(s) are well filled
         this->currentSong->fillBuffer();
 
-        if (framesWritten != framesToPush
+        if (this->IsPlaying() && framesWritten != framesToPush
 #ifdef USE_JACK
             && gConfig.audioDriver != AudioDriver_t::Jack /*very spammy for jack*/
 #endif
