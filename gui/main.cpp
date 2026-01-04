@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     constexpr char kMprisTrackListIface[] = "org.mpris.MediaPlayer2.TrackList";
 #endif
 
-#ifdef Q_OS_WIN && _DEBUG
+#if defined(Q_OS_WIN) && !defined(NDEBUG)
     if (GetConsoleWindow() == nullptr)
     {
         AllocConsole();
