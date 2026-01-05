@@ -23,6 +23,11 @@ StringFormatter &StringFormatter::Singleton()
 
 std::string StringFormatter::GetLastWinError()
 {
+    return StringFormatter::GetLastWinError(GetLastError());
+}
+
+std::string StringFormatter::GetLastWinError(unsigned long code)
+{
 #ifdef WIN32
     constexpr size_t MaxErrorLen = 2048;
 #ifdef _UNICODE
@@ -33,12 +38,26 @@ std::string StringFormatter::GetLastWinError()
 #endif
 
         FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
-                      NULL,
-                      GetLastError(),
+                      nullptr,
+                      code,
                       MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
                       err,
                       sizeof(err) / sizeof(err[0]),
-                      NULL);
+                      nullptr);
+
+#ifdef UNICODE
+        size_t const nLen = wcslen(err);
+#else
+        size_t const nLen = strlen(err);
+#endif
+        if (nLen > 1 && err[nLen - 1] == '\n')
+        {
+            err[nLen - 1] = 0;
+            if (err[nLen - 2] == '\r')
+            {
+                err[nLen - 2] = 0;
+            }
+        }
 
 #ifdef _UNICODE
         WideCharToMultiByte(CP_UTF8, 0, err, -1, ascii_err, sizeof(ascii_err) / sizeof(ascii_err[0]), 0, 0);
