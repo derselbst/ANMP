@@ -74,7 +74,7 @@ MidiMessage::MidiMessage(const std::vector<int>& message) : vector<uchar>() {
 
 //////////////////////////////
 //
-// MidiMessage::~MidiMessage -- Deconstructor.
+// MidiMessage::~MidiMessage -- Destructor.
 //
 
 MidiMessage::~MidiMessage() {
@@ -2387,6 +2387,5 @@ std::ostream& operator<<(std::ostream& out, MidiMessage& message) {
 
 
 } // end namespace smf
-
 
 

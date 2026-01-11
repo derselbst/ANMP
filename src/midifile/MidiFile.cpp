@@ -115,7 +115,7 @@ MidiFile::MidiFile(MidiFile&& other) {
 
 //////////////////////////////
 //
-// MidiFile::~MidiFile -- Deconstructor.
+// MidiFile::~MidiFile -- Destructor.
 //
 
 MidiFile::~MidiFile() {
@@ -3502,6 +3502,5 @@ std::ostream& operator<<(std::ostream& out, smf::MidiFile& aMidiFile) {
 	aMidiFile.writeBinascWithComments(out);
 	return out;
 }
-
 
 
