@@ -1,6 +1,7 @@
 ANMP
 main
 build/
+build_home/
 bin/
 .vs/
 src/test.cpp

@@ -27,6 +27,10 @@ AudioDriver_t
     Portaudio,
 #endif
 
+#ifdef USE_WASAPI
+    Wasapi,
+#endif
+
 #ifdef USE_EBUR128
     Ebur128,
 #endif

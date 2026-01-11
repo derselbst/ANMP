@@ -20,6 +20,10 @@ const char *AudioDriverName[] =
 [Portaudio] = "PortAudio",
 #endif
 
+#ifdef USE_WASAPI
+[Wasapi] = "WASAPI",
+#endif
+
 [Wave] = "write WAVE files",
 
 [END] = "Srsly?",

@@ -90,8 +90,6 @@ jobs:
         echo ##vso[task.setvariable variable=INCLUDE]%INCLUDE%;$(WindowsSDKDir)\ucrt;$(WindowsSDKDir)\um;$(WindowsSDKDir)\shared;$(WindowsSDKDir)\winrt
         echo ##vso[task.setvariable variable=LIB]%LIB%;$(WindowsSDKDirLib)\um\$(platform);$(WindowsSDKDirLib)\ucrt\$(platform)
         echo ##vso[task.setvariable variable=LIBPATH]%LIBPATH%;$(WindowsSDKDirLib)\um\$(platform);$(WindowsSDKDirLib)\ucrt\$(platform)
-
-        git clone https://codeberg.org/tenacityteam/libid3tag.git
       displayName: 'Setup environment'
 
     - task: MSBuild@1
@@ -153,16 +151,6 @@ jobs:
         cmake --build . --config $(configuration) --target install
       displayName: 'Compile & Install libgme'
       workingDirectory: 'game-music-emu'
-
-    - script: |
-        @ECHO ON
-        mkdir build
-        cd build
-        cmake -Werror=dev -G Ninja -DCMAKE_MAKE_PROGRAM=C:/BuildTools/Common7/IDE/CommonExtensions/Microsoft/CMake/Ninja/ninja.exe -DCMAKE_BUILD_TYPE=$(configuration) -DVCPKG_TARGET_TRIPLET=$(platform)-windows-static -DCMAKE_TOOLCHAIN_FILE=$(VCPKG_INSTALLATION_ROOT)/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=$(VCPKG_INSTALLATION_ROOT)/installed/$(platform)-windows-static -DBUILD_SHARED_LIBS=0 -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded -DCMAKE_VERBOSE_MAKEFILE=1 ..
-        cmake --build . --config $(configuration) --parallel 3
-        cmake --build . --config $(configuration) --target install
-      displayName: 'Compile & Install libid3tag'
-      workingDirectory: 'libid3tag'
 
     - script: |
         @ECHO ON

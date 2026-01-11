@@ -108,6 +108,9 @@ set(LD_FLAGS ${LD_FLAGS} ${CMAKE_THREAD_LIBS_INIT})
 option(ENABLE_ALSA "Compile with support to use ALSA for playback" ON)
 option(ENABLE_JACK "Compile with support to use Jack for playback" ON)
 option(ENABLE_PORTAUDIO "Compile with support to use PortAudio for playback" ON)
+if(WIN32)
+  option(ENABLE_WASAPI "Compile with support to use WASAPI for playback" ON)
+endif()
 option(ENABLE_EBUR128 "Enable support for noise normalization through libebur128" ON)
 
 if(ENABLE_ALSA)
@@ -153,6 +156,12 @@ if(ENABLE_PORTAUDIO)
         
     summary_add("PortAudio support" USE_PORTAUDIO)
 endif(ENABLE_PORTAUDIO)
+
+if(WIN32 AND ENABLE_WASAPI)
+    add_definitions(-DUSE_WASAPI)
+    set(USE_WASAPI TRUE)
+    summary_add("WASAPI support" USE_WASAPI)
+endif()
 
 
 if(ENABLE_EBUR128)
@@ -284,10 +293,10 @@ endif(ENABLE_VGMSTREAM)
 
 
 if(ENABLE_FFMPEG)
-  PKG_CHECK_MODULES(AVCODEC libavcodec>=6.0 IMPORTED_TARGET)
-  PKG_CHECK_MODULES(AVFORMAT libavformat>=6.0 IMPORTED_TARGET)
-  PKG_CHECK_MODULES(AVUTIL libavutil>=6.0 IMPORTED_TARGET)
-  PKG_CHECK_MODULES(SWRESAMPLE libswresample>=6.0 IMPORTED_TARGET)
+  PKG_CHECK_MODULES(AVCODEC libavcodec>=60 IMPORTED_TARGET)
+  PKG_CHECK_MODULES(AVFORMAT libavformat>=60 IMPORTED_TARGET)
+  PKG_CHECK_MODULES(AVUTIL libavutil>=58 IMPORTED_TARGET)
+  PKG_CHECK_MODULES(SWRESAMPLE libswresample>=4.0 IMPORTED_TARGET)
   
   if(AVCODEC_FOUND AND AVFORMAT_FOUND AND AVUTIL_FOUND AND SWRESAMPLE_FOUND)
     set(USE_FFMPEG TRUE)
@@ -467,4 +476,3 @@ if(CLANG_FORMAT)
     ${ALL_SOURCE_FILES}
     )
 endif(CLANG_FORMAT)
-

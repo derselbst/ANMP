@@ -221,7 +221,7 @@ bool PlaylistModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int
     // if source and destination parents are the same, move elements locally
     if (true)
     {
-        beginMoveRows(sourceParent, sourceRow, sourceRow + count - 1, destinationParent, destinationRow);
+        beginMoveRows(sourceParent, sourceRow, sourceRow + count, destinationParent, destinationRow);
         this->playlist->move(sourceRow, count, destinationRow - sourceRow);
         endMoveRows();
     }

@@ -19,9 +19,13 @@ SET(ANMP_COMMON_SRC
        Common/Event.h
        Common/LoudnessFile.cpp
        Common/LoudnessFile.h
+       Common/MemoryMapped.cpp
+       Common/MemoryMapped.h
        Common/Nullable.h
        Common/PlaylistFactory.cpp
        Common/PlaylistFactory.h
+       Common/PortableEndian.h
+       Common/ringbuffer.hpp
        Common/SongFormat.cpp
        Common/SongFormat.h
        Common/StringFormatter.cpp
@@ -74,6 +78,11 @@ if(USE_PORTAUDIO)
     target_sources(anmp-internal PRIVATE AudioOutput/PortAudioOutput.cpp AudioOutput/PortAudioOutput.h)
     target_link_libraries(anmp-internal PUBLIC PkgConfig::PORTAUDIO PkgConfig::SAMPLERATE)
 endif(USE_PORTAUDIO)
+
+if(USE_WASAPI)
+    target_sources(anmp-internal PRIVATE AudioOutput/WASAPIOutput.cpp AudioOutput/WASAPIOutput.h)
+    target_link_libraries(anmp-internal PUBLIC ole32 uuid mmdevapi avrt)
+endif(USE_WASAPI)
 
 if(EBUR128_FOUND)
     target_sources(anmp-internal PRIVATE AudioOutput/ebur128Output.cpp AudioOutput/ebur128Output.h)

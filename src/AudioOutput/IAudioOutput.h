@@ -83,7 +83,7 @@ class IAudioOutput
     void setVolume(float vol);
 
     // gets and sets the number of mixdown channels, all non muted voices of a song get mixed to
-    uint8_t GetOutputChannels();
+    uint8_t GetOutputChannels() const;
     // only call this when playback is paused, i.e. no call to this->write() is pending
     virtual void SetOutputChannels(uint8_t);
 

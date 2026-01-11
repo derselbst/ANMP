@@ -24,6 +24,16 @@ int main(int argc, char *argv[])
     constexpr char kMprisTrackListIface[] = "org.mpris.MediaPlayer2.TrackList";
 #endif
 
+#if defined(Q_OS_WIN) && !defined(NDEBUG)
+    if (GetConsoleWindow() == nullptr)
+    {
+        AllocConsole();
+        FILE *f;
+        freopen_s(&f, "CONOUT$", "w", stdout);
+        freopen_s(&f, "CONOUT$", "w", stderr);
+    }
+#endif
+
     QApplication a(argc, argv);
     a.setStyle(QStyleFactory::create("Fusion"));
     QMessageBox msgBox;

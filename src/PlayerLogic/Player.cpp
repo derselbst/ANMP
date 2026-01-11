@@ -29,6 +29,9 @@
 #include "PortAudioOutput.h"
 #endif
 
+#ifdef USE_WASAPI
+#include "WASAPIOutput.h"
+#endif
 #include <cmath>
 #include <iostream>
 #include <limits>
@@ -117,6 +120,11 @@ void Player::_initAudio()
 #ifdef USE_PORTAUDIO
             case AudioDriver_t::Portaudio:
                 this->audioDriver = new PortAudioOutput();
+                break;
+#endif
+#ifdef USE_WASAPI
+            case AudioDriver_t::Wasapi:
+                this->audioDriver = new WASAPIOutput();
                 break;
 #endif
             default:
@@ -513,7 +521,7 @@ void Player::playFrames(frame_t framesToPlay)
         // ensure PCM buffer(s) are well filled
         this->currentSong->fillBuffer();
 
-        if (framesWritten != framesToPush
+        if (this->IsPlaying() && framesWritten != framesToPush
 #ifdef USE_JACK
             && gConfig.audioDriver != AudioDriver_t::Jack /*very spammy for jack*/
 #endif
