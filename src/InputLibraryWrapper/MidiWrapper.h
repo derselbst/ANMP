@@ -76,7 +76,7 @@ struct MidiLoopInfo
 /**
   * class MidiWrapper
   * 
-   * a wrapper around midifile, to support reading Standard Midi Files
+  * a wrapper around midifile, to support reading Standard Midi Files
   *
   */
 class MidiWrapper : public StandardWrapper<float>

@@ -32,6 +32,9 @@
  *  2. feed these event to some synthesizer (i.e. fluidsynth's sequencer)
  *  3. the synth manages an internal queue. on every call to this->render(), the synth pops these events from the queue and synthesize them
  *
+ * midifile events are converted into smf-like structs so the existing scheduling
+ * and looping logic can stay unchanged compared to the previous libsmf backend.
+ *
  * during 1) we observe the events sucked from a midi file. if we spot a MIDI CC102 (or 103), we've detected a midi track loop. so here we have to make sure,
  * that we get a callback whenever we reach the end of such a track loop during synthesization, in order to keep this midi track playing
  *
