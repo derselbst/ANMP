@@ -3,9 +3,42 @@
 
 #include "StandardWrapper.h"
 
-struct smf_event_struct;
-typedef struct smf_event_struct smf_event_t;
+#include "MidiFile.h"
+
+#include <cstddef>
+#include <vector>
+
 struct smf_struct;
+struct smf_track_struct;
+
+struct smf_event_struct
+{
+    struct smf_track_struct *track = nullptr;
+    int event_number = 0;
+    int track_number = 0;
+    int time_pulses = 0;
+    double time_seconds = 0.0;
+    std::vector<unsigned char> midi_buffer;
+    std::size_t midi_buffer_length = 0;
+};
+typedef struct smf_event_struct smf_event_t;
+
+struct smf_track_struct
+{
+    smf_struct *smf = nullptr;
+    std::vector<smf_event_struct> events;
+    int number_of_events = 0;
+};
+
+struct smf_struct
+{
+    smf::MidiFile midiFile;
+    std::vector<smf_track_struct> tracks;
+    std::vector<smf_event_t *> eventOrder;
+    std::size_t iteratorIndex = 0;
+    int ppqn = 0;
+    int number_of_tracks = 0;
+};
 typedef struct smf_struct smf_t;
 
 typedef struct _fluid_event_t fluid_event_t;
@@ -18,7 +51,7 @@ struct MidiLoopInfo
     // same as event->track_number, i.e. one based
     int trackId;
 
-    // unique id of this midi event given by libsmf
+    // unique id of this midi event given by the midi parser
     int eventId;
 
     // unique id of this loop, as specified by value of MIDI CC102 and CC103
@@ -43,7 +76,7 @@ struct MidiLoopInfo
 /**
   * class MidiWrapper
   * 
-  * a wrapper around libsmf, to support reading Standard Midi Files
+   * a wrapper around midifile, to support reading Standard Midi Files
   *
   */
 class MidiWrapper : public StandardWrapper<float>
@@ -88,3 +121,18 @@ class MidiWrapper : public StandardWrapper<float>
     void parseEvents();
     const MidiLoopInfo* getLongestMidiTrackLoop() const;
 };
+
+inline bool smf_event_is_valid(const smf_event_t *event)
+{
+    return event != nullptr && !event->midi_buffer.empty();
+}
+
+inline bool smf_event_is_metadata(const smf_event_t *event)
+{
+    return smf_event_is_valid(event) && event->midi_buffer[0] == 0xFF;
+}
+
+inline bool smf_event_is_sysex(const smf_event_t *event)
+{
+    return smf_event_is_valid(event) && (event->midi_buffer[0] == 0xF0 || event->midi_buffer[0] == 0xF7);
+}

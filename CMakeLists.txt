@@ -85,6 +85,7 @@ set(PROJECT_LOCAL_INCLUDE_DIRS
         ${CMAKE_SOURCE_DIR}/src/Common
         ${CMAKE_SOURCE_DIR}/src/PlayerLogic
         ${CMAKE_SOURCE_DIR}/src/InputLibraryWrapper
+        ${CMAKE_SOURCE_DIR}/src/midifile
         ${CMAKE_SOURCE_DIR}/src/AudioOutput)
 
 
@@ -313,7 +314,6 @@ endif(ENABLE_FFMPEG)
 
 if(ENABLE_FLUIDSYNTH)
   PKG_CHECK_MODULES(FLUIDSYNTH fluidsynth>=2.5.0 IMPORTED_TARGET)
-  PKG_CHECK_MODULES(LIBSMF smf IMPORTED_TARGET)
 
   if(FLUIDSYNTH_FOUND)
     add_definitions(-DUSE_FLUIDSYNTH)
@@ -322,12 +322,6 @@ if(ENABLE_FLUIDSYNTH)
         add_definitions(-DFLUIDSYNTH_DEFAULT_SF2="${FLUIDSYNTH_DEFAULT_SF2}")
     endif()
     MY_PRINT(FLUIDSYNTH)
-  
-    if(LIBSMF_FOUND)
-      add_definitions(-DUSE_SMF)
-      set(USE_SMF TRUE)
-      MY_PRINT(LIBSMF)
-    endif(LIBSMF_FOUND)
   endif(FLUIDSYNTH_FOUND)
 
   summary_add("fluidsynth support" USE_FLUIDSYNTH)

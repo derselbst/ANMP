@@ -27,7 +27,6 @@ BuildRequires: cmake >= 3.1.0
 %endif
 
 BuildRequires: pkgconfig(fluidsynth) >= 2.5.0
-BuildRequires: pkgconfig(smf)
 BuildRequires: libaopsf-devel
 BuildRequires: libcue-devel
 BuildRequires: libgme-devel >= 0.6.3
@@ -168,4 +167,3 @@ export CTEST_OUTPUT_ON_FAILURE=1
 %defattr(-,root,root)
 %{_bindir}/anmp-normalize
 %{_bindir}/anmp-dump
-

@@ -126,14 +126,11 @@ if(USE_FFMPEG)
     target_link_libraries(anmp-internal PUBLIC PkgConfig::AVCODEC PkgConfig::AVFORMAT PkgConfig::AVUTIL PkgConfig::SWRESAMPLE)
 endif(USE_FFMPEG)
 
-if(USE_SMF)
-    target_sources(anmp-internal PRIVATE InputLibraryWrapper/MidiWrapper.cpp InputLibraryWrapper/MidiWrapper.h)
-    target_link_libraries(anmp-internal PUBLIC PkgConfig::LIBSMF)
-endif(USE_SMF)
-
 if(USE_FLUIDSYNTH)
+    target_sources(anmp-internal PRIVATE InputLibraryWrapper/MidiWrapper.cpp InputLibraryWrapper/MidiWrapper.h)
     target_sources(anmp-internal PRIVATE InputLibraryWrapper/FluidsynthWrapper.cpp InputLibraryWrapper/FluidsynthWrapper.h)
     target_sources(anmp-internal PRIVATE InputLibraryWrapper/N64CSeqWrapper.cpp InputLibraryWrapper/N64CSeqWrapper.h)
+    target_sources(anmp-internal PRIVATE midifile/MidiFile.cpp midifile/MidiEvent.cpp midifile/MidiEventList.cpp midifile/MidiMessage.cpp midifile/Options.cpp midifile/Binasc.cpp)
     target_link_libraries(anmp-internal PUBLIC PkgConfig::FLUIDSYNTH)
 endif(USE_FLUIDSYNTH)
 

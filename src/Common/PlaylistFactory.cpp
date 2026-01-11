@@ -44,7 +44,7 @@
 #include "FFMpegWrapper.h"
 #endif
 
-#ifdef USE_SMF
+#ifdef USE_FLUIDSYNTH
 #include "MidiWrapper.h"
 #endif
 
@@ -184,7 +184,7 @@ bool PlaylistFactory::addSong(std::vector<Song*> &playlist, const std::string& f
         iEquals(ext, "dls") ||
         iEquals(ext, "txt") || // libmad converts it to sound
         iEquals(ext, "bash") ||
-        iEquals(ext, "zip") || // libsmf assertion fail
+        iEquals(ext, "zip") || // midi parser assertion fail
         iEquals(ext, "tar") ||
         iEquals(ext, "7z") ||
         iEquals(ext, "gz") ||
@@ -215,12 +215,10 @@ bool PlaylistFactory::addSong(std::vector<Song*> &playlist, const std::string& f
     }
 
 #ifdef USE_FLUIDSYNTH
-#ifdef USE_SMF
     else if (iEquals(ext, "mid") || iEquals(ext, "midi"))
     {
         PlaylistFactory::tryWith<MidiWrapper>(pcm, filePath, offset, len);
     }
-#endif
     else if (iEquals(ext, "cmf") || iEquals(ext, "btmf"))
     {
         PlaylistFactory::tryWith<N64CSeqWrapper>(pcm, filePath, offset, len);

@@ -7,15 +7,16 @@
 #include "Config.h"
 
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <cstring>
+#include <sstream>
 #include <thread> // std::this_thread::sleep_for
 #include <utility>
 #include <fstream>
 #include <bitset>
-
-#include <smf.h>
+#include <string>
 
 #define IsControlChange(e) ((e->midi_buffer[0] & 0xF0) == 0xB0)
 #define IsLoopStart(e) (IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopStart))
@@ -27,7 +28,7 @@
  *
  * Things we are doing here:
  *
- *  1. use libsmf to retrieve midi events from a midi file
+ *  1. use midifile to retrieve midi events from a midi file
  *  2. feed these event to some synthesizer (i.e. fluidsynth's sequencer)
  *  3. the synth manages an internal queue. on every call to this->render(), the synth pops these events from the queue and synthesize them
  *
@@ -35,6 +36,122 @@
  * that we get a callback whenever we reach the end of such a track loop during synthesization, in order to keep this midi track playing
  *
  */
+
+static smf_event_t *smf_track_get_event_by_number(smf_track_struct *track, int number)
+{
+    if (track == nullptr || number <= 0)
+    {
+        return nullptr;
+    }
+
+    const auto idx = static_cast<std::size_t>(number - 1);
+    if (idx >= track->events.size())
+    {
+        return nullptr;
+    }
+    return &track->events[idx];
+}
+
+static void smf_rewind(smf_t *smf)
+{
+    if (smf != nullptr)
+    {
+        smf->iteratorIndex = 0;
+    }
+}
+
+static smf_event_t *smf_get_next_event(smf_t *smf)
+{
+    if (smf == nullptr || smf->iteratorIndex >= smf->eventOrder.size())
+    {
+        return nullptr;
+    }
+
+    return smf->eventOrder[smf->iteratorIndex++];
+}
+
+static double smf_get_length_seconds(const smf_t *smf)
+{
+    return (smf == nullptr) ? 0.0 : smf->midiFile.getFileDurationInSeconds();
+}
+
+static int smf_get_length_pulses(const smf_t *smf)
+{
+    return (smf == nullptr) ? 0 : smf->midiFile.getFileDurationInTicks();
+}
+
+static smf_t *smf_load_from_memory(const char *data, std::size_t size)
+{
+    auto smf = new smf_t();
+    std::string content(data, size);
+    std::istringstream stream(content);
+    if (!smf->midiFile.read(stream))
+    {
+        delete smf;
+        return nullptr;
+    }
+
+    smf->midiFile.absoluteTicks();
+    smf->midiFile.doTimeAnalysis();
+    smf->midiFile.linkNotePairs();
+    smf->midiFile.sortTracks();
+
+    smf->ppqn = smf->midiFile.getTicksPerQuarterNote();
+    smf->number_of_tracks = smf->midiFile.getTrackCount();
+    smf->tracks.resize(smf->number_of_tracks);
+
+    int globalEventNumber = 1;
+    for (int t = 0; t < smf->number_of_tracks; t++)
+    {
+        smf_track_struct &track = smf->tracks[t];
+        track.smf = smf;
+
+        const auto &midiEvents = smf->midiFile[t];
+        track.events.reserve(midiEvents.size());
+
+        for (int i = 0; i < midiEvents.size(); i++)
+        {
+            const auto &me = midiEvents[i];
+            smf_event_t evt;
+            evt.track = &track;
+            evt.track_number = t + 1;
+            evt.event_number = globalEventNumber++;
+            evt.time_pulses = me.tick;
+            evt.time_seconds = me.seconds;
+            evt.midi_buffer.assign(me.begin(), me.end());
+            evt.midi_buffer_length = evt.midi_buffer.size();
+            track.events.push_back(std::move(evt));
+        }
+
+        track.number_of_events = static_cast<int>(track.events.size());
+        for (auto &evt : track.events)
+        {
+            smf->eventOrder.push_back(&evt);
+        }
+    }
+
+    std::stable_sort(smf->eventOrder.begin(), smf->eventOrder.end(),
+                     [](const smf_event_t *a, const smf_event_t *b)
+                     {
+                         if (a->time_pulses == b->time_pulses)
+                         {
+                             if (a->track_number == b->track_number)
+                             {
+                                 return a->event_number < b->event_number;
+                             }
+                             return a->track_number < b->track_number;
+                         }
+                         return a->time_pulses < b->time_pulses;
+                     });
+
+    smf_rewind(smf);
+    return smf;
+}
+
+static void smf_delete(smf_t *smf)
+{
+    delete smf;
+}
 
 
 string MidiWrapper::SmfEventToString(smf_event_t *event)
@@ -65,7 +182,7 @@ void MidiWrapper::initAttr()
     this->lastUseLoopInfo = gConfig.useLoopInfo;
 }
 
-// calling libsmf, parsing through all events is expensive
+// calling midifile, parsing through all events is expensive
 // the idea is to outsource those long-running parts and only do them when really necessary, i.e. when creating this object and whenever the user changes gConfig.overridingGlobalLoopCount
 void MidiWrapper::initialize()
 {
