@@ -511,6 +511,12 @@ void MainWindow::aboutAnmp()
     SUPPORT_NO("PortAudio")
 #endif
 
+#ifdef USE_WASAPI
+    SUPPORT_YES("WASAPI")
+#else
+    SUPPORT_NO("WASAPI")
+#endif
+
 #ifdef USE_EBUR128
     SUPPORT_YES("Audio Normalization")
 #else

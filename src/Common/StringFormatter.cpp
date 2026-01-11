@@ -23,7 +23,11 @@ StringFormatter &StringFormatter::Singleton()
 
 std::string StringFormatter::GetLastWinError()
 {
-    return StringFormatter::GetLastWinError(GetLastError());
+    unsigned long code = 0;
+#ifdef WIN32
+    code = GetLastError();
+#endif
+    return StringFormatter::GetLastWinError(code);
 }
 
 std::string StringFormatter::GetLastWinError(unsigned long code)
