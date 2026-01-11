@@ -483,6 +483,12 @@ void MainWindow::aboutAnmp()
     SUPPORT_NO("FFMpeg")
 #endif
 
+#ifdef USE_SMF
+    SUPPORT_YES("MIDI")
+#else
+    SUPPORT_NO("MIDI")
+#endif
+
 #ifdef USE_FLUIDSYNTH
     SUPPORT_YES("Fluidsynth")
 #else
