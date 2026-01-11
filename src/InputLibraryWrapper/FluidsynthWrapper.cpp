@@ -589,6 +589,13 @@ double FluidsynthWrapper::GetTempoScale(unsigned int uspqn, unsigned int ppqn)
 void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
 {
     int ret;
+    const auto &buf = event->midi_buffer;
+
+    if (buf.empty())
+    {
+        CLOG(LogLevel_t::Warning, "Ignoring empty MIDI event");
+        return;
+    }
 
     if (smf_event_is_sysex(event))
     {
@@ -596,15 +603,15 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
         return;
     }
 
-    if(event->midi_buffer[0] == 0xFF && event->midi_buffer[1] == 0x51)
+    if(buf[0] == 0xFF && buf.size() >= 2 && buf[1] == 0x51)
     {
-        if (event->midi_buffer_length < 6)
+        if (buf.size() < 6)
         {
             CLOG(LogLevel_t::Warning, "Ignoring truncated MIDI Tempo message.");
             return;
         }
 
-        int uspqn = (event->midi_buffer[3] << 16) + (event->midi_buffer[4] << 8) + event->midi_buffer[5];
+        int uspqn = (buf[3] << 16) + (buf[4] << 8) + buf[5];
         if (uspqn <= 0)
         {
             CLOG(LogLevel_t::Warning, "Ignoring invalid tempo change.");
@@ -619,20 +626,31 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
         return;
     }
     
-    if(event->midi_buffer[0] == 0xFF)
+    if(buf[0] == 0xFF)
     {
         // ignore all other meta events
         return;
     }
 
-    int key, vel, chan = event->midi_buffer[0] & 0x0F;
+    if (buf.size() < 2)
+    {
+        CLOG(LogLevel_t::Warning, "Ignoring truncated MIDI message with status " << static_cast<int>(buf[0]));
+        return;
+    }
+
+    int key, vel, chan = buf[0] & 0x0F;
     fluid_event_t *fluidEvt = this->synthEvent;
-    switch (event->midi_buffer[0] & 0xF0)
+    switch (buf[0] & 0xF0)
     {
         case 0x90:
+            if (buf.size() < 3)
+            {
+                CLOG(LogLevel_t::Warning, "Ignoring truncated NoteOn message");
+                return;
+            }
             fluidEvt = this->callbackNoteEvent;
-            key = event->midi_buffer[1];
-            vel = event->midi_buffer[2];
+            key = buf[1];
+            vel = buf[2];
             if(vel != 0)
             {
                 this->InformHasNoteOn(chan);
@@ -644,38 +662,53 @@ void FluidsynthWrapper::AddEvent(smf_event_t *event, double offset)
 
         case 0x80: // noteoff
             fluidEvt = this->callbackNoteEvent;
-            key = event->midi_buffer[1];
+            key = buf[1];
             fluid_event_noteoff(fluidEvt, chan, key);
             CLOG(LogLevel_t::Debug, "NoteOff at tick " << event->time_pulses + offset << ", channel " << chan << ", key " << key);
             break;
 
         case 0xA0:
-            fluid_event_key_pressure(fluidEvt, chan, event->midi_buffer[1], event->midi_buffer[2]);
-            CLOG(LogLevel_t::Debug, "Aftertouch at tick " << event->time_pulses + offset << ", channel " << chan << ", note " << static_cast<int>(event->midi_buffer[1]) << ", pressure " << static_cast<int>(event->midi_buffer[2]));
+            if (buf.size() < 3)
+            {
+                CLOG(LogLevel_t::Warning, "Ignoring truncated aftertouch message");
+                return;
+            }
+            fluid_event_key_pressure(fluidEvt, chan, buf[1], buf[2]);
+            CLOG(LogLevel_t::Debug, "Aftertouch at tick " << event->time_pulses + offset << ", channel " << chan << ", note " << static_cast<int>(buf[1]) << ", pressure " << static_cast<int>(buf[2]));
             break;
 
         case 0xB0: // ctrl change
             // just a usual control change
-            fluid_event_control_change(fluidEvt, chan, event->midi_buffer[1], event->midi_buffer[2]);
-            CLOG(LogLevel_t::Debug, "Controller at tick " << event->time_pulses + offset << ", channel " << chan << ", controller " << static_cast<int>(event->midi_buffer[1]) << ", value " << static_cast<int>(event->midi_buffer[2]));
+            if (buf.size() < 3)
+            {
+                CLOG(LogLevel_t::Warning, "Ignoring truncated control change message");
+                return;
+            }
+            fluid_event_control_change(fluidEvt, chan, buf[1], buf[2]);
+            CLOG(LogLevel_t::Debug, "Controller at tick " << event->time_pulses + offset << ", channel " << chan << ", controller " << static_cast<int>(buf[1]) << ", value " << static_cast<int>(buf[2]));
             break;
 
         case 0xC0:
             this->InformHasProgChange(chan);
-            fluid_event_program_change(fluidEvt, chan, event->midi_buffer[1]);
-            CLOG(LogLevel_t::Debug, "ProgChange at tick " << event->time_pulses + offset << ", channel " << chan << ", program " << static_cast<int>(event->midi_buffer[1]));
+            fluid_event_program_change(fluidEvt, chan, buf[1]);
+            CLOG(LogLevel_t::Debug, "ProgChange at tick " << event->time_pulses + offset << ", channel " << chan << ", program " << static_cast<int>(buf[1]));
             break;
 
         case 0xD0:
-            fluid_event_channel_pressure(fluidEvt, chan, event->midi_buffer[1]);
-            CLOG(LogLevel_t::Debug, "Channel Pressure at tick " << event->time_pulses + offset << ", channel " << chan << ", pressure " << static_cast<int>(event->midi_buffer[1]));
+            fluid_event_channel_pressure(fluidEvt, chan, buf[1]);
+            CLOG(LogLevel_t::Debug, "Channel Pressure at tick " << event->time_pulses + offset << ", channel " << chan << ", pressure " << static_cast<int>(buf[1]));
             break;
 
         case 0xE0:
         {
-            int16_t pitch = event->midi_buffer[2];
+            if (buf.size() < 3)
+            {
+                CLOG(LogLevel_t::Warning, "Ignoring truncated pitch bend message");
+                return;
+            }
+            int16_t pitch = buf[2];
             pitch <<= 7;
-            pitch |= event->midi_buffer[1];
+            pitch |= buf[1];
 
             fluid_event_pitch_bend(fluidEvt, chan, pitch);
             CLOG(LogLevel_t::Debug, "Pitch Wheel at tick " << event->time_pulses + offset << ", channel " << chan << ", value " << pitch);
@@ -753,8 +786,14 @@ void FluidsynthWrapper::ScheduleTempoChange(double newScale, int atTick, bool ab
 void FluidsynthWrapper::ScheduleSysEx(smf_event_t* event, int atTick, bool absolute)
 {
     CLOG(LogLevel_t::Debug, "SYSEX, atTick " << atTick);
+    const auto &buf = event->midi_buffer;
+    if (buf.size() <= 1)
+    {
+        CLOG(LogLevel_t::Warning, "Ignoring truncated SysEx event");
+        return;
+    }
     
-    auto* buffer = new std::vector<unsigned char>(event->midi_buffer + 1 , event->midi_buffer + 1 + (event->midi_buffer_length - 1));
+    auto* buffer = new std::vector<unsigned char>(buf.begin() + 1 , buf.end());
     fluid_event_timer(this->sysexEvent, buffer);
 
     int ret = fluid_sequencer_send_at(this->sequencer, this->sysexEvent, atTick, absolute);

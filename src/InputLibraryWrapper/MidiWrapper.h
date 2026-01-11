@@ -19,7 +19,6 @@ struct smf_event_struct
     int time_pulses = 0;
     double time_seconds = 0.0;
     std::vector<unsigned char> midi_buffer;
-    std::size_t midi_buffer_length = 0;
 };
 typedef struct smf_event_struct smf_event_t;
 

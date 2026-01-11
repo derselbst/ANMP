@@ -18,10 +18,11 @@
 #include <bitset>
 #include <string>
 
-#define IsControlChange(e) ((e->midi_buffer[0] & 0xF0) == 0xB0)
-#define IsLoopStart(e) (IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopStart))
-#define IsLoopStop(e) (IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopStop))
-#define IsLoopCount(e) (IsControlChange(e) && (e->midi_buffer[1] == gConfig.MidiControllerLoopCount))
+#define HasMidiData(e, n) ((e) != nullptr && (e)->midi_buffer.size() > (n))
+#define IsControlChange(e) (HasMidiData(e, 1) && ((e)->midi_buffer[0] & 0xF0) == 0xB0)
+#define IsLoopStart(e) (IsControlChange(e) && HasMidiData(e, 2) && ((e)->midi_buffer[1] == gConfig.MidiControllerLoopStart))
+#define IsLoopStop(e) (IsControlChange(e) && HasMidiData(e, 2) && ((e)->midi_buffer[1] == gConfig.MidiControllerLoopStop))
+#define IsLoopCount(e) (IsControlChange(e) && HasMidiData(e, 2) && ((e)->midi_buffer[1] == gConfig.MidiControllerLoopCount))
 
 
 /** class MidiWrapper
@@ -122,7 +123,6 @@ static smf_t *smf_load_from_memory(const char *data, std::size_t size)
             evt.time_pulses = me.tick;
             evt.time_seconds = me.seconds;
             evt.midi_buffer.assign(me.begin(), me.end());
-            evt.midi_buffer_length = evt.midi_buffer.size();
             track.events.push_back(std::move(evt));
         }
 
