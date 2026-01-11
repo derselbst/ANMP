@@ -2014,18 +2014,13 @@ std::vector<uchar> MidiMessage::intToVlv(int value) {
 		uchar byte3 = (value >> 14) & 0x7f;
 		uchar byte4 = (value >> 21) & 0x7f;
 		uchar byte5 = (value >> 28) & 0x7f;
-		if (byte5) {
+		if (byte5 || byte4) {
 			byte4 |= 0x80;
 		}
-		if (byte4) {
-			byte4 |= 0x80;
+		if (byte4 || byte5 || byte3) {
 			byte3 |= 0x80;
 		}
-		if (byte3) {
-			byte3 |= 0x80;
-			byte2 |= 0x80;
-		}
-		if (byte2) {
+		if (byte3 || byte4 || byte5) {
 			byte2 |= 0x80;
 		}
 		if (byte5) { output.push_back(byte5); }
@@ -2387,5 +2382,4 @@ std::ostream& operator<<(std::ostream& out, MidiMessage& message) {
 
 
 } // end namespace smf
-
 
