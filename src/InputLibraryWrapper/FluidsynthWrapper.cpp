@@ -323,14 +323,6 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
                               FLUID_MOD_CC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_NEGATIVE);
         fluid_synth_add_default_mod(this->synth, my_mod, FLUID_SYNTH_OVERWRITE);
     }
-
-    // remove default MIDI continuous controller 11 (expression) to initial attenuation mod amount (to make Dinosaur Planet work)
-    {
-        fluid_mod_set_source1(my_mod,
-                              11,
-                              FLUID_MOD_CC | FLUID_MOD_CONCAVE | FLUID_MOD_UNIPOLAR | FLUID_MOD_NEGATIVE);
-        fluid_synth_remove_default_mod(this->synth, my_mod);
-    }
     
     // Dinosaur Planet and Star Fox Adventures specific stuff
     fluid_mod_set_source2(my_mod, FLUID_MOD_NONE, 0);
