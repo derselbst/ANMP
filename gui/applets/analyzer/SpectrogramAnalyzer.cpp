@@ -4,6 +4,7 @@
 #include "PaletteHandler.h"
 #include "fht.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 
@@ -148,14 +149,8 @@ void SpectrogramAnalyzer::transform(QVector<float> &s)
 
     m_windowBuf.resize(wsize);
     const int copySize = std::min(static_cast<int>(s.size()), wsize);
-    for (int i = 0; i < copySize; i++)
-    {
-        m_windowBuf[i] = s[i];
-    }
-    for (int i = copySize; i < wsize; i++)
-    {
-        m_windowBuf[i] = 0.0f;
-    }
+    std::copy(s.begin(), s.begin() + copySize, m_windowBuf.begin());
+    std::fill(m_windowBuf.begin() + copySize, m_windowBuf.end(), 0.0f);
 
     m_windowFht->spectrum(m_windowBuf.data());
 }
