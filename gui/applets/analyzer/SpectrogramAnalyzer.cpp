@@ -51,7 +51,7 @@ void SpectrogramAnalyzer::resizeEvent(QResizeEvent * event)
     // Keep xPos proportional so the drawing cursor doesn't jump or go out of bounds
     if (oldWidth > 0 && newWidth != oldWidth)
     {
-        m_xPos = m_xPos * newWidth / oldWidth;
+        m_xPos = static_cast<int>(static_cast<float>(m_xPos) * newWidth / oldWidth + 0.5f);
     }
 
     m_currentHeight = event->size().height();
@@ -210,7 +210,7 @@ void SpectrogramAnalyzer::analyze(const QVector<float> &/*s*/, uint32_t srate)
         const int base = static_cast<int>(pow(2.0f, 44100.f / srate + 1));
         switch (static_cast<Speed>(m_speed.load()))
         {
-            case Slow:   return std::max(1, base / 2);
+            case Slow:   return std::max(1, base / 2); // minimum 1 pixel per frame
             case Fast:   return base * 2;
             default:     return base;
         }
