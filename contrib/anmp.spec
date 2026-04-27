@@ -32,7 +32,7 @@ BuildRequires: libaopsf-devel
 BuildRequires: libcue-devel
 BuildRequires: libgme-devel >= 0.6.3
 BuildRequires: libmad-devel pkgconfig(id3tag)
-BuildRequires: pkgconfig(sndfile)
+BuildRequires: pkgconfig(sndfile) >= 1.1.0
 BuildRequires: libmodplug-devel
 BuildRequires: vgmstream-devel
 %ifarch x86_64 i586 i686
