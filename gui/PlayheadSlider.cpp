@@ -131,7 +131,7 @@ void PlayheadSlider::paintEvent( QPaintEvent* )
     //
     const QRect greenBox = QRect(
         QPoint(groove.left(), groove.top()),
-        QPoint(playheadHandle.left(), groove.bottom()))
+        QPoint(playheadHandle.center().x(), groove.bottom()))
         .intersected(groove);
 
     if (!greenBox.isEmpty())
