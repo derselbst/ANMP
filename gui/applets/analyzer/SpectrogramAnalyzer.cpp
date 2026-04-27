@@ -41,7 +41,7 @@ void SpectrogramAnalyzer::resizeEvent(QResizeEvent * event)
     m_currentHeight = event->size().height();
     m_currentWidth = event->size().width();
 
-    event->accept();
+    AnalyzerBase::resizeEvent(event);
 }
 
 

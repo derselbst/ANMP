@@ -25,11 +25,11 @@ int PlayheadSlider::getFrameFromMouseEvt(const QMouseEvent *event)
 
     if (this->orientation() == Qt::Vertical)
     {
-        return static_cast<int>(min + ((max - min) * 1.0 * (height - event->y())) / height);
+        return static_cast<int>(min + ((max - min) * 1.0 * (height - event->position().y())) / height);
     }
     else
     {
-        return static_cast<int>(min + ((max - min) * 1.0 * event->x()) / width);
+        return static_cast<int>(min + ((max - min) * 1.0 * event->position().x()) / width);
     }
 }
 
@@ -55,7 +55,7 @@ void PlayheadSlider::mouseMoveEvent(QMouseEvent *event)
         const QRect rect(pos.x(), pos.y(), 1, this->height());
         int frameOnSlider = getFrameFromMouseEvt(event);
         
-        QToolTip::showText(event->globalPos(),
+        QToolTip::showText(event->globalPosition().toPoint(),
                            QString::fromStdString(framesToTimeStr(frameOnSlider, this->currentSampleRate)),
                            this,
                            rect);
@@ -92,47 +92,58 @@ void PlayheadSlider::paintEvent( QPaintEvent* )
                                                     &option,
                                                     QStyle::SC_SliderGroove,
                                                     this );
-    QRect rangeBox;
-    if (option.orientation == Qt::Horizontal)
-    {
-        const QRect lowerRange = this->style()->subControlRect(QStyle::CC_Slider,
-                                                &option,
-                                                QStyle::SC_SliderHandle,
-                                                this);
+    Q_ASSERT(option.orientation == Qt::Horizontal);
 
-        option.sliderPosition = this->bufferHealth;
-        const QRect upperRange = this->style()->subControlRect(QStyle::CC_Slider,
-                                                &option,
-                                                QStyle::SC_SliderHandle,
-                                                this);
+    // Handle rect at current playhead position
+    const QRect playheadHandle = this->style()->subControlRect(QStyle::CC_Slider,
+                                            &option,
+                                            QStyle::SC_SliderHandle,
+                                            this);
 
-        rangeBox = QRect(
-        QPoint(lowerRange.left(), groove.top()),
-        QPoint(upperRange.center().x(), groove.bottom()));
-    }
-    else
+    // Handle rect at buffer health position
+    option.sliderPosition = this->bufferHealth;
+    const QRect bufferHandle = this->style()->subControlRect(QStyle::CC_Slider,
+                                            &option,
+                                            QStyle::SC_SliderHandle,
+                                            this);
+
+    // -----------------------------
+    // Render yellow area: from groove start up to buffer health
+    //
+    const QRect yellowBox = QRect(
+        QPoint(groove.left(), groove.top()),
+        QPoint(bufferHandle.center().x(), groove.bottom()))
+        .intersected(groove);
+
+    if (!yellowBox.isEmpty())
     {
-        Q_ASSERT(false);
+        QLinearGradient yellowGradient(yellowBox.left(), groove.center().y(),
+                                       yellowBox.right(), groove.center().y());
+        yellowGradient.setColorAt(0, QColor(255, 255, 180));
+        yellowGradient.setColorAt(1, QColor(255, 244, 105));
+        p.setPen(Qt::NoPen);
+        p.setBrush(yellowGradient);
+        p.drawRect(yellowBox);
     }
 
     // -----------------------------
-    // Render the range
+    // Render green area: already-played range (groove start to current playhead)
     //
-    rangeBox = rangeBox.intersected(groove);
+    const QRect greenBox = QRect(
+        QPoint(groove.left(), groove.top()),
+        QPoint(playheadHandle.center().x(), groove.bottom()))
+        .intersected(groove);
 
-    Q_ASSERT(option.orientation == Qt::Horizontal);
-    QLinearGradient gradient = QLinearGradient( rangeBox.left(), groove.center().y(),
-                                rangeBox.right(), groove.center().y());
-
-    const QColor l = QColor(255,255,180);
-    const QColor u = QColor(255,244,105);
-
-    gradient.setColorAt(0, l);
-    gradient.setColorAt(1, u);
-
-    p.setPen(Qt::NoPen);
-    p.setBrush(gradient);
-    p.drawRect( rangeBox.intersected(groove) );
+    if (!greenBox.isEmpty())
+    {
+        QLinearGradient greenGradient(greenBox.left(), groove.center().y(),
+                                      greenBox.right(), groove.center().y());
+        greenGradient.setColorAt(0, QColor(180, 255, 180));
+        greenGradient.setColorAt(1, QColor(105, 225, 105));
+        p.setPen(Qt::NoPen);
+        p.setBrush(greenGradient);
+        p.drawRect(greenBox);
+    }
 
     this->initStyleOption(&option);
     option.subControls = QStyle::SC_SliderHandle;
@@ -195,4 +206,5 @@ void PlayheadSlider::SlotCurrentSongChanged(const Song *s)
 void PlayheadSlider::setBufferHealth(long long frames)
 {
     this->bufferHealth = frames;
+    this->update();
 }
