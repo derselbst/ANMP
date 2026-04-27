@@ -31,6 +31,7 @@ class SpectrogramAnalyzer : public AnalyzerBase
 {
 public:
     enum FrequencyScale { Logarithmic = 0, Mel = 1 };
+    enum Speed { Slow = 0, Normal = 1, Fast = 2 };
 
     SpectrogramAnalyzer(QWidget *);
     ~SpectrogramAnalyzer() override;
@@ -66,6 +67,7 @@ private:
     std::atomic<int> m_windowSize{2048};
     std::atomic<int> m_freqScale{Logarithmic};
     std::atomic<bool> m_scrolling{false};
+    std::atomic<int> m_speed{Normal};
 
     FHT *m_windowFht{nullptr}; // local FHT rebuilt when window size changes
 };

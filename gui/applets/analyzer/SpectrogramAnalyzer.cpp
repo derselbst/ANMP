@@ -45,8 +45,17 @@ void SpectrogramAnalyzer::display(const QImage& img)
 
 void SpectrogramAnalyzer::resizeEvent(QResizeEvent * event)
 {
+    const int newWidth = event->size().width();
+    const int oldWidth = m_currentWidth.load();
+
+    // Keep xPos proportional so the drawing cursor doesn't jump or go out of bounds
+    if (oldWidth > 0 && newWidth != oldWidth)
+    {
+        m_xPos = m_xPos * newWidth / oldWidth;
+    }
+
     m_currentHeight = event->size().height();
-    m_currentWidth = event->size().width();
+    m_currentWidth = newWidth;
 
     AnalyzerBase::resizeEvent(event);
 }
@@ -94,7 +103,7 @@ void SpectrogramAnalyzer::contextMenuEvent(QContextMenuEvent *event)
     windowGroup->setExclusive(true);
 
     const int currentWindowSize = m_windowSize.load();
-    for (int size : {512, 1024, 2048})
+    for (int size : {512, 1024, 2048, 4096, 8192, 16384})
     {
         QAction *act = windowMenu->addAction(QString::number(size));
         act->setCheckable(true);
@@ -115,6 +124,29 @@ void SpectrogramAnalyzer::contextMenuEvent(QContextMenuEvent *event)
         m_scrolling.store(checked);
         clearSpectrogram();
     });
+
+    // --- Speed ---
+    QMenu *speedMenu = menu.addMenu(tr("Speed"));
+    QActionGroup *speedGroup = new QActionGroup(speedMenu);
+    speedGroup->setExclusive(true);
+
+    const int currentSpeed = m_speed.load();
+    const struct { const char *label; Speed value; } speedItems[] = {
+        { QT_TR_NOOP("Slow"),   Slow   },
+        { QT_TR_NOOP("Normal"), Normal },
+        { QT_TR_NOOP("Fast"),   Fast   },
+    };
+    for (const auto &item : speedItems)
+    {
+        QAction *act = speedMenu->addAction(tr(item.label));
+        act->setCheckable(true);
+        act->setChecked(currentSpeed == static_cast<int>(item.value));
+        speedGroup->addAction(act);
+        const Speed sv = item.value;
+        connect(act, &QAction::triggered, this, [this, sv]() {
+            m_speed.store(static_cast<int>(sv));
+        });
+    }
 
     menu.exec(event->globalPos());
 }
@@ -174,7 +206,15 @@ void SpectrogramAnalyzer::analyze(const QVector<float> &/*s*/, uint32_t srate)
 
     interpolate(m_windowBuf, m_scope);
 
-    const int xStepWidth = static_cast<int>(pow(2.0f, 44100.f/srate + 1));
+    const int xStepWidth = [&]() {
+        const int base = static_cast<int>(pow(2.0f, 44100.f / srate + 1));
+        switch (static_cast<Speed>(m_speed.load()))
+        {
+            case Slow:   return std::max(1, base / 2);
+            case Fast:   return base * 2;
+            default:     return base;
+        }
+    }();
     const bool scrolling = m_scrolling.load();
 
     // In scrolling mode, shift the existing image left before drawing the new column
