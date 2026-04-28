@@ -90,11 +90,9 @@ void SpectrogramAnalyzer::contextMenuEvent(QContextMenuEvent *event)
 
     connect(logAction, &QAction::triggered, this, [this]() {
         m_freqScale.store(Logarithmic);
-        clearSpectrogram();
     });
     connect(melAction, &QAction::triggered, this, [this]() {
         m_freqScale.store(Mel);
-        clearSpectrogram();
     });
 
     // --- Window Size ---
@@ -111,7 +109,6 @@ void SpectrogramAnalyzer::contextMenuEvent(QContextMenuEvent *event)
         windowGroup->addAction(act);
         connect(act, &QAction::triggered, this, [this, size]() {
             m_windowSize.store(size);
-            clearSpectrogram();
         });
     }
 
@@ -122,7 +119,6 @@ void SpectrogramAnalyzer::contextMenuEvent(QContextMenuEvent *event)
     scrollAction->setChecked(m_scrolling.load());
     connect(scrollAction, &QAction::triggered, this, [this](bool checked) {
         m_scrolling.store(checked);
-        clearSpectrogram();
     });
 
     // --- Speed ---
