@@ -161,7 +161,7 @@ void FluidsynthWrapper::setupSynth(const Nullable<string>& suggestedSf2)
     }
 
     // set highest resampler quality on all channels
-    fluid_synth_set_interp_method(this->synth, -1, FLUID_INTERP_DEFAULT);
+    fluid_synth_set_interp_method(this->synth, -1, FLUID_INTERP_HIGHEST);
 
     // find a soundfont
     Nullable<string> soundfont;
@@ -422,6 +422,7 @@ void FluidsynthWrapper::setupSettings()
     // those are realtime settings, so they will update the synth in every case
     fluid_settings_setint(this->settings, "synth.chorus.active", gConfig.FluidsynthEnableChorus);
     fluid_settings_setint(this->settings, "synth.reverb.active", gConfig.FluidsynthEnableReverb);
+    fluid_settings_setstr(this->settings, "synth.reverb.engine", "lex");
     fluid_settings_setnum(this->settings, "synth.reverb.room-size", gConfig.FluidsynthRoomSize);
     fluid_settings_setnum(this->settings, "synth.reverb.damp", gConfig.FluidsynthDamping);
     fluid_settings_setnum(this->settings, "synth.reverb.width", gConfig.FluidsynthWidth);
