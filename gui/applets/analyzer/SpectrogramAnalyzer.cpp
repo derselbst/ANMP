@@ -2,6 +2,7 @@
 #include "SpectrogramAnalyzer.h"
 
 #include "PaletteHandler.h"
+#include "AtomicWrite.h"
 #include "fht.h"
 
 #include <algorithm>
@@ -14,6 +15,7 @@
 #include <QMenu>
 #include <QPainter>
 #include <QResizeEvent>
+#include <QThread>
 
 
 SpectrogramAnalyzer::SpectrogramAnalyzer(QWidget *parent)
@@ -37,25 +39,18 @@ void SpectrogramAnalyzer::connectSignals()
     this->disconnectSignals();
 }
 
-void SpectrogramAnalyzer::display(const QImage& img)
+void SpectrogramAnalyzer::display(QImage img)
 {
-    m_toBeDrawn = img;
+    Q_ASSERT(QThread::currentThread() == thread());
+
+    m_toBeDrawn = std::move(img);
     this->update();
 }
 
 void SpectrogramAnalyzer::resizeEvent(QResizeEvent * event)
 {
-    const int newWidth = event->size().width();
-    const int oldWidth = m_currentWidth.load();
-
-    // Keep xPos proportional so the drawing cursor doesn't jump or go out of bounds
-    if (oldWidth > 0 && newWidth != oldWidth)
-    {
-        m_xPos = static_cast<int>(static_cast<float>(m_xPos) * newWidth / oldWidth + 0.5f);
-    }
-
     m_currentHeight = event->size().height();
-    m_currentWidth = newWidth;
+    m_currentWidth = event->size().width();
 
     AnalyzerBase::resizeEvent(event);
 }
@@ -188,8 +183,9 @@ void SpectrogramAnalyzer::analyze(const QVector<float> &/*s*/, uint32_t srate)
     auto currentH = m_currentHeight.load(),
     currentW = m_currentWidth.load();
 
-    if (currentH == 0 || m_windowBuf.size() == 0)
+    if (currentW <= 0 || currentH <= 0 || m_windowBuf.isEmpty() || srate == 0)
     {
+        CLOG(LogLevel_t::Error, "THIS SHOULD NEVER HAPPEN! SpectrogramAnalyzer::analyze()");
         return;
     }
 
@@ -197,7 +193,20 @@ void SpectrogramAnalyzer::analyze(const QVector<float> &/*s*/, uint32_t srate)
 
     if (m_spectrogram.width() != currentW || m_spectrogram.height() != currentH)
     {
+        const int oldW = m_spectrogram.width();
+
+        if (oldW > 0 && currentW > 0)
+        {
+            // Keep xPos proportional so the drawing cursor doesn't jump or go out of bounds
+            m_xPos = static_cast<int>(static_cast<double>(m_xPos) * currentW / oldW + 0.5);
+        }
+        else
+        {
+            m_xPos = 0;
+        }
+
         m_spectrogram = m_spectrogram.scaled(currentW, currentH);
+        m_xPos = std::clamp(m_xPos, 0, std::max(0, currentW - 1));
     }
 
     interpolate(m_windowBuf, m_scope);
@@ -248,6 +257,7 @@ void SpectrogramAnalyzer::analyze(const QVector<float> &/*s*/, uint32_t srate)
         aPrev = std::min(aPrev, 255);
 
         int yTarget = static_cast<int>(this->getYForFrequency(
+            currentH,
             srate / 2.0 * y / scopeSize,
             1.0 / scopeSize * srate / 2.0,
             srate / 2.0,
@@ -272,13 +282,25 @@ void SpectrogramAnalyzer::analyze(const QVector<float> &/*s*/, uint32_t srate)
         }
     }
 
-    this->display(m_spectrogram);
+    // Complete all writes to m_spectrogram before publishing it.
+    painter.end();
+
+    // Deep copy: the GUI must not share storage that the worker modifies.
+    QImage frame = m_spectrogram.copy();
+
+    QMetaObject::invokeMethod(
+    this,
+    [this, frame = std::move(frame)]() mutable
+    {
+        this->display(std::move(frame));
+    },
+    Qt::QueuedConnection);
 }
 
 
-double SpectrogramAnalyzer::getYForFrequency(double frequency, double minf, double maxf, FrequencyScale scale)
+double SpectrogramAnalyzer::getYForFrequency(int currentHeight, double frequency, double minf, double maxf, FrequencyScale scale)
 {
-    const int h = this->height();
+    const int h = currentHeight;
 
     if (scale == Logarithmic)
     {
