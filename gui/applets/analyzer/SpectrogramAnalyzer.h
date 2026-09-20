@@ -47,10 +47,10 @@ protected:
     void contextMenuEvent(QContextMenuEvent *event) override;
     void analyze(const QVector<float> &, uint32_t srate) override;
 
-    double getYForFrequency(double frequency, double minf, double maxf, FrequencyScale scale);
+    double getYForFrequency(int currentHeight, double frequency, double minf, double maxf, FrequencyScale scale);
 
 protected slots:
-    void display(const QImage&);
+    void display(QImage);
 
 private:
     void clearSpectrogram();
@@ -61,7 +61,10 @@ private:
     QVector<float> m_scope;
     QVector<float> m_windowBuf; // holds per-frame FFT spectrum output
 
+    // Spectrogram rendered and modified by the worker thread
     QImage m_spectrogram;
+
+    // Spectrogram to be displayed by the UI thread
     QImage m_toBeDrawn;
 
     std::atomic<int> m_windowSize{2048};
